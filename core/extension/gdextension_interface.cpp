@@ -41,6 +41,7 @@
 #include "core/os/memory.h"
 #include "core/variant/variant.h"
 #include "core/version.h"
+#include "core/extension/extension_spx_ext.cpp"
 
 class CallableCustomExtension : public CallableCustom {
 	void *userdata;
@@ -1516,6 +1517,7 @@ void gdextension_setup_interface() {
 	REGISTER_INTERFACE_FUNC(classdb_get_class_tag);
 	REGISTER_INTERFACE_FUNC(editor_add_plugin);
 	REGISTER_INTERFACE_FUNC(editor_remove_plugin);
+	gdextension_spx_ext();
 }
 
 #undef REGISTER_INTERFACE_FUNCTION
