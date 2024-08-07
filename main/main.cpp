@@ -38,6 +38,7 @@
 #include "core/extension/extension_api_dump.h"
 #include "core/extension/gdextension_interface_dump.gen.h"
 #include "core/extension/gdextension_manager.h"
+#include "core/extension/spx.h"
 #include "core/input/input.h"
 #include "core/input/input_map.h"
 #include "core/io/dir_access.h"
@@ -3503,6 +3504,8 @@ bool Main::start() {
 			}
 
 			OS::get_singleton()->benchmark_end_measure("game_load");
+
+			Spx::on_start(sml->get_root());
 		}
 
 #ifdef TOOLS_ENABLED
@@ -3700,6 +3703,7 @@ bool Main::iteration() {
 	process_max = MAX(process_ticks, process_max);
 	uint64_t frame_time = OS::get_singleton()->get_ticks_usec() - ticks;
 
+	Spx::on_update(process_step * time_scale);
 	for (int i = 0; i < ScriptServer::get_language_count(); i++) {
 		ScriptServer::get_language(i)->frame();
 	}
@@ -3709,7 +3713,6 @@ bool Main::iteration() {
 	if (EngineDebugger::is_active()) {
 		EngineDebugger::get_singleton()->iteration(frame_time, process_ticks, physics_process_ticks, physics_step);
 	}
-
 	frames++;
 	Engine::get_singleton()->_process_frames++;
 
@@ -3801,6 +3804,10 @@ void Main::cleanup(bool p_force) {
 	if (!p_force) {
 		ERR_FAIL_COND(!_start_success);
 	}
+
+#ifdef TOOLS_ENABLED
+	Spx::on_destroy();
+#endif
 
 	for (int i = 0; i < TextServerManager::get_singleton()->get_interface_count(); i++) {
 		TextServerManager::get_singleton()->get_interface(i)->cleanup();

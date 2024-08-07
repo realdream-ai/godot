@@ -1,5 +1,5 @@
-﻿/**************************************************************************/
-/*  gdextension_interface.cpp                                             */
+/**************************************************************************/
+/*  spx.cpp                                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,27 +28,38 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include "gdextension_interface.h"
+#include "spx.h"
+#include "gdextension_spx_ext.h"
+#include "scene/main/node.h"
+#include "spx_engine.h"
 
-#include "core/config/engine.h"
-#include "core/extension/gdextension.h"
-#include "core/extension/gdextension_compat_hashes.h"
-#include "core/io/file_access.h"
-#include "core/io/xml_parser.h"
-#include "core/object/class_db.h"
-#include "core/object/script_language_extension.h"
-#include "core/object/worker_thread_pool.h"
-#include "core/os/memory.h"
-#include "core/variant/variant.h"
-#include "core/version.h"
+#define SPX_ENGINE SpxEngine::get_singleton()
 
-#define REGISTER_INTERFACE_FUNC(m_name) GDExtension::register_interface_function(#m_name, (GDExtensionInterfaceFunctionPtr)&gdextension_##m_name)
-
-
-static void gdextension_spx_editor_remove_pluginsss(GDExtensionConstStringNamePtr p_classname) {
-
+void Spx::on_start(void *root_node) {
+	if (!SpxEngine::has_initialed()) {
+		return;
+	}
+	Node *tree = (Node *)root_node;
+	if (tree == nullptr) {
+		return;
+	}
+	Node *new_node = memnew(Node);
+	new_node->set_name("SpxEngineNode");
+	tree->add_child(new_node);
+	SPX_ENGINE->set_root_node(new_node);
+	SPX_ENGINE->on_start();
 }
 
-static void gdextension_spx_ext() {
-	REGISTER_INTERFACE_FUNC(spx_editor_remove_pluginsss);
+void Spx::on_update(float delta) {
+	if (!SpxEngine::has_initialed()) {
+		return;
+	}
+	SPX_ENGINE->on_update(delta);
+}
+
+void Spx::on_destroy() {
+	if (!SpxEngine::has_initialed()) {
+		return;
+	}
+	SPX_ENGINE->on_destroy();
 }
