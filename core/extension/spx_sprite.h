@@ -33,15 +33,21 @@
 
 #include "gdextension_spx_ext.h"
 #include "scene/2d/node_2d.h"
+#include "scene/2d/sprite_2d.h"
+class AnimatedSprite2D;
+class Area2D;
+class CollisionShape2D;
 
-class SpxSprite : public Node2D {
+class SpxSprite : public Sprite2D {
 	GDCLASS(SpxSprite, Node2D);
-
 private:
 	GdObj obj_id;
-
 public:
-	bool is_alive;
+	AnimatedSprite2D *animation;
+	Area2D *area;
+	CollisionShape2D* collider;
+public:
+	static void _bind_methods();
 	void set_id(GdObj id);
 	GdObj get_id();
 	void on_destroy_call();

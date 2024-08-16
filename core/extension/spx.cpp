@@ -32,8 +32,13 @@
 #include "gdextension_spx_ext.h"
 #include "scene/main/node.h"
 #include "spx_engine.h"
+#include "spx_sprite.h"
 
 #define SPX_ENGINE SpxEngine::get_singleton()
+
+void Spx::register_types() {
+	ClassDB::register_class<SpxSprite>();
+}
 
 void Spx::on_start(void *root_node) {
 	if (!SpxEngine::has_initialed()) {
@@ -43,6 +48,7 @@ void Spx::on_start(void *root_node) {
 	if (tree == nullptr) {
 		return;
 	}
+
 	Node *new_node = memnew(Node);
 	new_node->set_name("SpxEngineNode");
 	tree->add_child(new_node);

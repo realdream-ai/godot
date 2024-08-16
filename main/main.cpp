@@ -3168,7 +3168,7 @@ bool Main::start() {
 	}
 
 	OS::get_singleton()->set_main_loop(main_loop);
-
+	Spx::register_types();
 	SceneTree *sml = Object::cast_to<SceneTree>(main_loop);
 	if (sml) {
 #ifdef DEBUG_ENABLED

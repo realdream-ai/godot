@@ -33,6 +33,13 @@
 #include "spx_engine.h"
 #include "spx_sprite_mgr.h"
 
+void SpxSprite::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_id", "id"), &SpxSprite::set_id);
+	ClassDB::bind_method(D_METHOD("get_id"), &SpxSprite::get_id);
+	ClassDB::bind_method(D_METHOD("on_destroy_call"), &SpxSprite::on_destroy_call);
+
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "obj_id"), "set_id", "get_id");
+}
 void SpxSprite::set_id(int64_t id) {
 	this->obj_id = id;
 }
@@ -55,6 +62,10 @@ void SpxSprite::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_PREDELETE: {
 			on_destroy_call();
+			break;
+		}
+		case NOTIFICATION_READY: {
+			//set_process(true);
 			break;
 		}
 		default:
