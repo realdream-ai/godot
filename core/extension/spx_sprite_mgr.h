@@ -55,7 +55,7 @@ public:
 	GdBool destroy_sprite(GdObj obj);
 	GdBool is_sprite_alive(GdObj obj);
 	void set_position(GdObj obj, GdVec2 pos);
-	void set_rotation(GdObj obj, float rot);
+	void set_rotation(GdObj obj, GdFloat rot);
 	void set_scale(GdObj obj, GdVec2 scale);
 	GdVec2 get_position(GdObj obj);
 	GdFloat get_rotation(GdObj obj);

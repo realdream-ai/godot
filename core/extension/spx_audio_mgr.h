@@ -45,6 +45,7 @@ private:
 public:
 	void on_start() override;
 	void on_destroy() override;
+public:
 	void play_audio(GdString path);
 	void set_audio_volume(GdFloat volume);
 	GdFloat get_audio_volume();
