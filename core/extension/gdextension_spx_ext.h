@@ -182,8 +182,8 @@ typedef GdBool (*GDExtensionSpxPhysicIsTrigger)(GdObj obj);
 typedef void (*GDExtensionSpxPhysicSetCollisionEnabled)(GdObj obj, GdBool enabled);
 typedef GdBool (*GDExtensionSpxPhysicIsCollisionEnabled)(GdObj obj);
 // SpxSprite
-typedef GdInt (*GDExtensionSpxSpriteCreateSprite)(GdString path);
-typedef GdInt (*GDExtensionSpxSpriteCloneSprite)(GdObj obj);
+typedef GdObj (*GDExtensionSpxSpriteCreateSprite)(GdString path);
+typedef GdObj (*GDExtensionSpxSpriteCloneSprite)(GdObj obj);
 typedef GdBool (*GDExtensionSpxSpriteDestroySprite)(GdObj obj);
 typedef GdBool (*GDExtensionSpxSpriteIsSpriteAlive)(GdObj obj);
 typedef void (*GDExtensionSpxSpriteSetPosition)(GdObj obj, GdVec2 pos);

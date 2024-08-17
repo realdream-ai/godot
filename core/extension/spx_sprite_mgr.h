@@ -50,8 +50,8 @@ public:
 	void on_sprite_destroy(SpxSprite *sprite);
 
 public:
-	GdInt create_sprite(GdString path);
-	GdInt clone_sprite(GdObj obj);
+	GdObj create_sprite(GdString path);
+	GdObj clone_sprite(GdObj obj);
 	GdBool destroy_sprite(GdObj obj);
 	GdBool is_sprite_alive(GdObj obj);
 	void set_position(GdObj obj, GdVec2 pos);

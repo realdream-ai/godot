@@ -165,10 +165,10 @@ static void gdextension_spx_physic_set_collision_enabled(GdObj obj,GdBool enable
 static GdBool gdextension_spx_physic_is_collision_enabled(GdObj obj) {
 	return physicMgr->is_collision_enabled(obj);
 }
-static GdInt gdextension_spx_sprite_create_sprite(GdString path) {
+static GdObj gdextension_spx_sprite_create_sprite(GdString path) {
 	return spriteMgr->create_sprite(path);
 }
-static GdInt gdextension_spx_sprite_clone_sprite(GdObj obj) {
+static GdObj gdextension_spx_sprite_clone_sprite(GdObj obj) {
 	return spriteMgr->clone_sprite(obj);
 }
 static GdBool gdextension_spx_sprite_destroy_sprite(GdObj obj) {
