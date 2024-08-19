@@ -71,6 +71,8 @@ private:
 	SpxCallbackInfo callbacks;
 
 public:
+	SpxCallbackInfo* get_callbacks() ;
+public:
 	GdInt get_unique_id() override;
 	Node *get_root_node() override;
 	void set_root_node(Node *node) { root_node = node; }

@@ -36,8 +36,10 @@
 
 class SpxSprite;
 #define NULL_SPRITE_ID 0
+
 class SpxSpriteMgr : SpxBaseMgr {
 	SPXCLASS(SpxSprite, SpxBaseMgr)
+
 private:
 	RBMap<GdObj, SpxSprite *> id_sprites;
 
@@ -62,11 +64,39 @@ public:
 	GdVec2 get_scale(GdObj obj);
 	void set_color(GdObj obj, GdColor color);
 	GdColor get_color(GdObj obj);
-	void update_texture(GdObj obj, GdString path);
+	void set_texture(GdObj obj, GdString path);
 	GdString get_texture(GdObj obj);
 	void set_visible(GdObj obj, GdBool visible);
 	GdBool get_visible(GdObj obj);
-	void update_z_index(GdObj obj, GdInt z);
+	GdInt get_z_index(GdObj obj);
+	void set_z_index(GdObj obj, GdInt z);
+
+	// animation
+	void play_anim(GdObj obj, const StringName &p_name = StringName(), GdFloat p_custom_scale = 1.0, GdBool p_from_end = false);
+	void play_backwards_anim(GdObj obj, const StringName &p_name = StringName());
+	void pause_anim(GdObj obj);
+	void stop_anim(GdObj obj);
+	GdBool is_playing_anim(GdObj obj);
+	void set_anim(GdObj obj, const StringName &p_name);
+	StringName get_anim(GdObj obj);
+	void set_anim_frame(GdObj obj, GdInt p_frame);
+	GdInt get_anim_frame(GdObj obj);
+
+	void set_anim_speed_scale(GdObj obj, GdFloat p_speed_scale);
+	GdFloat get_anim_speed_scale(GdObj obj);
+	GdFloat get_anim_playing_speed(GdObj obj);
+
+	void set_anim_centered(GdObj obj, GdBool p_center);
+	GdBool is_anim_centered(GdObj obj);
+
+	void set_anim_offset(GdObj obj, GdVec2 &p_offset);
+	GdVec2 get_anim_offset(GdObj obj);
+
+	void set_anim_flip_h(GdObj obj, GdBool p_flip);
+	GdBool is_anim_flipped_h(GdObj obj);
+
+	void set_anim_flip_v(GdObj obj, GdBool p_flip);
+	GdBool is_anim_flipped_v(GdObj obj);
 };
 
 #endif // SPX_SPRITE_MGR_H

@@ -63,6 +63,10 @@ void SpxEngine::register_callbacks(GDExtensionSpxCallbackInfoPtr callback_ptr) {
 	singleton->global_id = 1;
 }
 
+SpxCallbackInfo * SpxEngine::get_callbacks() {
+	return &callbacks;
+}
+
 GdInt SpxEngine::get_unique_id() {
 	return global_id++;
 }

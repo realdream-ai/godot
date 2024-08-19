@@ -202,7 +202,7 @@ static GdColor gdextension_spx_sprite_get_color(GdObj obj) {
 	return spriteMgr->get_color(obj);
 }
 static void gdextension_spx_sprite_update_texture(GdObj obj,GdString path) {
-	 spriteMgr->update_texture(obj, path);
+	 spriteMgr->set_texture(obj, path);
 }
 static GdString gdextension_spx_sprite_get_texture(GdObj obj) {
 	return spriteMgr->get_texture(obj);
@@ -214,7 +214,7 @@ static GdBool gdextension_spx_sprite_get_visible(GdObj obj) {
 	return spriteMgr->get_visible(obj);
 }
 static void gdextension_spx_sprite_update_z_index(GdObj obj,GdInt z) {
-	 spriteMgr->update_z_index(obj, z);
+	 spriteMgr->set_z_index(obj, z);
 }
 static GdInt gdextension_spx_ui_create_button(GdString path,GdRect2 rect,GdString text) {
 	return uiMgr->create_button(path, rect, text);

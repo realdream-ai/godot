@@ -41,6 +41,23 @@
 #include "scene/resources/circle_shape_2d.h"
 #include "scene/resources/packed_scene.h"
 
+#define get_check_sprite_r(VALUE) \
+	auto sprite = get_sprite(obj);\
+	if (sprite == nullptr) {\
+		print_error("try to get property of a null sprite" + itos(obj)); \
+		return VALUE; \
+	}
+
+#define get_check_sprite_v() \
+	auto sprite = get_sprite(obj);\
+	if (sprite == nullptr) {\
+		print_error("try to get property of a null sprite" + itos(obj)); \
+		return ; \
+	}
+
+
+#define SPX_CALLBACK SpxEngine::get_singleton()->get_callbacks()
+
 void SpxSpriteMgr::on_start() {
 	SpxBaseMgr::on_start();
 }
@@ -61,7 +78,9 @@ SpxSprite *SpxSpriteMgr::get_sprite(GdObj obj) {
 }
 
 void SpxSpriteMgr::on_sprite_destroy(SpxSprite *sprite) {
-	id_sprites.erase(sprite->get_id());
+	if (id_sprites.erase(sprite->get_id())) {
+		SPX_CALLBACK->func_on_sprite_destroyed(sprite->get_id());
+	}
 }
 
 
@@ -72,7 +91,6 @@ GdInt SpxSpriteMgr::create_sprite(GdString path) {
 	if (path_str == "") {
 		sprite = memnew(SpxSprite);
 		AnimatedSprite2D *animated_sprite = memnew(AnimatedSprite2D);
-		sprite->animation = animated_sprite;
 		sprite->add_child(animated_sprite);
 		Area2D *area = memnew(Area2D);
 		sprite->add_child(area);
@@ -81,17 +99,14 @@ GdInt SpxSpriteMgr::create_sprite(GdString path) {
 		area_shape->set_radius(50.0f);
 		area_collision_shape->set_shape(area_shape);
 		area->add_child(area_collision_shape);
-		sprite->area = area;
 		CollisionShape2D *body_collision_shape = memnew(CollisionShape2D);
 		const Ref<CircleShape2D> body_shape = memnew(CircleShape2D);
 		body_shape->set_radius(50.0f);
 		body_collision_shape->set_shape(body_shape);
 		sprite->add_child(body_collision_shape);
-		sprite->collider = body_collision_shape;
 		Node2D *shooting_point = memnew(Node2D);
 		shooting_point->set_name("ShootingPoint");
 		sprite->add_child(shooting_point);
-		sprite->on_start();
 	} else {
 		// load from path
 		Ref<PackedScene> scene = ResourceLoader::load(SpxStr(path));
@@ -99,32 +114,28 @@ GdInt SpxSpriteMgr::create_sprite(GdString path) {
 			print_error("Failed to load scene.");
 			return NULL_SPRITE_ID;
 		} else {
-			sprite = (SpxSprite*)scene->instantiate();
+			sprite = (SpxSprite *)scene->instantiate();
 		}
 	}
-	auto id = get_unique_id();
-	sprite->set_id(id);
+	sprite->set_id(get_unique_id());
 	get_root_node()->add_child(sprite);
-	return id;
+	sprite->on_start();
+	SPX_CALLBACK->func_on_sprite_ready(sprite->get_id());
+	return sprite->get_id();
 }
 
 GdInt SpxSpriteMgr::clone_sprite(GdObj obj) {
-	auto sprite = get_sprite(obj);
-	if (sprite == nullptr) {
-		return NULL_SPRITE_ID;
-	}
-	auto new_node = (SpxSprite *)sprite->duplicate();
-	new_node->set_id(get_unique_id());
-	owner->add_child(new_node);
-
-	return new_node->get_id();
+	get_check_sprite_r(NULL_SPRITE_ID)
+	sprite = dynamic_cast<SpxSprite *>(sprite->duplicate());
+	sprite->set_id(get_unique_id());
+	get_root_node()->add_child(sprite);
+	sprite->on_start();
+	SPX_CALLBACK->func_on_sprite_ready(sprite->get_id());
+	return sprite->get_id();
 }
 
 GdBool SpxSpriteMgr::destroy_sprite(GdObj obj) {
-	auto sprite = get_sprite(obj);
-	if (sprite == nullptr) {
-		return false;
-	}
+	get_check_sprite_r(false)
 	sprite->queue_free();
 	return true;
 }
@@ -134,101 +145,175 @@ GdBool SpxSpriteMgr::is_sprite_alive(GdObj obj) {
 }
 
 void SpxSpriteMgr::set_position(GdObj obj, GdVec2 pos) {
-	auto sprite = get_sprite(obj);
-	if (sprite == nullptr) {
-		return;
-	}
+	get_check_sprite_v()
 	sprite->set_position(pos);
-	print_line(vformat("Updating position of %d to %f, %f", obj, pos.x, pos.y));
 }
 
 void SpxSpriteMgr::set_rotation(GdObj obj, float rot) {
-	auto sprite = get_sprite(obj);
-	if (sprite == nullptr) {
-		return;
-	}
+	get_check_sprite_v()
 	sprite->set_rotation(rot);
-	print_line(vformat("Updating rotation of %d to %f", obj, rot));
 }
 
 void SpxSpriteMgr::set_scale(GdObj obj, GdVec2 scale) {
-	auto sprite = get_sprite(obj);
-	if (sprite == nullptr) {
-		return;
-	}
+	get_check_sprite_v()
 	sprite->set_scale(scale);
-	print_line(vformat("Updating scale of %d to %f, %f", obj, scale.x, scale.y));
 }
 
 GdVec2 SpxSpriteMgr::get_position(GdObj obj) {
-	auto sprite = get_sprite(obj);
-	if (sprite == nullptr) {
-		print_error("try to get position of a null sprite" + itos(obj));
-		return GdVec2();
-	}
+	get_check_sprite_r(GdVec2())
 	return sprite->get_position();
 }
 
 GdFloat SpxSpriteMgr::get_rotation(GdObj obj) {
-	auto sprite = get_sprite(obj);
-	if (sprite == nullptr) {
-		print_error("try to get rotation of a null sprite" + itos(obj));
-		return 0;
-	}
+	get_check_sprite_r(0)
 	return sprite->get_rotation();
 }
 
 GdVec2 SpxSpriteMgr::get_scale(GdObj obj) {
-	auto sprite = get_sprite(obj);
-	if (sprite == nullptr) {
-		print_error("try to get scale of a null sprite" + itos(obj));
-		return GdVec2();
-	}
+	get_check_sprite_r(GdVec2())
 	return sprite->get_scale();
 }
 
 void SpxSpriteMgr::set_color(GdObj obj, GdColor color) {
-	print_line(vformat("TODO set_color of sprite Updating GdColor of %d to %f, %f, %f, %f", obj, color.r, color.g, color.b, color.a));
+	get_check_sprite_v()
+	sprite->set_color(color);
 }
 
 GdColor SpxSpriteMgr::get_color(GdObj obj) {
-	print_line("TODO get_color of sprite");
-	return GdColor();
+	get_check_sprite_r(GdColor())
+	return sprite->get_color();
 }
 
-void SpxSpriteMgr::update_texture(GdObj obj, GdString path) {
-	print_line("TODO update_texture of sprite");
+void SpxSpriteMgr::set_texture(GdObj obj, GdString path) {
+	get_check_sprite_v()
+	sprite->set_texture(path);
 }
 
 GdString SpxSpriteMgr::get_texture(GdObj obj) {
-	print_line("TODO get_texture of sprite");
-	return nullptr;
+	get_check_sprite_r(GdString())
+	return sprite->get_texture();
 }
 
 void SpxSpriteMgr::set_visible(GdObj obj, GdBool visible) {
-	auto sprite = get_sprite(obj);
-	if (sprite == nullptr) {
-		print_error("try to set_visible of a null sprite" + itos(obj));
-		return;
-	}
+	get_check_sprite_v()
 	sprite->set_visible(visible);
 }
 
 GdBool SpxSpriteMgr::get_visible(GdObj obj) {
-	auto sprite = get_sprite(obj);
-	if (sprite == nullptr) {
-		print_error("try to get_visible of a null sprite" + itos(obj));
-		return false;
-	}
+	get_check_sprite_r(false)
 	return sprite->is_visible();
 }
 
-void SpxSpriteMgr::update_z_index(GdObj obj, GdInt z) {
-	print_line(vformat("Updating z index of %d to %d", obj, z));
+GdInt SpxSpriteMgr::get_z_index(GdObj obj) {
+	get_check_sprite_r(0)
+	return sprite->get_z_index();
+}
+
+void SpxSpriteMgr::set_z_index(GdObj obj, GdInt z) {
+	get_check_sprite_v()
+	sprite->set_z_index(z);
+}
+
+void SpxSpriteMgr::play_anim(GdObj obj, const StringName &p_name, GdFloat p_custom_scale, GdBool p_from_end) {
+	get_check_sprite_v()
+	sprite->play_anim(p_name, p_custom_scale, p_from_end);
+}
+
+void SpxSpriteMgr::play_backwards_anim(GdObj obj, const StringName &p_name) {
+	get_check_sprite_v()
+	sprite->play_backwards_anim(p_name);
+}
+
+void SpxSpriteMgr::pause_anim(GdObj obj) {
+	get_check_sprite_v()
+	sprite->pause_anim();
+}
+
+void SpxSpriteMgr::stop_anim(GdObj obj) {
+	get_check_sprite_v()
+	sprite->stop_anim();
+}
+
+GdBool SpxSpriteMgr::is_playing_anim(GdObj obj) {
+	get_check_sprite_r(false)
+	return sprite->is_playing_anim();
+}
+
+void SpxSpriteMgr::set_anim(GdObj obj, const StringName &p_name) {
+	get_check_sprite_v()
+	sprite->set_anim(p_name);
+}
+
+StringName SpxSpriteMgr::get_anim(GdObj obj) {
+	get_check_sprite_r(StringName())
+	return sprite->get_anim();
+}
+
+void SpxSpriteMgr::set_anim_frame(GdObj obj, GdInt p_frame) {
+	get_check_sprite_v()
+	sprite->set_frame(p_frame);
+}
+
+GdInt SpxSpriteMgr::get_anim_frame(GdObj obj) {
+	get_check_sprite_r(0)
+	return sprite->get_frame();
+}
+
+void SpxSpriteMgr::set_anim_speed_scale(GdObj obj, GdFloat p_speed_scale) {
+	get_check_sprite_v()
+	sprite->set_anim_speed_scale(p_speed_scale);
+}
+
+GdFloat SpxSpriteMgr::get_anim_speed_scale(GdObj obj) {
+	get_check_sprite_r(1.0)
+	return sprite->get_anim_speed_scale();
+}
+
+GdFloat SpxSpriteMgr::get_anim_playing_speed(GdObj obj) {
+	get_check_sprite_r(1.0)
+	return sprite->get_anim_playing_speed();
+}
+
+void SpxSpriteMgr::set_anim_centered(GdObj obj, GdBool p_center) {
+	get_check_sprite_v()
+	sprite->set_centered(p_center);
+}
+
+GdBool SpxSpriteMgr::is_anim_centered(GdObj obj) {
+	get_check_sprite_r(false)
+	return sprite->is_centered();
+}
+
+void SpxSpriteMgr::set_anim_offset(GdObj obj, GdVec2 &p_offset) {
+	get_check_sprite_v()
+	sprite->set_offset(p_offset);
+}
+
+GdVec2 SpxSpriteMgr::get_anim_offset(GdObj obj) {
+	get_check_sprite_r(GdVec2())
+	return sprite->get_offset();
+}
+
+void SpxSpriteMgr::set_anim_flip_h(GdObj obj, GdBool p_flip) {
+	get_check_sprite_v()
+	sprite->set_flip_h(p_flip);
+}
+
+GdBool SpxSpriteMgr::is_anim_flipped_h(GdObj obj) {
 	auto sprite = get_sprite(obj);
 	if (sprite == nullptr) {
-		print_error("try to update_z_index of a null sprite" + itos(obj));
-		return;
+		print_error("try to get property of a null sprite" + itos(obj));
+		return false;
 	}
-	sprite->set_z_index(z);
+	return sprite->is_flipped_h();
+}
+
+void SpxSpriteMgr::set_anim_flip_v(GdObj obj, GdBool p_flip) {
+	get_check_sprite_v()
+	sprite->set_flip_v(p_flip);
+}
+
+GdBool SpxSpriteMgr::is_anim_flipped_v(GdObj obj) {
+	get_check_sprite_r(false)
+	return sprite->is_flipped_v();
 }
