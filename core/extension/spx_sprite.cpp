@@ -32,6 +32,7 @@
 
 #include "spx_engine.h"
 #include "spx_sprite_mgr.h"
+#include "scene/2d/area_2d.h"
 
 void SpxSprite::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_id", "id"), &SpxSprite::set_id);
@@ -39,7 +40,11 @@ void SpxSprite::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("on_destroy_call"), &SpxSprite::on_destroy_call);
 
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "obj_id"), "set_id", "get_id");
+	ClassDB::bind_method(D_METHOD("on_area_entered", "area"), &SpxSprite::on_area_entered);
+	ClassDB::bind_method(D_METHOD("on_area_exited", "area"), &SpxSprite::on_area_exited);
+
 }
+
 void SpxSprite::set_id(int64_t id) {
 	this->obj_id = id;
 }
@@ -71,4 +76,19 @@ void SpxSprite::_notification(int p_what) {
 		default:
 			break;
 	}
+}
+
+void SpxSprite::on_start() {
+	if (area) {
+		area->connect("area_entered", Callable(this, "on_area_entered"));
+		area->connect("area_exited", Callable(this, "on_area_exited"));
+	}
+}
+
+void SpxSprite::on_area_entered(Node *node) {
+	print_line("on_area_entered " + node->get_name());
+}
+
+void SpxSprite::on_area_exited(Node *node) {
+	print_line("on_area_exited " + node->get_name());
 }

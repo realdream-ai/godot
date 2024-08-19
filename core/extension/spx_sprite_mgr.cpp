@@ -38,6 +38,7 @@
 #include "scene/2d/area_2d.h"
 #include "scene/2d/collision_shape_2d.h"
 #include "scene/2d/physics_body_2d.h"
+#include "scene/resources/circle_shape_2d.h"
 #include "scene/resources/packed_scene.h"
 
 void SpxSpriteMgr::on_start() {
@@ -76,14 +77,21 @@ GdInt SpxSpriteMgr::create_sprite(GdString path) {
 		Area2D *area = memnew(Area2D);
 		sprite->add_child(area);
 		CollisionShape2D *area_collision_shape = memnew(CollisionShape2D);
+		const Ref<CircleShape2D> area_shape = memnew(CircleShape2D);
+		area_shape->set_radius(50.0f);
+		area_collision_shape->set_shape(area_shape);
 		area->add_child(area_collision_shape);
 		sprite->area = area;
 		CollisionShape2D *body_collision_shape = memnew(CollisionShape2D);
+		const Ref<CircleShape2D> body_shape = memnew(CircleShape2D);
+		body_shape->set_radius(50.0f);
+		body_collision_shape->set_shape(body_shape);
 		sprite->add_child(body_collision_shape);
 		sprite->collider = body_collision_shape;
 		Node2D *shooting_point = memnew(Node2D);
 		shooting_point->set_name("ShootingPoint");
 		sprite->add_child(shooting_point);
+		sprite->on_start();
 	} else {
 		// load from path
 		Ref<PackedScene> scene = ResourceLoader::load(SpxStr(path));
@@ -96,8 +104,7 @@ GdInt SpxSpriteMgr::create_sprite(GdString path) {
 	}
 	auto id = get_unique_id();
 	sprite->set_id(id);
-	owner->add_child(sprite);
-	print_line("cpp SpxSprite::create_sprite " + path_str);
+	get_root_node()->add_child(sprite);
 	return id;
 }
 

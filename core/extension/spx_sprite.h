@@ -54,6 +54,9 @@ public:
 	SpxSprite();
 	~SpxSprite() override;
 	void _notification(int p_what);
+	void on_start();
+	void on_area_entered(Node *node);
+	void on_area_exited(Node *node);
 };
 
 #endif // SPX_SPRITE_H
