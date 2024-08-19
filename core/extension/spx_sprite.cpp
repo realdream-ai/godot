@@ -34,6 +34,7 @@
 #include "spx_sprite_mgr.h"
 #include "scene/2d/animated_sprite_2d.h"
 #include "scene/2d/area_2d.h"
+#include "scene/2d/collision_shape_2d.h"
 #define SPX_CALLBACK SpxEngine::get_singleton()->get_callbacks()
 
 Node *SpxSprite::get_component(Node *node, StringName name, GdBool recursive) {

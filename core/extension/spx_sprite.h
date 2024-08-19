@@ -107,7 +107,7 @@ public:
 };
 
 template <typename T> T *SpxSprite::get_component(Node *node, GdBool recursive) {
-	for (GdInt i = 0; i < node->get_child_count(); ++i) {
+	for (int i = 0; i < node->get_child_count(); ++i) {
 		Node *child = node->get_child(i);
 		T *component = Object::cast_to<T>(child);
 		if (component != nullptr) {
