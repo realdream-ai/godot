@@ -139,7 +139,7 @@ void SpxSprite::on_area_entered(Node *node) {
 	Node *parent_node = node->get_parent();
 	const SpxSprite *other = Object::cast_to<SpxSprite>(parent_node);
 	if (other != nullptr) {
-		SPX_CALLBACK->func_on_collision_enter(this->gid, other->gid);
+		SPX_CALLBACK->func_on_trigger_enter(this->gid, other->gid);
 	}
 }
 
@@ -180,6 +180,7 @@ GdString SpxSprite::get_texture() {
 	auto tex = anim2d->get_sprite_frames()->get_frame_texture(SpxSpriteMgr::default_texture_anim, 0);
 	if (tex == nullptr)
 		return nullptr;
+	// TODO(tanjp) fix temp string memory
 	return &tex->get_name();
 }
 
