@@ -36,27 +36,9 @@
 
 class SpxPhysicMgr : SpxBaseMgr {
 	SPXCLASS(SpxPhysic, SpxBaseMgr)
+
 public:
-	void set_gravity(GdFloat gravity);
-	GdFloat get_gravity();
-	void set_velocity(GdObj obj, GdVec2 velocity);
-	GdVec2 get_velocity(GdObj obj);
-	void set_mass(GdObj obj, GdFloat mass);
-	GdFloat get_mass(GdObj obj);
-	void add_force(GdObj obj, GdVec2 force);
-	void add_impulse(GdObj obj, GdVec2 impulse);
-	void set_collision_layer(GdObj obj, GdInt layer);
-	GdInt get_collision_layer(GdObj obj);
-	void set_collision_mask(GdObj obj, GdInt mask);
-	GdInt get_collision_mask(GdObj obj);
-	GdInt get_collider_type(GdObj obj);
-	void add_collider_rect(GdObj obj, GdVec2 center, GdVec2 size);
-	void add_collider_circle(GdObj obj, GdVec2 center, GdFloat radius);
-	void add_collider_capsule(GdObj obj, GdVec2 center, GdVec2 size);
-	void set_trigger(GdObj obj, GdBool trigger);
-	GdBool is_trigger(GdObj obj);
-	void set_collision_enabled(GdObj obj, GdBool enabled);
-	GdBool is_collision_enabled(GdObj obj);
+	GdObj raycast(GdVec2 from, GdVec2 to, GdInt collision_mask);
 };
 
 #endif // SPX_PHYSIC_MGR_H

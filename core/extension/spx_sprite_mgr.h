@@ -44,6 +44,7 @@ private:
 	RBMap<GdObj, SpxSprite *> id_sprites;
 
 public:
+	static StringName default_texture_anim;
 	void on_start() override;
 	void on_destroy() override;
 	void on_update(float delta) override;
@@ -72,31 +73,57 @@ public:
 	void set_z_index(GdObj obj, GdInt z);
 
 	// animation
-	void play_anim(GdObj obj, const StringName &p_name = StringName(), GdFloat p_custom_scale = 1.0, GdBool p_from_end = false);
-	void play_backwards_anim(GdObj obj, const StringName &p_name = StringName());
+	void play_anim(GdObj obj, GdString p_name , GdFloat p_custom_scale , GdBool p_from_end );
+	void play_backwards_anim(GdObj obj,  GdString p_name );
 	void pause_anim(GdObj obj);
 	void stop_anim(GdObj obj);
 	GdBool is_playing_anim(GdObj obj);
-	void set_anim(GdObj obj, const StringName &p_name);
-	StringName get_anim(GdObj obj);
+	void set_anim(GdObj obj, GdString p_name);
+	GdString get_anim(GdObj obj);
 	void set_anim_frame(GdObj obj, GdInt p_frame);
 	GdInt get_anim_frame(GdObj obj);
-
 	void set_anim_speed_scale(GdObj obj, GdFloat p_speed_scale);
 	GdFloat get_anim_speed_scale(GdObj obj);
 	GdFloat get_anim_playing_speed(GdObj obj);
-
 	void set_anim_centered(GdObj obj, GdBool p_center);
 	GdBool is_anim_centered(GdObj obj);
-
-	void set_anim_offset(GdObj obj, GdVec2 &p_offset);
+	void set_anim_offset(GdObj obj, GdVec2 p_offset);
 	GdVec2 get_anim_offset(GdObj obj);
-
 	void set_anim_flip_h(GdObj obj, GdBool p_flip);
 	GdBool is_anim_flipped_h(GdObj obj);
-
 	void set_anim_flip_v(GdObj obj, GdBool p_flip);
 	GdBool is_anim_flipped_v(GdObj obj);
+
+	// physics
+	void set_gravity(GdObj obj, GdFloat gravity);
+	GdFloat get_gravity(GdObj obj);
+	void set_mass(GdObj obj, GdFloat mass);
+	GdFloat get_mass(GdObj obj);
+	void add_force(GdObj obj, GdVec2 force);
+	void add_impulse(GdObj obj, GdVec2 impulse);
+
+	void set_collision_layer(GdObj obj, GdInt layer);
+	GdInt get_collision_layer(GdObj obj);
+	void set_collision_mask(GdObj obj, GdInt mask);
+	GdInt get_collision_mask(GdObj obj);
+
+	void set_trigger_layer(GdObj obj, GdInt layer);
+	GdInt get_trigger_layer(GdObj obj);
+	void set_trigger_mask(GdObj obj, GdInt mask);
+	GdInt get_trigger_mask(GdObj obj);
+
+	void set_collider_rect(GdObj obj, GdVec2 center, GdVec2 size);
+	void set_collider_circle(GdObj obj, GdVec2 center, GdFloat radius);
+	void set_collider_capsule(GdObj obj, GdVec2 center, GdVec2 size);
+	void set_collision_enabled(GdObj obj, GdBool enabled);
+	GdBool is_collision_enabled(GdObj obj);
+
+	void set_trigger_rect(GdObj obj, GdVec2 center, GdVec2 size);
+	void set_trigger_circle(GdObj obj, GdVec2 center, GdFloat radius);
+	void set_trigger_capsule(GdObj obj, GdVec2 center, GdVec2 size);
+	void set_trigger_enabled(GdObj obj, GdBool trigger);
+	GdBool is_trigger_enabled(GdObj obj);
+
 };
 
 #endif // SPX_SPRITE_MGR_H

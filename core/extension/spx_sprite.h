@@ -33,16 +33,17 @@
 
 #include "gdextension_spx_ext.h"
 #include "scene/2d/node_2d.h"
+#include "scene/2d/physics_body_2d.h"
 #include "scene/2d/sprite_2d.h"
 class AnimatedSprite2D;
 class Area2D;
 class CollisionShape2D;
 
-class SpxSprite : public Sprite2D {
-	GDCLASS(SpxSprite, Node2D);
+class SpxSprite : public CharacterBody2D {
+	GDCLASS(SpxSprite, CharacterBody2D);
 
 private:
-	GdObj obj_id;
+	GdObj gid;
 
 	template <typename T>
 	T *get_component(Node *node, GdBool recursive = false);
@@ -50,12 +51,13 @@ private:
 
 protected:
 	void _notification(int p_what);
+	void _draw();
 
+	AnimatedSprite2D *anim2d;
+	Area2D *area2d;
+	CollisionShape2D *trigger2d;
+	CollisionShape2D *collider2d;
 public:
-	AnimatedSprite2D *animation;
-	Area2D *area;
-	CollisionShape2D *collider;
-
 	template <typename T>
 	T *get_component(GdBool recursive = false);
 	template <typename T>
@@ -63,14 +65,17 @@ public:
 
 public:
 	static void _bind_methods();
-	void set_id(GdObj id);
-	GdObj get_id();
 	void on_destroy_call();
 	SpxSprite();
 	~SpxSprite() override;
 	void on_start();
 	void on_area_entered(Node *node);
 	void on_area_exited(Node *node);
+
+
+public:
+	void set_gid(GdObj id);
+	GdObj get_gid();
 
 	// render
 	void set_color(GdColor color);
@@ -79,31 +84,51 @@ public:
 	GdString get_texture();
 
 	// animation
-	void play_anim(const StringName &p_name = StringName(), GdFloat p_custom_scale = 1.0, GdBool p_from_end = false);
-	void play_backwards_anim(const StringName &p_name = StringName());
+	void play_anim(GdString p_name, GdFloat p_custom_scale = 1.0, GdBool p_from_end = false);
+	void play_backwards_anim(GdString p_name);
 	void pause_anim();
 	void stop_anim();
 	GdBool is_playing_anim() const;
-	void set_anim(const StringName &p_name);
-	StringName get_anim() const;
+	void set_anim(GdString p_name);
+	GdString get_anim() const;
 	void set_anim_frame(GdInt p_frame);
 	GdInt get_anim_frame() const;
-
 	void set_anim_speed_scale(GdFloat p_speed_scale);
 	GdFloat get_anim_speed_scale() const;
 	GdFloat get_anim_playing_speed() const;
-
 	void set_anim_centered(GdBool p_center);
 	GdBool is_anim_centered() const;
-
-	void set_anim_offset(const GdVec2 &p_offset);
+	void set_anim_offset(GdVec2 p_offset);
 	GdVec2 get_anim_offset() const;
-
 	void set_anim_flip_h(GdBool p_flip);
 	GdBool is_anim_flipped_h() const;
-
 	void set_anim_flip_v(GdBool p_flip);
 	GdBool is_anim_flipped_v() const;
+
+	// physics
+	void set_gravity(GdFloat gravity);
+	GdFloat get_gravity();
+	void set_mass(GdFloat mass);
+	GdFloat get_mass();
+	void add_force(GdVec2 force);
+	void add_impulse(GdVec2 impulse);
+
+	void set_trigger_layer(GdInt layer);
+	GdInt get_trigger_layer();
+	void set_trigger_mask(GdInt mask);
+	GdInt get_trigger_mask();
+
+	void set_collider_rect(GdVec2 center, GdVec2 size);
+	void set_collider_circle(GdVec2 center, GdFloat radius);
+	void set_collider_capsule(GdVec2 center, GdVec2 size);
+	void set_collision_enabled(GdBool enabled);
+	GdBool is_collision_enabled();
+
+	void set_trigger_rect(GdVec2 center, GdVec2 size);
+	void set_trigger_circle(GdVec2 center, GdFloat radius);
+	void set_trigger_capsule(GdVec2 center, GdVec2 size);
+	void set_trigger_enabled(GdBool trigger);
+	GdBool is_trigger_enabled();
 };
 
 template <typename T> T *SpxSprite::get_component(Node *node, GdBool recursive) {

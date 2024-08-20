@@ -105,65 +105,8 @@ static GdBool gdextension_spx_input_is_action_just_pressed(GdString action) {
 static GdBool gdextension_spx_input_is_action_just_released(GdString action) {
 	return inputMgr->is_action_just_released(action);
 }
-static void gdextension_spx_physic_set_gravity(GdFloat gravity) {
-	 physicMgr->set_gravity(gravity);
-}
-static GdFloat gdextension_spx_physic_get_gravity() {
-	return physicMgr->get_gravity();
-}
-static void gdextension_spx_physic_set_velocity(GdObj obj,GdVec2 velocity) {
-	 physicMgr->set_velocity(obj, velocity);
-}
-static GdVec2 gdextension_spx_physic_get_velocity(GdObj obj) {
-	return physicMgr->get_velocity(obj);
-}
-static void gdextension_spx_physic_set_mass(GdObj obj,GdFloat mass) {
-	 physicMgr->set_mass(obj, mass);
-}
-static GdFloat gdextension_spx_physic_get_mass(GdObj obj) {
-	return physicMgr->get_mass(obj);
-}
-static void gdextension_spx_physic_add_force(GdObj obj,GdVec2 force) {
-	 physicMgr->add_force(obj, force);
-}
-static void gdextension_spx_physic_add_impulse(GdObj obj,GdVec2 impulse) {
-	 physicMgr->add_impulse(obj, impulse);
-}
-static void gdextension_spx_physic_set_collision_layer(GdObj obj,GdInt layer) {
-	 physicMgr->set_collision_layer(obj, layer);
-}
-static GdInt gdextension_spx_physic_get_collision_layer(GdObj obj) {
-	return physicMgr->get_collision_layer(obj);
-}
-static void gdextension_spx_physic_set_collision_mask(GdObj obj,GdInt mask) {
-	 physicMgr->set_collision_mask(obj, mask);
-}
-static GdInt gdextension_spx_physic_get_collision_mask(GdObj obj) {
-	return physicMgr->get_collision_mask(obj);
-}
-static GdInt gdextension_spx_physic_get_collider_type(GdObj obj) {
-	return physicMgr->get_collider_type(obj);
-}
-static void gdextension_spx_physic_add_collider_rect(GdObj obj,GdVec2 center,GdVec2 size) {
-	 physicMgr->add_collider_rect(obj, center, size);
-}
-static void gdextension_spx_physic_add_collider_circle(GdObj obj,GdVec2 center,GdFloat radius) {
-	 physicMgr->add_collider_circle(obj, center, radius);
-}
-static void gdextension_spx_physic_add_collider_capsule(GdObj obj,GdVec2 center,GdVec2 size) {
-	 physicMgr->add_collider_capsule(obj, center, size);
-}
-static void gdextension_spx_physic_set_trigger(GdObj obj,GdBool trigger) {
-	 physicMgr->set_trigger(obj, trigger);
-}
-static GdBool gdextension_spx_physic_is_trigger(GdObj obj) {
-	return physicMgr->is_trigger(obj);
-}
-static void gdextension_spx_physic_set_collision_enabled(GdObj obj,GdBool enabled) {
-	 physicMgr->set_collision_enabled(obj, enabled);
-}
-static GdBool gdextension_spx_physic_is_collision_enabled(GdObj obj) {
-	return physicMgr->is_collision_enabled(obj);
+static GdObj gdextension_spx_physic_raycast(GdVec2 from,GdVec2 to,GdInt collision_mask) {
+	return physicMgr->raycast(from, to, collision_mask);
 }
 static GdObj gdextension_spx_sprite_create_sprite(GdString path) {
 	return spriteMgr->create_sprite(path);
@@ -201,7 +144,7 @@ static void gdextension_spx_sprite_set_color(GdObj obj,GdColor color) {
 static GdColor gdextension_spx_sprite_get_color(GdObj obj) {
 	return spriteMgr->get_color(obj);
 }
-static void gdextension_spx_sprite_update_texture(GdObj obj,GdString path) {
+static void gdextension_spx_sprite_set_texture(GdObj obj,GdString path) {
 	 spriteMgr->set_texture(obj, path);
 }
 static GdString gdextension_spx_sprite_get_texture(GdObj obj) {
@@ -213,8 +156,143 @@ static void gdextension_spx_sprite_set_visible(GdObj obj,GdBool visible) {
 static GdBool gdextension_spx_sprite_get_visible(GdObj obj) {
 	return spriteMgr->get_visible(obj);
 }
-static void gdextension_spx_sprite_update_z_index(GdObj obj,GdInt z) {
+static GdInt gdextension_spx_sprite_get_z_index(GdObj obj) {
+	return spriteMgr->get_z_index(obj);
+}
+static void gdextension_spx_sprite_set_z_index(GdObj obj,GdInt z) {
 	 spriteMgr->set_z_index(obj, z);
+}
+static void gdextension_spx_sprite_play_anim(GdObj obj,GdString p_name,GdFloat p_custom_scale,GdBool p_from_end) {
+	 spriteMgr->play_anim(obj, p_name, p_custom_scale, p_from_end);
+}
+static void gdextension_spx_sprite_play_backwards_anim(GdObj obj,GdString p_name) {
+	 spriteMgr->play_backwards_anim(obj, p_name);
+}
+static void gdextension_spx_sprite_pause_anim(GdObj obj) {
+	 spriteMgr->pause_anim(obj);
+}
+static void gdextension_spx_sprite_stop_anim(GdObj obj) {
+	 spriteMgr->stop_anim(obj);
+}
+static GdBool gdextension_spx_sprite_is_playing_anim(GdObj obj) {
+	return spriteMgr->is_playing_anim(obj);
+}
+static void gdextension_spx_sprite_set_anim(GdObj obj,GdString p_name) {
+	 spriteMgr->set_anim(obj, p_name);
+}
+static GdString gdextension_spx_sprite_get_anim(GdObj obj) {
+	return spriteMgr->get_anim(obj);
+}
+static void gdextension_spx_sprite_set_anim_frame(GdObj obj,GdInt p_frame) {
+	 spriteMgr->set_anim_frame(obj, p_frame);
+}
+static GdInt gdextension_spx_sprite_get_anim_frame(GdObj obj) {
+	return spriteMgr->get_anim_frame(obj);
+}
+static void gdextension_spx_sprite_set_anim_speed_scale(GdObj obj,GdFloat p_speed_scale) {
+	 spriteMgr->set_anim_speed_scale(obj, p_speed_scale);
+}
+static GdFloat gdextension_spx_sprite_get_anim_speed_scale(GdObj obj) {
+	return spriteMgr->get_anim_speed_scale(obj);
+}
+static GdFloat gdextension_spx_sprite_get_anim_playing_speed(GdObj obj) {
+	return spriteMgr->get_anim_playing_speed(obj);
+}
+static void gdextension_spx_sprite_set_anim_centered(GdObj obj,GdBool p_center) {
+	 spriteMgr->set_anim_centered(obj, p_center);
+}
+static GdBool gdextension_spx_sprite_is_anim_centered(GdObj obj) {
+	return spriteMgr->is_anim_centered(obj);
+}
+static void gdextension_spx_sprite_set_anim_offset(GdObj obj,GdVec2 p_offset) {
+	 spriteMgr->set_anim_offset(obj, p_offset);
+}
+static GdVec2 gdextension_spx_sprite_get_anim_offset(GdObj obj) {
+	return spriteMgr->get_anim_offset(obj);
+}
+static void gdextension_spx_sprite_set_anim_flip_h(GdObj obj,GdBool p_flip) {
+	 spriteMgr->set_anim_flip_h(obj, p_flip);
+}
+static GdBool gdextension_spx_sprite_is_anim_flipped_h(GdObj obj) {
+	return spriteMgr->is_anim_flipped_h(obj);
+}
+static void gdextension_spx_sprite_set_anim_flip_v(GdObj obj,GdBool p_flip) {
+	 spriteMgr->set_anim_flip_v(obj, p_flip);
+}
+static GdBool gdextension_spx_sprite_is_anim_flipped_v(GdObj obj) {
+	return spriteMgr->is_anim_flipped_v(obj);
+}
+static void gdextension_spx_sprite_set_gravity(GdObj obj,GdFloat gravity) {
+	 spriteMgr->set_gravity(obj, gravity);
+}
+static GdFloat gdextension_spx_sprite_get_gravity(GdObj obj) {
+	return spriteMgr->get_gravity(obj);
+}
+static void gdextension_spx_sprite_set_mass(GdObj obj,GdFloat mass) {
+	 spriteMgr->set_mass(obj, mass);
+}
+static GdFloat gdextension_spx_sprite_get_mass(GdObj obj) {
+	return spriteMgr->get_mass(obj);
+}
+static void gdextension_spx_sprite_add_force(GdObj obj,GdVec2 force) {
+	 spriteMgr->add_force(obj, force);
+}
+static void gdextension_spx_sprite_add_impulse(GdObj obj,GdVec2 impulse) {
+	 spriteMgr->add_impulse(obj, impulse);
+}
+static void gdextension_spx_sprite_set_collision_layer(GdObj obj,GdInt layer) {
+	 spriteMgr->set_collision_layer(obj, layer);
+}
+static GdInt gdextension_spx_sprite_get_collision_layer(GdObj obj) {
+	return spriteMgr->get_collision_layer(obj);
+}
+static void gdextension_spx_sprite_set_collision_mask(GdObj obj,GdInt mask) {
+	 spriteMgr->set_collision_mask(obj, mask);
+}
+static GdInt gdextension_spx_sprite_get_collision_mask(GdObj obj) {
+	return spriteMgr->get_collision_mask(obj);
+}
+static void gdextension_spx_sprite_set_trigger_layer(GdObj obj,GdInt layer) {
+	 spriteMgr->set_trigger_layer(obj, layer);
+}
+static GdInt gdextension_spx_sprite_get_trigger_layer(GdObj obj) {
+	return spriteMgr->get_trigger_layer(obj);
+}
+static void gdextension_spx_sprite_set_trigger_mask(GdObj obj,GdInt mask) {
+	 spriteMgr->set_trigger_mask(obj, mask);
+}
+static GdInt gdextension_spx_sprite_get_trigger_mask(GdObj obj) {
+	return spriteMgr->get_trigger_mask(obj);
+}
+static void gdextension_spx_sprite_set_collider_rect(GdObj obj,GdVec2 center,GdVec2 size) {
+	 spriteMgr->set_collider_rect(obj, center, size);
+}
+static void gdextension_spx_sprite_set_collider_circle(GdObj obj,GdVec2 center,GdFloat radius) {
+	 spriteMgr->set_collider_circle(obj, center, radius);
+}
+static void gdextension_spx_sprite_set_collider_capsule(GdObj obj,GdVec2 center,GdVec2 size) {
+	 spriteMgr->set_collider_capsule(obj, center, size);
+}
+static void gdextension_spx_sprite_set_collision_enabled(GdObj obj,GdBool enabled) {
+	 spriteMgr->set_collision_enabled(obj, enabled);
+}
+static GdBool gdextension_spx_sprite_is_collision_enabled(GdObj obj) {
+	return spriteMgr->is_collision_enabled(obj);
+}
+static void gdextension_spx_sprite_set_trigger_rect(GdObj obj,GdVec2 center,GdVec2 size) {
+	 spriteMgr->set_trigger_rect(obj, center, size);
+}
+static void gdextension_spx_sprite_set_trigger_circle(GdObj obj,GdVec2 center,GdFloat radius) {
+	 spriteMgr->set_trigger_circle(obj, center, radius);
+}
+static void gdextension_spx_sprite_set_trigger_capsule(GdObj obj,GdVec2 center,GdVec2 size) {
+	 spriteMgr->set_trigger_capsule(obj, center, size);
+}
+static void gdextension_spx_sprite_set_trigger_enabled(GdObj obj,GdBool trigger) {
+	 spriteMgr->set_trigger_enabled(obj, trigger);
+}
+static GdBool gdextension_spx_sprite_is_trigger_enabled(GdObj obj) {
+	return spriteMgr->is_trigger_enabled(obj);
 }
 static GdInt gdextension_spx_ui_create_button(GdString path,GdRect2 rect,GdString text) {
 	return uiMgr->create_button(path, rect, text);
@@ -295,26 +373,7 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_input_is_action_pressed);
 	REGISTER_SPX_INTERFACE_FUNC(spx_input_is_action_just_pressed);
 	REGISTER_SPX_INTERFACE_FUNC(spx_input_is_action_just_released);
-	REGISTER_SPX_INTERFACE_FUNC(spx_physic_set_gravity);
-	REGISTER_SPX_INTERFACE_FUNC(spx_physic_get_gravity);
-	REGISTER_SPX_INTERFACE_FUNC(spx_physic_set_velocity);
-	REGISTER_SPX_INTERFACE_FUNC(spx_physic_get_velocity);
-	REGISTER_SPX_INTERFACE_FUNC(spx_physic_set_mass);
-	REGISTER_SPX_INTERFACE_FUNC(spx_physic_get_mass);
-	REGISTER_SPX_INTERFACE_FUNC(spx_physic_add_force);
-	REGISTER_SPX_INTERFACE_FUNC(spx_physic_add_impulse);
-	REGISTER_SPX_INTERFACE_FUNC(spx_physic_set_collision_layer);
-	REGISTER_SPX_INTERFACE_FUNC(spx_physic_get_collision_layer);
-	REGISTER_SPX_INTERFACE_FUNC(spx_physic_set_collision_mask);
-	REGISTER_SPX_INTERFACE_FUNC(spx_physic_get_collision_mask);
-	REGISTER_SPX_INTERFACE_FUNC(spx_physic_get_collider_type);
-	REGISTER_SPX_INTERFACE_FUNC(spx_physic_add_collider_rect);
-	REGISTER_SPX_INTERFACE_FUNC(spx_physic_add_collider_circle);
-	REGISTER_SPX_INTERFACE_FUNC(spx_physic_add_collider_capsule);
-	REGISTER_SPX_INTERFACE_FUNC(spx_physic_set_trigger);
-	REGISTER_SPX_INTERFACE_FUNC(spx_physic_is_trigger);
-	REGISTER_SPX_INTERFACE_FUNC(spx_physic_set_collision_enabled);
-	REGISTER_SPX_INTERFACE_FUNC(spx_physic_is_collision_enabled);
+	REGISTER_SPX_INTERFACE_FUNC(spx_physic_raycast);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_create_sprite);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_clone_sprite);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_destroy_sprite);
@@ -327,11 +386,56 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_scale);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_color);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_color);
-	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_update_texture);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_texture);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_texture);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_visible);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_visible);
-	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_update_z_index);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_z_index);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_z_index);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_play_anim);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_play_backwards_anim);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_pause_anim);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_stop_anim);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_is_playing_anim);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_anim);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_anim);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_anim_frame);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_anim_frame);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_anim_speed_scale);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_anim_speed_scale);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_anim_playing_speed);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_anim_centered);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_is_anim_centered);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_anim_offset);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_anim_offset);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_anim_flip_h);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_is_anim_flipped_h);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_anim_flip_v);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_is_anim_flipped_v);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_gravity);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_gravity);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_mass);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_mass);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_add_force);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_add_impulse);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_collision_layer);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_collision_layer);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_collision_mask);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_collision_mask);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_trigger_layer);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_trigger_layer);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_trigger_mask);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_trigger_mask);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_collider_rect);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_collider_circle);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_collider_capsule);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_collision_enabled);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_is_collision_enabled);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_trigger_rect);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_trigger_circle);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_trigger_capsule);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_trigger_enabled);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_is_trigger_enabled);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_create_button);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_create_label);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_create_image);

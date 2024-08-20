@@ -32,13 +32,14 @@
 #define SPX_BASE_MGR_H
 
 #include "gdextension_spx_ext.h"
-#include "scene/main/node.h"
+#include "scene/2d/node_2d.h"
 
 #define SPXCLASS(m_class, m_inherits) \
 public:                               \
 	String get_class_name() const override { return #m_class; }
 
 #define SpxStr(str) String(*(const String *)str)
+#define SpxStrName(str) StringName(*(const String *)str)
 
 #define inputMgr SpxEngine::get_singleton()->get_input()
 #define audioMgr SpxEngine::get_singleton()->get_audio()
@@ -49,7 +50,7 @@ public:                               \
 class SpxBaseMgr {
 public:
 protected:
-	Node *owner;
+	Node2D *owner;
 
 protected:
 	virtual GdInt get_unique_id();
