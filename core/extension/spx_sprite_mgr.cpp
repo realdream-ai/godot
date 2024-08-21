@@ -149,7 +149,8 @@ GdBool SpxSpriteMgr::is_sprite_alive(GdObj obj) {
 
 void SpxSpriteMgr::set_position(GdObj obj, GdVec2 pos) {
 	get_check_sprite_v()
-	sprite->set_position(pos);
+	// flip y axis
+	sprite->set_position(GdVec2(pos.x,-pos.y));
 }
 
 void SpxSpriteMgr::set_rotation(GdObj obj, float rot) {
@@ -164,14 +165,15 @@ void SpxSpriteMgr::set_scale(GdObj obj, GdVec2 scale) {
 
 GdVec2 SpxSpriteMgr::get_position(GdObj obj) {
 	get_check_sprite_r(GdVec2())
-	return sprite->get_position();
+	auto pos = sprite->get_position();
+	// flip y axis
+	return GdVec2{pos.x,-pos.y};
 }
 
 GdFloat SpxSpriteMgr::get_rotation(GdObj obj) {
 	get_check_sprite_r(0)
 	return sprite->get_rotation();
 }
-
 GdVec2 SpxSpriteMgr::get_scale(GdObj obj) {
 	get_check_sprite_r(GdVec2())
 	return sprite->get_scale();
