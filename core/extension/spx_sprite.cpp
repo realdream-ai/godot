@@ -180,8 +180,8 @@ GdString SpxSprite::get_texture() {
 	auto tex = anim2d->get_sprite_frames()->get_frame_texture(SpxSpriteMgr::default_texture_anim, 0);
 	if (tex == nullptr)
 		return nullptr;
-	// TODO(tanjp) fix temp string memory
-	return &tex->get_name();
+	SpxBaseMgr::temp_return_str = tex->get_name();
+	return &SpxBaseMgr::temp_return_str;
 }
 
 void SpxSprite::play_anim(GdString p_name, GdFloat p_custom_scale, GdBool p_from_end) {

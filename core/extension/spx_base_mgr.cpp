@@ -32,6 +32,7 @@
 #include "spx_engine.h"
 #include "scene/2d/node_2d.h"
 
+String SpxBaseMgr::temp_return_str;
 GdInt SpxBaseMgr::get_unique_id() {
 	return SpxEngine::get_singleton()->get_unique_id();
 }

@@ -49,9 +49,9 @@ public:                               \
 
 class SpxBaseMgr {
 public:
+	static String temp_return_str;
 protected:
 	Node2D *owner;
-
 protected:
 	virtual GdInt get_unique_id();
 	virtual Node *get_root_node();
