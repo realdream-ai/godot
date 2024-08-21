@@ -129,8 +129,8 @@ static void gdextension_spx_sprite_set_rotation(GdObj obj,GdFloat rot) {
 static void gdextension_spx_sprite_set_scale(GdObj obj,GdVec2 scale) {
 	 spriteMgr->set_scale(obj, scale);
 }
-static GdVec2 gdextension_spx_sprite_get_position(GdObj obj) {
-	return spriteMgr->get_position(obj);
+static void gdextension_spx_sprite_get_position(GdObj obj,GdVec2* ret_val) {
+	*ret_val = spriteMgr->get_position(obj);
 }
 static GdFloat gdextension_spx_sprite_get_rotation(GdObj obj) {
 	return spriteMgr->get_rotation(obj);
@@ -455,5 +455,5 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_font_size);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_visible);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_visible);
-	
+
 }

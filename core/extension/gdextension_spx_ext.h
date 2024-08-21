@@ -52,6 +52,21 @@ typedef Vector2 GdVec2;
 typedef Color GdColor;
 typedef Rect2 GdRect2;
 
+
+typedef struct {
+	// 0 is return value
+	// 1-7 are arguments
+	GdVec4 Ret;
+	GdVec4 Arg0;
+	GdVec4 Arg1;
+	GdVec4 Arg2;
+	GdVec4 Arg3;
+	GdVec4 Arg4;
+	GdVec4 Arg5;
+	GdVec4 Arg6;
+	GdVec4 Arg7;
+} CallFrameArgs;
+
 typedef void *GDExtensionSpxCallbackInfoPtr;
 typedef void (*GDExtensionSpxGlobalRegisterCallbacks)(GDExtensionSpxCallbackInfoPtr callback_ptr);
 
@@ -170,7 +185,7 @@ typedef GdBool (*GDExtensionSpxSpriteIsSpriteAlive)(GdObj obj);
 typedef void (*GDExtensionSpxSpriteSetPosition)(GdObj obj, GdVec2 pos);
 typedef void (*GDExtensionSpxSpriteSetRotation)(GdObj obj, GdFloat rot);
 typedef void (*GDExtensionSpxSpriteSetScale)(GdObj obj, GdVec2 scale);
-typedef GdVec2 (*GDExtensionSpxSpriteGetPosition)(GdObj obj);
+typedef void (*GDExtensionSpxSpriteGetPosition)(GdObj obj,GdVec2* retPtr);
 typedef GdFloat (*GDExtensionSpxSpriteGetRotation)(GdObj obj);
 typedef GdVec2 (*GDExtensionSpxSpriteGetScale)(GdObj obj);
 typedef void (*GDExtensionSpxSpriteSetColor)(GdObj obj, GdColor color);
