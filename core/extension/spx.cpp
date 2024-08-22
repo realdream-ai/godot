@@ -33,11 +33,16 @@
 #include "scene/main/node.h"
 #include "spx_engine.h"
 #include "spx_sprite.h"
+#include "spx_ui.h"
 
 #define SPX_ENGINE SpxEngine::get_singleton()
 bool Spx::initialed = false;
 void Spx::register_types() {
 	ClassDB::register_class<SpxSprite>();
+	ClassDB::register_class<SpxLabel>();
+	ClassDB::register_class<SpxButton>();
+	ClassDB::register_class<SpxImage>();
+	ClassDB::register_class<SpxToggle>();
 }
 
 void Spx::on_start(void *root_node) {

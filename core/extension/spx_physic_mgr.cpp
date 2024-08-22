@@ -36,7 +36,8 @@
 #include "servers/physics_server_3d.h"
 
 GdObj SpxPhysicMgr::raycast(GdVec2 from,GdVec2 to,GdInt collision_mask){
-	PhysicsDirectSpaceState2D *space_state = owner->get_world_2d()->get_direct_space_state();
+	auto node = (Node2D*) owner;
+	PhysicsDirectSpaceState2D *space_state = node->get_world_2d()->get_direct_space_state();
 
 	PhysicsDirectSpaceState2D::RayResult result;
 	PhysicsDirectSpaceState2D::RayParameters params;

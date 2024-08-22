@@ -35,13 +35,12 @@
 #include "spx_base_mgr.h"
 
 class SpxSprite;
-#define NULL_SPRITE_ID 0
 
 class SpxSpriteMgr : SpxBaseMgr {
 	SPXCLASS(SpxSprite, SpxBaseMgr)
 
 private:
-	RBMap<GdObj, SpxSprite *> id_sprites;
+	RBMap<GdObj, SpxSprite *> id_objects;
 
 public:
 	static StringName default_texture_anim;

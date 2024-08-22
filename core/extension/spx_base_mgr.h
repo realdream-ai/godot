@@ -38,7 +38,7 @@
 public:                               \
 	String get_class_name() const override { return #m_class; }
 
-#define SpxStr(str) String(*(const String *)str)
+#define SpxStr(str) (String(*(const String *)str)+ "")
 #define SpxStrName(str) StringName(*(const String *)str)
 
 #define inputMgr SpxEngine::get_singleton()->get_input()
@@ -47,11 +47,13 @@ public:                               \
 #define spriteMgr SpxEngine::get_singleton()->get_sprite()
 #define uiMgr SpxEngine::get_singleton()->get_ui()
 
+#define NULL_OBJECT_ID 0
+
 class SpxBaseMgr {
 public:
 	static String temp_return_str;
 protected:
-	Node2D *owner;
+	Node *owner;
 protected:
 	virtual GdInt get_unique_id();
 	virtual Node *get_root_node();

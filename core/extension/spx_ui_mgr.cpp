@@ -30,78 +30,224 @@
 
 #include "spx_ui_mgr.h"
 
-// ui
-GdInt SpxUIMgr::create_button(GdString path, GdRect2 rect, GdString text) {
-	return 0;
+#include "scene/main/canvas_layer.h"
+#include "scene/resources/packed_scene.h"
+
+#define SPX_CALLBACK SpxEngine::get_singleton()->get_callbacks()
+#define check_and_get_node_r(VALUE) \
+	auto node = get_node(obj);\
+	if (node == nullptr) {\
+		print_error("try to get property of a null node gid=" + itos(obj)); \
+	return VALUE; \
 }
 
-GdInt SpxUIMgr::create_label(GdString path, GdRect2 rect, GdString text) {
-	return 0;
+#define check_and_get_node_v() \
+	auto node = get_node(obj);\
+	if (node == nullptr) {\
+		print_error("try to get property of a null node gid=" + itos(obj)); \
+	return ; \
 }
 
-GdInt SpxUIMgr::create_image(GdString path, GdRect2 rect, GdColor color) {
-	return 0;
-}
 
-GdInt SpxUIMgr::create_slider(GdString path, GdRect2 rect, GdFloat value) {
-	return 0;
-}
-
-GdInt SpxUIMgr::create_toggle(GdString path, GdRect2 rect, GdBool value) {
-	return 0;
-}
-
-GdInt SpxUIMgr::create_input(GdString path, GdRect2 rect, GdString text) {
-	return 0;
-}
-
-GdInt SpxUIMgr::get_type(GdObj id) {
-	return 0;
-}
-
-void SpxUIMgr::set_interactable(GdObj id, GdBool interactable) {
-	print_line(vformat("Updating interactable of %d to %s", id, interactable ? "true" : "false"));
-}
-
-GdBool SpxUIMgr::get_interactable(GdObj id) {
-	return false;
-}
-
-void SpxUIMgr::set_text(GdObj id, GdString text) {
-}
-
-GdString SpxUIMgr::get_text(GdObj id) {
+SpxUi *SpxUIMgr::get_node(GdObj obj) {
+	if (id_objects.has(obj)) {
+		return id_objects[obj];
+	}
 	return nullptr;
 }
 
-void SpxUIMgr::set_rect(GdObj id, GdRect2 rect) {
-	print_line(vformat("Updating rect of %d to %f, %f, %f, %f", id, rect.position.x, rect.position.y, rect.size.x, rect.size.y));
+ESpxUiType SpxUIMgr::get_type(Control *obj) {
+	if (obj == nullptr) {
+		return ESpxUiType::None;
+	}
+	if (dynamic_cast<SpxLabel *>(obj)) {
+		return ESpxUiType::Label;
+	}
+	if (dynamic_cast<SpxButton *>(obj)) {
+		return ESpxUiType::Button;
+	}
+	if (dynamic_cast<SpxImage *>(obj)) {
+		return ESpxUiType::Image;
+	}
+	if (dynamic_cast<SpxToggle *>(obj)) {
+		return ESpxUiType::Toggle;
+	}
+	return ESpxUiType::None;
 }
 
-GdRect2 SpxUIMgr::get_rect(GdObj id) {
-	return GdRect2();
+
+void SpxUIMgr::on_start() {
+	SpxBaseMgr::on_start();
+	owner = memnew(CanvasLayer);
+	owner->set_name(get_class_name());
+	get_root_node()->add_child(owner);
 }
 
-void SpxUIMgr::set_color(GdObj id, GdColor color) {
-	print_line(vformat("Updating GdColor of %d to %f, %f, %f, %f", id, color.r, color.g, color.b, color.a));
+void SpxUIMgr::on_node_destroy(SpxUi *node) {
+	if (id_objects.erase(node->get_gid())) {
+		SPX_CALLBACK->func_on_ui_destroyed(node->get_gid());
+	}
 }
 
-GdColor SpxUIMgr::get_color(GdObj id) {
-	return GdColor();
+Control *SpxUIMgr::create_control(GdString path) {
+	const String path_str = SpxStr(path);
+	Control *node = nullptr;
+	if (path_str != "") {
+		Ref<PackedScene> scene = ResourceLoader::load(path_str);
+		if (scene.is_null()) {
+			print_error("Failed to load sprite scene " + path_str);
+			return NULL_OBJECT_ID;
+		} else {
+			node = dynamic_cast<Control *>(scene->instantiate());
+			if (node == nullptr) {
+				print_error("Failed to load sprite scene , type invalid " + path_str);
+			}
+		}
+	}
+	return node;
 }
 
-void SpxUIMgr::set_font_size(GdObj id, GdFloat size) {
-	print_line(vformat("Updating font size of %d to %f", id, size));
+
+
+SpxUi *SpxUIMgr::on_create_node(Control *control, GdInt type) {
+	SpxUi *node = memnew(SpxUi);
+	owner->add_child(control);
+	node->set_type(type);
+	node->set_canvas_item(control);
+	node->set_gid(get_unique_id());
+	node->on_start();
+	uiMgr->id_objects[node->get_gid()] = node;
+	SPX_CALLBACK->func_on_ui_ready(node->get_gid());
+	return node;
 }
 
-GdFloat SpxUIMgr::get_font_size(GdObj id) {
+#define CREATE_UI_NODE(TYPE) \
+	Spx##TYPE *control = dynamic_cast<Spx##TYPE *>(create_control(path)); \
+	if (control == nullptr) { \
+		control = memnew(Spx##TYPE); \
+	} \
+	auto node = on_create_node(control,(GdInt)ESpxUiType::##TYPE);
+
+GdObj SpxUIMgr::create_node(GdString path) {
+	auto control = create_control(path);
+	if (control == nullptr) {
+		print_error("Failed to create node " + SpxStr(path));
+		return NULL_OBJECT_ID;
+	}
+	auto type = get_type(control);
+	auto node = on_create_node(control, (GdInt)type);
+	return node->get_gid();
+}
+
+GdObj SpxUIMgr::create_button(GdString path, GdString text) {
+	CREATE_UI_NODE(Button)
+	control->set_text(SpxStr(text));
+	return node->get_gid();
+}
+
+GdObj SpxUIMgr::create_label(GdString path, GdString text) {
+	CREATE_UI_NODE(Label)
+	control->set_text(SpxStr(text));
+	return node->get_gid();
+}
+
+GdObj SpxUIMgr::create_image(GdString path) {
+	CREATE_UI_NODE(Image)
+	return node->get_gid();
+}
+
+GdObj SpxUIMgr::create_toggle(GdString path, GdBool value) {
+	CREATE_UI_NODE(Toggle)
+	return node->get_gid();
+}
+
+GdObj SpxUIMgr::create_slider(GdString path, GdFloat value) {
 	return 0;
 }
 
-void SpxUIMgr::set_visible(GdObj id, GdBool visible) {
-	print_line(vformat("Updating visibility of %d to %s", id, visible ? "true" : "false"));
+
+GdObj SpxUIMgr::create_input(GdString path, GdString text) {
+	return 0;
 }
 
-GdBool SpxUIMgr::get_visible(GdObj id) {
-	return false;
+GdBool SpxUIMgr::destroy_node(GdObj obj) {
+	check_and_get_node_r(false)
+	node->queue_free();
+	return true;
+}
+
+
+GdInt SpxUIMgr::get_type(GdObj obj) {
+	check_and_get_node_r(0)
+	return node->get_type();
+}
+
+void SpxUIMgr::set_interactable(GdObj obj, GdBool interactable) {
+	check_and_get_node_v()
+	node->set_interactable(interactable);
+}
+
+GdBool SpxUIMgr::get_interactable(GdObj obj) {
+	check_and_get_node_r(false)
+	return node->is_interactable();
+}
+
+void SpxUIMgr::set_text(GdObj obj, GdString text) {
+	check_and_get_node_v()
+	node->set_text(text);
+}
+
+GdString SpxUIMgr::get_text(GdObj obj) {
+	check_and_get_node_r(GdString())
+	return node->get_text();
+}
+
+void SpxUIMgr::set_rect(GdObj obj, GdRect2 rect) {
+	check_and_get_node_v()
+	node->set_rect(rect);
+}
+
+GdRect2 SpxUIMgr::get_rect(GdObj obj) {
+	check_and_get_node_r(GdRect2())
+	return node->get_rect();
+}
+
+void SpxUIMgr::set_color(GdObj obj, GdColor color) {
+	check_and_get_node_v()
+	node->set_color(color);
+}
+
+GdColor SpxUIMgr::get_color(GdObj obj) {
+	check_and_get_node_r(GdColor())
+	return node->get_color();
+}
+
+void SpxUIMgr::set_font_size(GdObj obj, GdInt size) {
+	check_and_get_node_v()
+	node->set_font_size(size);
+}
+
+GdInt SpxUIMgr::get_font_size(GdObj obj) {
+	check_and_get_node_r(0)
+	return node->get_font_size();
+}
+
+void SpxUIMgr::set_visible(GdObj obj, GdBool visible) {
+	check_and_get_node_v()
+	node->set_visible(visible);
+}
+
+GdBool SpxUIMgr::get_visible(GdObj obj) {
+	check_and_get_node_r(false)
+	return node->get_visible();
+}
+
+void SpxUIMgr::set_texture(GdObj obj, GdString path) {
+	check_and_get_node_v()
+	node->set_texture(path);
+}
+
+GdString SpxUIMgr::get_texture(GdObj obj) {
+	check_and_get_node_r(nullptr)
+	return node->get_texture();
 }

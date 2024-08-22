@@ -33,29 +33,47 @@
 
 #include "gdextension_spx_ext.h"
 #include "spx_engine.h"
-
+#include "spx_ui.h"
 class SpxUIMgr : SpxBaseMgr {
 	SPXCLASS(SpxUI, SpxBaseMgr)
+
+private:
+	RBMap<GdObj, SpxUi *> id_objects;
+
+	Control* create_control(GdString path);
+
 public:
-	GdInt create_button(GdString path, GdRect2 rect, GdString text);
-	GdInt create_label(GdString path, GdRect2 rect, GdString text);
-	GdInt create_image(GdString path, GdRect2 rect, GdColor color);
-	GdInt create_slider(GdString path, GdRect2 rect, GdFloat value);
-	GdInt create_toggle(GdString path, GdRect2 rect, GdBool value);
-	GdInt create_input(GdString path, GdRect2 rect, GdString text);
+	void on_start() override;
+	void on_node_destroy(SpxUi *node);
+	SpxUi* on_create_node(Control *control,GdInt type);
+	SpxUi *get_node(GdObj obj);
+	ESpxUiType get_type(Control* obj);
+public:
+
+	GdObj create_node(GdString path);
+	GdObj create_button(GdString path,GdString text);
+	GdObj create_label(GdString path, GdString text);
+	GdObj create_image(GdString path);
+	GdObj create_toggle(GdString path, GdBool value);
+	GdObj create_slider(GdString path, GdFloat value);
+	GdObj create_input(GdString path, GdString text);
+	GdBool destroy_node(GdObj obj);
+
 	GdInt get_type(GdObj obj);
-	void set_interactable(GdObj obj, GdBool interactable);
-	GdBool get_interactable(GdObj obj);
 	void set_text(GdObj obj, GdString text);
 	GdString get_text(GdObj obj);
-	void set_rect(GdObj obj, GdRect2 rect);
-	GdRect2 get_rect(GdObj obj);
+	void set_texture(GdObj obj, GdString path);
+	GdString get_texture(GdObj obj);
 	void set_color(GdObj obj, GdColor color);
 	GdColor get_color(GdObj obj);
-	void set_font_size(GdObj obj, GdFloat size);
-	GdFloat get_font_size(GdObj obj);
+	void set_font_size(GdObj obj, GdInt size);
+	GdInt get_font_size(GdObj obj);
 	void set_visible(GdObj obj, GdBool visible);
 	GdBool get_visible(GdObj obj);
+	void set_interactable(GdObj obj, GdBool interactable);
+	GdBool get_interactable(GdObj obj);
+	void set_rect(GdObj obj, GdRect2 rect);
+	GdRect2 get_rect(GdObj obj);
 };
 
 #endif // SPX_UI_MGR_H

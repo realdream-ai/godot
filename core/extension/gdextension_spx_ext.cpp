@@ -297,32 +297,32 @@ static void gdextension_spx_sprite_set_trigger_enabled(GdObj obj,GdBool trigger)
 static void gdextension_spx_sprite_is_trigger_enabled(GdObj obj,GdBool* ret_val) {
 	*ret_val = spriteMgr->is_trigger_enabled(obj);
 }
-static void gdextension_spx_ui_create_button(GdString path,GdRect2 rect,GdString text,GdInt* ret_val) {
-	*ret_val = uiMgr->create_button(path, rect, text);
+static void gdextension_spx_ui_create_node(GdString path,GdObj* ret_val) {
+	*ret_val = uiMgr->create_node(path);
 }
-static void gdextension_spx_ui_create_label(GdString path,GdRect2 rect,GdString text,GdInt* ret_val) {
-	*ret_val = uiMgr->create_label(path, rect, text);
+static void gdextension_spx_ui_create_button(GdString path,GdString text,GdObj* ret_val) {
+	*ret_val = uiMgr->create_button(path, text);
 }
-static void gdextension_spx_ui_create_image(GdString path,GdRect2 rect,GdColor color,GdInt* ret_val) {
-	*ret_val = uiMgr->create_image(path, rect, color);
+static void gdextension_spx_ui_create_label(GdString path,GdString text,GdObj* ret_val) {
+	*ret_val = uiMgr->create_label(path, text);
 }
-static void gdextension_spx_ui_create_slider(GdString path,GdRect2 rect,GdFloat value,GdInt* ret_val) {
-	*ret_val = uiMgr->create_slider(path, rect, value);
+static void gdextension_spx_ui_create_image(GdString path,GdObj* ret_val) {
+	*ret_val = uiMgr->create_image(path);
 }
-static void gdextension_spx_ui_create_toggle(GdString path,GdRect2 rect,GdBool value,GdInt* ret_val) {
-	*ret_val = uiMgr->create_toggle(path, rect, value);
+static void gdextension_spx_ui_create_toggle(GdString path,GdBool value,GdObj* ret_val) {
+	*ret_val = uiMgr->create_toggle(path, value);
 }
-static void gdextension_spx_ui_create_input(GdString path,GdRect2 rect,GdString text,GdInt* ret_val) {
-	*ret_val = uiMgr->create_input(path, rect, text);
+static void gdextension_spx_ui_create_slider(GdString path,GdFloat value,GdObj* ret_val) {
+	*ret_val = uiMgr->create_slider(path, value);
+}
+static void gdextension_spx_ui_create_input(GdString path,GdString text,GdObj* ret_val) {
+	*ret_val = uiMgr->create_input(path, text);
+}
+static void gdextension_spx_ui_destroy_node(GdObj obj,GdBool* ret_val) {
+	*ret_val = uiMgr->destroy_node(obj);
 }
 static void gdextension_spx_ui_get_type(GdObj obj,GdInt* ret_val) {
 	*ret_val = uiMgr->get_type(obj);
-}
-static void gdextension_spx_ui_set_interactable(GdObj obj,GdBool interactable) {
-	 uiMgr->set_interactable(obj, interactable);
-}
-static void gdextension_spx_ui_get_interactable(GdObj obj,GdBool* ret_val) {
-	*ret_val = uiMgr->get_interactable(obj);
 }
 static void gdextension_spx_ui_set_text(GdObj obj,GdString text) {
 	 uiMgr->set_text(obj, text);
@@ -330,11 +330,11 @@ static void gdextension_spx_ui_set_text(GdObj obj,GdString text) {
 static void gdextension_spx_ui_get_text(GdObj obj,GdString* ret_val) {
 	*ret_val = uiMgr->get_text(obj);
 }
-static void gdextension_spx_ui_set_rect(GdObj obj,GdRect2 rect) {
-	 uiMgr->set_rect(obj, rect);
+static void gdextension_spx_ui_set_texture(GdObj obj,GdString path) {
+	 uiMgr->set_texture(obj, path);
 }
-static void gdextension_spx_ui_get_rect(GdObj obj,GdRect2* ret_val) {
-	*ret_val = uiMgr->get_rect(obj);
+static void gdextension_spx_ui_get_texture(GdObj obj,GdString* ret_val) {
+	*ret_val = uiMgr->get_texture(obj);
 }
 static void gdextension_spx_ui_set_color(GdObj obj,GdColor color) {
 	 uiMgr->set_color(obj, color);
@@ -342,10 +342,10 @@ static void gdextension_spx_ui_set_color(GdObj obj,GdColor color) {
 static void gdextension_spx_ui_get_color(GdObj obj,GdColor* ret_val) {
 	*ret_val = uiMgr->get_color(obj);
 }
-static void gdextension_spx_ui_set_font_size(GdObj obj,GdFloat size) {
+static void gdextension_spx_ui_set_font_size(GdObj obj,GdInt size) {
 	 uiMgr->set_font_size(obj, size);
 }
-static void gdextension_spx_ui_get_font_size(GdObj obj,GdFloat* ret_val) {
+static void gdextension_spx_ui_get_font_size(GdObj obj,GdInt* ret_val) {
 	*ret_val = uiMgr->get_font_size(obj);
 }
 static void gdextension_spx_ui_set_visible(GdObj obj,GdBool visible) {
@@ -353,6 +353,18 @@ static void gdextension_spx_ui_set_visible(GdObj obj,GdBool visible) {
 }
 static void gdextension_spx_ui_get_visible(GdObj obj,GdBool* ret_val) {
 	*ret_val = uiMgr->get_visible(obj);
+}
+static void gdextension_spx_ui_set_interactable(GdObj obj,GdBool interactable) {
+	 uiMgr->set_interactable(obj, interactable);
+}
+static void gdextension_spx_ui_get_interactable(GdObj obj,GdBool* ret_val) {
+	*ret_val = uiMgr->get_interactable(obj);
+}
+static void gdextension_spx_ui_set_rect(GdObj obj,GdRect2 rect) {
+	 uiMgr->set_rect(obj, rect);
+}
+static void gdextension_spx_ui_get_rect(GdObj obj,GdRect2* ret_val) {
+	*ret_val = uiMgr->get_rect(obj);
 }
 
 
@@ -442,24 +454,28 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_trigger_capsule);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_trigger_enabled);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_is_trigger_enabled);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_create_node);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_create_button);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_create_label);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_create_image);
-	REGISTER_SPX_INTERFACE_FUNC(spx_ui_create_slider);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_create_toggle);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_create_slider);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_create_input);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_destroy_node);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_type);
-	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_interactable);
-	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_interactable);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_text);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_text);
-	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_rect);
-	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_rect);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_texture);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_texture);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_color);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_color);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_font_size);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_font_size);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_visible);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_visible);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_interactable);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_interactable);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_rect);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_rect);
 	
 }
