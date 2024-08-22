@@ -169,6 +169,7 @@ typedef void (*GDExtensionSpxAudioGetMusicTimer)(GdFloat* ret_value);
 typedef void (*GDExtensionSpxAudioSetMusicTimer)(GdFloat time);
 // SpxInput
 typedef void (*GDExtensionSpxInputGetMousePos)(GdVec2* ret_value);
+typedef void (*GDExtensionSpxInputGetKey)(GdInt key, GdBool* ret_value);
 typedef void (*GDExtensionSpxInputGetMouseState)(GdInt mouse_id, GdBool* ret_value);
 typedef void (*GDExtensionSpxInputGetKeyState)(GdInt key, GdInt* ret_value);
 typedef void (*GDExtensionSpxInputGetAxis)(GdString axis, GdFloat* ret_value);

@@ -87,6 +87,9 @@ static void gdextension_spx_audio_set_music_timer(GdFloat time) {
 static void gdextension_spx_input_get_mouse_pos(GdVec2* ret_val) {
 	*ret_val = inputMgr->get_mouse_pos();
 }
+static void gdextension_spx_input_get_key(GdInt key,GdBool* ret_val) {
+	*ret_val = inputMgr->get_key(key);
+}
 static void gdextension_spx_input_get_mouse_state(GdInt mouse_id,GdBool* ret_val) {
 	*ret_val = inputMgr->get_mouse_state(mouse_id);
 }
@@ -369,6 +372,7 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_audio_get_music_timer);
 	REGISTER_SPX_INTERFACE_FUNC(spx_audio_set_music_timer);
 	REGISTER_SPX_INTERFACE_FUNC(spx_input_get_mouse_pos);
+	REGISTER_SPX_INTERFACE_FUNC(spx_input_get_key);
 	REGISTER_SPX_INTERFACE_FUNC(spx_input_get_mouse_state);
 	REGISTER_SPX_INTERFACE_FUNC(spx_input_get_key_state);
 	REGISTER_SPX_INTERFACE_FUNC(spx_input_get_axis);

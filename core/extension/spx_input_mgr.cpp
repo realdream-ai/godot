@@ -36,15 +36,19 @@ GdVec2 SpxInputMgr::get_mouse_pos() {
 	return GdVec2(pos.x, pos.y);
 }
 
+
+
 GdBool SpxInputMgr::get_mouse_state(GdInt mouse_id) {
 	if (mouse_id < (int)MouseButton::LEFT && (int)MouseButton::RIGHT < mouse_id) {
 		print_error("unknown mouse id " + itos(mouse_id));
 	}
 	return Input::get_singleton()->is_mouse_button_pressed((MouseButton)mouse_id);
 }
-
+GdBool SpxInputMgr::get_key(GdInt key) {
+	return Input::get_singleton()->is_key_pressed((Key)key);
+}
 GdInt SpxInputMgr::get_key_state(GdInt key) {
-	return Input::get_singleton()->is_key_pressed((Key)key) ? 1 : 0;
+	return get_key(key) ? 1 : 0;
 }
 
 GdFloat SpxInputMgr::get_axis(GdString axis) {

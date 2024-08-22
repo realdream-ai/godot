@@ -38,6 +38,7 @@ class SpxInputMgr : SpxBaseMgr {
 	SPXCLASS(SpxInput, SpxBaseMgr)
 public:
 	GdVec2 get_mouse_pos();
+	GdBool get_key(GdInt key);
 	GdBool get_mouse_state(GdInt mouse_id);
 	GdInt get_key_state(GdInt key);
 	GdFloat get_axis(GdString axis);
