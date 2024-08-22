@@ -135,7 +135,6 @@ GdObj SpxSprite::get_gid() {
 }
 
 void SpxSprite::on_area_entered(Node *node) {
-	print_line("on_area_entered " + node->get_name());
 	Node *parent_node = node->get_parent();
 	const SpxSprite *other = Object::cast_to<SpxSprite>(parent_node);
 	if (other != nullptr) {
@@ -144,7 +143,6 @@ void SpxSprite::on_area_entered(Node *node) {
 }
 
 void SpxSprite::on_area_exited(Node *node) {
-	print_line("on_area_exited " + node->get_name());
 	Node *parent_node = node->get_parent();
 	const SpxSprite *other = Object::cast_to<SpxSprite>(parent_node);
 	if (other != nullptr) {

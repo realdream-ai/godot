@@ -57,11 +57,11 @@ static void gdextension_spx_audio_play_audio(GdString path) {
 static void gdextension_spx_audio_set_audio_volume(GdFloat volume) {
 	 audioMgr->set_audio_volume(volume);
 }
-static GdFloat gdextension_spx_audio_get_audio_volume() {
-	return audioMgr->get_audio_volume();
+static void gdextension_spx_audio_get_audio_volume(GdFloat* ret_val) {
+	*ret_val = audioMgr->get_audio_volume();
 }
-static GdBool gdextension_spx_audio_is_music_playing() {
-	return audioMgr->is_music_playing();
+static void gdextension_spx_audio_is_music_playing(GdBool* ret_val) {
+	*ret_val = audioMgr->is_music_playing();
 }
 static void gdextension_spx_audio_play_music(GdString path) {
 	 audioMgr->play_music(path);
@@ -69,8 +69,8 @@ static void gdextension_spx_audio_play_music(GdString path) {
 static void gdextension_spx_audio_set_music_volume(GdFloat volume) {
 	 audioMgr->set_music_volume(volume);
 }
-static GdFloat gdextension_spx_audio_get_music_volume() {
-	return audioMgr->get_music_volume();
+static void gdextension_spx_audio_get_music_volume(GdFloat* ret_val) {
+	*ret_val = audioMgr->get_music_volume();
 }
 static void gdextension_spx_audio_pause_music() {
 	 audioMgr->pause_music();
@@ -78,47 +78,47 @@ static void gdextension_spx_audio_pause_music() {
 static void gdextension_spx_audio_resume_music() {
 	 audioMgr->resume_music();
 }
-static GdFloat gdextension_spx_audio_get_music_timer() {
-	return audioMgr->get_music_timer();
+static void gdextension_spx_audio_get_music_timer(GdFloat* ret_val) {
+	*ret_val = audioMgr->get_music_timer();
 }
 static void gdextension_spx_audio_set_music_timer(GdFloat time) {
 	 audioMgr->set_music_timer(time);
 }
-static GdVec2 gdextension_spx_input_get_mouse_pos() {
-	return inputMgr->get_mouse_pos();
+static void gdextension_spx_input_get_mouse_pos(GdVec2* ret_val) {
+	*ret_val = inputMgr->get_mouse_pos();
 }
-static GdBool gdextension_spx_input_get_mouse_state(GdInt mouse_id) {
-	return inputMgr->get_mouse_state(mouse_id);
+static void gdextension_spx_input_get_mouse_state(GdInt mouse_id,GdBool* ret_val) {
+	*ret_val = inputMgr->get_mouse_state(mouse_id);
 }
-static GdInt gdextension_spx_input_get_key_state(GdInt key) {
-	return inputMgr->get_key_state(key);
+static void gdextension_spx_input_get_key_state(GdInt key,GdInt* ret_val) {
+	*ret_val = inputMgr->get_key_state(key);
 }
-static GdFloat gdextension_spx_input_get_axis(GdString axis) {
-	return inputMgr->get_axis(axis);
+static void gdextension_spx_input_get_axis(GdString axis,GdFloat* ret_val) {
+	*ret_val = inputMgr->get_axis(axis);
 }
-static GdBool gdextension_spx_input_is_action_pressed(GdString action) {
-	return inputMgr->is_action_pressed(action);
+static void gdextension_spx_input_is_action_pressed(GdString action,GdBool* ret_val) {
+	*ret_val = inputMgr->is_action_pressed(action);
 }
-static GdBool gdextension_spx_input_is_action_just_pressed(GdString action) {
-	return inputMgr->is_action_just_pressed(action);
+static void gdextension_spx_input_is_action_just_pressed(GdString action,GdBool* ret_val) {
+	*ret_val = inputMgr->is_action_just_pressed(action);
 }
-static GdBool gdextension_spx_input_is_action_just_released(GdString action) {
-	return inputMgr->is_action_just_released(action);
+static void gdextension_spx_input_is_action_just_released(GdString action,GdBool* ret_val) {
+	*ret_val = inputMgr->is_action_just_released(action);
 }
-static GdObj gdextension_spx_physic_raycast(GdVec2 from,GdVec2 to,GdInt collision_mask) {
-	return physicMgr->raycast(from, to, collision_mask);
+static void gdextension_spx_physic_raycast(GdVec2 from,GdVec2 to,GdInt collision_mask,GdObj* ret_val) {
+	*ret_val = physicMgr->raycast(from, to, collision_mask);
 }
-static GdObj gdextension_spx_sprite_create_sprite(GdString path) {
-	return spriteMgr->create_sprite(path);
+static void gdextension_spx_sprite_create_sprite(GdString path,GdObj* ret_val) {
+	*ret_val = spriteMgr->create_sprite(path);
 }
-static GdObj gdextension_spx_sprite_clone_sprite(GdObj obj) {
-	return spriteMgr->clone_sprite(obj);
+static void gdextension_spx_sprite_clone_sprite(GdObj obj,GdObj* ret_val) {
+	*ret_val = spriteMgr->clone_sprite(obj);
 }
-static GdBool gdextension_spx_sprite_destroy_sprite(GdObj obj) {
-	return spriteMgr->destroy_sprite(obj);
+static void gdextension_spx_sprite_destroy_sprite(GdObj obj,GdBool* ret_val) {
+	*ret_val = spriteMgr->destroy_sprite(obj);
 }
-static GdBool gdextension_spx_sprite_is_sprite_alive(GdObj obj) {
-	return spriteMgr->is_sprite_alive(obj);
+static void gdextension_spx_sprite_is_sprite_alive(GdObj obj,GdBool* ret_val) {
+	*ret_val = spriteMgr->is_sprite_alive(obj);
 }
 static void gdextension_spx_sprite_set_position(GdObj obj,GdVec2 pos) {
 	 spriteMgr->set_position(obj, pos);
@@ -132,32 +132,32 @@ static void gdextension_spx_sprite_set_scale(GdObj obj,GdVec2 scale) {
 static void gdextension_spx_sprite_get_position(GdObj obj,GdVec2* ret_val) {
 	*ret_val = spriteMgr->get_position(obj);
 }
-static GdFloat gdextension_spx_sprite_get_rotation(GdObj obj) {
-	return spriteMgr->get_rotation(obj);
+static void gdextension_spx_sprite_get_rotation(GdObj obj,GdFloat* ret_val) {
+	*ret_val = spriteMgr->get_rotation(obj);
 }
-static GdVec2 gdextension_spx_sprite_get_scale(GdObj obj) {
-	return spriteMgr->get_scale(obj);
+static void gdextension_spx_sprite_get_scale(GdObj obj,GdVec2* ret_val) {
+	*ret_val = spriteMgr->get_scale(obj);
 }
 static void gdextension_spx_sprite_set_color(GdObj obj,GdColor color) {
 	 spriteMgr->set_color(obj, color);
 }
-static GdColor gdextension_spx_sprite_get_color(GdObj obj) {
-	return spriteMgr->get_color(obj);
+static void gdextension_spx_sprite_get_color(GdObj obj,GdColor* ret_val) {
+	*ret_val = spriteMgr->get_color(obj);
 }
 static void gdextension_spx_sprite_set_texture(GdObj obj,GdString path) {
 	 spriteMgr->set_texture(obj, path);
 }
-static GdString gdextension_spx_sprite_get_texture(GdObj obj) {
-	return spriteMgr->get_texture(obj);
+static void gdextension_spx_sprite_get_texture(GdObj obj,GdString* ret_val) {
+	*ret_val = spriteMgr->get_texture(obj);
 }
 static void gdextension_spx_sprite_set_visible(GdObj obj,GdBool visible) {
 	 spriteMgr->set_visible(obj, visible);
 }
-static GdBool gdextension_spx_sprite_get_visible(GdObj obj) {
-	return spriteMgr->get_visible(obj);
+static void gdextension_spx_sprite_get_visible(GdObj obj,GdBool* ret_val) {
+	*ret_val = spriteMgr->get_visible(obj);
 }
-static GdInt gdextension_spx_sprite_get_z_index(GdObj obj) {
-	return spriteMgr->get_z_index(obj);
+static void gdextension_spx_sprite_get_z_index(GdObj obj,GdInt* ret_val) {
+	*ret_val = spriteMgr->get_z_index(obj);
 }
 static void gdextension_spx_sprite_set_z_index(GdObj obj,GdInt z) {
 	 spriteMgr->set_z_index(obj, z);
@@ -174,65 +174,65 @@ static void gdextension_spx_sprite_pause_anim(GdObj obj) {
 static void gdextension_spx_sprite_stop_anim(GdObj obj) {
 	 spriteMgr->stop_anim(obj);
 }
-static GdBool gdextension_spx_sprite_is_playing_anim(GdObj obj) {
-	return spriteMgr->is_playing_anim(obj);
+static void gdextension_spx_sprite_is_playing_anim(GdObj obj,GdBool* ret_val) {
+	*ret_val = spriteMgr->is_playing_anim(obj);
 }
 static void gdextension_spx_sprite_set_anim(GdObj obj,GdString p_name) {
 	 spriteMgr->set_anim(obj, p_name);
 }
-static GdString gdextension_spx_sprite_get_anim(GdObj obj) {
-	return spriteMgr->get_anim(obj);
+static void gdextension_spx_sprite_get_anim(GdObj obj,GdString* ret_val) {
+	*ret_val = spriteMgr->get_anim(obj);
 }
 static void gdextension_spx_sprite_set_anim_frame(GdObj obj,GdInt p_frame) {
 	 spriteMgr->set_anim_frame(obj, p_frame);
 }
-static GdInt gdextension_spx_sprite_get_anim_frame(GdObj obj) {
-	return spriteMgr->get_anim_frame(obj);
+static void gdextension_spx_sprite_get_anim_frame(GdObj obj,GdInt* ret_val) {
+	*ret_val = spriteMgr->get_anim_frame(obj);
 }
 static void gdextension_spx_sprite_set_anim_speed_scale(GdObj obj,GdFloat p_speed_scale) {
 	 spriteMgr->set_anim_speed_scale(obj, p_speed_scale);
 }
-static GdFloat gdextension_spx_sprite_get_anim_speed_scale(GdObj obj) {
-	return spriteMgr->get_anim_speed_scale(obj);
+static void gdextension_spx_sprite_get_anim_speed_scale(GdObj obj,GdFloat* ret_val) {
+	*ret_val = spriteMgr->get_anim_speed_scale(obj);
 }
-static GdFloat gdextension_spx_sprite_get_anim_playing_speed(GdObj obj) {
-	return spriteMgr->get_anim_playing_speed(obj);
+static void gdextension_spx_sprite_get_anim_playing_speed(GdObj obj,GdFloat* ret_val) {
+	*ret_val = spriteMgr->get_anim_playing_speed(obj);
 }
 static void gdextension_spx_sprite_set_anim_centered(GdObj obj,GdBool p_center) {
 	 spriteMgr->set_anim_centered(obj, p_center);
 }
-static GdBool gdextension_spx_sprite_is_anim_centered(GdObj obj) {
-	return spriteMgr->is_anim_centered(obj);
+static void gdextension_spx_sprite_is_anim_centered(GdObj obj,GdBool* ret_val) {
+	*ret_val = spriteMgr->is_anim_centered(obj);
 }
 static void gdextension_spx_sprite_set_anim_offset(GdObj obj,GdVec2 p_offset) {
 	 spriteMgr->set_anim_offset(obj, p_offset);
 }
-static GdVec2 gdextension_spx_sprite_get_anim_offset(GdObj obj) {
-	return spriteMgr->get_anim_offset(obj);
+static void gdextension_spx_sprite_get_anim_offset(GdObj obj,GdVec2* ret_val) {
+	*ret_val = spriteMgr->get_anim_offset(obj);
 }
 static void gdextension_spx_sprite_set_anim_flip_h(GdObj obj,GdBool p_flip) {
 	 spriteMgr->set_anim_flip_h(obj, p_flip);
 }
-static GdBool gdextension_spx_sprite_is_anim_flipped_h(GdObj obj) {
-	return spriteMgr->is_anim_flipped_h(obj);
+static void gdextension_spx_sprite_is_anim_flipped_h(GdObj obj,GdBool* ret_val) {
+	*ret_val = spriteMgr->is_anim_flipped_h(obj);
 }
 static void gdextension_spx_sprite_set_anim_flip_v(GdObj obj,GdBool p_flip) {
 	 spriteMgr->set_anim_flip_v(obj, p_flip);
 }
-static GdBool gdextension_spx_sprite_is_anim_flipped_v(GdObj obj) {
-	return spriteMgr->is_anim_flipped_v(obj);
+static void gdextension_spx_sprite_is_anim_flipped_v(GdObj obj,GdBool* ret_val) {
+	*ret_val = spriteMgr->is_anim_flipped_v(obj);
 }
 static void gdextension_spx_sprite_set_gravity(GdObj obj,GdFloat gravity) {
 	 spriteMgr->set_gravity(obj, gravity);
 }
-static GdFloat gdextension_spx_sprite_get_gravity(GdObj obj) {
-	return spriteMgr->get_gravity(obj);
+static void gdextension_spx_sprite_get_gravity(GdObj obj,GdFloat* ret_val) {
+	*ret_val = spriteMgr->get_gravity(obj);
 }
 static void gdextension_spx_sprite_set_mass(GdObj obj,GdFloat mass) {
 	 spriteMgr->set_mass(obj, mass);
 }
-static GdFloat gdextension_spx_sprite_get_mass(GdObj obj) {
-	return spriteMgr->get_mass(obj);
+static void gdextension_spx_sprite_get_mass(GdObj obj,GdFloat* ret_val) {
+	*ret_val = spriteMgr->get_mass(obj);
 }
 static void gdextension_spx_sprite_add_force(GdObj obj,GdVec2 force) {
 	 spriteMgr->add_force(obj, force);
@@ -243,26 +243,26 @@ static void gdextension_spx_sprite_add_impulse(GdObj obj,GdVec2 impulse) {
 static void gdextension_spx_sprite_set_collision_layer(GdObj obj,GdInt layer) {
 	 spriteMgr->set_collision_layer(obj, layer);
 }
-static GdInt gdextension_spx_sprite_get_collision_layer(GdObj obj) {
-	return spriteMgr->get_collision_layer(obj);
+static void gdextension_spx_sprite_get_collision_layer(GdObj obj,GdInt* ret_val) {
+	*ret_val = spriteMgr->get_collision_layer(obj);
 }
 static void gdextension_spx_sprite_set_collision_mask(GdObj obj,GdInt mask) {
 	 spriteMgr->set_collision_mask(obj, mask);
 }
-static GdInt gdextension_spx_sprite_get_collision_mask(GdObj obj) {
-	return spriteMgr->get_collision_mask(obj);
+static void gdextension_spx_sprite_get_collision_mask(GdObj obj,GdInt* ret_val) {
+	*ret_val = spriteMgr->get_collision_mask(obj);
 }
 static void gdextension_spx_sprite_set_trigger_layer(GdObj obj,GdInt layer) {
 	 spriteMgr->set_trigger_layer(obj, layer);
 }
-static GdInt gdextension_spx_sprite_get_trigger_layer(GdObj obj) {
-	return spriteMgr->get_trigger_layer(obj);
+static void gdextension_spx_sprite_get_trigger_layer(GdObj obj,GdInt* ret_val) {
+	*ret_val = spriteMgr->get_trigger_layer(obj);
 }
 static void gdextension_spx_sprite_set_trigger_mask(GdObj obj,GdInt mask) {
 	 spriteMgr->set_trigger_mask(obj, mask);
 }
-static GdInt gdextension_spx_sprite_get_trigger_mask(GdObj obj) {
-	return spriteMgr->get_trigger_mask(obj);
+static void gdextension_spx_sprite_get_trigger_mask(GdObj obj,GdInt* ret_val) {
+	*ret_val = spriteMgr->get_trigger_mask(obj);
 }
 static void gdextension_spx_sprite_set_collider_rect(GdObj obj,GdVec2 center,GdVec2 size) {
 	 spriteMgr->set_collider_rect(obj, center, size);
@@ -276,8 +276,8 @@ static void gdextension_spx_sprite_set_collider_capsule(GdObj obj,GdVec2 center,
 static void gdextension_spx_sprite_set_collision_enabled(GdObj obj,GdBool enabled) {
 	 spriteMgr->set_collision_enabled(obj, enabled);
 }
-static GdBool gdextension_spx_sprite_is_collision_enabled(GdObj obj) {
-	return spriteMgr->is_collision_enabled(obj);
+static void gdextension_spx_sprite_is_collision_enabled(GdObj obj,GdBool* ret_val) {
+	*ret_val = spriteMgr->is_collision_enabled(obj);
 }
 static void gdextension_spx_sprite_set_trigger_rect(GdObj obj,GdVec2 center,GdVec2 size) {
 	 spriteMgr->set_trigger_rect(obj, center, size);
@@ -291,66 +291,68 @@ static void gdextension_spx_sprite_set_trigger_capsule(GdObj obj,GdVec2 center,G
 static void gdextension_spx_sprite_set_trigger_enabled(GdObj obj,GdBool trigger) {
 	 spriteMgr->set_trigger_enabled(obj, trigger);
 }
-static GdBool gdextension_spx_sprite_is_trigger_enabled(GdObj obj) {
-	return spriteMgr->is_trigger_enabled(obj);
+static void gdextension_spx_sprite_is_trigger_enabled(GdObj obj,GdBool* ret_val) {
+	*ret_val = spriteMgr->is_trigger_enabled(obj);
 }
-static GdInt gdextension_spx_ui_create_button(GdString path,GdRect2 rect,GdString text) {
-	return uiMgr->create_button(path, rect, text);
+static void gdextension_spx_ui_create_button(GdString path,GdRect2 rect,GdString text,GdInt* ret_val) {
+	*ret_val = uiMgr->create_button(path, rect, text);
 }
-static GdInt gdextension_spx_ui_create_label(GdString path,GdRect2 rect,GdString text) {
-	return uiMgr->create_label(path, rect, text);
+static void gdextension_spx_ui_create_label(GdString path,GdRect2 rect,GdString text,GdInt* ret_val) {
+	*ret_val = uiMgr->create_label(path, rect, text);
 }
-static GdInt gdextension_spx_ui_create_image(GdString path,GdRect2 rect,GdColor color) {
-	return uiMgr->create_image(path, rect, color);
+static void gdextension_spx_ui_create_image(GdString path,GdRect2 rect,GdColor color,GdInt* ret_val) {
+	*ret_val = uiMgr->create_image(path, rect, color);
 }
-static GdInt gdextension_spx_ui_create_slider(GdString path,GdRect2 rect,GdFloat value) {
-	return uiMgr->create_slider(path, rect, value);
+static void gdextension_spx_ui_create_slider(GdString path,GdRect2 rect,GdFloat value,GdInt* ret_val) {
+	*ret_val = uiMgr->create_slider(path, rect, value);
 }
-static GdInt gdextension_spx_ui_create_toggle(GdString path,GdRect2 rect,GdBool value) {
-	return uiMgr->create_toggle(path, rect, value);
+static void gdextension_spx_ui_create_toggle(GdString path,GdRect2 rect,GdBool value,GdInt* ret_val) {
+	*ret_val = uiMgr->create_toggle(path, rect, value);
 }
-static GdInt gdextension_spx_ui_create_input(GdString path,GdRect2 rect,GdString text) {
-	return uiMgr->create_input(path, rect, text);
+static void gdextension_spx_ui_create_input(GdString path,GdRect2 rect,GdString text,GdInt* ret_val) {
+	*ret_val = uiMgr->create_input(path, rect, text);
 }
-static GdInt gdextension_spx_ui_get_type(GdObj obj) {
-	return uiMgr->get_type(obj);
+static void gdextension_spx_ui_get_type(GdObj obj,GdInt* ret_val) {
+	*ret_val = uiMgr->get_type(obj);
 }
 static void gdextension_spx_ui_set_interactable(GdObj obj,GdBool interactable) {
 	 uiMgr->set_interactable(obj, interactable);
 }
-static GdBool gdextension_spx_ui_get_interactable(GdObj obj) {
-	return uiMgr->get_interactable(obj);
+static void gdextension_spx_ui_get_interactable(GdObj obj,GdBool* ret_val) {
+	*ret_val = uiMgr->get_interactable(obj);
 }
 static void gdextension_spx_ui_set_text(GdObj obj,GdString text) {
 	 uiMgr->set_text(obj, text);
 }
-static GdString gdextension_spx_ui_get_text(GdObj obj) {
-	return uiMgr->get_text(obj);
+static void gdextension_spx_ui_get_text(GdObj obj,GdString* ret_val) {
+	*ret_val = uiMgr->get_text(obj);
 }
 static void gdextension_spx_ui_set_rect(GdObj obj,GdRect2 rect) {
 	 uiMgr->set_rect(obj, rect);
 }
-static GdRect2 gdextension_spx_ui_get_rect(GdObj obj) {
-	return uiMgr->get_rect(obj);
+static void gdextension_spx_ui_get_rect(GdObj obj,GdRect2* ret_val) {
+	*ret_val = uiMgr->get_rect(obj);
 }
 static void gdextension_spx_ui_set_color(GdObj obj,GdColor color) {
 	 uiMgr->set_color(obj, color);
 }
-static GdColor gdextension_spx_ui_get_color(GdObj obj) {
-	return uiMgr->get_color(obj);
+static void gdextension_spx_ui_get_color(GdObj obj,GdColor* ret_val) {
+	*ret_val = uiMgr->get_color(obj);
 }
 static void gdextension_spx_ui_set_font_size(GdObj obj,GdFloat size) {
 	 uiMgr->set_font_size(obj, size);
 }
-static GdFloat gdextension_spx_ui_get_font_size(GdObj obj) {
-	return uiMgr->get_font_size(obj);
+static void gdextension_spx_ui_get_font_size(GdObj obj,GdFloat* ret_val) {
+	*ret_val = uiMgr->get_font_size(obj);
 }
 static void gdextension_spx_ui_set_visible(GdObj obj,GdBool visible) {
 	 uiMgr->set_visible(obj, visible);
 }
-static GdBool gdextension_spx_ui_get_visible(GdObj obj) {
-	return uiMgr->get_visible(obj);
+static void gdextension_spx_ui_get_visible(GdObj obj,GdBool* ret_val) {
+	*ret_val = uiMgr->get_visible(obj);
 }
+
+
 
 void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_global_register_callbacks);
@@ -455,5 +457,5 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_font_size);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_visible);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_visible);
-
+	
 }
