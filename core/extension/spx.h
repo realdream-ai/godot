@@ -32,6 +32,7 @@
 #define SPX_H
 
 class Spx {
+	static bool initialed;
 public:
 	static void register_types();
 	static void on_start(void *root);

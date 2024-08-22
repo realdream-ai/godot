@@ -40,7 +40,7 @@
 #include "spx_sprite_mgr.h"
 #include "spx_ui_mgr.h"
 
-SpxEngine *SpxEngine::singleton;
+SpxEngine *SpxEngine::singleton = nullptr;
 
 void SpxEngine::register_callbacks(GDExtensionSpxCallbackInfoPtr callback_ptr) {
 	if (singleton != nullptr) {
@@ -107,4 +107,5 @@ void SpxEngine::on_destroy() {
 	memdelete(sprite);
 	memdelete(ui);
 	mgrs.clear();
+	singleton = nullptr;
 }

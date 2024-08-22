@@ -35,12 +35,13 @@
 #include "spx_sprite.h"
 
 #define SPX_ENGINE SpxEngine::get_singleton()
-
+bool Spx::initialed = false;
 void Spx::register_types() {
 	ClassDB::register_class<SpxSprite>();
 }
 
 void Spx::on_start(void *root_node) {
+	initialed = true;
 	if (!SpxEngine::has_initialed()) {
 		return;
 	}
@@ -57,6 +58,9 @@ void Spx::on_start(void *root_node) {
 }
 
 void Spx::on_update(float delta) {
+	if(!initialed) {
+		return;
+	}
 	if (!SpxEngine::has_initialed()) {
 		return;
 	}
@@ -64,8 +68,12 @@ void Spx::on_update(float delta) {
 }
 
 void Spx::on_destroy() {
+	if(!initialed) {
+		return;
+	}
 	if (!SpxEngine::has_initialed()) {
 		return;
 	}
 	SPX_ENGINE->on_destroy();
+	initialed = false;
 }
