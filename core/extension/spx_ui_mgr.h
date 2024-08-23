@@ -48,6 +48,7 @@ public:
 	SpxUi* on_create_node(Control *control,GdInt type);
 	SpxUi *get_node(GdObj obj);
 	ESpxUiType get_type(Control* obj);
+	void on_click(SpxUi *node);
 public:
 
 	GdObj create_node(GdString path);

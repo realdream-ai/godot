@@ -27,6 +27,11 @@ void SpxButton::_notification(int p_what) {
 	}
 }
 
+void SpxButton::pressed() {
+	Button::pressed();
+	uiMgr->on_click(owner);
+}
+
 void SpxImage::_bind_methods() {
 }
 

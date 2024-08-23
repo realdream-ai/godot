@@ -75,6 +75,10 @@ ESpxUiType SpxUIMgr::get_type(Control *obj) {
 	return ESpxUiType::None;
 }
 
+void SpxUIMgr::on_click(SpxUi *node) {
+	SPX_CALLBACK->func_on_ui_clicked(node->get_gid());
+}
+
 
 void SpxUIMgr::on_start() {
 	SpxBaseMgr::on_start();

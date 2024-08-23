@@ -71,6 +71,7 @@ public:
 
 private:
 	void _notification(int p_what);
+	void pressed() override;
 };
 
 class SpxImage : public TextureRect {
