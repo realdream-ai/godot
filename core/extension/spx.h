@@ -36,7 +36,8 @@ class Spx {
 public:
 	static void register_types();
 	static void on_start(void *root);
-	static void on_update(float delta);
+	static void on_fixed_update(double delta);
+	static void on_update(double delta);
 	static void on_destroy();
 };
 

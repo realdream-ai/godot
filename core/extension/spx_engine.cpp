@@ -91,6 +91,15 @@ void SpxEngine::on_start() {
 	}
 }
 
+void SpxEngine::on_fixed_update(float delta) {
+	for (auto mgr : mgrs) {
+		mgr->on_fixed_update(delta);
+	}
+	if (callbacks.func_on_engine_fixed_update != nullptr) {
+		callbacks.func_on_engine_fixed_update(delta);
+	}
+}
+
 void SpxEngine::on_update(float delta) {
 	for (auto mgr : mgrs) {
 		mgr->on_update(delta);

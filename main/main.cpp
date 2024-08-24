@@ -3639,7 +3639,7 @@ bool Main::iteration() {
 
 		PhysicsServer2D::get_singleton()->sync();
 		PhysicsServer2D::get_singleton()->flush_queries();
-
+		Spx::on_fixed_update(physics_step * time_scale);
 		if (OS::get_singleton()->get_main_loop()->physics_process(physics_step * time_scale)) {
 			PhysicsServer3D::get_singleton()->end_sync();
 			PhysicsServer2D::get_singleton()->end_sync();

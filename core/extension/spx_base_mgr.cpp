@@ -54,6 +54,9 @@ void SpxBaseMgr::on_start() {
 void SpxBaseMgr::on_update(float delta) {
 }
 
+void SpxBaseMgr::on_fixed_update(float delta) {
+}
+
 void SpxBaseMgr::on_destroy() {
 	if (owner != nullptr) {
 		owner->queue_free();

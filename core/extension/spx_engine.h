@@ -85,6 +85,7 @@ public:
 	void set_root_node(Node *node) { root_node = node; }
 
 	void on_start() override;
+	void on_fixed_update(float delta) override;
 	void on_update(float delta) override;
 	void on_destroy() override;
 };

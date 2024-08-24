@@ -64,7 +64,8 @@ void SpxSpriteMgr::on_start() {
 	SpxBaseMgr::on_start();
 	default_texture_anim = "default";
 	dont_destroy_root = memnew(Node2D);
-	get_tree()->get_root()->add_child(dont_destroy_root);
+	dont_destroy_root->set_name("dont_destroy_root");
+	get_root_node()->add_child(dont_destroy_root);
 }
 
 void SpxSpriteMgr::on_destroy() {

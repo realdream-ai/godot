@@ -62,7 +62,17 @@ void Spx::on_start(void *root_node) {
 	SPX_ENGINE->on_start();
 }
 
-void Spx::on_update(float delta) {
+void Spx::on_fixed_update(double delta) {
+	if(!initialed) {
+		return;
+	}
+	if (!SpxEngine::has_initialed()) {
+		return;
+	}
+	SPX_ENGINE->on_fixed_update(delta);
+}
+
+void Spx::on_update(double delta) {
 	if(!initialed) {
 		return;
 	}

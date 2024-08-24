@@ -62,6 +62,7 @@ public:
 	virtual String get_class_name() const { return "SpxBaseMgr"; }
 	virtual void on_start();
 	virtual void on_update(float delta);
+	virtual void on_fixed_update(float delta);
 	virtual void on_destroy();
 };
 
