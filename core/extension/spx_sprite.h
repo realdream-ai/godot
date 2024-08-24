@@ -129,6 +129,7 @@ public:
 	void set_trigger_capsule(GdVec2 center, GdVec2 size);
 	void set_trigger_enabled(GdBool trigger);
 	GdBool is_trigger_enabled();
+
 };
 
 template <typename T> T *SpxSprite::get_component(Node *node, GdBool recursive) {

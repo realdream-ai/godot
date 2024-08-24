@@ -41,6 +41,10 @@ Node *SpxBaseMgr::get_root_node() {
 	return SpxEngine::get_singleton()->get_root_node();
 }
 
+SceneTree * SpxBaseMgr::get_tree() {
+	return get_root_node()->get_tree();
+}
+
 void SpxBaseMgr::on_start() {
 	owner = memnew(Node2D);
 	owner->set_name(get_class_name());

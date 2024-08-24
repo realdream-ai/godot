@@ -57,7 +57,7 @@ protected:
 protected:
 	virtual GdInt get_unique_id();
 	virtual Node *get_root_node();
-
+	SceneTree *get_tree();
 public:
 	virtual String get_class_name() const { return "SpxBaseMgr"; }
 	virtual void on_start();

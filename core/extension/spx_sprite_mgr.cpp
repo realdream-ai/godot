@@ -38,6 +38,7 @@
 #include "scene/2d/area_2d.h"
 #include "scene/2d/collision_shape_2d.h"
 #include "scene/2d/physics_body_2d.h"
+#include "scene/main/window.h"
 #include "scene/resources/circle_shape_2d.h"
 #include "scene/resources/packed_scene.h"
 
@@ -62,6 +63,8 @@ StringName SpxSpriteMgr::default_texture_anim = "";
 void SpxSpriteMgr::on_start() {
 	SpxBaseMgr::on_start();
 	default_texture_anim = "default";
+	dont_destroy_root = memnew(Node2D);
+	get_tree()->get_root()->add_child(dont_destroy_root);
 }
 
 void SpxSpriteMgr::on_destroy() {
@@ -83,6 +86,12 @@ void SpxSpriteMgr::on_sprite_destroy(SpxSprite *sprite) {
 	if (id_objects.erase(sprite->get_gid())) {
 		SPX_CALLBACK->func_on_sprite_destroyed(sprite->get_gid());
 	}
+}
+
+void SpxSpriteMgr::set_dont_destroy_on_load(GdObj obj) {
+	check_and_get_sprite_v()
+	sprite->get_parent()->remove_child(sprite);
+	dont_destroy_root->add_child(sprite);
 }
 
 

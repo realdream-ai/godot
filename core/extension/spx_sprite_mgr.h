@@ -38,9 +38,9 @@ class SpxSprite;
 
 class SpxSpriteMgr : SpxBaseMgr {
 	SPXCLASS(SpxSprite, SpxBaseMgr)
-
 private:
 	RBMap<GdObj, SpxSprite *> id_objects;
+	Node* dont_destroy_root;
 
 public:
 	static StringName default_texture_anim;
@@ -52,6 +52,8 @@ public:
 	void on_sprite_destroy(SpxSprite *sprite);
 
 public:
+	void set_dont_destroy_on_load(GdObj obj);
+
 	GdObj create_sprite(GdString path);
 	GdObj clone_sprite(GdObj obj);
 	GdBool destroy_sprite(GdObj obj);
