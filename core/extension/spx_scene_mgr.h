@@ -1,5 +1,5 @@
-/**************************************************************************/
-/*  spx_ui_mgr.h                                                          */
+﻿/**************************************************************************/
+/*  spx_scene_mgr.h                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,53 +28,18 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef SPX_UI_MGR_H
-#define SPX_UI_MGR_H
+#ifndef SPX_SCENE_MGR_H
+#define SPX_SCENE_MGR_H
 
 #include "gdextension_spx_ext.h"
-#include "spx_engine.h"
-#include "spx_ui.h"
-class SpxUiMgr : SpxBaseMgr {
-	SPXCLASS(SpxUIMgr, SpxBaseMgr)
+#include "spx_base_mgr.h"
 
-private:
-	RBMap<GdObj, SpxUi *> id_objects;
-
-	Control* create_control(GdString path);
-
+class SpxSceneMgr : SpxBaseMgr {
+	SPXCLASS(SpxSceneMgr, SpxBaseMgr)
 public:
-	void on_start() override;
-	void on_node_destroy(SpxUi *node);
-	SpxUi* on_create_node(Control *control,GdInt type);
-	SpxUi *get_node(GdObj obj);
-	ESpxUiType get_type(Control* obj);
-	void on_click(SpxUi *node);
-public:
-
-	GdObj create_node(GdString path);
-	GdObj create_button(GdString path,GdString text);
-	GdObj create_label(GdString path, GdString text);
-	GdObj create_image(GdString path);
-	GdObj create_toggle(GdString path, GdBool value);
-	GdObj create_slider(GdString path, GdFloat value);
-	GdObj create_input(GdString path, GdString text);
-	GdBool destroy_node(GdObj obj);
-
-	GdInt get_type(GdObj obj);
-	void set_text(GdObj obj, GdString text);
-	GdString get_text(GdObj obj);
-	void set_texture(GdObj obj, GdString path);
-	GdString get_texture(GdObj obj);
-	void set_color(GdObj obj, GdColor color);
-	GdColor get_color(GdObj obj);
-	void set_font_size(GdObj obj, GdInt size);
-	GdInt get_font_size(GdObj obj);
-	void set_visible(GdObj obj, GdBool visible);
-	GdBool get_visible(GdObj obj);
-	void set_interactable(GdObj obj, GdBool interactable);
-	GdBool get_interactable(GdObj obj);
-	void set_rect(GdObj obj, GdRect2 rect);
-	GdRect2 get_rect(GdObj obj);
+	void change_scene_to_file(GdString path);
+	GdInt reload_current_scene();
+	void unload_current_scene();
 };
 
-#endif // SPX_UI_MGR_H
+#endif // SPX_SCENE_MGR_H

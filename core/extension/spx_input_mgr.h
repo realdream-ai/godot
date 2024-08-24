@@ -35,7 +35,7 @@
 #include "spx_base_mgr.h"
 
 class SpxInputMgr : SpxBaseMgr {
-	SPXCLASS(SpxInput, SpxBaseMgr)
+	SPXCLASS(SpxInputMgr, SpxBaseMgr)
 public:
 	GdVec2 get_mouse_pos();
 	GdBool get_key(GdInt key);

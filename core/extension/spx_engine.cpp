@@ -29,16 +29,17 @@
 /**************************************************************************/
 
 #include "spx_engine.h"
-#include "core/config/engine.h"
 #include "core/extension/gdextension.h"
 #include "core/os/memory.h"
 #include "gdextension_spx_ext.h"
 #include "scene/main/window.h"
-#include "spx_audio_mgr.h"
 #include "spx_input_mgr.h"
+#include "spx_audio_mgr.h"
 #include "spx_physic_mgr.h"
 #include "spx_sprite_mgr.h"
 #include "spx_ui_mgr.h"
+#include "spx_camera_mgr.h"
+#include "spx_scene_mgr.h"
 
 SpxEngine *SpxEngine::singleton = nullptr;
 
@@ -51,14 +52,20 @@ void SpxEngine::register_callbacks(GDExtensionSpxCallbackInfoPtr callback_ptr) {
 	singleton->mgrs.clear();
 	singleton->input = memnew(SpxInputMgr);
 	singleton->mgrs.append((SpxBaseMgr *)singleton->input);
-	singleton->singleton->audio = memnew(SpxAudioMgr);
+	singleton->audio = memnew(SpxAudioMgr);
 	singleton->mgrs.append((SpxBaseMgr *)singleton->audio);
-	singleton->singleton->physic = memnew(SpxPhysicMgr);
+	singleton->physic = memnew(SpxPhysicMgr);
 	singleton->mgrs.append((SpxBaseMgr *)singleton->physic);
-	singleton->singleton->sprite = memnew(SpxSpriteMgr);
+	singleton->sprite = memnew(SpxSpriteMgr);
 	singleton->mgrs.append((SpxBaseMgr *)singleton->sprite);
-	singleton->singleton->ui = memnew(SpxUIMgr);
+	singleton->ui = memnew(SpxUiMgr);
 	singleton->mgrs.append((SpxBaseMgr *)singleton->ui);
+	singleton->camera = memnew(SpxCameraMgr);
+	singleton->mgrs.append((SpxBaseMgr *)singleton->camera);
+	singleton->scene = memnew(SpxSceneMgr);
+	singleton->mgrs.append((SpxBaseMgr *)singleton->scene);
+
+
 	singleton->callbacks = *(SpxCallbackInfo *)callback_ptr;
 	singleton->global_id = 1;
 }
@@ -106,6 +113,8 @@ void SpxEngine::on_destroy() {
 	memdelete(physic);
 	memdelete(sprite);
 	memdelete(ui);
+	memdelete(scene);
+	memdelete(camera);
 	mgrs.clear();
 	singleton = nullptr;
 }

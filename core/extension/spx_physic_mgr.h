@@ -35,7 +35,7 @@
 #include "spx_base_mgr.h"
 
 class SpxPhysicMgr : SpxBaseMgr {
-	SPXCLASS(SpxPhysic, SpxBaseMgr)
+	SPXCLASS(SpxPhysicMgr, SpxBaseMgr)
 
 public:
 	GdObj raycast(GdVec2 from, GdVec2 to, GdInt collision_mask);

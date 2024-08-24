@@ -33,6 +33,7 @@
 
 #include "gdextension_spx_ext.h"
 #include "spx_base_mgr.h"
+
 #include <cstdint>
 
 class Node;
@@ -40,7 +41,9 @@ class SpxInputMgr;
 class SpxAudioMgr;
 class SpxPhysicMgr;
 class SpxSpriteMgr;
-class SpxUIMgr;
+class SpxUiMgr;
+class SpxSceneMgr;
+class SpxCameraMgr;
 
 class SpxEngine : SpxBaseMgr {
 	static SpxEngine *singleton;
@@ -51,19 +54,23 @@ public:
 	static void register_callbacks(GDExtensionSpxCallbackInfoPtr callback_ptr);
 
 private:
+	Vector<SpxBaseMgr *> mgrs;
 	SpxInputMgr *input;
 	SpxAudioMgr *audio;
 	SpxPhysicMgr *physic;
 	SpxSpriteMgr *sprite;
-	SpxUIMgr *ui;
-	Vector<SpxBaseMgr *> mgrs;
+	SpxUiMgr *ui;
+	SpxSceneMgr *scene;
+	SpxCameraMgr *camera;
 
 public:
 	SpxInputMgr *get_input() { return input; }
 	SpxAudioMgr *get_audio() { return audio; }
 	SpxPhysicMgr *get_physic() { return physic; }
 	SpxSpriteMgr *get_sprite() { return sprite; }
-	SpxUIMgr *get_ui() { return ui; }
+	SpxUiMgr *get_ui() { return ui; }
+	SpxSceneMgr *get_scene() { return scene; }
+	SpxCameraMgr *get_camera() { return camera; }
 
 private:
 	Node *root_node;

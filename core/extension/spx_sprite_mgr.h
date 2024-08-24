@@ -37,7 +37,7 @@
 class SpxSprite;
 
 class SpxSpriteMgr : SpxBaseMgr {
-	SPXCLASS(SpxSprite, SpxBaseMgr)
+	SPXCLASS(SpxSpriteMgr, SpxBaseMgr)
 private:
 	RBMap<GdObj, SpxSprite *> id_objects;
 	Node* dont_destroy_root;
