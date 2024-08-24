@@ -70,15 +70,38 @@ typedef struct {
 typedef void *GDExtensionSpxCallbackInfoPtr;
 typedef void (*GDExtensionSpxGlobalRegisterCallbacks)(GDExtensionSpxCallbackInfoPtr callback_ptr);
 
+// string
+typedef void (*GDExtensionSpxStringNewWithLatin1Chars)(GDExtensionUninitializedStringPtr r_dest, const char *p_contents);
+typedef void (*GDExtensionSpxStringNewWithUtf8Chars)(GDExtensionUninitializedStringPtr r_dest, const char *p_contents);
+typedef void (*GDExtensionSpxStringNewWithLatin1CharsAndLen)(GDExtensionUninitializedStringPtr r_dest, const char *p_contents, GdInt p_size);
+typedef void (*GDExtensionSpxStringNewWithUtf8CharsAndLen)(GDExtensionUninitializedStringPtr r_dest, const char *p_contents, GdInt p_size);
+typedef GdInt (*GDExtensionSpxStringToLatin1Chars)(GDExtensionConstStringPtr p_self, char *r_text, GdInt p_max_write_length);
+typedef GdInt (*GDExtensionSpxStringToUtf8Chars)(GDExtensionConstStringPtr p_self, char *r_text, GdInt p_max_write_length);
+// variant
+typedef GDExtensionPtrConstructor (*GDExtensionSpxVariantGetPtrConstructor)(GDExtensionVariantType p_type, int32_t p_constructor);
+typedef GDExtensionPtrDestructor (*GDExtensionSpxVariantGetPtrDestructor)(GDExtensionVariantType p_type);
 
 // callback
 typedef void (*GDExtensionSpxCallbackOnEngineStart)();
 typedef void (*GDExtensionSpxCallbackOnEngineUpdate)(GdFloat delta);
+typedef void (*GDExtensionSpxCallbackOnEngineFixedUpdate)(GdFloat delta);
 typedef void (*GDExtensionSpxCallbackOnEngineDestroy)();
 
 typedef void (*GDExtensionSpxCallbackOnSpriteReady)(GdObj obj);
 typedef void (*GDExtensionSpxCallbackOnSpriteUpdated)(GdObj obj);
+typedef void (*GDExtensionSpxCallbackOnSpriteFixedUpdated)(GdObj obj);
 typedef void (*GDExtensionSpxCallbackOnSpriteDestroyed)(GdObj obj);
+
+typedef void (*GDExtensionSpxCallbackOnSpriteFramesSetChanged)(GdObj obj);
+typedef void (*GDExtensionSpxCallbackOnSpriteAnimationChanged)(GdObj obj);
+typedef void (*GDExtensionSpxCallbackOnSpriteFrameChanged)(GdObj obj);
+typedef void (*GDExtensionSpxCallbackOnSpriteAnimationLooped)(GdObj obj);
+typedef void (*GDExtensionSpxCallbackOnSpriteAnimationFinished)(GdObj obj);
+
+typedef void (*GDExtensionSpxCallbackOnSpriteVfxFinished)(GdObj obj);
+
+typedef void (*GDExtensionSpxCallbackOnSpriteScreenExited)(GdObj obj);
+typedef void (*GDExtensionSpxCallbackOnSpriteScreenEntered)(GdObj obj);
 
 typedef void (*GDExtensionSpxCallbackOnMousePressed)(GdInt keyid);
 typedef void (*GDExtensionSpxCallbackOnMouseReleased)(GdInt keyid);
@@ -96,38 +119,42 @@ typedef void (*GDExtensionSpxCallbackOnTriggerEnter)(GdInt self_id, GdInt other_
 typedef void (*GDExtensionSpxCallbackOnTriggerStay)(GdInt self_id, GdInt other_id);
 typedef void (*GDExtensionSpxCallbackOnTriggerExit)(GdInt self_id, GdInt other_id);
 
-typedef void (*GDExtensionSpxCallbackOnUIReady)(GdObj obj);
-typedef void (*GDExtensionSpxCallbackOnUIUpdated)(GdObj obj);
-typedef void (*GDExtensionSpxCallbackOnUIDestroyed)(GdObj obj);
+typedef void (*GDExtensionSpxCallbackOnUiReady)(GdObj obj);
+typedef void (*GDExtensionSpxCallbackOnUiUpdated)(GdObj obj);
+typedef void (*GDExtensionSpxCallbackOnUiDestroyed)(GdObj obj);
 
-typedef void (*GDExtensionSpxCallbackOnUIPressed)(GdObj obj);
-typedef void (*GDExtensionSpxCallbackOnUIReleased)(GdObj obj);
-typedef void (*GDExtensionSpxCallbackOnUIHovered)(GdObj obj);
-typedef void (*GDExtensionSpxCallbackOnUIClicked)(GdObj obj);
-typedef void (*GDExtensionSpxCallbackOnUIToggle)(GdObj obj, GdBool is_on);
-typedef void (*GDExtensionSpxCallbackOnUITextChanged)(GdObj obj, GdString text);
+typedef void (*GDExtensionSpxCallbackOnUiPressed)(GdObj obj);
+typedef void (*GDExtensionSpxCallbackOnUiReleased)(GdObj obj);
+typedef void (*GDExtensionSpxCallbackOnUiHovered)(GdObj obj);
+typedef void (*GDExtensionSpxCallbackOnUiClicked)(GdObj obj);
+typedef void (*GDExtensionSpxCallbackOnUiToggle)(GdObj obj, GdBool is_on);
+typedef void (*GDExtensionSpxCallbackOnUiTextChanged)(GdObj obj, GdString text);
 
-// string
-typedef void (*GDExtensionSpxStringNewWithLatin1Chars)(GDExtensionUninitializedStringPtr r_dest, const char *p_contents);
-typedef void (*GDExtensionSpxStringNewWithUtf8Chars)(GDExtensionUninitializedStringPtr r_dest, const char *p_contents);
-typedef void (*GDExtensionSpxStringNewWithLatin1CharsAndLen)(GDExtensionUninitializedStringPtr r_dest, const char *p_contents, GdInt p_size);
-typedef void (*GDExtensionSpxStringNewWithUtf8CharsAndLen)(GDExtensionUninitializedStringPtr r_dest, const char *p_contents, GdInt p_size);
-typedef GdInt (*GDExtensionSpxStringToLatin1Chars)(GDExtensionConstStringPtr p_self, char *r_text, GdInt p_max_write_length);
-typedef GdInt (*GDExtensionSpxStringToUtf8Chars)(GDExtensionConstStringPtr p_self, char *r_text, GdInt p_max_write_length);
-// variant
-typedef GDExtensionPtrConstructor (*GDExtensionSpxVariantGetPtrConstructor)(GDExtensionVariantType p_type, int32_t p_constructor);
-typedef GDExtensionPtrDestructor (*GDExtensionSpxVariantGetPtrDestructor)(GDExtensionVariantType p_type);
 
 typedef struct {
 	// engine
 	GDExtensionSpxCallbackOnEngineStart func_on_engine_start;
 	GDExtensionSpxCallbackOnEngineUpdate func_on_engine_update;
+	GDExtensionSpxCallbackOnEngineFixedUpdate func_on_engine_fixed_update;
 	GDExtensionSpxCallbackOnEngineDestroy func_on_engine_destroy;
 
 	// sprite
 	GDExtensionSpxCallbackOnSpriteReady func_on_sprite_ready;
 	GDExtensionSpxCallbackOnSpriteUpdated func_on_sprite_updated;
+	GDExtensionSpxCallbackOnSpriteUpdated func_on_sprite_fixed_updated;
 	GDExtensionSpxCallbackOnSpriteDestroyed func_on_sprite_destroyed;
+
+	// animation
+	GDExtensionSpxCallbackOnSpriteFramesSetChanged func_on_sprite_frames_set_changed;
+	GDExtensionSpxCallbackOnSpriteAnimationChanged func_on_sprite_animation_changed;
+	GDExtensionSpxCallbackOnSpriteFrameChanged func_on_sprite_frame_changed;
+	GDExtensionSpxCallbackOnSpriteAnimationLooped func_on_sprite_animation_looped;
+	GDExtensionSpxCallbackOnSpriteAnimationFinished func_on_sprite_animation_finished;
+	// vfx
+	GDExtensionSpxCallbackOnSpriteVfxFinished func_on_sprite_vfx_finished;
+	// visibility
+	GDExtensionSpxCallbackOnSpriteScreenExited func_on_sprite_screen_exited;
+	GDExtensionSpxCallbackOnSpriteScreenEntered func_on_sprite_screen_entered;
 
 	// input
 	GDExtensionSpxCallbackOnMousePressed func_on_mouse_pressed;
@@ -148,17 +175,18 @@ typedef struct {
 	GDExtensionSpxCallbackOnTriggerExit func_on_trigger_exit;
 
 	// ui
-	GDExtensionSpxCallbackOnUIReady func_on_ui_ready;
-	GDExtensionSpxCallbackOnUIUpdated func_on_ui_updated;
-	GDExtensionSpxCallbackOnUIDestroyed func_on_ui_destroyed;
+	GDExtensionSpxCallbackOnUiReady func_on_ui_ready;
+	GDExtensionSpxCallbackOnUiUpdated func_on_ui_updated;
+	GDExtensionSpxCallbackOnUiDestroyed func_on_ui_destroyed;
 
-	GDExtensionSpxCallbackOnUIPressed func_on_ui_pressed;
-	GDExtensionSpxCallbackOnUIReleased func_on_ui_released;
-	GDExtensionSpxCallbackOnUIHovered func_on_ui_hovered;
-	GDExtensionSpxCallbackOnUIClicked func_on_ui_clicked;
-	GDExtensionSpxCallbackOnUIToggle func_on_ui_toggle;
-	GDExtensionSpxCallbackOnUITextChanged func_on_ui_text_changed;
+	GDExtensionSpxCallbackOnUiPressed func_on_ui_pressed;
+	GDExtensionSpxCallbackOnUiReleased func_on_ui_released;
+	GDExtensionSpxCallbackOnUiHovered func_on_ui_hovered;
+	GDExtensionSpxCallbackOnUiClicked func_on_ui_clicked;
+	GDExtensionSpxCallbackOnUiToggle func_on_ui_toggle;
+	GDExtensionSpxCallbackOnUiTextChanged func_on_ui_text_changed;
 
+	
 } SpxCallbackInfo;
 
 
@@ -175,6 +203,11 @@ typedef void (*GDExtensionSpxAudioPauseMusic)();
 typedef void (*GDExtensionSpxAudioResumeMusic)();
 typedef void (*GDExtensionSpxAudioGetMusicTimer)(GdFloat* ret_value);
 typedef void (*GDExtensionSpxAudioSetMusicTimer)(GdFloat time);
+// SpxCamera
+typedef void (*GDExtensionSpxCameraGetCameraPosition)(GdVec2* ret_value);
+typedef void (*GDExtensionSpxCameraSetCameraPosition)(GdVec2 position);
+typedef void (*GDExtensionSpxCameraGetCameraZoom)(GdVec2* ret_value);
+typedef void (*GDExtensionSpxCameraSetCameraZoom)(GdVec2 size);
 // SpxInput
 typedef void (*GDExtensionSpxInputGetMousePos)(GdVec2* ret_value);
 typedef void (*GDExtensionSpxInputGetKey)(GdInt key, GdBool* ret_value);
@@ -186,7 +219,12 @@ typedef void (*GDExtensionSpxInputIsActionJustPressed)(GdString action, GdBool* 
 typedef void (*GDExtensionSpxInputIsActionJustReleased)(GdString action, GdBool* ret_value);
 // SpxPhysic
 typedef void (*GDExtensionSpxPhysicRaycast)(GdVec2 from, GdVec2 to, GdInt collision_mask, GdObj* ret_value);
+// SpxScene
+typedef void (*GDExtensionSpxSceneChangeSceneToFile)(GdString path);
+typedef void (*GDExtensionSpxSceneReloadCurrentScene)(GdInt* ret_value);
+typedef void (*GDExtensionSpxSceneUnloadCurrentScene)();
 // SpxSprite
+typedef void (*GDExtensionSpxSpriteSetDontDestroyOnLoad)(GdObj obj);
 typedef void (*GDExtensionSpxSpriteCreateSprite)(GdString path, GdObj* ret_value);
 typedef void (*GDExtensionSpxSpriteCloneSprite)(GdObj obj, GdObj* ret_value);
 typedef void (*GDExtensionSpxSpriteDestroySprite)(GdObj obj, GdBool* ret_value);
@@ -263,30 +301,30 @@ typedef void (*GDExtensionSpxSpriteSetTriggerCircle)(GdObj obj, GdVec2 center, G
 typedef void (*GDExtensionSpxSpriteSetTriggerCapsule)(GdObj obj, GdVec2 center, GdVec2 size);
 typedef void (*GDExtensionSpxSpriteSetTriggerEnabled)(GdObj obj, GdBool trigger);
 typedef void (*GDExtensionSpxSpriteIsTriggerEnabled)(GdObj obj, GdBool* ret_value);
-// SpxUI
-typedef void (*GDExtensionSpxUICreateNode)(GdString path, GdObj* ret_value);
-typedef void (*GDExtensionSpxUICreateButton)(GdString path,GdString text, GdObj* ret_value);
-typedef void (*GDExtensionSpxUICreateLabel)(GdString path, GdString text, GdObj* ret_value);
-typedef void (*GDExtensionSpxUICreateImage)(GdString path, GdObj* ret_value);
-typedef void (*GDExtensionSpxUICreateToggle)(GdString path, GdBool value, GdObj* ret_value);
-typedef void (*GDExtensionSpxUICreateSlider)(GdString path, GdFloat value, GdObj* ret_value);
-typedef void (*GDExtensionSpxUICreateInput)(GdString path, GdString text, GdObj* ret_value);
-typedef void (*GDExtensionSpxUIDestroyNode)(GdObj obj, GdBool* ret_value);
-typedef void (*GDExtensionSpxUIGetType)(GdObj obj, GdInt* ret_value);
-typedef void (*GDExtensionSpxUISetText)(GdObj obj, GdString text);
-typedef void (*GDExtensionSpxUIGetText)(GdObj obj, GdString* ret_value);
-typedef void (*GDExtensionSpxUISetTexture)(GdObj obj, GdString path);
-typedef void (*GDExtensionSpxUIGetTexture)(GdObj obj, GdString* ret_value);
-typedef void (*GDExtensionSpxUISetColor)(GdObj obj, GdColor color);
-typedef void (*GDExtensionSpxUIGetColor)(GdObj obj, GdColor* ret_value);
-typedef void (*GDExtensionSpxUISetFontSize)(GdObj obj, GdInt size);
-typedef void (*GDExtensionSpxUIGetFontSize)(GdObj obj, GdInt* ret_value);
-typedef void (*GDExtensionSpxUISetVisible)(GdObj obj, GdBool visible);
-typedef void (*GDExtensionSpxUIGetVisible)(GdObj obj, GdBool* ret_value);
-typedef void (*GDExtensionSpxUISetInteractable)(GdObj obj, GdBool interactable);
-typedef void (*GDExtensionSpxUIGetInteractable)(GdObj obj, GdBool* ret_value);
-typedef void (*GDExtensionSpxUISetRect)(GdObj obj, GdRect2 rect);
-typedef void (*GDExtensionSpxUIGetRect)(GdObj obj, GdRect2* ret_value);
+// SpxUi
+typedef void (*GDExtensionSpxUiCreateNode)(GdString path, GdObj* ret_value);
+typedef void (*GDExtensionSpxUiCreateButton)(GdString path,GdString text, GdObj* ret_value);
+typedef void (*GDExtensionSpxUiCreateLabel)(GdString path, GdString text, GdObj* ret_value);
+typedef void (*GDExtensionSpxUiCreateImage)(GdString path, GdObj* ret_value);
+typedef void (*GDExtensionSpxUiCreateToggle)(GdString path, GdBool value, GdObj* ret_value);
+typedef void (*GDExtensionSpxUiCreateSlider)(GdString path, GdFloat value, GdObj* ret_value);
+typedef void (*GDExtensionSpxUiCreateInput)(GdString path, GdString text, GdObj* ret_value);
+typedef void (*GDExtensionSpxUiDestroyNode)(GdObj obj, GdBool* ret_value);
+typedef void (*GDExtensionSpxUiGetType)(GdObj obj, GdInt* ret_value);
+typedef void (*GDExtensionSpxUiSetText)(GdObj obj, GdString text);
+typedef void (*GDExtensionSpxUiGetText)(GdObj obj, GdString* ret_value);
+typedef void (*GDExtensionSpxUiSetTexture)(GdObj obj, GdString path);
+typedef void (*GDExtensionSpxUiGetTexture)(GdObj obj, GdString* ret_value);
+typedef void (*GDExtensionSpxUiSetColor)(GdObj obj, GdColor color);
+typedef void (*GDExtensionSpxUiGetColor)(GdObj obj, GdColor* ret_value);
+typedef void (*GDExtensionSpxUiSetFontSize)(GdObj obj, GdInt size);
+typedef void (*GDExtensionSpxUiGetFontSize)(GdObj obj, GdInt* ret_value);
+typedef void (*GDExtensionSpxUiSetVisible)(GdObj obj, GdBool visible);
+typedef void (*GDExtensionSpxUiGetVisible)(GdObj obj, GdBool* ret_value);
+typedef void (*GDExtensionSpxUiSetInteractable)(GdObj obj, GdBool interactable);
+typedef void (*GDExtensionSpxUiGetInteractable)(GdObj obj, GdBool* ret_value);
+typedef void (*GDExtensionSpxUiSetRect)(GdObj obj, GdRect2 rect);
+typedef void (*GDExtensionSpxUiGetRect)(GdObj obj, GdRect2* ret_value);
 
 
 #ifdef __cplusplus

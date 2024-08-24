@@ -36,14 +36,18 @@
 #include "scene/main/window.h"
 #include "spx_engine.h"
 #include "spx_audio_mgr.h"
+#include "spx_camera_mgr.h"
 #include "spx_input_mgr.h"
 #include "spx_physic_mgr.h"
+#include "spx_scene_mgr.h"
 #include "spx_sprite_mgr.h"
 #include "spx_ui_mgr.h"
 
 #define audioMgr SpxEngine::get_singleton()->get_audio()
+#define cameraMgr SpxEngine::get_singleton()->get_camera()
 #define inputMgr SpxEngine::get_singleton()->get_input()
 #define physicMgr SpxEngine::get_singleton()->get_physic()
+#define sceneMgr SpxEngine::get_singleton()->get_scene()
 #define spriteMgr SpxEngine::get_singleton()->get_sprite()
 #define uiMgr SpxEngine::get_singleton()->get_ui()
 
@@ -84,6 +88,18 @@ static void gdextension_spx_audio_get_music_timer(GdFloat* ret_val) {
 static void gdextension_spx_audio_set_music_timer(GdFloat time) {
 	 audioMgr->set_music_timer(time);
 }
+static void gdextension_spx_camera_get_camera_position(GdVec2* ret_val) {
+	*ret_val = cameraMgr->get_camera_position();
+}
+static void gdextension_spx_camera_set_camera_position(GdVec2 position) {
+	 cameraMgr->set_camera_position(position);
+}
+static void gdextension_spx_camera_get_camera_zoom(GdVec2* ret_val) {
+	*ret_val = cameraMgr->get_camera_zoom();
+}
+static void gdextension_spx_camera_set_camera_zoom(GdVec2 size) {
+	 cameraMgr->set_camera_zoom(size);
+}
 static void gdextension_spx_input_get_mouse_pos(GdVec2* ret_val) {
 	*ret_val = inputMgr->get_mouse_pos();
 }
@@ -110,6 +126,18 @@ static void gdextension_spx_input_is_action_just_released(GdString action,GdBool
 }
 static void gdextension_spx_physic_raycast(GdVec2 from,GdVec2 to,GdInt collision_mask,GdObj* ret_val) {
 	*ret_val = physicMgr->raycast(from, to, collision_mask);
+}
+static void gdextension_spx_scene_change_scene_to_file(GdString path) {
+	 sceneMgr->change_scene_to_file(path);
+}
+static void gdextension_spx_scene_reload_current_scene(GdInt* ret_val) {
+	*ret_val = sceneMgr->reload_current_scene();
+}
+static void gdextension_spx_scene_unload_current_scene() {
+	 sceneMgr->unload_current_scene();
+}
+static void gdextension_spx_sprite_set_dont_destroy_on_load(GdObj obj) {
+	 spriteMgr->set_dont_destroy_on_load(obj);
 }
 static void gdextension_spx_sprite_create_sprite(GdString path,GdObj* ret_val) {
 	*ret_val = spriteMgr->create_sprite(path);
@@ -425,6 +453,10 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_audio_resume_music);
 	REGISTER_SPX_INTERFACE_FUNC(spx_audio_get_music_timer);
 	REGISTER_SPX_INTERFACE_FUNC(spx_audio_set_music_timer);
+	REGISTER_SPX_INTERFACE_FUNC(spx_camera_get_camera_position);
+	REGISTER_SPX_INTERFACE_FUNC(spx_camera_set_camera_position);
+	REGISTER_SPX_INTERFACE_FUNC(spx_camera_get_camera_zoom);
+	REGISTER_SPX_INTERFACE_FUNC(spx_camera_set_camera_zoom);
 	REGISTER_SPX_INTERFACE_FUNC(spx_input_get_mouse_pos);
 	REGISTER_SPX_INTERFACE_FUNC(spx_input_get_key);
 	REGISTER_SPX_INTERFACE_FUNC(spx_input_get_mouse_state);
@@ -434,6 +466,10 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_input_is_action_just_pressed);
 	REGISTER_SPX_INTERFACE_FUNC(spx_input_is_action_just_released);
 	REGISTER_SPX_INTERFACE_FUNC(spx_physic_raycast);
+	REGISTER_SPX_INTERFACE_FUNC(spx_scene_change_scene_to_file);
+	REGISTER_SPX_INTERFACE_FUNC(spx_scene_reload_current_scene);
+	REGISTER_SPX_INTERFACE_FUNC(spx_scene_unload_current_scene);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_dont_destroy_on_load);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_create_sprite);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_clone_sprite);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_destroy_sprite);
