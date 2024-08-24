@@ -95,7 +95,15 @@ void SpxSpriteMgr::set_dont_destroy_on_load(GdObj obj) {
 	dont_destroy_root->add_child(sprite);
 }
 
+void SpxSpriteMgr::set_process(GdObj obj, bool is_on) {
+	check_and_get_sprite_v()
+	sprite->set_process(is_on);
+}
 
+void SpxSpriteMgr::set_physic_process(GdObj obj, bool is_on) {
+	check_and_get_sprite_v()
+	sprite->set_physics_process(is_on);
+}
 // sprite
 GdInt SpxSpriteMgr::create_sprite(GdString path) {
 	const String path_str = String(*(const String *)path);

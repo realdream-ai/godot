@@ -225,6 +225,8 @@ typedef void (*GDExtensionSpxSceneReloadCurrentScene)(GdInt* ret_value);
 typedef void (*GDExtensionSpxSceneUnloadCurrentScene)();
 // SpxSprite
 typedef void (*GDExtensionSpxSpriteSetDontDestroyOnLoad)(GdObj obj);
+typedef void (*GDExtensionSpxSpriteSetProcess)(GdObj obj, bool is_on);
+typedef void (*GDExtensionSpxSpriteSetPhysicProcess)(GdObj obj, bool is_on);
 typedef void (*GDExtensionSpxSpriteCreateSprite)(GdString path, GdObj* ret_value);
 typedef void (*GDExtensionSpxSpriteCloneSprite)(GdObj obj, GdObj* ret_value);
 typedef void (*GDExtensionSpxSpriteDestroySprite)(GdObj obj, GdBool* ret_value);

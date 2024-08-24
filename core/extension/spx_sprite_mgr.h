@@ -53,6 +53,8 @@ public:
 
 public:
 	void set_dont_destroy_on_load(GdObj obj);
+	void set_process(GdObj obj, bool is_on);
+	void set_physic_process(GdObj obj, bool is_on);
 
 	GdObj create_sprite(GdString path);
 	GdObj clone_sprite(GdObj obj);

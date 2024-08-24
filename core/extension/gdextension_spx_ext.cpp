@@ -139,6 +139,12 @@ static void gdextension_spx_scene_unload_current_scene() {
 static void gdextension_spx_sprite_set_dont_destroy_on_load(GdObj obj) {
 	 spriteMgr->set_dont_destroy_on_load(obj);
 }
+static void gdextension_spx_sprite_set_process(GdObj obj,bool is_on) {
+	 spriteMgr->set_process(obj, is_on);
+}
+static void gdextension_spx_sprite_set_physic_process(GdObj obj,bool is_on) {
+	 spriteMgr->set_physic_process(obj, is_on);
+}
 static void gdextension_spx_sprite_create_sprite(GdString path,GdObj* ret_val) {
 	*ret_val = spriteMgr->create_sprite(path);
 }
@@ -470,6 +476,8 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_reload_current_scene);
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_unload_current_scene);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_dont_destroy_on_load);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_process);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_physic_process);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_create_sprite);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_clone_sprite);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_destroy_sprite);
