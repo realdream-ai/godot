@@ -30,13 +30,14 @@
 
 #include "spx_physic_mgr.h"
 
+#include "spx_sprite.h"
 #include "scene/resources/circle_shape_2d.h"
 #include "scene/resources/world_2d.h"
 #include "servers/physics_server_2d.h"
 #include "servers/physics_server_3d.h"
 
-GdObj SpxPhysicMgr::raycast(GdVec2 from,GdVec2 to,GdInt collision_mask){
-	auto node = (Node2D*) owner;
+GdObj SpxPhysicMgr::raycast(GdVec2 from, GdVec2 to, GdInt collision_mask) {
+	auto node = (Node2D *)owner;
 	PhysicsDirectSpaceState2D *space_state = node->get_world_2d()->get_direct_space_state();
 
 	PhysicsDirectSpaceState2D::RayResult result;
@@ -44,10 +45,12 @@ GdObj SpxPhysicMgr::raycast(GdVec2 from,GdVec2 to,GdInt collision_mask){
 	params.from = from;
 	params.to = to;
 	params.collision_mask = (uint32_t)collision_mask;
-	bool hit = space_state->intersect_ray(params,  result);
+	bool hit = space_state->intersect_ray(params, result);
 	if (hit) {
-		Object *collider = result.collider;
-		print_line("Collided with: " + String(collider->get_class_name()));
+		SpxSprite *collider = dynamic_cast<SpxSprite *>(result.collider);
+		if(collider != nullptr) {
+			return collider->get_gid();
+		}
 	}
 	return 0;
 }

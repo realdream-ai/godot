@@ -108,7 +108,6 @@ public:
 	GdBool is_anim_flipped_v(GdObj obj);
 
 	// physics
-
 	void set_velocity(GdObj obj, GdVec2 velocity);
 	GdVec2 get_velocity(GdObj obj);
 	GdBool is_on_floor(GdObj obj);
