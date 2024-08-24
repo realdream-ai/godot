@@ -53,18 +53,28 @@ public:
 
 public:
 	void set_dont_destroy_on_load(GdObj obj);
-	void set_process(GdObj obj, bool is_on);
-	void set_physic_process(GdObj obj, bool is_on);
+	// process
+	void set_process(GdObj obj, GdBool is_on);
+	void set_physic_process(GdObj obj, GdBool is_on);
 
+	// children
+	void set_child_position(GdObj obj, GdString path, GdVec2 pos);
+	GdVec2 get_child_position(GdObj obj, GdString path);
+	void set_child_rotation(GdObj obj, GdString path, GdFloat rot);
+	GdFloat get_child_rotation(GdObj obj, GdString path);
+	void set_child_scale(GdObj obj, GdString path, GdVec2 scale);
+	GdVec2 get_child_scale(GdObj obj, GdString path);
+
+	//
 	GdObj create_sprite(GdString path);
 	GdObj clone_sprite(GdObj obj);
 	GdBool destroy_sprite(GdObj obj);
 	GdBool is_sprite_alive(GdObj obj);
 	void set_position(GdObj obj, GdVec2 pos);
-	void set_rotation(GdObj obj, GdFloat rot);
-	void set_scale(GdObj obj, GdVec2 scale);
 	GdVec2 get_position(GdObj obj);
+	void set_rotation(GdObj obj, GdFloat rot);
 	GdFloat get_rotation(GdObj obj);
+	void set_scale(GdObj obj, GdVec2 scale);
 	GdVec2 get_scale(GdObj obj);
 	void set_color(GdObj obj, GdColor color);
 	GdColor get_color(GdObj obj);

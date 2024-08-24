@@ -95,15 +95,68 @@ void SpxSpriteMgr::set_dont_destroy_on_load(GdObj obj) {
 	dont_destroy_root->add_child(sprite);
 }
 
-void SpxSpriteMgr::set_process(GdObj obj, bool is_on) {
+void SpxSpriteMgr::set_process(GdObj obj, GdBool is_on) {
 	check_and_get_sprite_v()
 	sprite->set_process(is_on);
 }
 
-void SpxSpriteMgr::set_physic_process(GdObj obj, bool is_on) {
+void SpxSpriteMgr::set_physic_process(GdObj obj, GdBool is_on) {
 	check_and_get_sprite_v()
 	sprite->set_physics_process(is_on);
 }
+
+void SpxSpriteMgr::set_child_position(GdObj obj, GdString path, GdVec2 pos) {
+	check_and_get_sprite_v()
+	auto child = (Node2D *)sprite->get_node(SpxStr(path));
+	if (child != nullptr) {
+		child->set_position(GdVec2{ pos.x, -pos.y });
+	}
+}
+
+GdVec2 SpxSpriteMgr::get_child_position(GdObj obj, GdString path) {
+	check_and_get_sprite_r(GdVec2())
+	auto child = (Node2D *)sprite->get_node(SpxStr(path));
+	if (child != nullptr) {
+		auto pos = sprite->get_position();
+		return GdVec2{ pos.x, -pos.y };
+	}
+	return GdVec2();
+}
+
+void SpxSpriteMgr::set_child_rotation(GdObj obj, GdString path, GdFloat rot) {
+	check_and_get_sprite_v()
+	auto child = (Node2D *)sprite->get_node(SpxStr(path));
+	if (child != nullptr) {
+		child->set_rotation(rot);
+	}
+}
+
+GdFloat SpxSpriteMgr::get_child_rotation(GdObj obj, GdString path) {
+	check_and_get_sprite_r(0)
+	auto child = (Node2D *)sprite->get_node(SpxStr(path));
+	if (child != nullptr) {
+		return sprite->get_rotation();
+	}
+	return 0;
+}
+
+void SpxSpriteMgr::set_child_scale(GdObj obj, GdString path, GdVec2 scale) {
+	check_and_get_sprite_v()
+	auto child = (Node2D *)sprite->get_node(SpxStr(path));
+	if (child != nullptr) {
+		child->set_scale(scale);
+	}
+}
+
+GdVec2 SpxSpriteMgr::get_child_scale(GdObj obj, GdString path) {
+	check_and_get_sprite_r(GdVec2())
+	auto child = (Node2D *)sprite->get_node(SpxStr(path));
+	if (child != nullptr) {
+		return sprite->get_scale();
+	}
+	return GdVec2();
+}
+
 // sprite
 GdInt SpxSpriteMgr::create_sprite(GdString path) {
 	const String path_str = String(*(const String *)path);
@@ -135,7 +188,7 @@ GdInt SpxSpriteMgr::create_sprite(GdString path) {
 			return NULL_OBJECT_ID;
 		} else {
 			sprite = dynamic_cast<SpxSprite *>(scene->instantiate());
-			if(sprite == nullptr) {
+			if (sprite == nullptr) {
 				print_error("Failed to load sprite scene , type invalid " + path_str);
 			}
 		}
@@ -171,7 +224,7 @@ GdBool SpxSpriteMgr::is_sprite_alive(GdObj obj) {
 void SpxSpriteMgr::set_position(GdObj obj, GdVec2 pos) {
 	check_and_get_sprite_v()
 	// flip y axis
-	sprite->set_position(GdVec2(pos.x,-pos.y));
+	sprite->set_position(GdVec2(pos.x, -pos.y));
 }
 
 void SpxSpriteMgr::set_rotation(GdObj obj, float rot) {
@@ -188,13 +241,14 @@ GdVec2 SpxSpriteMgr::get_position(GdObj obj) {
 	check_and_get_sprite_r(GdVec2())
 	auto pos = sprite->get_position();
 	// flip y axis
-	return GdVec2{pos.x,-pos.y};
+	return GdVec2{ pos.x, -pos.y };
 }
 
 GdFloat SpxSpriteMgr::get_rotation(GdObj obj) {
 	check_and_get_sprite_r(0)
 	return sprite->get_rotation();
 }
+
 GdVec2 SpxSpriteMgr::get_scale(GdObj obj) {
 	check_and_get_sprite_r(GdVec2())
 	return sprite->get_scale();
@@ -272,7 +326,7 @@ void SpxSpriteMgr::set_anim(GdObj obj, GdString p_name) {
 
 GdString SpxSpriteMgr::get_anim(GdObj obj) {
 	check_and_get_sprite_r(GdString())
-	return  sprite->get_anim();
+	return sprite->get_anim();
 }
 
 void SpxSpriteMgr::set_anim_frame(GdObj obj, GdInt p_frame) {
@@ -347,57 +401,67 @@ GdBool SpxSpriteMgr::is_anim_flipped_v(GdObj obj) {
 void SpxSpriteMgr::set_velocity(GdObj obj, GdVec2 velocity) {
 	check_and_get_sprite_v()
 	// flip y axis
-	sprite->set_velocity(GdVec2(velocity.x,-velocity.y));
+	sprite->set_velocity(GdVec2(velocity.x, -velocity.y));
 }
 
 GdVec2 SpxSpriteMgr::get_velocity(GdObj obj) {
 	check_and_get_sprite_r(GdVec2())
 	auto val = sprite->get_velocity();
 	// flip y axis
-	return GdVec2{val.x,-val.y};
+	return GdVec2{ val.x, -val.y };
 }
 
-GdBool SpxSpriteMgr::is_on_floor(GdObj obj){
+GdBool SpxSpriteMgr::is_on_floor(GdObj obj) {
 	check_and_get_sprite_r(false)
 	return sprite->is_on_floor();
 }
-GdBool SpxSpriteMgr::is_on_floor_only(GdObj obj){
+
+GdBool SpxSpriteMgr::is_on_floor_only(GdObj obj) {
 	check_and_get_sprite_r(false)
 	return sprite->is_on_floor_only();
 }
-GdBool SpxSpriteMgr::is_on_wall(GdObj obj){
+
+GdBool SpxSpriteMgr::is_on_wall(GdObj obj) {
 	check_and_get_sprite_r(false)
 	return sprite->is_on_wall();
 }
-GdBool SpxSpriteMgr::is_on_wall_only(GdObj obj){
+
+GdBool SpxSpriteMgr::is_on_wall_only(GdObj obj) {
 	check_and_get_sprite_r(false)
 	return sprite->is_on_wall_only();
 }
-GdBool SpxSpriteMgr::is_on_ceiling(GdObj obj){
+
+GdBool SpxSpriteMgr::is_on_ceiling(GdObj obj) {
 	check_and_get_sprite_r(false)
 	return sprite->is_on_ceiling();
 }
-GdBool SpxSpriteMgr::is_on_ceiling_only(GdObj obj){
+
+GdBool SpxSpriteMgr::is_on_ceiling_only(GdObj obj) {
 	check_and_get_sprite_r(false)
 	return sprite->is_on_ceiling_only();
 }
-GdVec2 SpxSpriteMgr::get_last_motion(GdObj obj){
+
+GdVec2 SpxSpriteMgr::get_last_motion(GdObj obj) {
 	check_and_get_sprite_r(GdVec2())
 	return sprite->get_last_motion();
 }
-GdVec2 SpxSpriteMgr::get_position_delta(GdObj obj){
+
+GdVec2 SpxSpriteMgr::get_position_delta(GdObj obj) {
 	check_and_get_sprite_r(GdVec2())
 	return sprite->get_position_delta();
 }
-GdVec2 SpxSpriteMgr::get_floor_normal(GdObj obj){
+
+GdVec2 SpxSpriteMgr::get_floor_normal(GdObj obj) {
 	check_and_get_sprite_r(GdVec2())
 	return sprite->get_floor_normal();
 }
-GdVec2 SpxSpriteMgr::get_wall_normal(GdObj obj){
+
+GdVec2 SpxSpriteMgr::get_wall_normal(GdObj obj) {
 	check_and_get_sprite_r(GdVec2())
 	return sprite->get_wall_normal();
 }
-GdVec2 SpxSpriteMgr::get_real_velocity(GdObj obj){
+
+GdVec2 SpxSpriteMgr::get_real_velocity(GdObj obj) {
 	check_and_get_sprite_r(GdVec2())
 	return sprite->get_real_velocity();
 }
@@ -405,7 +469,6 @@ GdVec2 SpxSpriteMgr::get_real_velocity(GdObj obj){
 void SpxSpriteMgr::move_and_slide(GdObj obj) {
 	check_and_get_sprite_v()
 	sprite->move_and_slide();
-
 }
 
 void SpxSpriteMgr::set_gravity(GdObj obj, GdFloat gravity) {

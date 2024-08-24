@@ -139,11 +139,29 @@ static void gdextension_spx_scene_unload_current_scene() {
 static void gdextension_spx_sprite_set_dont_destroy_on_load(GdObj obj) {
 	 spriteMgr->set_dont_destroy_on_load(obj);
 }
-static void gdextension_spx_sprite_set_process(GdObj obj,bool is_on) {
+static void gdextension_spx_sprite_set_process(GdObj obj,GdBool is_on) {
 	 spriteMgr->set_process(obj, is_on);
 }
-static void gdextension_spx_sprite_set_physic_process(GdObj obj,bool is_on) {
+static void gdextension_spx_sprite_set_physic_process(GdObj obj,GdBool is_on) {
 	 spriteMgr->set_physic_process(obj, is_on);
+}
+static void gdextension_spx_sprite_set_child_position(GdObj obj,GdString path,GdVec2 pos) {
+	 spriteMgr->set_child_position(obj, path, pos);
+}
+static void gdextension_spx_sprite_get_child_position(GdObj obj,GdString path,GdVec2* ret_val) {
+	*ret_val = spriteMgr->get_child_position(obj, path);
+}
+static void gdextension_spx_sprite_set_child_rotation(GdObj obj,GdString path,GdFloat rot) {
+	 spriteMgr->set_child_rotation(obj, path, rot);
+}
+static void gdextension_spx_sprite_get_child_rotation(GdObj obj,GdString path,GdFloat* ret_val) {
+	*ret_val = spriteMgr->get_child_rotation(obj, path);
+}
+static void gdextension_spx_sprite_set_child_scale(GdObj obj,GdString path,GdVec2 scale) {
+	 spriteMgr->set_child_scale(obj, path, scale);
+}
+static void gdextension_spx_sprite_get_child_scale(GdObj obj,GdString path,GdVec2* ret_val) {
+	*ret_val = spriteMgr->get_child_scale(obj, path);
 }
 static void gdextension_spx_sprite_create_sprite(GdString path,GdObj* ret_val) {
 	*ret_val = spriteMgr->create_sprite(path);
@@ -160,17 +178,17 @@ static void gdextension_spx_sprite_is_sprite_alive(GdObj obj,GdBool* ret_val) {
 static void gdextension_spx_sprite_set_position(GdObj obj,GdVec2 pos) {
 	 spriteMgr->set_position(obj, pos);
 }
-static void gdextension_spx_sprite_set_rotation(GdObj obj,GdFloat rot) {
-	 spriteMgr->set_rotation(obj, rot);
-}
-static void gdextension_spx_sprite_set_scale(GdObj obj,GdVec2 scale) {
-	 spriteMgr->set_scale(obj, scale);
-}
 static void gdextension_spx_sprite_get_position(GdObj obj,GdVec2* ret_val) {
 	*ret_val = spriteMgr->get_position(obj);
 }
+static void gdextension_spx_sprite_set_rotation(GdObj obj,GdFloat rot) {
+	 spriteMgr->set_rotation(obj, rot);
+}
 static void gdextension_spx_sprite_get_rotation(GdObj obj,GdFloat* ret_val) {
 	*ret_val = spriteMgr->get_rotation(obj);
+}
+static void gdextension_spx_sprite_set_scale(GdObj obj,GdVec2 scale) {
+	 spriteMgr->set_scale(obj, scale);
 }
 static void gdextension_spx_sprite_get_scale(GdObj obj,GdVec2* ret_val) {
 	*ret_val = spriteMgr->get_scale(obj);
@@ -478,15 +496,21 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_dont_destroy_on_load);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_process);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_physic_process);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_child_position);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_child_position);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_child_rotation);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_child_rotation);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_child_scale);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_child_scale);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_create_sprite);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_clone_sprite);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_destroy_sprite);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_is_sprite_alive);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_position);
-	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_rotation);
-	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_scale);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_position);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_rotation);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_rotation);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_scale);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_scale);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_color);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_color);
