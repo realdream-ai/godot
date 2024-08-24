@@ -51,8 +51,8 @@ GdInt SpxInputMgr::get_key_state(GdInt key) {
 	return get_key(key) ? 1 : 0;
 }
 
-GdFloat SpxInputMgr::get_axis(GdString axis) {
-	return Input::get_singleton()->get_action_strength(SpxStr(axis));
+GdFloat SpxInputMgr::get_axis(GdString neg_action, GdString pos_action) {
+	return Input::get_singleton()->get_axis(SpxStr(neg_action),SpxStr(pos_action));
 }
 
 GdBool SpxInputMgr::is_action_pressed(GdString action) {

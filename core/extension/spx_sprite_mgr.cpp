@@ -326,6 +326,70 @@ GdBool SpxSpriteMgr::is_anim_flipped_v(GdObj obj) {
 	return sprite->is_anim_flipped_v();
 }
 
+void SpxSpriteMgr::set_velocity(GdObj obj, GdVec2 velocity) {
+	check_and_get_sprite_v()
+	// flip y axis
+	sprite->set_velocity(GdVec2(velocity.x,-velocity.y));
+}
+
+GdVec2 SpxSpriteMgr::get_velocity(GdObj obj) {
+	check_and_get_sprite_r(GdVec2())
+	auto val = sprite->get_velocity();
+	// flip y axis
+	return GdVec2{val.x,-val.y};
+}
+
+GdBool SpxSpriteMgr::is_on_floor(GdObj obj){
+	check_and_get_sprite_r(false)
+	return sprite->is_on_floor();
+}
+GdBool SpxSpriteMgr::is_on_floor_only(GdObj obj){
+	check_and_get_sprite_r(false)
+	return sprite->is_on_floor_only();
+}
+GdBool SpxSpriteMgr::is_on_wall(GdObj obj){
+	check_and_get_sprite_r(false)
+	return sprite->is_on_wall();
+}
+GdBool SpxSpriteMgr::is_on_wall_only(GdObj obj){
+	check_and_get_sprite_r(false)
+	return sprite->is_on_wall_only();
+}
+GdBool SpxSpriteMgr::is_on_ceiling(GdObj obj){
+	check_and_get_sprite_r(false)
+	return sprite->is_on_ceiling();
+}
+GdBool SpxSpriteMgr::is_on_ceiling_only(GdObj obj){
+	check_and_get_sprite_r(false)
+	return sprite->is_on_ceiling_only();
+}
+GdVec2 SpxSpriteMgr::get_last_motion(GdObj obj){
+	check_and_get_sprite_r(GdVec2())
+	return sprite->get_last_motion();
+}
+GdVec2 SpxSpriteMgr::get_position_delta(GdObj obj){
+	check_and_get_sprite_r(GdVec2())
+	return sprite->get_position_delta();
+}
+GdVec2 SpxSpriteMgr::get_floor_normal(GdObj obj){
+	check_and_get_sprite_r(GdVec2())
+	return sprite->get_floor_normal();
+}
+GdVec2 SpxSpriteMgr::get_wall_normal(GdObj obj){
+	check_and_get_sprite_r(GdVec2())
+	return sprite->get_wall_normal();
+}
+GdVec2 SpxSpriteMgr::get_real_velocity(GdObj obj){
+	check_and_get_sprite_r(GdVec2())
+	return sprite->get_real_velocity();
+}
+
+void SpxSpriteMgr::move_and_slide(GdObj obj) {
+	check_and_get_sprite_v()
+	sprite->move_and_slide();
+
+}
+
 void SpxSpriteMgr::set_gravity(GdObj obj, GdFloat gravity) {
 	check_and_get_sprite_v()
 	sprite->set_gravity(gravity);

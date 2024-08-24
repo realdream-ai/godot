@@ -94,6 +94,22 @@ public:
 	GdBool is_anim_flipped_v(GdObj obj);
 
 	// physics
+
+	void set_velocity(GdObj obj, GdVec2 velocity);
+	GdVec2 get_velocity(GdObj obj);
+	GdBool is_on_floor(GdObj obj);
+	GdBool is_on_floor_only(GdObj obj);
+	GdBool is_on_wall(GdObj obj);
+	GdBool is_on_wall_only(GdObj obj);
+	GdBool is_on_ceiling(GdObj obj);
+	GdBool is_on_ceiling_only(GdObj obj);
+	GdVec2 get_last_motion(GdObj obj);
+	GdVec2 get_position_delta(GdObj obj);
+	GdVec2 get_floor_normal(GdObj obj);
+	GdVec2 get_wall_normal(GdObj obj);
+	GdVec2 get_real_velocity(GdObj obj);
+	void move_and_slide(GdObj obj);
+
 	void set_gravity(GdObj obj, GdFloat gravity);
 	GdFloat get_gravity(GdObj obj);
 	void set_mass(GdObj obj, GdFloat mass);

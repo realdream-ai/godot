@@ -96,8 +96,8 @@ static void gdextension_spx_input_get_mouse_state(GdInt mouse_id,GdBool* ret_val
 static void gdextension_spx_input_get_key_state(GdInt key,GdInt* ret_val) {
 	*ret_val = inputMgr->get_key_state(key);
 }
-static void gdextension_spx_input_get_axis(GdString axis,GdFloat* ret_val) {
-	*ret_val = inputMgr->get_axis(axis);
+static void gdextension_spx_input_get_axis(GdString neg_action,GdString pos_action,GdFloat* ret_val) {
+	*ret_val = inputMgr->get_axis(neg_action, pos_action);
 }
 static void gdextension_spx_input_is_action_pressed(GdString action,GdBool* ret_val) {
 	*ret_val = inputMgr->is_action_pressed(action);
@@ -224,6 +224,48 @@ static void gdextension_spx_sprite_set_anim_flip_v(GdObj obj,GdBool p_flip) {
 }
 static void gdextension_spx_sprite_is_anim_flipped_v(GdObj obj,GdBool* ret_val) {
 	*ret_val = spriteMgr->is_anim_flipped_v(obj);
+}
+static void gdextension_spx_sprite_set_velocity(GdObj obj,GdVec2 velocity) {
+	 spriteMgr->set_velocity(obj, velocity);
+}
+static void gdextension_spx_sprite_get_velocity(GdObj obj,GdVec2* ret_val) {
+	*ret_val = spriteMgr->get_velocity(obj);
+}
+static void gdextension_spx_sprite_is_on_floor(GdObj obj,GdBool* ret_val) {
+	*ret_val = spriteMgr->is_on_floor(obj);
+}
+static void gdextension_spx_sprite_is_on_floor_only(GdObj obj,GdBool* ret_val) {
+	*ret_val = spriteMgr->is_on_floor_only(obj);
+}
+static void gdextension_spx_sprite_is_on_wall(GdObj obj,GdBool* ret_val) {
+	*ret_val = spriteMgr->is_on_wall(obj);
+}
+static void gdextension_spx_sprite_is_on_wall_only(GdObj obj,GdBool* ret_val) {
+	*ret_val = spriteMgr->is_on_wall_only(obj);
+}
+static void gdextension_spx_sprite_is_on_ceiling(GdObj obj,GdBool* ret_val) {
+	*ret_val = spriteMgr->is_on_ceiling(obj);
+}
+static void gdextension_spx_sprite_is_on_ceiling_only(GdObj obj,GdBool* ret_val) {
+	*ret_val = spriteMgr->is_on_ceiling_only(obj);
+}
+static void gdextension_spx_sprite_get_last_motion(GdObj obj,GdVec2* ret_val) {
+	*ret_val = spriteMgr->get_last_motion(obj);
+}
+static void gdextension_spx_sprite_get_position_delta(GdObj obj,GdVec2* ret_val) {
+	*ret_val = spriteMgr->get_position_delta(obj);
+}
+static void gdextension_spx_sprite_get_floor_normal(GdObj obj,GdVec2* ret_val) {
+	*ret_val = spriteMgr->get_floor_normal(obj);
+}
+static void gdextension_spx_sprite_get_wall_normal(GdObj obj,GdVec2* ret_val) {
+	*ret_val = spriteMgr->get_wall_normal(obj);
+}
+static void gdextension_spx_sprite_get_real_velocity(GdObj obj,GdVec2* ret_val) {
+	*ret_val = spriteMgr->get_real_velocity(obj);
+}
+static void gdextension_spx_sprite_move_and_slide(GdObj obj) {
+	 spriteMgr->move_and_slide(obj);
 }
 static void gdextension_spx_sprite_set_gravity(GdObj obj,GdFloat gravity) {
 	 spriteMgr->set_gravity(obj, gravity);
@@ -430,6 +472,20 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_is_anim_flipped_h);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_anim_flip_v);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_is_anim_flipped_v);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_velocity);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_velocity);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_is_on_floor);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_is_on_floor_only);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_is_on_wall);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_is_on_wall_only);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_is_on_ceiling);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_is_on_ceiling_only);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_last_motion);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_position_delta);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_floor_normal);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_wall_normal);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_real_velocity);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_move_and_slide);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_gravity);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_gravity);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_mass);
