@@ -65,12 +65,11 @@ void SpxEngine::register_callbacks(GDExtensionSpxCallbackInfoPtr callback_ptr) {
 	singleton->scene = memnew(SpxSceneMgr);
 	singleton->mgrs.append((SpxBaseMgr *)singleton->scene);
 
-
 	singleton->callbacks = *(SpxCallbackInfo *)callback_ptr;
 	singleton->global_id = 1;
 }
 
-SpxCallbackInfo * SpxEngine::get_callbacks() {
+SpxCallbackInfo *SpxEngine::get_callbacks() {
 	return &callbacks;
 }
 
@@ -78,8 +77,21 @@ GdInt SpxEngine::get_unique_id() {
 	return global_id++;
 }
 
-Node *SpxEngine::get_root_node() {
-	return root_node;
+Node *SpxEngine::get_spx_root() {
+	return spx_root;
+}
+
+SceneTree * SpxEngine::get_tree() {
+	return tree;
+}
+
+Window *SpxEngine::get_root() {
+	return tree->get_root();
+}
+
+void SpxEngine::set_root_node(SceneTree *p_tree, Node *p_node) {
+	this->tree = p_tree;
+	spx_root = p_node;
 }
 
 void SpxEngine::on_start() {

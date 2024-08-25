@@ -35,7 +35,8 @@
 #include "spx_base_mgr.h"
 
 #include <cstdint>
-
+class SceneTree;
+class Window;
 class Node;
 class SpxInputMgr;
 class SpxAudioMgr;
@@ -73,16 +74,20 @@ public:
 	SpxCameraMgr *get_camera() { return camera; }
 
 private:
-	Node *root_node;
+	SceneTree *tree;
+	Node *spx_root;
 	GdInt global_id;
 	SpxCallbackInfo callbacks;
 
 public:
-	SpxCallbackInfo* get_callbacks() ;
+	SpxCallbackInfo *get_callbacks();
+
 public:
 	GdInt get_unique_id() override;
-	Node *get_root_node() override;
-	void set_root_node(Node *node) { root_node = node; }
+	Node *get_spx_root() override;
+	SceneTree *get_tree() override;
+	Window *get_root();
+	void set_root_node(SceneTree *p_tree, Node *p_node);
 
 	void on_start() override;
 	void on_fixed_update(float delta) override;

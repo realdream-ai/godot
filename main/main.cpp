@@ -3505,7 +3505,7 @@ bool Main::start() {
 
 			OS::get_singleton()->benchmark_end_measure("game_load");
 
-			Spx::on_start(sml->get_root());
+			Spx::on_start(sml);
 		}
 
 #ifdef TOOLS_ENABLED

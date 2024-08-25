@@ -31,24 +31,30 @@
 #include "spx_base_mgr.h"
 #include "spx_engine.h"
 #include "scene/2d/node_2d.h"
+#include "scene/main/window.h"
 
 String SpxBaseMgr::temp_return_str;
+
 GdInt SpxBaseMgr::get_unique_id() {
 	return SpxEngine::get_singleton()->get_unique_id();
 }
 
-Node *SpxBaseMgr::get_root_node() {
-	return SpxEngine::get_singleton()->get_root_node();
+Window *SpxBaseMgr::get_root() {
+	return SpxEngine::get_singleton()->get_root();
 }
 
-SceneTree * SpxBaseMgr::get_tree() {
-	return get_root_node()->get_tree();
+Node *SpxBaseMgr::get_spx_root() {
+	return SpxEngine::get_singleton()->get_spx_root();
+}
+
+SceneTree *SpxBaseMgr::get_tree() {
+	return SpxEngine::get_singleton()->get_tree();
 }
 
 void SpxBaseMgr::on_start() {
 	owner = memnew(Node2D);
 	owner->set_name(get_class_name());
-	get_root_node()->add_child(owner);
+	get_spx_root()->add_child(owner);
 }
 
 void SpxBaseMgr::on_update(float delta) {

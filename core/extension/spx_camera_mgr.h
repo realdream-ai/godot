@@ -38,7 +38,9 @@ class Camera2D;
 class SpxCameraMgr : SpxBaseMgr {
 	SPXCLASS(SpxCameraMgr, SpxBaseMgr)
 private:
-	Camera2D *camera;
+	Camera2D *camera = nullptr;
+public:
+	void on_start() override;
 public:
 	Rect2 get_viewport_rect() ;
 	GdVec2 get_camera_position();

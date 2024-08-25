@@ -84,7 +84,7 @@ void SpxUiMgr::on_start() {
 	SpxBaseMgr::on_start();
 	owner = memnew(CanvasLayer);
 	owner->set_name(get_class_name());
-	get_root_node()->add_child(owner);
+	get_spx_root()->add_child(owner);
 }
 
 void SpxUiMgr::on_node_destroy(SpxUi *node) {

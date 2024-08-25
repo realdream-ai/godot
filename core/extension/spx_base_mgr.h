@@ -49,6 +49,8 @@ public:                               \
 
 #define NULL_OBJECT_ID 0
 
+class Window;
+class SceneTree;
 class SpxBaseMgr {
 public:
 	static String temp_return_str;
@@ -56,8 +58,9 @@ protected:
 	Node *owner;
 protected:
 	virtual GdInt get_unique_id();
-	virtual Node *get_root_node();
-	SceneTree *get_tree();
+	virtual SceneTree *get_tree();
+	virtual Window *get_root();
+	virtual Node *get_spx_root();
 public:
 	virtual String get_class_name() const { return "SpxBaseMgr"; }
 	virtual void on_start();

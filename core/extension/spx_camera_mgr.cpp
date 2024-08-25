@@ -31,6 +31,25 @@
 #include "spx_camera_mgr.h"
 
 #include "scene/2d/camera_2d.h"
+#include "scene/main/window.h"
+
+void SpxCameraMgr::on_start() {
+	SpxBaseMgr::on_start();
+	camera = nullptr;
+	auto nodes = get_root()->find_children("*","Camera2D",true,false);
+	for(int i = 0; i < nodes.size(); i++) {
+		camera =  Object::cast_to<Camera2D>(nodes[i]);
+		if(camera != nullptr) {
+			break;
+		}
+	}
+	if(camera == nullptr) {
+		camera = memnew(Camera2D);
+		camera->set_name("SpxCamera2D");
+		get_spx_root()->add_child(camera);
+		print_line("no camera , create one " + camera->get_name());
+	}
+}
 
 Rect2 SpxCameraMgr::get_viewport_rect() {
 	return camera->get_viewport_rect();
