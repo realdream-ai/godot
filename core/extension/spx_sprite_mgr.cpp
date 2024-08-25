@@ -117,7 +117,7 @@ GdVec2 SpxSpriteMgr::get_child_position(GdObj obj, GdString path) {
 	check_and_get_sprite_r(GdVec2())
 	auto child = (Node2D *)sprite->get_node(SpxStr(path));
 	if (child != nullptr) {
-		auto pos = sprite->get_position();
+		auto pos = child->get_position();
 		return GdVec2{ pos.x, -pos.y };
 	}
 	return GdVec2();
@@ -135,7 +135,7 @@ GdFloat SpxSpriteMgr::get_child_rotation(GdObj obj, GdString path) {
 	check_and_get_sprite_r(0)
 	auto child = (Node2D *)sprite->get_node(SpxStr(path));
 	if (child != nullptr) {
-		return sprite->get_rotation();
+		return child->get_rotation();
 	}
 	return 0;
 }
@@ -152,7 +152,7 @@ GdVec2 SpxSpriteMgr::get_child_scale(GdObj obj, GdString path) {
 	check_and_get_sprite_r(GdVec2())
 	auto child = (Node2D *)sprite->get_node(SpxStr(path));
 	if (child != nullptr) {
-		return sprite->get_scale();
+		return child->get_scale();
 	}
 	return GdVec2();
 }
