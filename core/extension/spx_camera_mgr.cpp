@@ -33,8 +33,8 @@
 #include "scene/2d/camera_2d.h"
 #include "scene/main/window.h"
 
-void SpxCameraMgr::on_start() {
-	SpxBaseMgr::on_start();
+void SpxCameraMgr::on_awake() {
+	SpxBaseMgr::on_awake();
 	camera = nullptr;
 	auto nodes = get_root()->find_children("*","Camera2D",true,false);
 	for(int i = 0; i < nodes.size(); i++) {

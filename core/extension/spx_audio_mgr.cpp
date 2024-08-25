@@ -31,8 +31,8 @@
 #include "spx_audio_mgr.h"
 #include "scene/2d/audio_stream_player_2d.h"
 
-void SpxAudioMgr::on_start() {
-	SpxBaseMgr::on_start();
+void SpxAudioMgr::on_awake() {
+	SpxBaseMgr::on_awake();
 	audio = memnew(AudioStreamPlayer2D);
 	owner->add_child(audio);
 	music = memnew(AudioStreamPlayer2D);

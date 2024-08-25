@@ -44,6 +44,7 @@ private:
 
 public:
 	static StringName default_texture_anim;
+	void on_awake() override;
 	void on_start() override;
 	void on_destroy() override;
 	void on_update(float delta) override;

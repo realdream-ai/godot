@@ -89,7 +89,7 @@ public:
 	Window *get_root();
 	void set_root_node(SceneTree *p_tree, Node *p_node);
 
-	void on_start() override;
+	void on_awake() override;
 	void on_fixed_update(float delta) override;
 	void on_update(float delta) override;
 	void on_destroy() override;

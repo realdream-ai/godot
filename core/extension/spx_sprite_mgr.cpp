@@ -60,12 +60,29 @@ StringName SpxSpriteMgr::default_texture_anim = "";
 
 #define SPX_CALLBACK SpxEngine::get_singleton()->get_callbacks()
 
-void SpxSpriteMgr::on_start() {
-	SpxBaseMgr::on_start();
+void SpxSpriteMgr::on_awake() {
+	SpxBaseMgr::on_awake();
 	default_texture_anim = "default";
 	dont_destroy_root = memnew(Node2D);
 	dont_destroy_root->set_name("dont_destroy_root");
 	get_spx_root()->add_child(dont_destroy_root);
+}
+
+void SpxSpriteMgr::on_start() {
+	SpxBaseMgr::on_start();
+	auto nodes = get_root()->find_children("*","SpxSprite",true,false);
+	for(int i = 0; i < nodes.size(); i++) {
+		auto sprite = Object::cast_to<SpxSprite>(nodes[i]);
+		if(sprite != nullptr) {
+			sprite->set_gid(get_unique_id());
+			get_spx_root()->add_child(sprite);
+			sprite->on_start();
+			spriteMgr->id_objects[sprite->get_gid()] = sprite;
+			SpxBaseMgr::temp_return_str = sprite->get_spx_type_name();
+			// TODO(jiepengtan) fixed it
+			SPX_CALLBACK->func_on_scene_sprite_instantiated(sprite->get_gid(), SpxBaseMgr::temp_return_str.ascii().get_data());
+		}
+	}
 }
 
 void SpxSpriteMgr::on_destroy() {

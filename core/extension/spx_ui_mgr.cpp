@@ -80,8 +80,8 @@ void SpxUiMgr::on_click(SpxUi *node) {
 }
 
 
-void SpxUiMgr::on_start() {
-	SpxBaseMgr::on_start();
+void SpxUiMgr::on_awake() {
+	SpxBaseMgr::on_awake();
 	owner = memnew(CanvasLayer);
 	owner->set_name(get_class_name());
 	get_spx_root()->add_child(owner);

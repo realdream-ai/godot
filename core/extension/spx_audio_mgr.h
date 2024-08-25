@@ -43,7 +43,7 @@ private:
 	AudioStreamPlayer2D *music;
 
 public:
-	void on_start() override;
+	void on_awake() override;
 	void on_destroy() override;
 public:
 	void play_audio(GdString path);

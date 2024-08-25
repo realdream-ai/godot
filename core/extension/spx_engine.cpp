@@ -94,7 +94,10 @@ void SpxEngine::set_root_node(SceneTree *p_tree, Node *p_node) {
 	spx_root = p_node;
 }
 
-void SpxEngine::on_start() {
+void SpxEngine::on_awake() {
+	for (auto mgr : mgrs) {
+		mgr->on_awake();
+	}
 	for (auto mgr : mgrs) {
 		mgr->on_start();
 	}

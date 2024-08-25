@@ -64,7 +64,7 @@ void Spx::on_start(void *p_tree) {
 	new_node->set_name("SpxEngineNode");
 	root->add_child(new_node);
 	SPX_ENGINE->set_root_node(tree, new_node);
-	SPX_ENGINE->on_start();
+	SPX_ENGINE->on_awake();
 }
 
 void Spx::on_fixed_update(double delta) {

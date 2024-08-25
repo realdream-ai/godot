@@ -87,6 +87,8 @@ typedef void (*GDExtensionSpxCallbackOnEngineUpdate)(GdFloat delta);
 typedef void (*GDExtensionSpxCallbackOnEngineFixedUpdate)(GdFloat delta);
 typedef void (*GDExtensionSpxCallbackOnEngineDestroy)();
 
+typedef void (*GDExtensionSpxCallbackOnSceneSpriteInstantiated)(GdObj obj,GdString type_name);
+
 typedef void (*GDExtensionSpxCallbackOnSpriteReady)(GdObj obj);
 typedef void (*GDExtensionSpxCallbackOnSpriteUpdated)(GdFloat delta);
 typedef void (*GDExtensionSpxCallbackOnSpriteFixedUpdated)(GdFloat delta);
@@ -138,6 +140,8 @@ typedef struct {
 	GDExtensionSpxCallbackOnEngineFixedUpdate func_on_engine_fixed_update;
 	GDExtensionSpxCallbackOnEngineDestroy func_on_engine_destroy;
 
+	// scene
+	GDExtensionSpxCallbackOnSceneSpriteInstantiated func_on_scene_sprite_instantiated;
 	// sprite
 	GDExtensionSpxCallbackOnSpriteReady func_on_sprite_ready;
 	GDExtensionSpxCallbackOnSpriteUpdated func_on_sprite_updated;

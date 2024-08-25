@@ -51,10 +51,13 @@ SceneTree *SpxBaseMgr::get_tree() {
 	return SpxEngine::get_singleton()->get_tree();
 }
 
-void SpxBaseMgr::on_start() {
+void SpxBaseMgr::on_awake() {
 	owner = memnew(Node2D);
 	owner->set_name(get_class_name());
 	get_spx_root()->add_child(owner);
+}
+
+void SpxBaseMgr::on_start() {
 }
 
 void SpxBaseMgr::on_update(float delta) {

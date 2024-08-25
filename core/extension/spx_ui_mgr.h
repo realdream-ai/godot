@@ -43,7 +43,7 @@ private:
 	Control* create_control(GdString path);
 
 public:
-	void on_start() override;
+	void on_awake() override;
 	void on_node_destroy(SpxUi *node);
 	SpxUi* on_create_node(Control *control,GdInt type);
 	SpxUi *get_node(GdObj obj);
