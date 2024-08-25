@@ -35,18 +35,22 @@
 #include "spx_base_mgr.h"
 
 class Camera2D;
+
 class SpxCameraMgr : SpxBaseMgr {
 	SPXCLASS(SpxCameraMgr, SpxBaseMgr)
+
 private:
 	Camera2D *camera = nullptr;
+
 public:
 	void on_start() override;
+
 public:
-	Rect2 get_viewport_rect() ;
 	GdVec2 get_camera_position();
 	void set_camera_position(GdVec2 position);
 	GdVec2 get_camera_zoom();
 	void set_camera_zoom(GdVec2 size);
+	GdRect2 get_viewport_rect();
 };
 
 #endif // SPX_CAMERA_MGR_H

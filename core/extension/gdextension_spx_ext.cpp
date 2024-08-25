@@ -100,6 +100,9 @@ static void gdextension_spx_camera_get_camera_zoom(GdVec2* ret_val) {
 static void gdextension_spx_camera_set_camera_zoom(GdVec2 size) {
 	 cameraMgr->set_camera_zoom(size);
 }
+static void gdextension_spx_camera_get_viewport_rect(GdRect2* ret_val) {
+	*ret_val = cameraMgr->get_viewport_rect();
+}
 static void gdextension_spx_input_get_mouse_pos(GdVec2* ret_val) {
 	*ret_val = inputMgr->get_mouse_pos();
 }
@@ -481,6 +484,7 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_camera_set_camera_position);
 	REGISTER_SPX_INTERFACE_FUNC(spx_camera_get_camera_zoom);
 	REGISTER_SPX_INTERFACE_FUNC(spx_camera_set_camera_zoom);
+	REGISTER_SPX_INTERFACE_FUNC(spx_camera_get_viewport_rect);
 	REGISTER_SPX_INTERFACE_FUNC(spx_input_get_mouse_pos);
 	REGISTER_SPX_INTERFACE_FUNC(spx_input_get_key);
 	REGISTER_SPX_INTERFACE_FUNC(spx_input_get_mouse_state);

@@ -208,6 +208,7 @@ typedef void (*GDExtensionSpxCameraGetCameraPosition)(GdVec2* ret_value);
 typedef void (*GDExtensionSpxCameraSetCameraPosition)(GdVec2 position);
 typedef void (*GDExtensionSpxCameraGetCameraZoom)(GdVec2* ret_value);
 typedef void (*GDExtensionSpxCameraSetCameraZoom)(GdVec2 size);
+typedef void (*GDExtensionSpxCameraGetViewportRect)(GdRect2* ret_value);
 // SpxInput
 typedef void (*GDExtensionSpxInputGetMousePos)(GdVec2* ret_value);
 typedef void (*GDExtensionSpxInputGetKey)(GdInt key, GdBool* ret_value);

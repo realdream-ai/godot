@@ -51,7 +51,7 @@ void SpxCameraMgr::on_start() {
 	}
 }
 
-Rect2 SpxCameraMgr::get_viewport_rect() {
+GdRect2 SpxCameraMgr::get_viewport_rect() {
 	return camera->get_viewport_rect();
 }
 
