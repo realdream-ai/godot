@@ -64,6 +64,8 @@ public:
 	T *get_component(StringName name, GdBool recursive);
 
 public:
+	String spx_type_name;
+public:
 	static void _bind_methods();
 	void on_destroy_call();
 	SpxSprite();
@@ -72,7 +74,8 @@ public:
 	void on_area_entered(Node *node);
 	void on_area_exited(Node *node);
 
-
+	void set_spx_type_name(String type_name);
+	String get_spx_type_name();
 public:
 	void set_gid(GdObj id);
 	GdObj get_gid();

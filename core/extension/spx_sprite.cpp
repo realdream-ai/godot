@@ -64,6 +64,10 @@ void SpxSprite::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_gid"), &SpxSprite::get_gid);
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "gid"), "set_gid", "get_gid");
 
+	ClassDB::bind_method(D_METHOD("set_spx_type_name", "spx_type_name"), &SpxSprite::set_spx_type_name);
+	ClassDB::bind_method(D_METHOD("get_spx_type_name"), &SpxSprite::get_spx_type_name);
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "spx_type_name"), "set_spx_type_name", "get_spx_type_name");
+
 	ClassDB::bind_method(D_METHOD("on_destroy_call"), &SpxSprite::on_destroy_call);
 
 	ClassDB::bind_method(D_METHOD("on_area_entered", "area"), &SpxSprite::on_area_entered);
@@ -132,6 +136,14 @@ void SpxSprite::set_gid(GdObj id) {
 
 GdObj SpxSprite::get_gid() {
 	return gid;
+}
+
+void SpxSprite::set_spx_type_name(String type_name) {
+	spx_type_name = type_name;
+}
+
+String SpxSprite::get_spx_type_name() {
+	return spx_type_name;
 }
 
 void SpxSprite::on_area_entered(Node *node) {
