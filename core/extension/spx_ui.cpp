@@ -77,6 +77,8 @@ Control *SpxUi::get_canvas_item() const {
 			return image;
 		case ESpxUiType::Toggle:
 			return toggle;
+		case ESpxUiType::None:
+			return nullptr;
 	}
 	print_error("Unknown type " + itos(type));
 	return nullptr;
@@ -100,6 +102,9 @@ void SpxUi::set_canvas_item(Control *control) {
 		case ESpxUiType::Toggle:
 			toggle = (SpxToggle *)(control);
 			toggle->owner = this;
+			break;
+		case ESpxUiType::None:
+			print_error("Unknown type " + itos(type));
 			break;
 	}
 }
@@ -209,6 +214,9 @@ void SpxUi::set_text(GdString text) {
 		case ESpxUiType::Toggle:
 			toggle->set_text(value);
 			break;
+		case ESpxUiType::None:
+			print_error("Unknown type " + itos(type));
+			break;
 	}
 }
 
@@ -227,6 +235,9 @@ GdString SpxUi::get_text() {
 			break;
 		case ESpxUiType::Toggle:
 			value = toggle->get_text();
+			break;
+		case ESpxUiType::None:
+			print_error("Unknown type " + itos(type));
 			break;
 	}
 	SpxBaseMgr::temp_return_str = value;
@@ -251,6 +262,9 @@ void SpxUi::set_texture(GdString path) {
 			case ESpxUiType::Toggle:
 				toggle->set_icon(value);
 				break;
+			case ESpxUiType::None:
+				print_error("Unknown type " + itos(type));
+				break;
 		}
 	} else {
 		print_error("can not find a texture: " + path_str);
@@ -272,6 +286,9 @@ GdString SpxUi::get_texture() {
 			break;
 		case ESpxUiType::Toggle:
 			value = toggle->get_icon();
+			break;
+		case ESpxUiType::None:
+			print_error("Unknown type " + itos(type));
 			break;
 	}
 	if (value == nullptr)
