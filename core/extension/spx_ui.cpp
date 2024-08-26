@@ -1,4 +1,6 @@
 ﻿#include "spx_ui.h"
+
+#include "spx.h"
 #include "spx_base_mgr.h"
 #include "spx_engine.h"
 #include "spx_ui_mgr.h"
@@ -111,6 +113,8 @@ void SpxUi::set_canvas_item(Control *control) {
 
 
 void SpxUi::on_destroy_call() {
+	if(!Spx::initialed)
+		return;
 	uiMgr->on_node_destroy(this);
 }
 
