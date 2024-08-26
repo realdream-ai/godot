@@ -38,7 +38,7 @@
 class AnimatedSprite2D;
 class Area2D;
 class CollisionShape2D;
-
+class VisibleOnScreenNotifier2D;
 class SpxSprite : public CharacterBody2D {
 	GDCLASS(SpxSprite, CharacterBody2D);
 
@@ -57,6 +57,8 @@ protected:
 	Area2D *area2d;
 	CollisionShape2D *trigger2d;
 	CollisionShape2D *collider2d;
+	VisibleOnScreenNotifier2D *visible_notifier;
+
 public:
 	template <typename T>
 	T *get_component(GdBool recursive = false);
@@ -73,6 +75,19 @@ public:
 	void on_start();
 	void on_area_entered(Node *node);
 	void on_area_exited(Node *node);
+
+	// animation events
+	void on_sprite_frames_set_changed();
+	void on_sprite_animation_changed();
+	void on_sprite_frame_changed();
+	void on_sprite_animation_looped();
+	void on_sprite_animation_finished();
+	// vfx
+	void on_sprite_vfx_finished();
+	// visibility
+	void on_sprite_screen_exited();
+	void on_sprite_screen_entered();
+
 
 	void set_spx_type_name(String type_name);
 	String get_spx_type_name();

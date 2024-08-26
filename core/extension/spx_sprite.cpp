@@ -30,11 +30,13 @@
 
 #include "spx_sprite.h"
 
+#include "spx.h"
 #include "spx_engine.h"
 #include "spx_sprite_mgr.h"
 #include "scene/2d/animated_sprite_2d.h"
 #include "scene/2d/area_2d.h"
 #include "scene/2d/collision_shape_2d.h"
+#include "scene/2d/visible_on_screen_notifier_2d.h"
 #include "scene/resources/capsule_shape_2d.h"
 #include "scene/resources/circle_shape_2d.h"
 #include "scene/resources/rectangle_shape_2d.h"
@@ -72,10 +74,21 @@ void SpxSprite::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("on_area_entered", "area"), &SpxSprite::on_area_entered);
 	ClassDB::bind_method(D_METHOD("on_area_exited", "area"), &SpxSprite::on_area_exited);
+
+	ClassDB::bind_method(D_METHOD("on_sprite_frames_set_changed"), &SpxSprite::on_sprite_frames_set_changed);
+	ClassDB::bind_method(D_METHOD("on_sprite_animation_changed"), &SpxSprite::on_sprite_animation_changed);
+	ClassDB::bind_method(D_METHOD("on_sprite_frame_changed"), &SpxSprite::on_sprite_frame_changed);
+	ClassDB::bind_method(D_METHOD("on_sprite_animation_looped"), &SpxSprite::on_sprite_animation_looped);
+	ClassDB::bind_method(D_METHOD("on_sprite_animation_finished"), &SpxSprite::on_sprite_animation_finished);
+	ClassDB::bind_method(D_METHOD("on_sprite_vfx_finished"), &SpxSprite::on_sprite_vfx_finished);
+	ClassDB::bind_method(D_METHOD("on_sprite_screen_exited"), &SpxSprite::on_sprite_screen_exited);
+	ClassDB::bind_method(D_METHOD("on_sprite_screen_entered"), &SpxSprite::on_sprite_screen_entered);
 }
 
 
 void SpxSprite::on_destroy_call() {
+	if(!Spx::initialed)
+		return;
 	spriteMgr->on_sprite_destroy(this);
 }
 
@@ -118,6 +131,11 @@ void SpxSprite::on_start() {
 	if (anim2d->get_sprite_frames() == nullptr) {
 		anim2d->set_sprite_frames(memnew(SpriteFrames));
 	}
+	visible_notifier = (get_component<VisibleOnScreenNotifier2D>());
+	if(visible_notifier == nullptr) {
+		visible_notifier = memnew(VisibleOnScreenNotifier2D);
+		add_child(visible_notifier);
+	}
 	//anim2d->get_sprite_frames()->add_animation(SpxSpriteMgr::default_texture_anim);
 	area2d = (get_component<Area2D>());
 	if (area2d != nullptr) {
@@ -127,6 +145,17 @@ void SpxSprite::on_start() {
 	if (area2d != nullptr) {
 		area2d->connect("area_entered", Callable(this, "on_area_entered"));
 		area2d->connect("area_exited", Callable(this, "on_area_exited"));
+	}
+	if (anim2d != nullptr) {
+		anim2d->connect("sprite_frames_changed", Callable(this, "on_sprite_frames_set_changed"));
+		anim2d->connect("animation_changed", Callable(this, "on_sprite_animation_changed"));
+		anim2d->connect("frame_changed", Callable(this, "on_sprite_frame_changed"));
+		anim2d->connect("animation_looped", Callable(this, "on_sprite_animation_looped"));
+		anim2d->connect("animation_finished", Callable(this, "on_sprite_animation_finished"));
+	}
+	if(visible_notifier != nullptr) {
+		visible_notifier->connect("screen_exited", Callable(this, "on_sprite_screen_exited"));
+		visible_notifier->connect("screen_entered", Callable(this, "on_sprite_screen_entered"));
 	}
 }
 
@@ -160,6 +189,37 @@ void SpxSprite::on_area_exited(Node *node) {
 	if (other != nullptr) {
 		SPX_CALLBACK->func_on_trigger_exit(this->gid, other->gid);
 	}
+}
+
+void SpxSprite::on_sprite_frames_set_changed() {
+	SPX_CALLBACK->func_on_sprite_frames_set_changed(this->gid);
+}
+
+void SpxSprite::on_sprite_animation_changed() {
+	SPX_CALLBACK->func_on_sprite_animation_changed(this->gid);
+}
+
+void SpxSprite::on_sprite_frame_changed() {
+	SPX_CALLBACK->func_on_sprite_frame_changed(this->gid);
+}
+
+void SpxSprite::on_sprite_animation_looped() {
+	SPX_CALLBACK->func_on_sprite_animation_looped(this->gid);
+}
+
+void SpxSprite::on_sprite_animation_finished() {
+	SPX_CALLBACK->func_on_sprite_animation_finished(this->gid);
+}
+
+void SpxSprite::on_sprite_vfx_finished() {
+}
+
+void SpxSprite::on_sprite_screen_exited() {
+	SPX_CALLBACK->func_on_sprite_screen_exited(this->gid);
+}
+
+void SpxSprite::on_sprite_screen_entered() {
+	SPX_CALLBACK->func_on_sprite_screen_entered(this->gid);
 }
 
 void SpxSprite::set_color(GdColor color) {
