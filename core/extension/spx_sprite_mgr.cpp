@@ -75,7 +75,8 @@ void SpxSpriteMgr::on_start() {
 		auto sprite = Object::cast_to<SpxSprite>(nodes[i]);
 		if(sprite != nullptr) {
 			sprite->set_gid(get_unique_id());
-			get_spx_root()->add_child(sprite);
+			//sprite->get_parent()->remove_child(sprite);
+			//get_spx_root()->add_child(sprite);
 			sprite->on_start();
 			spriteMgr->id_objects[sprite->get_gid()] = sprite;
 			SpxBaseMgr::temp_return_str = sprite->get_spx_type_name();
