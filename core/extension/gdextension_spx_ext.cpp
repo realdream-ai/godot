@@ -130,6 +130,9 @@ static void gdextension_spx_input_is_action_just_released(GdString action,GdBool
 static void gdextension_spx_physic_raycast(GdVec2 from,GdVec2 to,GdInt collision_mask,GdObj* ret_val) {
 	*ret_val = physicMgr->raycast(from, to, collision_mask);
 }
+static void gdextension_spx_physic_check_collision(GdVec2 from,GdVec2 to,GdInt collision_mask,GdBool collide_with_areas,GdBool collide_with_bodies,GdBool* ret_val) {
+	*ret_val = physicMgr->check_collision(from, to, collision_mask, collide_with_areas, collide_with_bodies);
+}
 static void gdextension_spx_scene_change_scene_to_file(GdString path) {
 	 sceneMgr->change_scene_to_file(path);
 }
@@ -494,6 +497,7 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_input_is_action_just_pressed);
 	REGISTER_SPX_INTERFACE_FUNC(spx_input_is_action_just_released);
 	REGISTER_SPX_INTERFACE_FUNC(spx_physic_raycast);
+	REGISTER_SPX_INTERFACE_FUNC(spx_physic_check_collision);
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_change_scene_to_file);
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_reload_current_scene);
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_unload_current_scene);

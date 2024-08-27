@@ -37,11 +37,14 @@
 #include "servers/physics_server_3d.h"
 
 GdObj SpxPhysicMgr::raycast(GdVec2 from, GdVec2 to, GdInt collision_mask) {
-	auto node = (Node2D *)owner;
+	auto node = (Node2D *)get_root();
 	PhysicsDirectSpaceState2D *space_state = node->get_world_2d()->get_direct_space_state();
 
 	PhysicsDirectSpaceState2D::RayResult result;
 	PhysicsDirectSpaceState2D::RayParameters params;
+	// flip y axis
+	from =  GdVec2{ from.x, -from.y };
+	to =  GdVec2{ to.x, -to.y };
 	params.from = from;
 	params.to = to;
 	params.collision_mask = (uint32_t)collision_mask;
@@ -53,4 +56,22 @@ GdObj SpxPhysicMgr::raycast(GdVec2 from, GdVec2 to, GdInt collision_mask) {
 		}
 	}
 	return 0;
+}
+
+GdBool SpxPhysicMgr::check_collision(GdVec2 from, GdVec2 to, GdInt collision_mask, GdBool collide_with_areas, GdBool collide_with_bodies) {
+	auto node = (Node2D *)get_root();
+	PhysicsDirectSpaceState2D *space_state = node->get_world_2d()->get_direct_space_state();
+	PhysicsDirectSpaceState2D::RayResult result;
+	PhysicsDirectSpaceState2D::RayParameters params;
+
+	// flip y axis
+	from =  GdVec2{ from.x, -from.y };
+	to =  GdVec2{ to.x, -to.y };
+	params.from = from;
+	params.to = to;
+	params.collision_mask = (uint32_t)collision_mask;
+	params.collide_with_areas = collide_with_areas;
+	params.collide_with_bodies = collide_with_bodies;
+	bool hit = space_state->intersect_ray(params, result);
+	return hit;
 }

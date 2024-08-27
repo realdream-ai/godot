@@ -224,6 +224,7 @@ typedef void (*GDExtensionSpxInputIsActionJustPressed)(GdString action, GdBool* 
 typedef void (*GDExtensionSpxInputIsActionJustReleased)(GdString action, GdBool* ret_value);
 // SpxPhysic
 typedef void (*GDExtensionSpxPhysicRaycast)(GdVec2 from, GdVec2 to, GdInt collision_mask, GdObj* ret_value);
+typedef void (*GDExtensionSpxPhysicCheckCollision)(GdVec2 from, GdVec2 to, GdInt collision_mask, GdBool collide_with_areas, GdBool collide_with_bodies, GdBool* ret_value);
 // SpxScene
 typedef void (*GDExtensionSpxSceneChangeSceneToFile)(GdString path);
 typedef void (*GDExtensionSpxSceneReloadCurrentScene)(GdInt* ret_value);
