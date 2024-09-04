@@ -38,7 +38,7 @@
 public:                               \
 	String get_class_name() const override { return #m_class; }
 
-#define SpxStr(str) (String(*(const String *)str)+ "")
+#define SpxStr(str) (((const String *)str)->clone())
 #define SpxStrName(str) StringName(*(const String *)str)
 
 #define inputMgr SpxEngine::get_singleton()->get_input()
