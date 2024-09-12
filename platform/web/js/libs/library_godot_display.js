@@ -801,7 +801,11 @@ const GodotDisplay = {
 	godot_js_on_load_gdextension__sig: 'viii',
 	godot_js_on_load_gdextension : function (p_name, p_get_proc_address, p_library, r_initialization) {
 		const text = GodotRuntime.parseString(p_name);
-		console.log("C++ called JavaScript function godot_js_on_load_gdextension", p_name);
+		if ("goWasmInit" !== text) {
+			console.log("not go wasm environment, just skip ", text);
+			return;
+		}
+		console.log("C++ called JavaScript function godot_js_on_load_gdextension", text);
 	},
 };
 

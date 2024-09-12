@@ -255,7 +255,7 @@ bool OS_Web::indirect_call_dynamic_library(const String p_name, void* p_get_proc
 	print_line("indirect_call_dynamic_library ",p_name);
 	CharString string = p_name.utf8();
 	godot_js_on_load_gdextension(string.get_data(), p_get_proc_address, p_library, r_initialization);
-	return true;
+	return p_name == "goWasmInit";
 }
 
 OS_Web *OS_Web::get_singleton() {
