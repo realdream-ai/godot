@@ -36,6 +36,7 @@
 
 #include "core/config/project_settings.h"
 #include "core/debugger/engine_debugger.h"
+#include "core/extension/gdextension_interface.h"
 #include "drivers/unix/dir_access_unix.h"
 #include "drivers/unix/file_access_unix.h"
 #include "main/main.h"
@@ -249,6 +250,12 @@ Error OS_Web::open_dynamic_library(const String p_path, void *&p_library_handle,
 	}
 
 	return OK;
+}
+bool OS_Web::indirect_call_dynamic_library(const String p_name, void* p_get_proc_address, void* p_library, void* r_initialization){
+	print_line("indirect_call_dynamic_library ",p_name);
+	CharString string = p_name.utf8();
+	godot_js_on_load_gdextension(string.get_data(), p_get_proc_address, p_library, r_initialization);
+	return true;
 }
 
 OS_Web *OS_Web::get_singleton() {

@@ -795,6 +795,14 @@ const GodotDisplay = {
 			GodotDisplayVK.init(input_cb);
 		}
 	},
+
+	// godot gdspx extensions
+	godot_js_on_load_gdextension__proxy: 'sync',
+	godot_js_on_load_gdextension__sig: 'viii',
+	godot_js_on_load_gdextension : function (p_name, p_get_proc_address, p_library, r_initialization) {
+		const text = GodotRuntime.parseString(p_name);
+		console.log("C++ called JavaScript function godot_js_on_load_gdextension", p_name);
+	},
 };
 
 autoAddDeps(GodotDisplay, '$GodotDisplay');

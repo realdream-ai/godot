@@ -128,6 +128,9 @@ extern void godot_js_display_vk_cb(void (*p_input)(const char *p_text, int p_cur
 extern void godot_js_display_vk_show(const char *p_text, int p_type, int p_start, int p_end);
 extern void godot_js_display_vk_hide();
 
+// GDExtention
+extern void godot_js_on_load_gdextension(const char *p_text, void* p_get_proc_address, void* p_library, void* r_initialization);
+
 #ifdef __cplusplus
 }
 #endif
