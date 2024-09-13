@@ -807,6 +807,31 @@ const GodotDisplay = {
 		}
 		console.log("C++ called JavaScript function godot_js_on_load_gdextension", text);
 	},
+
+	// godot gdspx extensions
+	godot_js_spx_on_engine_start__proxy: 'sync',
+	godot_js_spx_on_engine_start__sig: 'v',
+	godot_js_spx_on_engine_start : function () {
+		console.log("C++ called JavaScript function godot_js_spx_on_engine_start");
+	},
+
+	godot_js_spx_on_engine_update__proxy: 'sync',
+	godot_js_spx_on_engine_update__sig: 'vf', 
+	godot_js_spx_on_engine_update : function (delta) {
+		console.log("C++ called JavaScript function godot_js_spx_on_engine_update with delta: " + delta);
+	},
+
+	godot_js_spx_on_engine_fixed_update__proxy: 'sync',
+	godot_js_spx_on_engine_fixed_update__sig: 'vf', 
+	godot_js_spx_on_engine_fixed_update : function (delta) {
+		console.log("C++ called JavaScript function godot_js_spx_on_engine_fixed_update with delta: " + delta);
+	},
+
+	godot_js_spx_on_engine_destroy__proxy: 'sync',
+	godot_js_spx_on_engine_destroy__sig: 'v',
+	godot_js_spx_on_engine_destroy : function () {
+		console.log("C++ called JavaScript function godot_js_spx_on_engine_destroy");
+	},
 };
 
 autoAddDeps(GodotDisplay, '$GodotDisplay');

@@ -37,6 +37,8 @@
 #include "core/config/project_settings.h"
 #include "core/debugger/engine_debugger.h"
 #include "core/extension/gdextension_interface.h"
+#include "core/extension/spx_engine.h"
+#include "core/extension/gdextension_spx_ext.h"
 #include "drivers/unix/dir_access_unix.h"
 #include "drivers/unix/file_access_unix.h"
 #include "main/main.h"
@@ -284,8 +286,16 @@ OS_Web::OS_Web() {
 	Vector<Logger *> loggers;
 	loggers.push_back(memnew(StdLogger));
 	_set_logger(memnew(CompositeLogger(loggers)));
-
 	FileAccessUnix::close_notification_func = file_access_close_callback;
+ 	SpxCallbackInfo* callback_infos = memnew(SpxCallbackInfo);
+
+	// gdspx register callbacks
+	callback_infos->func_on_engine_start = &godot_js_spx_on_engine_start;
+	callback_infos->func_on_engine_update = &godot_js_spx_on_engine_update;
+	callback_infos->func_on_engine_fixed_update = &godot_js_spx_on_engine_fixed_update;
+	callback_infos->func_on_engine_destroy = &godot_js_spx_on_engine_destroy;
+
+	SpxEngine::register_callbacks(callback_infos);
 }
 
 
