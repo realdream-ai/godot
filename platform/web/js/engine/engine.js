@@ -169,6 +169,11 @@ const Engine = (function () {
 							+ 'Enable "Extensions Support" for your export preset and/or build your custom template with "dlink_enabled=yes".'));
 					}
 					me.config.gdextensionLibs.forEach(function (lib) {
+						// gdspx is special, it must be loaded before the others.
+						if(lib.startsWith('gdspx')) {
+							console.log('Loading gdspx dynamic library:', lib);
+							return 
+						}
 						libs.push(me.rtenv['loadDynamicLibrary'](lib, { 'loadAsync': true }));
 					});
 					return Promise.all(libs).then(function () {
