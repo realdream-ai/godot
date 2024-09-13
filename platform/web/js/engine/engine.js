@@ -183,6 +183,7 @@ const Engine = (function () {
 								me.rtenv['copyToFS'](file.path, file.buffer);
 							});
 							preloader.preloadedFiles.length = 0; // Clear memory
+							Module['_test_js_call_cpp'](45);
 							me.rtenv['callMain'](me.config.args);
 							initPromise = null;
 							if (me.config.serviceWorker && 'serviceWorker' in navigator) {

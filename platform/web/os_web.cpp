@@ -287,3 +287,12 @@ OS_Web::OS_Web() {
 
 	FileAccessUnix::close_notification_func = file_access_close_callback;
 }
+
+
+
+extern "C" {
+	EMSCRIPTEN_KEEPALIVE
+	void test_js_call_cpp(float val) {
+		printf("C++ function called with value: %f\n", val);
+	}
+}
