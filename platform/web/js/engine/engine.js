@@ -209,7 +209,7 @@ const Engine = (function () {
 											me.goWasm = {
 												goWasmInit: window.goWasmInit,
 											};
-											me.goWasm.goWasmInit("Godot call ");
+											me.goWasm.goWasmInit();
 											resolve(); 
 										});
 									});

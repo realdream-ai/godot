@@ -813,25 +813,30 @@ const GodotDisplay = {
 	godot_js_spx_on_engine_start__sig: 'v',
 	godot_js_spx_on_engine_start : function () {
 		console.log("C++ called JavaScript function godot_js_spx_on_engine_start");
+		window.gdspx_on_engine_start();
 	},
 
 	godot_js_spx_on_engine_update__proxy: 'sync',
 	godot_js_spx_on_engine_update__sig: 'vf', 
 	godot_js_spx_on_engine_update : function (delta) {
 		console.log("C++ called JavaScript function godot_js_spx_on_engine_update with delta: " + delta);
+		window.gdspx_on_engine_update(delta);
 	},
 
 	godot_js_spx_on_engine_fixed_update__proxy: 'sync',
 	godot_js_spx_on_engine_fixed_update__sig: 'vf', 
 	godot_js_spx_on_engine_fixed_update : function (delta) {
 		console.log("C++ called JavaScript function godot_js_spx_on_engine_fixed_update with delta: " + delta);
+		window.gdspx_on_engine_fixed_update(delta);
 	},
 
 	godot_js_spx_on_engine_destroy__proxy: 'sync',
 	godot_js_spx_on_engine_destroy__sig: 'v',
 	godot_js_spx_on_engine_destroy : function () {
 		console.log("C++ called JavaScript function godot_js_spx_on_engine_destroy");
+		window.gdspx_on_engine_destroy(delta);
 	},
+
 };
 
 autoAddDeps(GodotDisplay, '$GodotDisplay');
