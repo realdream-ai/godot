@@ -302,7 +302,9 @@ OS_Web::OS_Web() {
 
 extern "C" {
 	EMSCRIPTEN_KEEPALIVE
-	void test_js_call_cpp(float val) {
-		printf("C++ function called with value: %f\n", val);
+	float test_go_call_cpp(float val) {
+		auto ret = val * 2;
+		printf("C++ function called with value: %f return %f\n ", val,ret);
+		return ret;
 	}
 }

@@ -8,6 +8,10 @@
  * @module Engine
  * @header Web export JavaScript reference
  */
+var GodotEngine;
+function test_go_call_cpp(val) {
+	return GodotEngine.rtenv['_test_go_call_cpp'](val);
+}
 const Engine = (function () {
 	const preloader = new Preloader();
 
@@ -183,7 +187,6 @@ const Engine = (function () {
 								me.rtenv['copyToFS'](file.path, file.buffer);
 							});
 							preloader.preloadedFiles.length = 0; // Clear memory
-							me.rtenv['_test_js_call_cpp'](45);
 							me.rtenv['callMain'](me.config.args);
 							initPromise = null;
 							if (me.config.serviceWorker && 'serviceWorker' in navigator) {
@@ -237,6 +240,7 @@ const Engine = (function () {
 			 * @return {Promise} Promise that resolves once the game started.
 			 */
 			startGame: function (override) {
+				GodotEngine = this;
 				this.config.update(override);
 				// Add main-pack argument.
 				const exe = this.config.executable;

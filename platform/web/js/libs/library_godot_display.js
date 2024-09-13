@@ -841,3 +841,4 @@ const GodotDisplay = {
 
 autoAddDeps(GodotDisplay, '$GodotDisplay');
 mergeInto(LibraryManager.library, GodotDisplay);
+
