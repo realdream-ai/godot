@@ -92,18 +92,35 @@ const Engine = (function () {
 					// Make sure to test that when refactoring.
 					return new Promise(function (resolve, reject) {
 						promise.then(function (response) {
-							const cloned = new Response(response.clone().body, { 'headers': [['content-type', 'application/wasm']] });
-							Godot(me.config.getModuleConfig(loadPath, cloned)).then(function (module) {
-								const paths = me.config.persistentPaths;
-								module['initFS'](paths).then(function (err) {
-									me.rtenv = module;
-									if (me.config.unloadAfterInit) {
-										Engine.unload();
-									}
-									resolve();
+							// Load gdspx before proceeding
+							const gdspxPath = basePath.replace("index", "gdspx");
+							const gdspxPromise = preloader.loadPromise(`${gdspxPath}.wasm`, me.config.fileSizes[`${gdspxPath}.wasm`], true);
+							
+							gdspxPromise.then(function (gdspxResponse) {
+								const go = new Go();
+								const gdspxCloned = new Response(gdspxResponse.clone().body, { 'headers': [['content-type', 'application/wasm']] });
+								const goModuleConfig = me.config.getModuleConfig(loadPath, gdspxCloned);
+								goModuleConfig.instantiateWasm(go.importObject, function (goWasmInstance, goWasmModule) {
+									go.run(goWasmInstance);
+									me.goWasm =  {
+										goWasmInit: window.goWasmInit,
+									};
+									me.goWasm.goWasmInit("Godot call ");
+									const cloned = new Response(response.clone().body, { 'headers': [['content-type', 'application/wasm']] });
+									// Now proceed with Godot and other logic
+									Godot(me.config.getModuleConfig(loadPath, cloned)).then(function (module) {
+										const paths = me.config.persistentPaths;
+										module['initFS'](paths).then(function (err) {
+											me.rtenv = module;
+											if (me.config.unloadAfterInit) {
+												Engine.unload();
+											}
+											resolve();
+										});
+									});
 								});
-							});
-						});
+							}).catch(reject); // Reject if gdspx loading fails
+						}).catch(reject); // Reject if the original promise fails
 					});
 				}
 				preloader.setProgressFunc(this.config.onProgress);
