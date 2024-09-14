@@ -128,15 +128,7 @@ extern void godot_js_display_vk_cb(void (*p_input)(const char *p_text, int p_cur
 extern void godot_js_display_vk_show(const char *p_text, int p_type, int p_start, int p_end);
 extern void godot_js_display_vk_hide();
 
-// GDExtention
-extern void godot_js_on_load_gdextension(const char *p_text, void* p_get_proc_address, void* p_library, void* r_initialization);
-
-
-// Gdspx 
-extern void godot_js_spx_on_engine_start();
-extern void godot_js_spx_on_engine_update(float delta);
-extern void godot_js_spx_on_engine_fixed_update(float delta);
-extern void godot_js_spx_on_engine_destroy();
+#include "godot_js_spx.h"
 
 #ifdef __cplusplus
 }

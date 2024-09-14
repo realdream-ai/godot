@@ -1,0 +1,282 @@
+const GodotGdspx = {
+	$GodotGdspx__deps: ['$GodotConfig', '$GodotRuntime'],
+	$GodotGdspx: {
+	},
+
+	
+	godot_js_spx_on_engine_update__proxy: 'sync',
+	godot_js_spx_on_engine_update__sig: 'vf', 
+	godot_js_spx_on_engine_update : function (delta) {
+		console.log("C++ called JavaScript function godot_js_spx_on_engine_update with delta: " + delta);
+		window.gdspx_on_engine_update(delta);
+	},
+
+	godot_js_spx_on_engine_fixed_update__proxy: 'sync',
+	godot_js_spx_on_engine_fixed_update__sig: 'vf', 
+	godot_js_spx_on_engine_fixed_update : function (delta) {
+		console.log("C++ called JavaScript function godot_js_spx_on_engine_fixed_update with delta: " + delta);
+		window.gdspx_on_engine_fixed_update(delta);
+	},
+
+	godot_js_spx_on_engine_destroy__proxy: 'sync',
+	godot_js_spx_on_engine_destroy__sig: 'v',
+	godot_js_spx_on_engine_destroy : function () {
+		console.log("C++ called JavaScript function godot_js_spx_on_engine_destroy");
+		window.gdspx_on_engine_destroy(delta);
+	},
+
+	godot_js_spx_on_scene_sprite_instantiated__proxy: 'sync',
+	godot_js_spx_on_scene_sprite_instantiated__sig: 'vii',
+	godot_js_spx_on_scene_sprite_instantiated: function (obj, type_name) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_scene_sprite_instantiated，obj: " + obj + ", type_name: " + GodotRuntime.parseString(type_name));
+		window.gdspx_on_scene_sprite_instantiated(obj, GodotRuntime.parseString(type_name));
+	},
+
+	godot_js_spx_on_sprite_ready__proxy: 'sync',
+	godot_js_spx_on_sprite_ready__sig: 'vi',
+	godot_js_spx_on_sprite_ready: function (obj) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_sprite_ready，obj: " + obj);
+		window.gdspx_on_sprite_ready(obj);
+	},
+
+	godot_js_spx_on_sprite_updated__proxy: 'sync',
+	godot_js_spx_on_sprite_updated__sig: 'vf',
+	godot_js_spx_on_sprite_updated: function (delta) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_sprite_updated，delta: " + delta);
+		window.gdspx_on_sprite_updated(delta);
+	},
+
+	godot_js_spx_on_sprite_fixed_updated__proxy: 'sync',
+	godot_js_spx_on_sprite_fixed_updated__sig: 'vf',
+	godot_js_spx_on_sprite_fixed_updated: function (delta) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_sprite_fixed_updated，delta: " + delta);
+		window.gdspx_on_sprite_fixed_updated(delta);
+	},
+
+	godot_js_spx_on_sprite_destroyed__proxy: 'sync',
+	godot_js_spx_on_sprite_destroyed__sig: 'vi',
+	godot_js_spx_on_sprite_destroyed: function (obj) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_sprite_destroyed，obj: " + obj);
+		window.gdspx_on_sprite_destroyed(obj);
+	},
+
+	godot_js_spx_on_sprite_frames_set_changed__proxy: 'sync',
+	godot_js_spx_on_sprite_frames_set_changed__sig: 'vi',
+	godot_js_spx_on_sprite_frames_set_changed: function (obj) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_sprite_frames_set_changed，obj: " + obj);
+		window.gdspx_on_sprite_frames_set_changed(obj);
+	},
+
+	godot_js_spx_on_sprite_animation_changed__proxy: 'sync',
+	godot_js_spx_on_sprite_animation_changed__sig: 'vi',
+	godot_js_spx_on_sprite_animation_changed: function (obj) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_sprite_animation_changed，obj: " + obj);
+		window.gdspx_on_sprite_animation_changed(obj);
+	},
+
+	godot_js_spx_on_sprite_frame_changed__proxy: 'sync',
+	godot_js_spx_on_sprite_frame_changed__sig: 'vi',
+	godot_js_spx_on_sprite_frame_changed: function (obj) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_sprite_frame_changed，obj: " + obj);
+		window.gdspx_on_sprite_frame_changed(obj);
+	},
+
+	godot_js_spx_on_sprite_animation_looped__proxy: 'sync',
+	godot_js_spx_on_sprite_animation_looped__sig: 'vi',
+	godot_js_spx_on_sprite_animation_looped: function (obj) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_sprite_animation_looped，obj: " + obj);
+		window.gdspx_on_sprite_animation_looped(obj);
+	},
+
+	godot_js_spx_on_sprite_animation_finished__proxy: 'sync',
+	godot_js_spx_on_sprite_animation_finished__sig: 'vi',
+	godot_js_spx_on_sprite_animation_finished: function (obj) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_sprite_animation_finished，obj: " + obj);
+		window.gdspx_on_sprite_animation_finished(obj);
+	},
+
+	godot_js_spx_on_sprite_vfx_finished__proxy: 'sync',
+	godot_js_spx_on_sprite_vfx_finished__sig: 'vi',
+	godot_js_spx_on_sprite_vfx_finished: function (obj) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_sprite_vfx_finished，obj: " + obj);
+		window.gdspx_on_sprite_vfx_finished(obj);
+	},
+
+	godot_js_spx_on_sprite_screen_exited__proxy: 'sync',
+	godot_js_spx_on_sprite_screen_exited__sig: 'vi',
+	godot_js_spx_on_sprite_screen_exited: function (obj) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_sprite_screen_exited，obj: " + obj);
+		window.gdspx_on_sprite_screen_exited(obj);
+	},
+
+	godot_js_spx_on_sprite_screen_entered__proxy: 'sync',
+	godot_js_spx_on_sprite_screen_entered__sig: 'vi',
+	godot_js_spx_on_sprite_screen_entered: function (obj) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_sprite_screen_entered，obj: " + obj);
+		window.gdspx_on_sprite_screen_entered(obj);
+	},
+
+	godot_js_spx_on_mouse_pressed__proxy: 'sync',
+	godot_js_spx_on_mouse_pressed__sig: 'vi',
+	godot_js_spx_on_mouse_pressed: function (keyid) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_mouse_pressed，keyid: " + keyid);
+		window.gdspx_on_mouse_pressed(keyid);
+	},
+
+	godot_js_spx_on_mouse_released__proxy: 'sync',
+	godot_js_spx_on_mouse_released__sig: 'vi',
+	godot_js_spx_on_mouse_released: function (keyid) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_mouse_released，keyid: " + keyid);
+		window.gdspx_on_mouse_released(keyid);
+	},
+
+	godot_js_spx_on_key_pressed__proxy: 'sync',
+	godot_js_spx_on_key_pressed__sig: 'vi',
+	godot_js_spx_on_key_pressed: function (keyid) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_key_pressed，keyid: " + keyid);
+		window.gdspx_on_key_pressed(keyid);
+	},
+
+	godot_js_spx_on_key_released__proxy: 'sync',
+	godot_js_spx_on_key_released__sig: 'vi',
+	godot_js_spx_on_key_released: function (keyid) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_key_released，keyid: " + keyid);
+		window.gdspx_on_key_released(keyid);
+	},
+
+	godot_js_spx_on_action_pressed__proxy: 'sync',
+	godot_js_spx_on_action_pressed__sig: 'vi',
+	godot_js_spx_on_action_pressed: function (action_name) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_action_pressed，action_name: " + GodotRuntime.parseString(action_name));
+		window.gdspx_on_action_pressed(GodotRuntime.parseString(action_name));
+	},
+
+	godot_js_spx_on_action_just_pressed__proxy: 'sync',
+	godot_js_spx_on_action_just_pressed__sig: 'vi',
+	godot_js_spx_on_action_just_pressed: function (action_name) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_action_just_pressed，action_name: " + GodotRuntime.parseString(action_name));
+		window.gdspx_on_action_just_pressed(GodotRuntime.parseString(action_name));
+	},
+
+	godot_js_spx_on_action_just_released__proxy: 'sync',
+	godot_js_spx_on_action_just_released__sig: 'vi',
+	godot_js_spx_on_action_just_released: function (action_name) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_action_just_released，action_name: " + GodotRuntime.parseString(action_name));
+		window.gdspx_on_action_just_released(GodotRuntime.parseString(action_name));
+	},
+
+	godot_js_spx_on_axis_changed__proxy: 'sync',
+	godot_js_spx_on_axis_changed__sig: 'vif',
+	godot_js_spx_on_axis_changed: function (action_name, value) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_axis_changed，action_name: " + GodotRuntime.parseString(action_name) + ", value: " + value);
+		window.gdspx_on_axis_changed(GodotRuntime.parseString(action_name), value);
+	},
+
+	godot_js_spx_on_collision_enter__proxy: 'sync',
+	godot_js_spx_on_collision_enter__sig: 'vii',
+	godot_js_spx_on_collision_enter: function (self_id, other_id) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_collision_enter，self_id: " + self_id + ", other_id: " + other_id);
+		window.gdspx_on_collision_enter(self_id, other_id);
+	},
+
+	godot_js_spx_on_collision_stay__proxy: 'sync',
+	godot_js_spx_on_collision_stay__sig: 'vii',
+	godot_js_spx_on_collision_stay: function (self_id, other_id) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_collision_stay，self_id: " + self_id + ", other_id: " + other_id);
+		window.gdspx_on_collision_stay(self_id, other_id);
+	},
+
+	godot_js_spx_on_collision_exit__proxy: 'sync',
+	godot_js_spx_on_collision_exit__sig: 'vii',
+	godot_js_spx_on_collision_exit: function (self_id, other_id) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_collision_exit，self_id: " + self_id + ", other_id: " + other_id);
+		window.gdspx_on_collision_exit(self_id, other_id);
+	},
+
+	godot_js_spx_on_trigger_enter__proxy: 'sync',
+	godot_js_spx_on_trigger_enter__sig: 'vii',
+	godot_js_spx_on_trigger_enter: function (self_id, other_id) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_trigger_enter，self_id: " + self_id + ", other_id: " + other_id);
+		window.gdspx_on_trigger_enter(self_id, other_id);
+	},
+
+	godot_js_spx_on_trigger_stay__proxy: 'sync',
+	godot_js_spx_on_trigger_stay__sig: 'vii',
+	godot_js_spx_on_trigger_stay: function (self_id, other_id) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_trigger_stay，self_id: " + self_id + ", other_id: " + other_id);
+		window.gdspx_on_trigger_stay(self_id, other_id);
+	},
+
+	godot_js_spx_on_trigger_exit__proxy: 'sync',
+	godot_js_spx_on_trigger_exit__sig: 'vii',
+	godot_js_spx_on_trigger_exit: function (self_id, other_id) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_trigger_exit，self_id: " + self_id + ", other_id: " + other_id);
+		window.gdspx_on_trigger_exit(self_id, other_id);
+	},
+
+	godot_js_spx_on_ui_ready__proxy: 'sync',
+	godot_js_spx_on_ui_ready__sig: 'vi',
+	godot_js_spx_on_ui_ready: function (obj) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_ui_ready，obj: " + obj);
+		window.gdspx_on_ui_ready(obj);
+	},
+
+	godot_js_spx_on_ui_updated__proxy: 'sync',
+	godot_js_spx_on_ui_updated__sig: 'vi',
+	godot_js_spx_on_ui_updated: function (obj) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_ui_updated，obj: " + obj);
+		window.gdspx_on_ui_updated(obj);
+	},
+
+	godot_js_spx_on_ui_destroyed__proxy: 'sync',
+	godot_js_spx_on_ui_destroyed__sig: 'vi',
+	godot_js_spx_on_ui_destroyed: function (obj) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_ui_destroyed，obj: " + obj);
+		window.gdspx_on_ui_destroyed(obj);
+	},
+
+	godot_js_spx_on_ui_pressed__proxy: 'sync',
+	godot_js_spx_on_ui_pressed__sig: 'vi',
+	godot_js_spx_on_ui_pressed: function (obj) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_ui_pressed，obj: " + obj);
+		window.gdspx_on_ui_pressed(obj);
+	},
+
+	godot_js_spx_on_ui_released__proxy: 'sync',
+	godot_js_spx_on_ui_released__sig: 'vi',
+	godot_js_spx_on_ui_released: function (obj) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_ui_released，obj: " + obj);
+		window.gdspx_on_ui_released(obj);
+	},
+
+	godot_js_spx_on_ui_hovered__proxy: 'sync',
+	godot_js_spx_on_ui_hovered__sig: 'vi',
+	godot_js_spx_on_ui_hovered: function (obj) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_ui_hovered，obj: " + obj);
+		window.gdspx_on_ui_hovered(obj);
+	},
+
+	godot_js_spx_on_ui_clicked__proxy: 'sync',
+	godot_js_spx_on_ui_clicked__sig: 'vi',
+	godot_js_spx_on_ui_clicked: function (obj) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_ui_clicked，obj: " + obj);
+		window.gdspx_on_ui_clicked(obj);
+	},
+
+	godot_js_spx_on_ui_toggle__proxy: 'sync',
+	godot_js_spx_on_ui_toggle__sig: 'vii',
+	godot_js_spx_on_ui_toggle: function (obj, is_on) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_ui_toggle，obj: " + obj + ", is_on: " + is_on);
+		window.gdspx_on_ui_toggle(obj, is_on);
+	},
+
+	godot_js_spx_on_ui_text_changed__proxy: 'sync',
+	godot_js_spx_on_ui_text_changed__sig: 'vii',
+	godot_js_spx_on_ui_text_changed: function (obj, text) {
+		console.log("C++ 调用了 JavaScript 函数 godot_js_spx_on_ui_text_changed，obj: " + obj + ", text: " + GodotRuntime.parseString(text));
+		window.gdspx_on_ui_text_changed(obj, GodotRuntime.parseString(text));
+	},
+};
+
+autoAddDeps(GodotGdspx, '$GodotGdspx');
+mergeInto(LibraryManager.library, GodotGdspx);
