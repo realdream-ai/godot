@@ -25,6 +25,7 @@ web_files = [
     "os_web.cpp",
     "api/web_tools_editor_plugin.cpp",
     "godot_js_spx.cpp",
+    "godot_js_spx_callback.cpp",
 ]
 
 sys_env = env.Clone()
