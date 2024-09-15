@@ -19,29 +19,49 @@ static ObjectPool<GdColor> colorPool(100);
 static ObjectPool<GdRect2> rect2Pool(100);
 
 extern "C" {
+	
+EMSCRIPTEN_KEEPALIVE
+GdBool* gdspx_alloc_bool() {
+    return boolPool.acquire();
+}
 
-GdInt* _alloc_int() {
+EMSCRIPTEN_KEEPALIVE
+GDFloat* gdspx_alloc_float() {
+    return floatPool.acquire();
+}
+
+EMSCRIPTEN_KEEPALIVE
+GdInt* gdspx_alloc_int() {
     return intPool.acquire();
 }
 
-GdObj* _alloc_obj() {
+EMSCRIPTEN_KEEPALIVE
+GdObj* gdspx_alloc_obj() {
     return objPool.acquire();
 }
 
-GdVec2* _alloc_vec2() {
+EMSCRIPTEN_KEEPALIVE
+GdVec2* gdspx_alloc_vec2() {
     return vec2Pool.acquire();
 }
 
-GdVec3* _alloc_vec3() {
+EMSCRIPTEN_KEEPALIVE
+GdVec3* gdspx_alloc_vec3() {
     return vec3Pool.acquire();
 }
-GdVec4* _alloc_vec4() {
+
+EMSCRIPTEN_KEEPALIVE
+GdVec4* gdspx_alloc_vec4() {
     return vec4Pool.acquire();
 }
-GdColor* _alloc_color() {
+
+EMSCRIPTEN_KEEPALIVE
+GdColor* gdspx_alloc_color() {
     return colorPool.acquire();
 }
-GdRect2* _alloc_rect2() {
+
+EMSCRIPTEN_KEEPALIVE
+GdRect2* gdspx_alloc_rect2() {
     return rect2Pool.acquire();
 }
 
@@ -53,30 +73,30 @@ float gdspx_get_value(float* array, int idx) {
 
 // 
 EMSCRIPTEN_KEEPALIVE
-GdInt* gdspx_alloc_int(double val) {
-    GdInt* ptr = _alloc_int();
+GdInt* gdspx_new_int(double val) {
+    GdInt* ptr = gdspx_alloc_int();
     *ptr = (GdInt)val;
     return ptr;
 }
 
 EMSCRIPTEN_KEEPALIVE
-GdObj* gdspx_alloc_obj(double val) {
-    GdObj* ptr = _alloc_obj();
+GdObj* gdspx_new_obj(double val) {
+    GdObj* ptr = gdspx_alloc_obj();
     *ptr = (GdObj)val;
     return ptr;
 }
 
 EMSCRIPTEN_KEEPALIVE
-GdVec2* gdspx_alloc_vec2(float x, float y) {
-    GdVec2* ptr = _alloc_vec2();
+GdVec2* gdspx_new_vec2(float x, float y) {
+    GdVec2* ptr = gdspx_alloc_vec2();
     ptr->x = x;
     ptr->y = y;
     return ptr;
 }
 
 EMSCRIPTEN_KEEPALIVE
-GdVec3* gdspx_alloc_vec3(float x, float y, float z) {
-    GdVec3* ptr= _alloc_vec3();
+GdVec3* gdspx_new_vec3(float x, float y, float z) {
+    GdVec3* ptr= gdspx_alloc_vec3();
     ptr->x = x;
     ptr->y = y;
     ptr->z = z;
@@ -84,8 +104,8 @@ GdVec3* gdspx_alloc_vec3(float x, float y, float z) {
 }
 
 EMSCRIPTEN_KEEPALIVE
-GdVec4* gdspx_alloc_vec4(float x, float y, float z, float w) {
-    GdVec4* ptr = _alloc_vec4();
+GdVec4* gdspx_new_vec4(float x, float y, float z, float w) {
+    GdVec4* ptr = gdspx_alloc_vec4();
     ptr->x = x;
     ptr->y = y;
     ptr->z = z;
@@ -94,8 +114,8 @@ GdVec4* gdspx_alloc_vec4(float x, float y, float z, float w) {
 }
 
 EMSCRIPTEN_KEEPALIVE
-GdColor* gdspx_alloc_color(float r, float g, float b, float a) {
-    GdColor* ptr = _alloc_color();
+GdColor* gdspx_new_color(float r, float g, float b, float a) {
+    GdColor* ptr = gdspx_alloc_color();
     ptr->r = r;
     ptr->g = g;
     ptr->b = b;
@@ -104,8 +124,8 @@ GdColor* gdspx_alloc_color(float r, float g, float b, float a) {
 }
 
 EMSCRIPTEN_KEEPALIVE
-GdRect2* gdspx_alloc_rect2(float x, float y, float width, float height) {
-    GdRect2* ptr = _alloc_rect2();
+GdRect2* gdspx_new_rect2(float x, float y, float width, float height) {
+    GdRect2* ptr = gdspx_alloc_rect2();
     ptr->position.x = x;
     ptr->position.y = y;
     ptr->size.width = width;
