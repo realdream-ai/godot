@@ -6,7 +6,7 @@
 
 typedef float GdFloat ;
 typedef int64_t GdObj ;
-typedef const char* GdString ;
+typedef const void* GdString ;
 typedef int64_t GdInt ;
 
 // GDExtention
@@ -67,3 +67,4 @@ extern void godot_js_spx_on_ui_text_changed(GdObj obj, GdString text);
 
 
 
+#endif // GODOT_JS_SPX_H
