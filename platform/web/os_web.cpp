@@ -44,6 +44,7 @@
 #include "main/main.h"
 
 #include "modules/modules_enabled.gen.h" // For websocket.
+#include "godot_js_spx.h"
 
 #include <dlfcn.h>
 #include <emscripten.h>
@@ -267,6 +268,7 @@ OS_Web *OS_Web::get_singleton() {
 void OS_Web::initialize_joypads() {
 }
 
+
 OS_Web::OS_Web() {
 	char locale_ptr[16];
 	godot_js_config_locale_get(locale_ptr, 16);
@@ -287,24 +289,6 @@ OS_Web::OS_Web() {
 	loggers.push_back(memnew(StdLogger));
 	_set_logger(memnew(CompositeLogger(loggers)));
 	FileAccessUnix::close_notification_func = file_access_close_callback;
- 	SpxCallbackInfo* callback_infos = memnew(SpxCallbackInfo);
-
-	// gdspx register callbacks
-	callback_infos->func_on_engine_start = &godot_js_spx_on_engine_start;
-	callback_infos->func_on_engine_update = &godot_js_spx_on_engine_update;
-	callback_infos->func_on_engine_fixed_update = &godot_js_spx_on_engine_fixed_update;
-	callback_infos->func_on_engine_destroy = &godot_js_spx_on_engine_destroy;
-
-	SpxEngine::register_callbacks(callback_infos);
+	register_spx_callbacks();
 }
 
-
-
-extern "C" {
-	EMSCRIPTEN_KEEPALIVE
-	float test_go_call_cpp(float val) {
-		auto ret = val * 2;
-		printf("C++ function called with value: %f return %f\n ", val,ret);
-		return ret;
-	}
-}

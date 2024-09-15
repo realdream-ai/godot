@@ -8,10 +8,10 @@ typedef float GdFloat ;
 typedef int64_t GdObj ;
 typedef const void* GdString ;
 typedef int64_t GdInt ;
+typedef uint8_t GdBool ;
 
 // GDExtention
 extern void godot_js_on_load_gdextension(GdString p_text, void* p_get_proc_address, void* p_library, void* r_initialization);
-
 
 // Gdspx 
 extern void godot_js_spx_on_engine_start();
@@ -61,7 +61,7 @@ extern void godot_js_spx_on_ui_pressed(GdObj obj);
 extern void godot_js_spx_on_ui_released(GdObj obj);
 extern void godot_js_spx_on_ui_hovered(GdObj obj);
 extern void godot_js_spx_on_ui_clicked(GdObj obj);
-extern void godot_js_spx_on_ui_toggle(GdObj obj, GdInt is_on);
+extern void godot_js_spx_on_ui_toggle(GdObj obj, GdBool is_on);
 extern void godot_js_spx_on_ui_text_changed(GdObj obj, GdString text);
 
 
