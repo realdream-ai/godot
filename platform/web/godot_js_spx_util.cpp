@@ -210,12 +210,21 @@ GdString* gdspx_alloc_string() {
 EMSCRIPTEN_KEEPALIVE
 GdString* gdspx_new_string(const char* str) {
     GdString* ptr = gdspx_alloc_string();
-    *ptr = str;
+    *ptr = new String(str); // TODO check if this is correct
     return ptr;
 }
 
-void gdspx_free_string(GdString* str) {
-    stringPool.release(str);
+EMSCRIPTEN_KEEPALIVE
+void gdspx_free_string(GdString* p_gdstr) {
+    String** ppstr = (String**)p_gdstr;
+    if(ppstr == nullptr || *ppstr == nullptr) {
+        print_line("gdspx_free_stringptr: null pointer");
+        return;
+    }
+    String* pstr = *ppstr;
+    delete pstr;
+    *ppstr = nullptr;
+    stringPool.release(p_gdstr);
 }
 
 }
