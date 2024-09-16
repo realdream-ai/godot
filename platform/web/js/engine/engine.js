@@ -8,10 +8,8 @@
  * @module Engine
  * @header Web export JavaScript reference
  */
+var GodotModule;
 var GodotEngine;
-function test_go_call_cpp(val) {
-	return GodotEngine.rtenv['_test_go_call_cpp'](val);
-}
 const Engine = (function () {
 	const preloader = new Preloader();
 
@@ -90,6 +88,12 @@ const Engine = (function () {
 					Engine.load(basePath, this.config.fileSizes[`${basePath}.wasm`]);
 				}
 				const me = this;
+
+                createWrapper = function (module, name) {
+					return function() {
+						return module["asm"][name].apply(null, arguments);
+					};
+				}
 				function doInit(promise) {
 					// Care! Promise chaining is bogus with old emscripten versions.
 					// This caused a regression with the Mono build (which uses an older emscripten version).
@@ -98,7 +102,10 @@ const Engine = (function () {
 						promise.then(function (response) {
 							const cloned = new Response(response.clone().body, { 'headers': [['content-type', 'application/wasm']] });
 							// Now proceed with Godot and other logic
-							Godot(me.config.getModuleConfig(loadPath, cloned)).then(function (module) {
+							gdmodule = me.config.getModuleConfig(loadPath, cloned);
+							Godot(gdmodule).then(function (module) {
+								GodotModule = gdmodule
+								GodotModule._malloc = createWrapper(gdmodule,"malloc");
 								const paths = me.config.persistentPaths;
 								module['initFS'](paths).then(function (err) {
 									me.rtenv = module;

@@ -7,7 +7,7 @@ function ToGdBool(value) {
 }
 
 function ToJsBool(ptr) {
-    const HEAPU8 = Module.HEAPU8;
+    const HEAPU8 = GodotModule.HEAPU8;
     const boolValue = HEAPU8[ptr];
     return boolValue !== 0;
 }
@@ -32,7 +32,7 @@ function ToGdInt(value) {
 }
 
 function ToJsInt(ptr) {
-    const memoryBuffer = Module.HEAPU8.buffer;
+    const memoryBuffer = GodotModule.HEAPU8.buffer;
     const dataView = new DataView(memoryBuffer);
     const low = dataView.getUint32(ptr, true);  // 低32位
     const high = dataView.getUint32(ptr + 4, true);  // 高32位
@@ -61,7 +61,7 @@ function ToGdFloat(value) {
 }
 
 function ToJsFloat(ptr) {
-    const HEAPF32 = Module.HEAPF32; 
+    const HEAPF32 = GodotModule.HEAPF32; 
     const floatIndex = ptr / 4;
     const floatValue = HEAPF32[floatIndex];
     return floatValue;
@@ -84,14 +84,16 @@ function FreeGdFloat(ptr) {
 function ToGdString(str) {
     const encoder = new TextEncoder();
     const stringBytes = encoder.encode(str);
-    const ptr = Module._malloc(stringBytes.length + 1); 
-    Module.HEAPU8.set(stringBytes, ptr);
-    Module.HEAPU8[ptr + stringBytes.length] = 0;
-    return ptr;
+    const ptr = GodotModule._malloc(stringBytes.length + 1); 
+    GodotModule.HEAPU8.set(stringBytes, ptr);
+    GodotModule.HEAPU8[ptr + stringBytes.length] = 0;
+    func = GodotEngine.rtenv['_gdspx_new_string']; 
+    gdStringPtr = func(ptr);
+    return gdStringPtr;
 }
 
 function ToJsString(ptr) {
-    const HEAPU8 = Module.HEAPU8;
+    const HEAPU8 = GodotModule.HEAPU8;
     let length = 0;
     while (HEAPU8[ptr + length] !== 0) {
         length++;
@@ -121,7 +123,7 @@ function ToGdObj(object) {
 }
 
 function ToJsObj(ptr) {
-    const memoryBuffer = Module.HEAPU8.buffer;
+    const memoryBuffer = GodotModule.HEAPU8.buffer;
     const dataView = new DataView(memoryBuffer);
     const low = dataView.getUint32(ptr, true);  // 低32位
     const high = dataView.getUint32(ptr + 4, true);  // 高32位
@@ -149,7 +151,7 @@ function ToGdVec2(vec) {
 }
 
 function ToJsVec2(ptr) {
-    const HEAPF32 = Module.HEAPF32;
+    const HEAPF32 = GodotModule.HEAPF32;
     const floatIndex = ptr / 4;
     return {
         x: HEAPF32[floatIndex],
@@ -177,7 +179,7 @@ function ToGdVec3(vec) {
 }
 
 function ToJsVec3(ptr) {
-    const HEAPF32 = Module.HEAPF32;
+    const HEAPF32 = GodotModule.HEAPF32;
     const floatIndex = ptr / 4;
     return {
         x: HEAPF32[floatIndex],
@@ -207,7 +209,7 @@ function ToGdVec4(vec) {
 }
 
 function ToJsVec4(ptr) {
-    const HEAPF32 = Module.HEAPF32;
+    const HEAPF32 = GodotModule.HEAPF32;
     const floatIndex = ptr / 4;
     return {
         x: HEAPF32[floatIndex],
@@ -238,7 +240,7 @@ function ToGdColor(color) {
 }
 
 function ToJsColor(ptr) {
-    const HEAPF32 = Module.HEAPF32;
+    const HEAPF32 = GodotModule.HEAPF32;
     const floatIndex = ptr / 4;
     return {
         r: HEAPF32[floatIndex],
@@ -269,7 +271,7 @@ function ToGdRect2(rect) {
 }
 
 function ToJsRect2(ptr) {
-    const HEAPF32 = Module.HEAPF32;
+    const HEAPF32 = GodotModule.HEAPF32;
     const floatIndex = ptr / 4;
     return {
         position: {
