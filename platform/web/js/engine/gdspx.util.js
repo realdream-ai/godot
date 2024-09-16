@@ -2,8 +2,8 @@
 
 // Bool-related functions
 function ToGdBool(value) {
-	func = GodotEngine.rtenv['_gdspx_new_bool']; 
-	return func(value);
+    func = GodotEngine.rtenv['_gdspx_new_bool']; 
+    return func(value);
 }
 
 function ToJsBool(ptr) {
@@ -13,17 +13,22 @@ function ToJsBool(ptr) {
 }
 
 function AllocGdBool() {
-	return GodotEngine.rtenv['_gdspx_alloc_bool']();
+    return GodotEngine.rtenv['_gdspx_alloc_bool']();
 }
 
 function PrintGdBool(ptr) {
-	console.log(ToJsBool(ptr));
+    console.log(ToJsBool(ptr));
 }
+
+function FreeGdBool(ptr) {
+    GodotEngine.rtenv['_gdspx_free_bool'](ptr);
+}
+
 
 // Int-related functions
 function ToGdInt(value) {
-	func = GodotEngine.rtenv['_gdspx_new_int']; 
-	return func(value);
+    func = GodotEngine.rtenv['_gdspx_new_int']; 
+    return func(value);
 }
 
 function ToJsInt(ptr) {
@@ -36,18 +41,23 @@ function ToJsInt(ptr) {
 }
 
 function AllocGdInt() {
-	ptr = GodotEngine.rtenv['_gdspx_alloc_int']; 
-	return ptr;
+    ptr = GodotEngine.rtenv['_gdspx_alloc_int']; 
+    return ptr;
 }
 
 function PrintGdInt(ptr) {
-	console.log(ToJsInt(ptr));
+    console.log(ToJsInt(ptr));
 }
+
+function FreeGdInt(ptr) {
+    GodotEngine.rtenv['_gdspx_free_int'](ptr);
+}
+
 
 // Float-related functions
 function ToGdFloat(value) {
-	func = GodotEngine.rtenv['_gdspx_new_float']; 
-	return func(value);
+    func = GodotEngine.rtenv['_gdspx_new_float']; 
+    return func(value);
 }
 
 function ToJsFloat(ptr) {
@@ -58,21 +68,26 @@ function ToJsFloat(ptr) {
 }
 
 function AllocGdFloat() {
-	return GodotEngine.rtenv['_gdspx_alloc_float']();
+    return GodotEngine.rtenv['_gdspx_alloc_float']();
 }
 
 function PrintGdFloat(ptr) {
-	console.log(ToJsFloat(ptr));
+    console.log(ToJsFloat(ptr));
 }
+
+function FreeGdFloat(ptr) {
+    GodotEngine.rtenv['_gdspx_free_float'](ptr);
+}
+
 
 // String-related functions
 function ToGdString(str) {
-	const encoder = new TextEncoder();
-	const stringBytes = encoder.encode(str);
-	const ptr = Module._malloc(stringBytes.length + 1); 
-	Module.HEAPU8.set(stringBytes, ptr);
-	Module.HEAPU8[ptr + stringBytes.length] = 0;
-	return ptr;
+    const encoder = new TextEncoder();
+    const stringBytes = encoder.encode(str);
+    const ptr = Module._malloc(stringBytes.length + 1); 
+    Module.HEAPU8.set(stringBytes, ptr);
+    Module.HEAPU8[ptr + stringBytes.length] = 0;
+    return ptr;
 }
 
 function ToJsString(ptr) {
@@ -87,17 +102,22 @@ function ToJsString(ptr) {
 }
 
 function AllocGdString() {
-	return GodotEngine.rtenv['_gdspx_alloc_string']();
+    return GodotEngine.rtenv['_gdspx_alloc_string']();
 }
 
 function PrintGdString(ptr) {
-	console.log(ToJsString(ptr));
+    console.log(ToJsString(ptr));
 }
+
+function FreeGdString(ptr) {
+    GodotEngine.rtenv['_gdspx_free_string'](ptr);
+}
+
 
 // Object-related functions
 function ToGdObj(object) {
-	func = GodotEngine.rtenv['_gdspx_new_obj']; 
-	return func(object);
+    func = GodotEngine.rtenv['_gdspx_new_obj']; 
+    return func(object);
 }
 
 function ToJsObj(ptr) {
@@ -110,17 +130,22 @@ function ToJsObj(ptr) {
 }
 
 function AllocGdObj() {
-	return GodotEngine.rtenv['_gdspx_alloc_obj']();
+    return GodotEngine.rtenv['_gdspx_alloc_obj']();
 }
 
 function PrintGdObj(ptr) {
-	console.log(ToJsObj(ptr));
+    console.log(ToJsObj(ptr));
 }
+
+function FreeGdObj(ptr) {
+    GodotEngine.rtenv['_gdspx_free_obj'](ptr);
+}
+
 
 // Vec2-related functions
 function ToGdVec2(vec) {
-	func = GodotEngine.rtenv['_gdspx_new_vec2']; 
-	return func(vec.x, vec.y);
+    func = GodotEngine.rtenv['_gdspx_new_vec2']; 
+    return func(vec.x, vec.y);
 }
 
 function ToJsVec2(ptr) {
@@ -133,17 +158,22 @@ function ToJsVec2(ptr) {
 }
 
 function AllocGdVec2() {
-	return GodotEngine.rtenv['_gdspx_alloc_vec2']();
+    return GodotEngine.rtenv['_gdspx_alloc_vec2']();
 }
 
 function PrintGdVec2(ptr) {
-	console.log(ToJsVec2(ptr));
+    console.log(ToJsVec2(ptr));
 }
+
+function FreeGdVec2(ptr) {
+    GodotEngine.rtenv['_gdspx_free_vec2'](ptr);
+}
+
 
 // Vec3-related functions
 function ToGdVec3(vec) {
-	func = GodotEngine.rtenv['_gdspx_new_vec3']; 
-	return func(vec.x, vec.y, vec.z);
+    func = GodotEngine.rtenv['_gdspx_new_vec3']; 
+    return func(vec.x, vec.y, vec.z);
 }
 
 function ToJsVec3(ptr) {
@@ -157,18 +187,23 @@ function ToJsVec3(ptr) {
 }
 
 function AllocGdVec3() {
-	return GodotEngine.rtenv['_gdspx_alloc_vec3']();
+    return GodotEngine.rtenv['_gdspx_alloc_vec3']();
 }
 
 function PrintGdVec3(ptr) {
-	const vec3 = ToJsVec3(ptr);
-	console.log(`Vec3(${vec3.x}, ${vec3.y}, ${vec3.z})`);
+    const vec3 = ToJsVec3(ptr);
+    console.log(`Vec3(${vec3.x}, ${vec3.y}, ${vec3.z})`);
 }
+
+function FreeGdVec3(ptr) {
+    GodotEngine.rtenv['_gdspx_free_vec3'](ptr);
+}
+
 
 // Vec4-related functions
 function ToGdVec4(vec) {
-	func = GodotEngine.rtenv['_gdspx_new_vec4']; 
-	return func(vec.x, vec.y, vec.z, vec.w);
+    func = GodotEngine.rtenv['_gdspx_new_vec4']; 
+    return func(vec.x, vec.y, vec.z, vec.w);
 }
 
 function ToJsVec4(ptr) {
@@ -183,18 +218,23 @@ function ToJsVec4(ptr) {
 }
 
 function AllocGdVec4() {
-	return GodotEngine.rtenv['_gdspx_alloc_vec4']();
+    return GodotEngine.rtenv['_gdspx_alloc_vec4']();
 }
 
 function PrintGdVec4(ptr) {
-	const vec4 = ToJsVec4(ptr);
-	console.log(`Vec4(${vec4.x}, ${vec4.y}, ${vec4.z}, ${vec4.w})`);
+    const vec4 = ToJsVec4(ptr);
+    console.log(`Vec4(${vec4.x}, ${vec4.y}, ${vec4.z}, ${vec4.w})`);
 }
+
+function FreeGdVec4(ptr) {
+    GodotEngine.rtenv['_gdspx_free_vec4'](ptr);
+}
+
 
 // Color-related functions
 function ToGdColor(color) {
-	func = GodotEngine.rtenv['_gdspx_new_color']; 
-	return func(color.r, color.g, color.b, color.a);
+    func = GodotEngine.rtenv['_gdspx_new_color']; 
+    return func(color.r, color.g, color.b, color.a);
 }
 
 function ToJsColor(ptr) {
@@ -209,18 +249,23 @@ function ToJsColor(ptr) {
 }
 
 function AllocGdColor() {
-	return GodotEngine.rtenv['_gdspx_alloc_color']();
+    return GodotEngine.rtenv['_gdspx_alloc_color']();
 }
 
 function PrintGdColor(ptr) {
-	const color = ToJsColor(ptr);
-	console.log(`Color(${color.r}, ${color.g}, ${color.b}, ${color.a})`);
+    const color = ToJsColor(ptr);
+    console.log(`Color(${color.r}, ${color.g}, ${color.b}, ${color.a})`);
 }
+
+function FreeGdColor(ptr) {
+    GodotEngine.rtenv['_gdspx_free_color'](ptr);
+}
+
 
 // Rect2-related functions
 function ToGdRect2(rect) {
-	func = GodotEngine.rtenv['_gdspx_new_rect2']; 
-	return func(rect.position.x, rect.position.y, rect.size.width, rect.size.height);
+    func = GodotEngine.rtenv['_gdspx_new_rect2']; 
+    return func(rect.position.x, rect.position.y, rect.size.width, rect.size.height);
 }
 
 function ToJsRect2(ptr) {
@@ -239,10 +284,14 @@ function ToJsRect2(ptr) {
 }
 
 function AllocGdRect2() {
-	return GodotEngine.rtenv['_gdspx_alloc_rect2']();
+    return GodotEngine.rtenv['_gdspx_alloc_rect2']();
 }
 
 function PrintGdRect2(ptr) {
-	const rect = ToJsRect2(ptr);
-	console.log(`Rect2(position: (${rect.position.x}, ${rect.position.y}), size: (${rect.size.width}, ${rect.size.height}))`);
+    const rect = ToJsRect2(ptr);
+    console.log(`Rect2(position: (${rect.position.x}, ${rect.position.y}), size: (${rect.size.width}, ${rect.size.height}))`);
+}
+
+function FreeGdRect2(ptr) {
+    GodotEngine.rtenv['gdspx_free_rect2'](ptr);
 }

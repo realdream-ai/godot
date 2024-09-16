@@ -45,11 +45,6 @@ void gdspx_free_bool(GdBool* b) {
 }
 
 
-EMSCRIPTEN_KEEPALIVE
-void gdspx_print_bool(GdBool* value) {
-    print_line("bool: %s", *value ? "true" : "false");
-}
-
 // float functions
 EMSCRIPTEN_KEEPALIVE
 GdFloat* gdspx_alloc_float() {
@@ -66,11 +61,6 @@ GdFloat* gdspx_new_float(float val) {
 EMSCRIPTEN_KEEPALIVE
 void gdspx_free_float(GdFloat* f) {
     floatPool.release(f);
-}
-
-EMSCRIPTEN_KEEPALIVE
-void gdspx_print_float(GdFloat* value) {
-    print_line("float: %f", *value);
 }
 
 // int functions
@@ -91,11 +81,6 @@ void gdspx_free_int(GdInt* i) {
     intPool.release(i);
 }
 
-EMSCRIPTEN_KEEPALIVE
-void gdspx_print_int(GdInt* value) {
-    print_line("int: %d", *value);
-}
-
 // object functions
 EMSCRIPTEN_KEEPALIVE
 GdObj* gdspx_alloc_obj() {
@@ -112,11 +97,6 @@ GdObj* gdspx_new_obj(double val) {
 EMSCRIPTEN_KEEPALIVE
 void gdspx_free_obj(GdObj* obj) {
     objPool.release(obj);
-}
-
-EMSCRIPTEN_KEEPALIVE
-void gdspx_print_obj(GdObj* obj) {
-    print_line("object: %p", (void*)obj);
 }
 
 // vec2 functions
@@ -138,11 +118,6 @@ void gdspx_free_vec2(GdVec2* vec) {
     vec2Pool.release(vec);
 }
 
-EMSCRIPTEN_KEEPALIVE
-void gdspx_print_vec2(GdVec2* vec) {
-    print_line("vec2: %f, %f", vec->x, vec->y);
-}
-
 // vec3 functions
 EMSCRIPTEN_KEEPALIVE
 GdVec3* gdspx_alloc_vec3() {
@@ -161,11 +136,6 @@ GdVec3* gdspx_new_vec3(float x, float y, float z) {
 EMSCRIPTEN_KEEPALIVE
 void gdspx_free_vec3(GdVec3* vec) {
     vec3Pool.release(vec);
-}
-
-EMSCRIPTEN_KEEPALIVE
-void gdspx_print_vec3(GdVec3* vec) {
-    print_line("vec3: %f, %f, %f", vec->x, vec->y, vec->z);
 }
 
 // vec4 functions
@@ -189,11 +159,6 @@ void gdspx_free_vec4(GdVec4* vec) {
     vec4Pool.release(vec);
 }
 
-EMSCRIPTEN_KEEPALIVE
-void gdspx_print_vec4(GdVec4* vec) {
-    print_line("vec4: %f, %f, %f, %f", vec->x, vec->y, vec->z, vec->w);
-}
-
 // color functions
 EMSCRIPTEN_KEEPALIVE
 GdColor* gdspx_alloc_color() {
@@ -213,11 +178,6 @@ GdColor* gdspx_new_color(float r, float g, float b, float a) {
 EMSCRIPTEN_KEEPALIVE
 void gdspx_free_color(GdColor* color) {
     colorPool.release(color);
-}
-
-EMSCRIPTEN_KEEPALIVE
-void gdspx_print_color(GdColor* color) {
-    print_line("color: %f, %f, %f, %f", color->r, color->g, color->b, color->a);
 }
 
 // rect2 functions
@@ -241,11 +201,6 @@ void gdspx_free_rect2(GdRect2* rect) {
     rect2Pool.release(rect);
 }
 
-EMSCRIPTEN_KEEPALIVE
-void gdspx_print_rect2(GdRect2* rect) {
-    print_line("rect2: position(%f, %f), size(%f, %f)", rect->position.x, rect->position.y, rect->size.width, rect->size.height);
-}
-
 // string functions
 EMSCRIPTEN_KEEPALIVE
 GdString* gdspx_alloc_string() {
@@ -255,17 +210,12 @@ GdString* gdspx_alloc_string() {
 EMSCRIPTEN_KEEPALIVE
 GdString* gdspx_new_string(const char* str) {
     GdString* ptr = gdspx_alloc_string();
-    ptr->c_str = strdup(str);
+    *ptr = str;
     return ptr;
 }
 
 void gdspx_free_string(GdString* str) {
     stringPool.release(str);
-}
-
-EMSCRIPTEN_KEEPALIVE
-void gdspx_print_string(GdString* str) {
-    print_line("string: %s", str->c_str());
 }
 
 }

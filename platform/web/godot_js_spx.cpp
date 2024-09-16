@@ -55,12 +55,12 @@
 
 extern "C" {
 EMSCRIPTEN_KEEPALIVE
-void gdspx_audio_play_audio(GdString path) {
-	 audioMgr->play_audio(path);
+void gdspx_audio_play_audio(GdString* path) {
+	 audioMgr->play_audio(*path);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_audio_set_audio_volume(GdFloat volume) {
-	 audioMgr->set_audio_volume(volume);
+void gdspx_audio_set_audio_volume(GdFloat* volume) {
+	 audioMgr->set_audio_volume(*volume);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_audio_get_audio_volume(GdFloat* ret_val) {
@@ -71,12 +71,12 @@ void gdspx_audio_is_music_playing(GdBool* ret_val) {
 	*ret_val = audioMgr->is_music_playing();
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_audio_play_music(GdString path) {
-	 audioMgr->play_music(path);
+void gdspx_audio_play_music(GdString* path) {
+	 audioMgr->play_music(*path);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_audio_set_music_volume(GdFloat volume) {
-	 audioMgr->set_music_volume(volume);
+void gdspx_audio_set_music_volume(GdFloat* volume) {
+	 audioMgr->set_music_volume(*volume);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_audio_get_music_volume(GdFloat* ret_val) {
@@ -95,8 +95,8 @@ void gdspx_audio_get_music_timer(GdFloat* ret_val) {
 	*ret_val = audioMgr->get_music_timer();
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_audio_set_music_timer(GdFloat time) {
-	 audioMgr->set_music_timer(time);
+void gdspx_audio_set_music_timer(GdFloat* time) {
+	 audioMgr->set_music_timer(*time);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_camera_get_camera_position(GdVec2* ret_val) {
@@ -135,32 +135,32 @@ void gdspx_input_get_key_state(GdInt* key,GdInt* ret_val) {
 	*ret_val = inputMgr->get_key_state(*key);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_input_get_axis(GdString neg_action,GdString pos_action,GdFloat* ret_val) {
-	*ret_val = inputMgr->get_axis(neg_action, pos_action);
+void gdspx_input_get_axis(GdString* neg_action,GdString* pos_action,GdFloat* ret_val) {
+	*ret_val = inputMgr->get_axis(*neg_action, *pos_action);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_input_is_action_pressed(GdString action,GdBool* ret_val) {
-	*ret_val = inputMgr->is_action_pressed(action);
+void gdspx_input_is_action_pressed(GdString* action,GdBool* ret_val) {
+	*ret_val = inputMgr->is_action_pressed(*action);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_input_is_action_just_pressed(GdString action,GdBool* ret_val) {
-	*ret_val = inputMgr->is_action_just_pressed(action);
+void gdspx_input_is_action_just_pressed(GdString* action,GdBool* ret_val) {
+	*ret_val = inputMgr->is_action_just_pressed(*action);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_input_is_action_just_released(GdString action,GdBool* ret_val) {
-	*ret_val = inputMgr->is_action_just_released(action);
+void gdspx_input_is_action_just_released(GdString* action,GdBool* ret_val) {
+	*ret_val = inputMgr->is_action_just_released(*action);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_physic_raycast(GdVec2* from,GdVec2* to,GdInt* collision_mask,GdObj* ret_val) {
 	*ret_val = physicMgr->raycast(*from, *to, *collision_mask);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_physic_check_collision(GdVec2* from,GdVec2* to,GdInt* collision_mask,GdBool collide_with_areas,GdBool collide_with_bodies,GdBool* ret_val) {
-	*ret_val = physicMgr->check_collision(*from, *to, *collision_mask, collide_with_areas, collide_with_bodies);
+void gdspx_physic_check_collision(GdVec2* from,GdVec2* to,GdInt* collision_mask,GdBool* collide_with_areas,GdBool* collide_with_bodies,GdBool* ret_val) {
+	*ret_val = physicMgr->check_collision(*from, *to, *collision_mask, *collide_with_areas, *collide_with_bodies);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_scene_change_scene_to_file(GdString path) {
-	 sceneMgr->change_scene_to_file(path);
+void gdspx_scene_change_scene_to_file(GdString* path) {
+	 sceneMgr->change_scene_to_file(*path);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_scene_reload_current_scene(GdInt* ret_val) {
@@ -175,40 +175,40 @@ void gdspx_sprite_set_dont_destroy_on_load(GdObj* obj) {
 	 spriteMgr->set_dont_destroy_on_load(*obj);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_set_process(GdObj* obj,GdBool is_on) {
-	 spriteMgr->set_process(*obj, is_on);
+void gdspx_sprite_set_process(GdObj* obj,GdBool* is_on) {
+	 spriteMgr->set_process(*obj, *is_on);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_set_physic_process(GdObj* obj,GdBool is_on) {
-	 spriteMgr->set_physic_process(*obj, is_on);
+void gdspx_sprite_set_physic_process(GdObj* obj,GdBool* is_on) {
+	 spriteMgr->set_physic_process(*obj, *is_on);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_set_child_position(GdObj* obj,GdString path,GdVec2* pos) {
-	 spriteMgr->set_child_position(*obj, path, *pos);
+void gdspx_sprite_set_child_position(GdObj* obj,GdString* path,GdVec2* pos) {
+	 spriteMgr->set_child_position(*obj, *path, *pos);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_get_child_position(GdObj* obj,GdString path,GdVec2* ret_val) {
-	*ret_val = spriteMgr->get_child_position(*obj, path);
+void gdspx_sprite_get_child_position(GdObj* obj,GdString* path,GdVec2* ret_val) {
+	*ret_val = spriteMgr->get_child_position(*obj, *path);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_set_child_rotation(GdObj* obj,GdString path,GdFloat rot) {
-	 spriteMgr->set_child_rotation(*obj, path, rot);
+void gdspx_sprite_set_child_rotation(GdObj* obj,GdString* path,GdFloat* rot) {
+	 spriteMgr->set_child_rotation(*obj, *path, *rot);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_get_child_rotation(GdObj* obj,GdString path,GdFloat* ret_val) {
-	*ret_val = spriteMgr->get_child_rotation(*obj, path);
+void gdspx_sprite_get_child_rotation(GdObj* obj,GdString* path,GdFloat* ret_val) {
+	*ret_val = spriteMgr->get_child_rotation(*obj, *path);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_set_child_scale(GdObj* obj,GdString path,GdVec2* scale) {
-	 spriteMgr->set_child_scale(*obj, path, *scale);
+void gdspx_sprite_set_child_scale(GdObj* obj,GdString* path,GdVec2* scale) {
+	 spriteMgr->set_child_scale(*obj, *path, *scale);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_get_child_scale(GdObj* obj,GdString path,GdVec2* ret_val) {
-	*ret_val = spriteMgr->get_child_scale(*obj, path);
+void gdspx_sprite_get_child_scale(GdObj* obj,GdString* path,GdVec2* ret_val) {
+	*ret_val = spriteMgr->get_child_scale(*obj, *path);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_create_sprite(GdString path,GdObj* ret_val) {
-	*ret_val = spriteMgr->create_sprite(path);
+void gdspx_sprite_create_sprite(GdString* path,GdObj* ret_val) {
+	*ret_val = spriteMgr->create_sprite(*path);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_clone_sprite(GdObj* obj,GdObj* ret_val) {
@@ -231,8 +231,8 @@ void gdspx_sprite_get_position(GdObj* obj,GdVec2* ret_val) {
 	*ret_val = spriteMgr->get_position(*obj);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_set_rotation(GdObj* obj,GdFloat rot) {
-	 spriteMgr->set_rotation(*obj, rot);
+void gdspx_sprite_set_rotation(GdObj* obj,GdFloat* rot) {
+	 spriteMgr->set_rotation(*obj, *rot);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_get_rotation(GdObj* obj,GdFloat* ret_val) {
@@ -255,16 +255,16 @@ void gdspx_sprite_get_color(GdObj* obj,GdColor* ret_val) {
 	*ret_val = spriteMgr->get_color(*obj);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_set_texture(GdObj* obj,GdString path) {
-	 spriteMgr->set_texture(*obj, path);
+void gdspx_sprite_set_texture(GdObj* obj,GdString* path) {
+	 spriteMgr->set_texture(*obj, *path);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_get_texture(GdObj* obj,GdString* ret_val) {
 	*ret_val = spriteMgr->get_texture(*obj);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_set_visible(GdObj* obj,GdBool visible) {
-	 spriteMgr->set_visible(*obj, visible);
+void gdspx_sprite_set_visible(GdObj* obj,GdBool* visible) {
+	 spriteMgr->set_visible(*obj, *visible);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_get_visible(GdObj* obj,GdBool* ret_val) {
@@ -279,12 +279,12 @@ void gdspx_sprite_set_z_index(GdObj* obj,GdInt* z) {
 	 spriteMgr->set_z_index(*obj, *z);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_play_anim(GdObj* obj,GdString p_name,GdFloat p_custom_scale,GdBool p_from_end) {
-	 spriteMgr->play_anim(*obj, p_name, p_custom_scale, p_from_end);
+void gdspx_sprite_play_anim(GdObj* obj,GdString* p_name,GdFloat* p_custom_scale,GdBool* p_from_end) {
+	 spriteMgr->play_anim(*obj, *p_name, *p_custom_scale, *p_from_end);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_play_backwards_anim(GdObj* obj,GdString p_name) {
-	 spriteMgr->play_backwards_anim(*obj, p_name);
+void gdspx_sprite_play_backwards_anim(GdObj* obj,GdString* p_name) {
+	 spriteMgr->play_backwards_anim(*obj, *p_name);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_pause_anim(GdObj* obj) {
@@ -299,8 +299,8 @@ void gdspx_sprite_is_playing_anim(GdObj* obj,GdBool* ret_val) {
 	*ret_val = spriteMgr->is_playing_anim(*obj);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_set_anim(GdObj* obj,GdString p_name) {
-	 spriteMgr->set_anim(*obj, p_name);
+void gdspx_sprite_set_anim(GdObj* obj,GdString* p_name) {
+	 spriteMgr->set_anim(*obj, *p_name);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_get_anim(GdObj* obj,GdString* ret_val) {
@@ -315,8 +315,8 @@ void gdspx_sprite_get_anim_frame(GdObj* obj,GdInt* ret_val) {
 	*ret_val = spriteMgr->get_anim_frame(*obj);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_set_anim_speed_scale(GdObj* obj,GdFloat p_speed_scale) {
-	 spriteMgr->set_anim_speed_scale(*obj, p_speed_scale);
+void gdspx_sprite_set_anim_speed_scale(GdObj* obj,GdFloat* p_speed_scale) {
+	 spriteMgr->set_anim_speed_scale(*obj, *p_speed_scale);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_get_anim_speed_scale(GdObj* obj,GdFloat* ret_val) {
@@ -327,8 +327,8 @@ void gdspx_sprite_get_anim_playing_speed(GdObj* obj,GdFloat* ret_val) {
 	*ret_val = spriteMgr->get_anim_playing_speed(*obj);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_set_anim_centered(GdObj* obj,GdBool p_center) {
-	 spriteMgr->set_anim_centered(*obj, p_center);
+void gdspx_sprite_set_anim_centered(GdObj* obj,GdBool* p_center) {
+	 spriteMgr->set_anim_centered(*obj, *p_center);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_is_anim_centered(GdObj* obj,GdBool* ret_val) {
@@ -343,16 +343,16 @@ void gdspx_sprite_get_anim_offset(GdObj* obj,GdVec2* ret_val) {
 	*ret_val = spriteMgr->get_anim_offset(*obj);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_set_anim_flip_h(GdObj* obj,GdBool p_flip) {
-	 spriteMgr->set_anim_flip_h(*obj, p_flip);
+void gdspx_sprite_set_anim_flip_h(GdObj* obj,GdBool* p_flip) {
+	 spriteMgr->set_anim_flip_h(*obj, *p_flip);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_is_anim_flipped_h(GdObj* obj,GdBool* ret_val) {
 	*ret_val = spriteMgr->is_anim_flipped_h(*obj);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_set_anim_flip_v(GdObj* obj,GdBool p_flip) {
-	 spriteMgr->set_anim_flip_v(*obj, p_flip);
+void gdspx_sprite_set_anim_flip_v(GdObj* obj,GdBool* p_flip) {
+	 spriteMgr->set_anim_flip_v(*obj, *p_flip);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_is_anim_flipped_v(GdObj* obj,GdBool* ret_val) {
@@ -415,16 +415,16 @@ void gdspx_sprite_move_and_slide(GdObj* obj) {
 	 spriteMgr->move_and_slide(*obj);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_set_gravity(GdObj* obj,GdFloat gravity) {
-	 spriteMgr->set_gravity(*obj, gravity);
+void gdspx_sprite_set_gravity(GdObj* obj,GdFloat* gravity) {
+	 spriteMgr->set_gravity(*obj, *gravity);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_get_gravity(GdObj* obj,GdFloat* ret_val) {
 	*ret_val = spriteMgr->get_gravity(*obj);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_set_mass(GdObj* obj,GdFloat mass) {
-	 spriteMgr->set_mass(*obj, mass);
+void gdspx_sprite_set_mass(GdObj* obj,GdFloat* mass) {
+	 spriteMgr->set_mass(*obj, *mass);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_get_mass(GdObj* obj,GdFloat* ret_val) {
@@ -475,16 +475,16 @@ void gdspx_sprite_set_collider_rect(GdObj* obj,GdVec2* center,GdVec2* size) {
 	 spriteMgr->set_collider_rect(*obj, *center, *size);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_set_collider_circle(GdObj* obj,GdVec2* center,GdFloat radius) {
-	 spriteMgr->set_collider_circle(*obj, *center, radius);
+void gdspx_sprite_set_collider_circle(GdObj* obj,GdVec2* center,GdFloat* radius) {
+	 spriteMgr->set_collider_circle(*obj, *center, *radius);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_set_collider_capsule(GdObj* obj,GdVec2* center,GdVec2* size) {
 	 spriteMgr->set_collider_capsule(*obj, *center, *size);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_set_collision_enabled(GdObj* obj,GdBool enabled) {
-	 spriteMgr->set_collision_enabled(*obj, enabled);
+void gdspx_sprite_set_collision_enabled(GdObj* obj,GdBool* enabled) {
+	 spriteMgr->set_collision_enabled(*obj, *enabled);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_is_collision_enabled(GdObj* obj,GdBool* ret_val) {
@@ -495,48 +495,48 @@ void gdspx_sprite_set_trigger_rect(GdObj* obj,GdVec2* center,GdVec2* size) {
 	 spriteMgr->set_trigger_rect(*obj, *center, *size);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_set_trigger_circle(GdObj* obj,GdVec2* center,GdFloat radius) {
-	 spriteMgr->set_trigger_circle(*obj, *center, radius);
+void gdspx_sprite_set_trigger_circle(GdObj* obj,GdVec2* center,GdFloat* radius) {
+	 spriteMgr->set_trigger_circle(*obj, *center, *radius);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_set_trigger_capsule(GdObj* obj,GdVec2* center,GdVec2* size) {
 	 spriteMgr->set_trigger_capsule(*obj, *center, *size);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_set_trigger_enabled(GdObj* obj,GdBool trigger) {
-	 spriteMgr->set_trigger_enabled(*obj, trigger);
+void gdspx_sprite_set_trigger_enabled(GdObj* obj,GdBool* trigger) {
+	 spriteMgr->set_trigger_enabled(*obj, *trigger);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_is_trigger_enabled(GdObj* obj,GdBool* ret_val) {
 	*ret_val = spriteMgr->is_trigger_enabled(*obj);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_ui_create_node(GdString path,GdObj* ret_val) {
-	*ret_val = uiMgr->create_node(path);
+void gdspx_ui_create_node(GdString* path,GdObj* ret_val) {
+	*ret_val = uiMgr->create_node(*path);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_ui_create_button(GdString path,GdString text,GdObj* ret_val) {
-	*ret_val = uiMgr->create_button(path, text);
+void gdspx_ui_create_button(GdString* path,GdString* text,GdObj* ret_val) {
+	*ret_val = uiMgr->create_button(*path, *text);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_ui_create_label(GdString path,GdString text,GdObj* ret_val) {
-	*ret_val = uiMgr->create_label(path, text);
+void gdspx_ui_create_label(GdString* path,GdString* text,GdObj* ret_val) {
+	*ret_val = uiMgr->create_label(*path, *text);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_ui_create_image(GdString path,GdObj* ret_val) {
-	*ret_val = uiMgr->create_image(path);
+void gdspx_ui_create_image(GdString* path,GdObj* ret_val) {
+	*ret_val = uiMgr->create_image(*path);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_ui_create_toggle(GdString path,GdBool value,GdObj* ret_val) {
-	*ret_val = uiMgr->create_toggle(path, value);
+void gdspx_ui_create_toggle(GdString* path,GdBool* value,GdObj* ret_val) {
+	*ret_val = uiMgr->create_toggle(*path, *value);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_ui_create_slider(GdString path,GdFloat value,GdObj* ret_val) {
-	*ret_val = uiMgr->create_slider(path, value);
+void gdspx_ui_create_slider(GdString* path,GdFloat* value,GdObj* ret_val) {
+	*ret_val = uiMgr->create_slider(*path, *value);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_ui_create_input(GdString path,GdString text,GdObj* ret_val) {
-	*ret_val = uiMgr->create_input(path, text);
+void gdspx_ui_create_input(GdString* path,GdString* text,GdObj* ret_val) {
+	*ret_val = uiMgr->create_input(*path, *text);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_ui_destroy_node(GdObj* obj,GdBool* ret_val) {
@@ -547,16 +547,16 @@ void gdspx_ui_get_type(GdObj* obj,GdInt* ret_val) {
 	*ret_val = uiMgr->get_type(*obj);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_ui_set_text(GdObj* obj,GdString text) {
-	 uiMgr->set_text(*obj, text);
+void gdspx_ui_set_text(GdObj* obj,GdString* text) {
+	 uiMgr->set_text(*obj, *text);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_ui_get_text(GdObj* obj,GdString* ret_val) {
 	*ret_val = uiMgr->get_text(*obj);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_ui_set_texture(GdObj* obj,GdString path) {
-	 uiMgr->set_texture(*obj, path);
+void gdspx_ui_set_texture(GdObj* obj,GdString* path) {
+	 uiMgr->set_texture(*obj, *path);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_ui_get_texture(GdObj* obj,GdString* ret_val) {
@@ -579,16 +579,16 @@ void gdspx_ui_get_font_size(GdObj* obj,GdInt* ret_val) {
 	*ret_val = uiMgr->get_font_size(*obj);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_ui_set_visible(GdObj* obj,GdBool visible) {
-	 uiMgr->set_visible(*obj, visible);
+void gdspx_ui_set_visible(GdObj* obj,GdBool* visible) {
+	 uiMgr->set_visible(*obj, *visible);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_ui_get_visible(GdObj* obj,GdBool* ret_val) {
 	*ret_val = uiMgr->get_visible(*obj);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_ui_set_interactable(GdObj* obj,GdBool interactable) {
-	 uiMgr->set_interactable(*obj, interactable);
+void gdspx_ui_set_interactable(GdObj* obj,GdBool* interactable) {
+	 uiMgr->set_interactable(*obj, *interactable);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_ui_get_interactable(GdObj* obj,GdBool* ret_val) {
