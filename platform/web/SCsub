@@ -27,7 +27,6 @@ web_files = [
     "godot_js_spx.cpp",
     "godot_js_spx_callback.cpp",
     "godot_js_spx_util.cpp",
-    
 ]
 
 sys_env = env.Clone()
@@ -101,6 +100,7 @@ engine = [
     "js/engine/config.js",
     "js/engine/engine.js",
     "js/engine/gdspx.js",
+    "js/engine/gdspx.util.js",
 ]
 externs = [env.File("#platform/web/js/engine/engine.externs.js")]
 js_engine = env.CreateEngineFile("#bin/godot${PROGSUFFIX}.engine.js", engine, externs)

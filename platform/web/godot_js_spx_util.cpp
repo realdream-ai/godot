@@ -19,7 +19,14 @@ static ObjectPool<GdColor> colorPool(100);
 static ObjectPool<GdRect2> rect2Pool(100);
 
 extern "C" {
-	
+
+
+EMSCRIPTEN_KEEPALIVE
+float gdspx_get_value(float* array, int idx) {
+    return array[idx];
+}
+
+
 EMSCRIPTEN_KEEPALIVE
 GdBool* gdspx_alloc_bool() {
     return boolPool.acquire();
@@ -63,12 +70,6 @@ GdColor* gdspx_alloc_color() {
 EMSCRIPTEN_KEEPALIVE
 GdRect2* gdspx_alloc_rect2() {
     return rect2Pool.acquire();
-}
-
-
-EMSCRIPTEN_KEEPALIVE
-float gdspx_get_value(float* array, int idx) {
-    return array[idx];
 }
 
 // 
@@ -179,6 +180,17 @@ void gdspx_free_rect2(GdRect2* rect) {
     rect2Pool.release(rect);
 }
 
+EMSCRIPTEN_KEEPALIVE
+void gdspx_free_float(GdFloat* f) {
+    floatPool.release(f);
+}
+
+EMSCRIPTEN_KEEPALIVE
+void gdspx_free_bool(GdBool* b) {
+    boolPool.release(b);
+}
+
+
 
 EMSCRIPTEN_KEEPALIVE
 void gdspx_print_vec2(GdVec2* vec) {
@@ -204,11 +216,35 @@ void gdspx_print_color(GdColor* color) {
 }
 
 
+
 EMSCRIPTEN_KEEPALIVE
 void gdspx_print_rect2(GdRect2* rect) {
     print_line("rect2: position(%f, %f), size(%f, %f)", rect->position.x, rect->position.y, rect->size.width, rect->size.height);
 }
 
+EMSCRIPTEN_KEEPALIVE
+void gdspx_print_int(GdInt* value) {
+    print_line("int: %d", *value);
+}
 
+EMSCRIPTEN_KEEPALIVE
+void gdspx_print_float(GdFloat* value) {
+    print_line("float: %f", *value);
+}
+
+EMSCRIPTEN_KEEPALIVE
+void gdspx_print_bool(GdBool* value) {
+    print_line("bool: %s", *value ? "true" : "false");
+}
+
+EMSCRIPTEN_KEEPALIVE
+void gdspx_print_string(GdString* str) {
+    print_line("string: %s", str->c_str());
+}
+
+EMSCRIPTEN_KEEPALIVE
+void gdspx_print_obj(GdObj* obj) {
+    print_line("object: %p", (void*)obj);
+}
 
 }
