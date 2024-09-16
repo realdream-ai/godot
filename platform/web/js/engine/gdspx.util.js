@@ -21,6 +21,11 @@ function PrintGdBool(ptr) {
 }
 
 // Int-related functions
+function ToGdInt(value) {
+	func = GodotEngine.rtenv['_gdspx_new_int']; 
+	return func(value);
+}
+
 function ToJsInt(ptr) {
     const memoryBuffer = Module.HEAPU8.buffer;
     const dataView = new DataView(memoryBuffer);
@@ -102,6 +107,10 @@ function ToJsObj(ptr) {
     const high = dataView.getUint32(ptr + 4, true);  // 高32位
     const int64Value = BigInt(high) << 32n | BigInt(low);
     return int64Value;
+}
+
+function AllocGdObj() {
+	return GodotEngine.rtenv['_gdspx_alloc_obj']();
 }
 
 function PrintGdObj(ptr) {
