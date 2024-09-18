@@ -304,8 +304,8 @@ function ToJsRect2(ptr) {
             y: HEAPF32[floatIndex + 1]
         },
         size: {
-            width: HEAPF32[floatIndex + 2],
-            height: HEAPF32[floatIndex + 3]
+            x: HEAPF32[floatIndex + 2],
+            y: HEAPF32[floatIndex + 3]
         }
     };
 }
