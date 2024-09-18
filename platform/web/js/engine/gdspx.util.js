@@ -320,5 +320,5 @@ function PrintGdRect2(ptr) {
 }
 
 function FreeGdRect2(ptr) {
-    GodotEngine.rtenv['gdspx_free_rect2'](ptr);
+    GodotEngine.rtenv['_gdspx_free_rect2'](ptr);
 }
