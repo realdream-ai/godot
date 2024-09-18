@@ -29,8 +29,8 @@ function gdspx_audio_get_audio_volume() {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_audio_get_audio_volume']; 
 	_retValue = AllocGdFloat();
 	_gdFuncPtr(_retValue);
-	_finalRetValue = ToJsFloat32(_retValue);
-	Freefloat32(_retValue); 
+	_finalRetValue = ToJsFloat(_retValue);
+	FreeGdFloat(_retValue); 
 	return _finalRetValue
 }
 function gdspx_audio_is_music_playing() {
@@ -38,7 +38,7 @@ function gdspx_audio_is_music_playing() {
 	_retValue = AllocGdBool();
 	_gdFuncPtr(_retValue);
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_audio_play_music(path) {
@@ -61,8 +61,8 @@ function gdspx_audio_get_music_volume() {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_audio_get_music_volume']; 
 	_retValue = AllocGdFloat();
 	_gdFuncPtr(_retValue);
-	_finalRetValue = ToJsFloat32(_retValue);
-	Freefloat32(_retValue); 
+	_finalRetValue = ToJsFloat(_retValue);
+	FreeGdFloat(_retValue); 
 	return _finalRetValue
 }
 function gdspx_audio_pause_music() {
@@ -81,8 +81,8 @@ function gdspx_audio_get_music_timer() {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_audio_get_music_timer']; 
 	_retValue = AllocGdFloat();
 	_gdFuncPtr(_retValue);
-	_finalRetValue = ToJsFloat32(_retValue);
-	Freefloat32(_retValue); 
+	_finalRetValue = ToJsFloat(_retValue);
+	FreeGdFloat(_retValue); 
 	return _finalRetValue
 }
 function gdspx_audio_set_music_timer(time) {
@@ -98,7 +98,7 @@ function gdspx_camera_get_camera_position() {
 	_retValue = AllocGdVec2();
 	_gdFuncPtr(_retValue);
 	_finalRetValue = ToJsVec2(_retValue);
-	FreeVec2(_retValue); 
+	FreeGdVec2(_retValue); 
 	return _finalRetValue
 }
 function gdspx_camera_set_camera_position(position) {
@@ -114,7 +114,7 @@ function gdspx_camera_get_camera_zoom() {
 	_retValue = AllocGdVec2();
 	_gdFuncPtr(_retValue);
 	_finalRetValue = ToJsVec2(_retValue);
-	FreeVec2(_retValue); 
+	FreeGdVec2(_retValue); 
 	return _finalRetValue
 }
 function gdspx_camera_set_camera_zoom(size) {
@@ -130,7 +130,7 @@ function gdspx_camera_get_viewport_rect() {
 	_retValue = AllocGdRect2();
 	_gdFuncPtr(_retValue);
 	_finalRetValue = ToJsRect2(_retValue);
-	FreeRect2(_retValue); 
+	FreeGdRect2(_retValue); 
 	return _finalRetValue
 }
 function gdspx_input_get_mouse_pos() {
@@ -138,7 +138,7 @@ function gdspx_input_get_mouse_pos() {
 	_retValue = AllocGdVec2();
 	_gdFuncPtr(_retValue);
 	_finalRetValue = ToJsVec2(_retValue);
-	FreeVec2(_retValue); 
+	FreeGdVec2(_retValue); 
 	return _finalRetValue
 }
 function gdspx_input_get_key(key) {
@@ -148,7 +148,7 @@ function gdspx_input_get_key(key) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdInt(_arg0); 
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_input_get_mouse_state(mouse_id) {
@@ -158,7 +158,7 @@ function gdspx_input_get_mouse_state(mouse_id) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdInt(_arg0); 
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_input_get_key_state(key) {
@@ -167,8 +167,8 @@ function gdspx_input_get_key_state(key) {
 	_arg0 = ToGdInt(key);
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdInt(_arg0); 
-	_finalRetValue = ToJsInt64(_retValue);
-	Freeint64(_retValue); 
+	_finalRetValue = ToJsInt(_retValue);
+	FreeGdInt(_retValue); 
 	return _finalRetValue
 }
 function gdspx_input_get_axis(neg_action,pos_action) {
@@ -179,8 +179,8 @@ function gdspx_input_get_axis(neg_action,pos_action) {
 	_gdFuncPtr(_arg0, _arg1, _retValue);
 	FreeGdString(_arg0); 
 	FreeGdString(_arg1); 
-	_finalRetValue = ToJsFloat32(_retValue);
-	Freefloat32(_retValue); 
+	_finalRetValue = ToJsFloat(_retValue);
+	FreeGdFloat(_retValue); 
 	return _finalRetValue
 }
 function gdspx_input_is_action_pressed(action) {
@@ -190,7 +190,7 @@ function gdspx_input_is_action_pressed(action) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdString(_arg0); 
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_input_is_action_just_pressed(action) {
@@ -200,7 +200,7 @@ function gdspx_input_is_action_just_pressed(action) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdString(_arg0); 
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_input_is_action_just_released(action) {
@@ -210,7 +210,7 @@ function gdspx_input_is_action_just_released(action) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdString(_arg0); 
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_physic_raycast(from,to,collision_mask) {
@@ -223,8 +223,8 @@ function gdspx_physic_raycast(from,to,collision_mask) {
 	FreeGdVec2(_arg0); 
 	FreeGdVec2(_arg1); 
 	FreeGdInt(_arg2); 
-	_finalRetValue = ToJsObject(_retValue);
-	FreeObject(_retValue); 
+	_finalRetValue = ToJsObj(_retValue);
+	FreeGdObj(_retValue); 
 	return _finalRetValue
 }
 function gdspx_physic_check_collision(from,to,collision_mask,collide_with_areas,collide_with_bodies) {
@@ -242,7 +242,7 @@ function gdspx_physic_check_collision(from,to,collision_mask,collide_with_areas,
 	FreeGdBool(_arg3); 
 	FreeGdBool(_arg4); 
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_scene_change_scene_to_file(path) {
@@ -257,8 +257,8 @@ function gdspx_scene_reload_current_scene() {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_scene_reload_current_scene']; 
 	_retValue = AllocGdInt();
 	_gdFuncPtr(_retValue);
-	_finalRetValue = ToJsInt64(_retValue);
-	Freeint64(_retValue); 
+	_finalRetValue = ToJsInt(_retValue);
+	FreeGdInt(_retValue); 
 	return _finalRetValue
 }
 function gdspx_scene_unload_current_scene() {
@@ -316,7 +316,7 @@ function gdspx_sprite_get_child_position(obj,path) {
 	FreeGdObj(_arg0); 
 	FreeGdString(_arg1); 
 	_finalRetValue = ToJsVec2(_retValue);
-	FreeVec2(_retValue); 
+	FreeGdVec2(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_set_child_rotation(obj,path,rot) {
@@ -339,8 +339,8 @@ function gdspx_sprite_get_child_rotation(obj,path) {
 	_gdFuncPtr(_arg0, _arg1, _retValue);
 	FreeGdObj(_arg0); 
 	FreeGdString(_arg1); 
-	_finalRetValue = ToJsFloat32(_retValue);
-	Freefloat32(_retValue); 
+	_finalRetValue = ToJsFloat(_retValue);
+	FreeGdFloat(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_set_child_scale(obj,path,scale) {
@@ -364,7 +364,7 @@ function gdspx_sprite_get_child_scale(obj,path) {
 	FreeGdObj(_arg0); 
 	FreeGdString(_arg1); 
 	_finalRetValue = ToJsVec2(_retValue);
-	FreeVec2(_retValue); 
+	FreeGdVec2(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_create_sprite(path) {
@@ -373,8 +373,8 @@ function gdspx_sprite_create_sprite(path) {
 	_arg0 = ToGdString(path);
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdString(_arg0); 
-	_finalRetValue = ToJsObject(_retValue);
-	FreeObject(_retValue); 
+	_finalRetValue = ToJsObj(_retValue);
+	FreeGdObj(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_clone_sprite(obj) {
@@ -383,8 +383,8 @@ function gdspx_sprite_clone_sprite(obj) {
 	_arg0 = ToGdObj(obj);
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
-	_finalRetValue = ToJsObject(_retValue);
-	FreeObject(_retValue); 
+	_finalRetValue = ToJsObj(_retValue);
+	FreeGdObj(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_destroy_sprite(obj) {
@@ -394,7 +394,7 @@ function gdspx_sprite_destroy_sprite(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_is_sprite_alive(obj) {
@@ -404,7 +404,7 @@ function gdspx_sprite_is_sprite_alive(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_set_position(obj,pos) {
@@ -424,7 +424,7 @@ function gdspx_sprite_get_position(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsVec2(_retValue);
-	FreeVec2(_retValue); 
+	FreeGdVec2(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_set_rotation(obj,rot) {
@@ -443,8 +443,8 @@ function gdspx_sprite_get_rotation(obj) {
 	_arg0 = ToGdObj(obj);
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
-	_finalRetValue = ToJsFloat32(_retValue);
-	Freefloat32(_retValue); 
+	_finalRetValue = ToJsFloat(_retValue);
+	FreeGdFloat(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_set_scale(obj,scale) {
@@ -464,7 +464,7 @@ function gdspx_sprite_get_scale(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsVec2(_retValue);
-	FreeVec2(_retValue); 
+	FreeGdVec2(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_set_color(obj,color) {
@@ -484,7 +484,7 @@ function gdspx_sprite_get_color(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsColor(_retValue);
-	FreeColor(_retValue); 
+	FreeGdColor(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_set_texture(obj,path) {
@@ -504,7 +504,7 @@ function gdspx_sprite_get_texture(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsString(_retValue);
-	Freestring(_retValue); 
+	FreeGdString(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_set_visible(obj,visible) {
@@ -524,7 +524,7 @@ function gdspx_sprite_get_visible(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_get_z_index(obj) {
@@ -533,8 +533,8 @@ function gdspx_sprite_get_z_index(obj) {
 	_arg0 = ToGdObj(obj);
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
-	_finalRetValue = ToJsInt64(_retValue);
-	Freeint64(_retValue); 
+	_finalRetValue = ToJsInt(_retValue);
+	FreeGdInt(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_set_z_index(obj,z) {
@@ -594,7 +594,7 @@ function gdspx_sprite_is_playing_anim(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_set_anim(obj,p_name) {
@@ -614,7 +614,7 @@ function gdspx_sprite_get_anim(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsString(_retValue);
-	Freestring(_retValue); 
+	FreeGdString(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_set_anim_frame(obj,p_frame) {
@@ -633,8 +633,8 @@ function gdspx_sprite_get_anim_frame(obj) {
 	_arg0 = ToGdObj(obj);
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
-	_finalRetValue = ToJsInt64(_retValue);
-	Freeint64(_retValue); 
+	_finalRetValue = ToJsInt(_retValue);
+	FreeGdInt(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_set_anim_speed_scale(obj,p_speed_scale) {
@@ -653,8 +653,8 @@ function gdspx_sprite_get_anim_speed_scale(obj) {
 	_arg0 = ToGdObj(obj);
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
-	_finalRetValue = ToJsFloat32(_retValue);
-	Freefloat32(_retValue); 
+	_finalRetValue = ToJsFloat(_retValue);
+	FreeGdFloat(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_get_anim_playing_speed(obj) {
@@ -663,8 +663,8 @@ function gdspx_sprite_get_anim_playing_speed(obj) {
 	_arg0 = ToGdObj(obj);
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
-	_finalRetValue = ToJsFloat32(_retValue);
-	Freefloat32(_retValue); 
+	_finalRetValue = ToJsFloat(_retValue);
+	FreeGdFloat(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_set_anim_centered(obj,p_center) {
@@ -684,7 +684,7 @@ function gdspx_sprite_is_anim_centered(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_set_anim_offset(obj,p_offset) {
@@ -704,7 +704,7 @@ function gdspx_sprite_get_anim_offset(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsVec2(_retValue);
-	FreeVec2(_retValue); 
+	FreeGdVec2(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_set_anim_flip_h(obj,p_flip) {
@@ -724,7 +724,7 @@ function gdspx_sprite_is_anim_flipped_h(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_set_anim_flip_v(obj,p_flip) {
@@ -744,7 +744,7 @@ function gdspx_sprite_is_anim_flipped_v(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_set_velocity(obj,velocity) {
@@ -764,7 +764,7 @@ function gdspx_sprite_get_velocity(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsVec2(_retValue);
-	FreeVec2(_retValue); 
+	FreeGdVec2(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_is_on_floor(obj) {
@@ -774,7 +774,7 @@ function gdspx_sprite_is_on_floor(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_is_on_floor_only(obj) {
@@ -784,7 +784,7 @@ function gdspx_sprite_is_on_floor_only(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_is_on_wall(obj) {
@@ -794,7 +794,7 @@ function gdspx_sprite_is_on_wall(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_is_on_wall_only(obj) {
@@ -804,7 +804,7 @@ function gdspx_sprite_is_on_wall_only(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_is_on_ceiling(obj) {
@@ -814,7 +814,7 @@ function gdspx_sprite_is_on_ceiling(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_is_on_ceiling_only(obj) {
@@ -824,7 +824,7 @@ function gdspx_sprite_is_on_ceiling_only(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_get_last_motion(obj) {
@@ -834,7 +834,7 @@ function gdspx_sprite_get_last_motion(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsVec2(_retValue);
-	FreeVec2(_retValue); 
+	FreeGdVec2(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_get_position_delta(obj) {
@@ -844,7 +844,7 @@ function gdspx_sprite_get_position_delta(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsVec2(_retValue);
-	FreeVec2(_retValue); 
+	FreeGdVec2(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_get_floor_normal(obj) {
@@ -854,7 +854,7 @@ function gdspx_sprite_get_floor_normal(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsVec2(_retValue);
-	FreeVec2(_retValue); 
+	FreeGdVec2(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_get_wall_normal(obj) {
@@ -864,7 +864,7 @@ function gdspx_sprite_get_wall_normal(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsVec2(_retValue);
-	FreeVec2(_retValue); 
+	FreeGdVec2(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_get_real_velocity(obj) {
@@ -874,7 +874,7 @@ function gdspx_sprite_get_real_velocity(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsVec2(_retValue);
-	FreeVec2(_retValue); 
+	FreeGdVec2(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_move_and_slide(obj) {
@@ -901,8 +901,8 @@ function gdspx_sprite_get_gravity(obj) {
 	_arg0 = ToGdObj(obj);
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
-	_finalRetValue = ToJsFloat32(_retValue);
-	Freefloat32(_retValue); 
+	_finalRetValue = ToJsFloat(_retValue);
+	FreeGdFloat(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_set_mass(obj,mass) {
@@ -921,8 +921,8 @@ function gdspx_sprite_get_mass(obj) {
 	_arg0 = ToGdObj(obj);
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
-	_finalRetValue = ToJsFloat32(_retValue);
-	Freefloat32(_retValue); 
+	_finalRetValue = ToJsFloat(_retValue);
+	FreeGdFloat(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_add_force(obj,force) {
@@ -961,8 +961,8 @@ function gdspx_sprite_get_collision_layer(obj) {
 	_arg0 = ToGdObj(obj);
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
-	_finalRetValue = ToJsInt64(_retValue);
-	Freeint64(_retValue); 
+	_finalRetValue = ToJsInt(_retValue);
+	FreeGdInt(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_set_collision_mask(obj,mask) {
@@ -981,8 +981,8 @@ function gdspx_sprite_get_collision_mask(obj) {
 	_arg0 = ToGdObj(obj);
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
-	_finalRetValue = ToJsInt64(_retValue);
-	Freeint64(_retValue); 
+	_finalRetValue = ToJsInt(_retValue);
+	FreeGdInt(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_set_trigger_layer(obj,layer) {
@@ -1001,8 +1001,8 @@ function gdspx_sprite_get_trigger_layer(obj) {
 	_arg0 = ToGdObj(obj);
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
-	_finalRetValue = ToJsInt64(_retValue);
-	Freeint64(_retValue); 
+	_finalRetValue = ToJsInt(_retValue);
+	FreeGdInt(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_set_trigger_mask(obj,mask) {
@@ -1021,8 +1021,8 @@ function gdspx_sprite_get_trigger_mask(obj) {
 	_arg0 = ToGdObj(obj);
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
-	_finalRetValue = ToJsInt64(_retValue);
-	Freeint64(_retValue); 
+	_finalRetValue = ToJsInt(_retValue);
+	FreeGdInt(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_set_collider_rect(obj,center,size) {
@@ -1078,7 +1078,7 @@ function gdspx_sprite_is_collision_enabled(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_sprite_set_trigger_rect(obj,center,size) {
@@ -1134,7 +1134,7 @@ function gdspx_sprite_is_trigger_enabled(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_ui_create_node(path) {
@@ -1143,8 +1143,8 @@ function gdspx_ui_create_node(path) {
 	_arg0 = ToGdString(path);
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdString(_arg0); 
-	_finalRetValue = ToJsObject(_retValue);
-	FreeObject(_retValue); 
+	_finalRetValue = ToJsObj(_retValue);
+	FreeGdObj(_retValue); 
 	return _finalRetValue
 }
 function gdspx_ui_create_button(path,text) {
@@ -1155,8 +1155,8 @@ function gdspx_ui_create_button(path,text) {
 	_gdFuncPtr(_arg0, _arg1, _retValue);
 	FreeGdString(_arg0); 
 	FreeGdString(_arg1); 
-	_finalRetValue = ToJsObject(_retValue);
-	FreeObject(_retValue); 
+	_finalRetValue = ToJsObj(_retValue);
+	FreeGdObj(_retValue); 
 	return _finalRetValue
 }
 function gdspx_ui_create_label(path,text) {
@@ -1167,8 +1167,8 @@ function gdspx_ui_create_label(path,text) {
 	_gdFuncPtr(_arg0, _arg1, _retValue);
 	FreeGdString(_arg0); 
 	FreeGdString(_arg1); 
-	_finalRetValue = ToJsObject(_retValue);
-	FreeObject(_retValue); 
+	_finalRetValue = ToJsObj(_retValue);
+	FreeGdObj(_retValue); 
 	return _finalRetValue
 }
 function gdspx_ui_create_image(path) {
@@ -1177,8 +1177,8 @@ function gdspx_ui_create_image(path) {
 	_arg0 = ToGdString(path);
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdString(_arg0); 
-	_finalRetValue = ToJsObject(_retValue);
-	FreeObject(_retValue); 
+	_finalRetValue = ToJsObj(_retValue);
+	FreeGdObj(_retValue); 
 	return _finalRetValue
 }
 function gdspx_ui_create_toggle(path,value) {
@@ -1189,8 +1189,8 @@ function gdspx_ui_create_toggle(path,value) {
 	_gdFuncPtr(_arg0, _arg1, _retValue);
 	FreeGdString(_arg0); 
 	FreeGdBool(_arg1); 
-	_finalRetValue = ToJsObject(_retValue);
-	FreeObject(_retValue); 
+	_finalRetValue = ToJsObj(_retValue);
+	FreeGdObj(_retValue); 
 	return _finalRetValue
 }
 function gdspx_ui_create_slider(path,value) {
@@ -1201,8 +1201,8 @@ function gdspx_ui_create_slider(path,value) {
 	_gdFuncPtr(_arg0, _arg1, _retValue);
 	FreeGdString(_arg0); 
 	FreeGdFloat(_arg1); 
-	_finalRetValue = ToJsObject(_retValue);
-	FreeObject(_retValue); 
+	_finalRetValue = ToJsObj(_retValue);
+	FreeGdObj(_retValue); 
 	return _finalRetValue
 }
 function gdspx_ui_create_input(path,text) {
@@ -1213,8 +1213,8 @@ function gdspx_ui_create_input(path,text) {
 	_gdFuncPtr(_arg0, _arg1, _retValue);
 	FreeGdString(_arg0); 
 	FreeGdString(_arg1); 
-	_finalRetValue = ToJsObject(_retValue);
-	FreeObject(_retValue); 
+	_finalRetValue = ToJsObj(_retValue);
+	FreeGdObj(_retValue); 
 	return _finalRetValue
 }
 function gdspx_ui_destroy_node(obj) {
@@ -1224,7 +1224,7 @@ function gdspx_ui_destroy_node(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_ui_get_type(obj) {
@@ -1233,8 +1233,8 @@ function gdspx_ui_get_type(obj) {
 	_arg0 = ToGdObj(obj);
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
-	_finalRetValue = ToJsInt64(_retValue);
-	Freeint64(_retValue); 
+	_finalRetValue = ToJsInt(_retValue);
+	FreeGdInt(_retValue); 
 	return _finalRetValue
 }
 function gdspx_ui_set_text(obj,text) {
@@ -1254,7 +1254,7 @@ function gdspx_ui_get_text(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsString(_retValue);
-	Freestring(_retValue); 
+	FreeGdString(_retValue); 
 	return _finalRetValue
 }
 function gdspx_ui_set_texture(obj,path) {
@@ -1274,7 +1274,7 @@ function gdspx_ui_get_texture(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsString(_retValue);
-	Freestring(_retValue); 
+	FreeGdString(_retValue); 
 	return _finalRetValue
 }
 function gdspx_ui_set_color(obj,color) {
@@ -1294,7 +1294,7 @@ function gdspx_ui_get_color(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsColor(_retValue);
-	FreeColor(_retValue); 
+	FreeGdColor(_retValue); 
 	return _finalRetValue
 }
 function gdspx_ui_set_font_size(obj,size) {
@@ -1313,8 +1313,8 @@ function gdspx_ui_get_font_size(obj) {
 	_arg0 = ToGdObj(obj);
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
-	_finalRetValue = ToJsInt64(_retValue);
-	Freeint64(_retValue); 
+	_finalRetValue = ToJsInt(_retValue);
+	FreeGdInt(_retValue); 
 	return _finalRetValue
 }
 function gdspx_ui_set_visible(obj,visible) {
@@ -1334,7 +1334,7 @@ function gdspx_ui_get_visible(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_ui_set_interactable(obj,interactable) {
@@ -1354,7 +1354,7 @@ function gdspx_ui_get_interactable(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsBool(_retValue);
-	Freebool(_retValue); 
+	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
 function gdspx_ui_set_rect(obj,rect) {
@@ -1374,6 +1374,6 @@ function gdspx_ui_get_rect(obj) {
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdObj(_arg0); 
 	_finalRetValue = ToJsRect2(_retValue);
-	FreeRect2(_retValue); 
+	FreeGdRect2(_retValue); 
 	return _finalRetValue
 }

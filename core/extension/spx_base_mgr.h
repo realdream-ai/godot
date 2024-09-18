@@ -38,6 +38,7 @@
 public:                               \
 	String get_class_name() const override { return #m_class; }
 
+#define SpxCharPtr(str) (((const String *)str)->utf8().get_data())
 #define SpxStr(str) (((const String *)str)->clone())
 #define SpxStrName(str) StringName(*(const String *)str)
 

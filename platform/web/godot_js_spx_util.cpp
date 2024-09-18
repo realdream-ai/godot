@@ -211,19 +211,28 @@ EMSCRIPTEN_KEEPALIVE
 GdString* gdspx_new_string(const char* str) {
     GdString* ptr = gdspx_alloc_string();
     *ptr = new String(str); // TODO check if this is correct
+    print_line("== gdspx_new_string str=", String(str), "ptr == " , (int64_t)(*ptr));
     return ptr;
 }
 
 EMSCRIPTEN_KEEPALIVE
+const char* gdspx_get_string(GdString* ptr) {
+    auto cstr = ((const String *)ptr)->utf8();
+    print_line("== gdspx_get_string val = " , *((const String *)(*ptr)) , " utf8=", String(cstr.get_data()));
+    return cstr.get_data();
+    //return SpxCharPtr(ptr);
+}
+
+
+EMSCRIPTEN_KEEPALIVE
 void gdspx_free_string(GdString* p_gdstr) {
-    String** ppstr = (String**)p_gdstr;
-    if(ppstr == nullptr || *ppstr == nullptr) {
+    if(p_gdstr == nullptr || *p_gdstr == nullptr) {
         print_line("gdspx_free_stringptr: null pointer");
         return;
     }
-    String* pstr = *ppstr;
-    delete pstr;
-    *ppstr = nullptr;
+    print_line("== gdspx_free_string val = " , *((const String *)(*p_gdstr)));
+    //delete *(String**)p_gdstr; // TODO check free memory
+    *p_gdstr = nullptr;
     stringPool.release(p_gdstr);
 }
 

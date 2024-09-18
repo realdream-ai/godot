@@ -25,6 +25,53 @@ function FreeGdBool(ptr) {
 }
 
 
+
+// Object-related functions
+function ToGdObject(object) {
+    return ToGdObj(object);
+}
+function ToJsObject(ptr) {
+    return ToJsObj(ptr);
+}
+function FreeGdObject(ptr) {
+    FreeGdObj(ptr);
+}
+function AllocGdObject() {
+    return AllocGdObj();
+}
+function PrintGdObject(ptr) {
+    PrintGdObj(ptr);
+}
+
+function ToGdObj(object) {
+    func = GodotEngine.rtenv['_gdspx_new_obj']; 
+    return func(object);
+}
+
+function ToJsObj(ptr) {
+    const memoryBuffer = GodotModule.HEAPU8.buffer;
+    const dataView = new DataView(memoryBuffer);
+    const low = dataView.getUint32(ptr, true);  // 低32位
+    const high = dataView.getUint32(ptr + 4, true);  // 高32位
+    //const int64Value = BigInt(high) << 32n | BigInt(low);
+    return {
+        low : low,
+        high : high
+    };
+}
+
+function AllocGdObj() {
+    return GodotEngine.rtenv['_gdspx_alloc_obj']();
+}
+
+function PrintGdObj(ptr) {
+    console.log(ToJsObj(ptr));
+}
+
+function FreeGdObj(ptr) {
+    GodotEngine.rtenv['_gdspx_free_obj'](ptr);
+}
+
 // Int-related functions
 function ToGdInt(value) {
     func = GodotEngine.rtenv['_gdspx_new_int']; 
@@ -37,7 +84,11 @@ function ToJsInt(ptr) {
     const low = dataView.getUint32(ptr, true);  // 低32位
     const high = dataView.getUint32(ptr + 4, true);  // 高32位
     const int64Value = BigInt(high) << 32n | BigInt(low);
-    return int64Value;
+    console.log('==call ToJsInt ' ,int64Value);
+    return {
+        low : low,
+        high : high
+    };
 }
 
 function AllocGdInt() {
@@ -79,20 +130,22 @@ function FreeGdFloat(ptr) {
     GodotEngine.rtenv['_gdspx_free_float'](ptr);
 }
 
-
 // String-related functions
 function ToGdString(str) {
+    console.log('==call ToGdString' ,str);
     const encoder = new TextEncoder();
     const stringBytes = encoder.encode(str);
     const ptr = GodotModule._malloc(stringBytes.length + 1); 
     GodotModule.HEAPU8.set(stringBytes, ptr);
     GodotModule.HEAPU8[ptr + stringBytes.length] = 0;
     func = GodotEngine.rtenv['_gdspx_new_string']; 
-    gdStringPtr = func(ptr);
-    return gdStringPtr;
+    gdstrPtr= func(ptr);
+    return gdstrPtr;
 }
 
-function ToJsString(ptr) {
+function ToJsString(gdstrPtr) {
+    func = GodotEngine.rtenv['_gdspx_get_string']; 
+    ptr = func(gdstrPtr)
     const HEAPU8 = GodotModule.HEAPU8;
     let length = 0;
     while (HEAPU8[ptr + length] !== 0) {
@@ -100,8 +153,11 @@ function ToJsString(ptr) {
     }
     const stringBytes = HEAPU8.subarray(ptr, ptr + length);
     const decoder = new TextDecoder();
-    return decoder.decode(stringBytes);
+    result = decoder.decode(stringBytes);
+    console.log('==call ToJsString ' ,result);
+    return result;
 }
+
 
 function AllocGdString() {
     return GodotEngine.rtenv['_gdspx_alloc_string']();
@@ -115,33 +171,6 @@ function FreeGdString(ptr) {
     GodotEngine.rtenv['_gdspx_free_string'](ptr);
 }
 
-
-// Object-related functions
-function ToGdObj(object) {
-    func = GodotEngine.rtenv['_gdspx_new_obj']; 
-    return func(object);
-}
-
-function ToJsObj(ptr) {
-    const memoryBuffer = GodotModule.HEAPU8.buffer;
-    const dataView = new DataView(memoryBuffer);
-    const low = dataView.getUint32(ptr, true);  // 低32位
-    const high = dataView.getUint32(ptr + 4, true);  // 高32位
-    const int64Value = BigInt(high) << 32n | BigInt(low);
-    return int64Value;
-}
-
-function AllocGdObj() {
-    return GodotEngine.rtenv['_gdspx_alloc_obj']();
-}
-
-function PrintGdObj(ptr) {
-    console.log(ToJsObj(ptr));
-}
-
-function FreeGdObj(ptr) {
-    GodotEngine.rtenv['_gdspx_free_obj'](ptr);
-}
 
 
 // Vec2-related functions
@@ -274,7 +303,7 @@ function ToJsRect2(ptr) {
     const HEAPF32 = GodotModule.HEAPF32;
     const floatIndex = ptr / 4;
     return {
-        position: {
+        center: {
             x: HEAPF32[floatIndex],
             y: HEAPF32[floatIndex + 1]
         },
