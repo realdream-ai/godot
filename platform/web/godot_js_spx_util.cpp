@@ -73,7 +73,6 @@ EMSCRIPTEN_KEEPALIVE
 GdInt* gdspx_new_int(uint32_t high,uint32_t low) {
     GdInt* ptr = gdspx_alloc_int();
     int64_t val = int64_t(high)<<32 | int64_t(low);
-    print_line("== gdspx_new_int val = " , val);
     *ptr = (GdInt)val;
     return ptr;
 }
@@ -93,7 +92,6 @@ EMSCRIPTEN_KEEPALIVE
 GdObj* gdspx_new_obj(uint32_t high,uint32_t low) {
     GdObj* ptr = gdspx_alloc_obj();
     int64_t val = int64_t(high)<<32 | int64_t(low);
-    print_line("== gdspx_new_obj val = " , val);
     *ptr = (GdObj)val;
     return ptr;
 }
@@ -214,17 +212,14 @@ GdString* gdspx_alloc_string() {
 EMSCRIPTEN_KEEPALIVE
 GdString* gdspx_new_string(const char* str) {
     GdString* ptr = gdspx_alloc_string();
-    *ptr = new String(str); // TODO check if this is correct
-    print_line("== gdspx_new_string str=", String(str), "ptr == " , (int64_t)(*ptr));
+    *ptr = new String(str);
     return ptr;
 }
 
 EMSCRIPTEN_KEEPALIVE
 const char* gdspx_get_string(GdString* ptr) {
     auto cstr = ((const String *)ptr)->utf8();
-    print_line("== gdspx_get_string val = " , *((const String *)(*ptr)) , " utf8=", String(cstr.get_data()));
     return cstr.get_data();
-    //return SpxCharPtr(ptr);
 }
 
 
@@ -234,8 +229,7 @@ void gdspx_free_string(GdString* p_gdstr) {
         print_line("gdspx_free_stringptr: null pointer");
         return;
     }
-    print_line("== gdspx_free_string val = " , *((const String *)(*p_gdstr)));
-    //delete *(String**)p_gdstr; // TODO check free memory
+    delete *(String**)p_gdstr; 
     *p_gdstr = nullptr;
     stringPool.release(p_gdstr);
 }

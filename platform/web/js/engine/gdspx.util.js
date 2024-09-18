@@ -83,8 +83,6 @@ function ToJsInt(ptr) {
     const dataView = new DataView(memoryBuffer);
     const low = dataView.getUint32(ptr, true);  // 低32位
     const high = dataView.getUint32(ptr + 4, true);  // 高32位
-    const int64Value = BigInt(high) << 32n | BigInt(low);
-    console.log('==call ToJsInt ' ,int64Value);
     return {
         low : low,
         high : high
@@ -132,7 +130,6 @@ function FreeGdFloat(ptr) {
 
 // String-related functions
 function ToGdString(str) {
-    console.log('==call ToGdString' ,str);
     const encoder = new TextEncoder();
     const stringBytes = encoder.encode(str);
     const ptr = GodotModule._malloc(stringBytes.length + 1); 
@@ -154,7 +151,6 @@ function ToJsString(gdstrPtr) {
     const stringBytes = HEAPU8.subarray(ptr, ptr + length);
     const decoder = new TextDecoder();
     result = decoder.decode(stringBytes);
-    console.log('==call ToJsString ' ,result);
     return result;
 }
 
