@@ -43,9 +43,9 @@ function PrintGdObject(ptr) {
     PrintGdObj(ptr);
 }
 
-function ToGdObj(object) {
+function ToGdObj(value) {
     func = GodotEngine.rtenv['_gdspx_new_obj']; 
-    return func(object);
+    return func(value.high, value.low);
 }
 
 function ToJsObj(ptr) {
@@ -75,7 +75,7 @@ function FreeGdObj(ptr) {
 // Int-related functions
 function ToGdInt(value) {
     func = GodotEngine.rtenv['_gdspx_new_int']; 
-    return func(value);
+    return func(value.high, value.low);
 }
 
 function ToJsInt(ptr) {

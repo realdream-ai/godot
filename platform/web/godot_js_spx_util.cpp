@@ -70,8 +70,10 @@ GdInt* gdspx_alloc_int() {
 }
 
 EMSCRIPTEN_KEEPALIVE
-GdInt* gdspx_new_int(double val) {
+GdInt* gdspx_new_int(uint32_t high,uint32_t low) {
     GdInt* ptr = gdspx_alloc_int();
+    int64_t val = int64_t(high)<<32 | int64_t(low);
+    print_line("== gdspx_new_int val = " , val);
     *ptr = (GdInt)val;
     return ptr;
 }
@@ -88,8 +90,10 @@ GdObj* gdspx_alloc_obj() {
 }
 
 EMSCRIPTEN_KEEPALIVE
-GdObj* gdspx_new_obj(double val) {
+GdObj* gdspx_new_obj(uint32_t high,uint32_t low) {
     GdObj* ptr = gdspx_alloc_obj();
+    int64_t val = int64_t(high)<<32 | int64_t(low);
+    print_line("== gdspx_new_obj val = " , val);
     *ptr = (GdObj)val;
     return ptr;
 }

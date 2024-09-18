@@ -1318,6 +1318,7 @@ function gdspx_ui_get_font_size(obj) {
 	return _finalRetValue
 }
 function gdspx_ui_set_visible(obj,visible) {
+	console.log("gdspx_ui_set_visible",obj,visible);
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_ui_set_visible']; 
 	
 	_arg0 = ToGdObj(obj);

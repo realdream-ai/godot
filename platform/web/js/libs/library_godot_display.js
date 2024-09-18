@@ -796,47 +796,6 @@ const GodotDisplay = {
 		}
 	},
 
-	// godot gdspx extensions
-	godot_js_on_load_gdextension__proxy: 'sync',
-	godot_js_on_load_gdextension__sig: 'viii',
-	godot_js_on_load_gdextension : function (p_name, p_get_proc_address, p_library, r_initialization) {
-		const text = GodotRuntime.parseString(p_name);
-		if ("goWasmInit" !== text) {
-			console.log("not go wasm environment, just skip ", text);
-			return;
-		}
-		console.log("C++ called JavaScript function godot_js_on_load_gdextension", text);
-	},
-
-	// godot gdspx extensions
-	godot_js_spx_on_engine_start__proxy: 'sync',
-	godot_js_spx_on_engine_start__sig: 'v',
-	godot_js_spx_on_engine_start : function () {
-		console.log("C++ called JavaScript function godot_js_spx_on_engine_start");
-		window.gdspx_on_engine_start();
-	},
-
-	godot_js_spx_on_engine_update__proxy: 'sync',
-	godot_js_spx_on_engine_update__sig: 'vf', 
-	godot_js_spx_on_engine_update : function (delta) {
-		console.log("C++ called JavaScript function godot_js_spx_on_engine_update with delta: " + delta);
-		window.gdspx_on_engine_update(delta);
-	},
-
-	godot_js_spx_on_engine_fixed_update__proxy: 'sync',
-	godot_js_spx_on_engine_fixed_update__sig: 'vf', 
-	godot_js_spx_on_engine_fixed_update : function (delta) {
-		console.log("C++ called JavaScript function godot_js_spx_on_engine_fixed_update with delta: " + delta);
-		window.gdspx_on_engine_fixed_update(delta);
-	},
-
-	godot_js_spx_on_engine_destroy__proxy: 'sync',
-	godot_js_spx_on_engine_destroy__sig: 'v',
-	godot_js_spx_on_engine_destroy : function () {
-		console.log("C++ called JavaScript function godot_js_spx_on_engine_destroy");
-		window.gdspx_on_engine_destroy(delta);
-	},
-
 };
 
 autoAddDeps(GodotDisplay, '$GodotDisplay');

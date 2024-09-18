@@ -133,7 +133,9 @@ SpxUi *SpxUiMgr::on_create_node(Control *control, GdInt type) {
 	auto node = on_create_node(control,(GdInt)ESpxUiType::TYPE);
 
 GdObj SpxUiMgr::create_node(GdString path) {
+	print_line("create_node");
 	auto control = create_control(path);
+	print_line("create_control "+ SpxStr(path));
 	if (control == nullptr) {
 		print_error("Failed to create node " + SpxStr(path));
 		return NULL_OBJECT_ID;
