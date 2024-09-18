@@ -225,7 +225,7 @@ const Engine = (function () {
 									});
 								}).then(function () {
 									return executeMainLogic();
-								}).catch(reject); 
+								}); 
 						}
 						return executeMainLogic();
 					});
