@@ -245,6 +245,56 @@ function gdspx_physic_check_collision(from,to,collision_mask,collide_with_areas,
 	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
+function gdspx_platform_set_window_size(width,height) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_platform_set_window_size']; 
+	
+	_arg0 = ToGdInt(width);
+	_arg1 = ToGdInt(height);
+	_gdFuncPtr(_arg0, _arg1);
+	FreeGdInt(_arg0); 
+	FreeGdInt(_arg1); 
+
+}
+function gdspx_platform_get_window_size() {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_platform_get_window_size']; 
+	_retValue = AllocGdVec2();
+	_gdFuncPtr(_retValue);
+	_finalRetValue = ToJsVec2(_retValue);
+	FreeGdVec2(_retValue); 
+	return _finalRetValue
+}
+function gdspx_platform_set_window_title(title) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_platform_set_window_title']; 
+	
+	_arg0 = ToGdString(title);
+	_gdFuncPtr(_arg0);
+	FreeGdString(_arg0); 
+
+}
+function gdspx_platform_get_window_title() {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_platform_get_window_title']; 
+	_retValue = AllocGdString();
+	_gdFuncPtr(_retValue);
+	_finalRetValue = ToJsString(_retValue);
+	FreeGdString(_retValue); 
+	return _finalRetValue
+}
+function gdspx_platform_set_window_fullscreen(enable) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_platform_set_window_fullscreen']; 
+	
+	_arg0 = ToGdBool(enable);
+	_gdFuncPtr(_arg0);
+	FreeGdBool(_arg0); 
+
+}
+function gdspx_platform_is_window_fullscreen() {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_platform_is_window_fullscreen']; 
+	_retValue = AllocGdBool();
+	_gdFuncPtr(_retValue);
+	_finalRetValue = ToJsBool(_retValue);
+	FreeGdBool(_retValue); 
+	return _finalRetValue
+}
 function gdspx_scene_change_scene_to_file(path) {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_scene_change_scene_to_file']; 
 	

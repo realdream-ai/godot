@@ -39,6 +39,7 @@
 #include "core/extension/spx_camera_mgr.h"
 #include "core/extension/spx_input_mgr.h"
 #include "core/extension/spx_physic_mgr.h"
+#include "core/extension/spx_platform_mgr.h"
 #include "core/extension/spx_scene_mgr.h"
 #include "core/extension/spx_sprite_mgr.h"
 #include "core/extension/spx_ui_mgr.h"
@@ -48,6 +49,7 @@
 #define cameraMgr SpxEngine::get_singleton()->get_camera()
 #define inputMgr SpxEngine::get_singleton()->get_input()
 #define physicMgr SpxEngine::get_singleton()->get_physic()
+#define platformMgr SpxEngine::get_singleton()->get_platform()
 #define sceneMgr SpxEngine::get_singleton()->get_scene()
 #define spriteMgr SpxEngine::get_singleton()->get_sprite()
 #define uiMgr SpxEngine::get_singleton()->get_ui()
@@ -157,6 +159,30 @@ void gdspx_physic_raycast(GdVec2* from,GdVec2* to,GdInt* collision_mask,GdObj* r
 EMSCRIPTEN_KEEPALIVE
 void gdspx_physic_check_collision(GdVec2* from,GdVec2* to,GdInt* collision_mask,GdBool* collide_with_areas,GdBool* collide_with_bodies,GdBool* ret_val) {
 	*ret_val = physicMgr->check_collision(*from, *to, *collision_mask, *collide_with_areas, *collide_with_bodies);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_platform_set_window_size(GdInt* width,GdInt* height) {
+	 platformMgr->set_window_size(*width, *height);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_platform_get_window_size(GdVec2* ret_val) {
+	*ret_val = platformMgr->get_window_size();
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_platform_set_window_title(GdString* title) {
+	 platformMgr->set_window_title(*title);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_platform_get_window_title(GdString* ret_val) {
+	*ret_val = platformMgr->get_window_title();
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_platform_set_window_fullscreen(GdBool* enable) {
+	 platformMgr->set_window_fullscreen(*enable);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_platform_is_window_fullscreen(GdBool* ret_val) {
+	*ret_val = platformMgr->is_window_fullscreen();
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_scene_change_scene_to_file(GdString* path) {

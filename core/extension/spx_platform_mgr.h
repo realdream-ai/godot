@@ -1,5 +1,5 @@
-/**************************************************************************/
-/*  spx_engine.h                                                          */
+﻿/**************************************************************************/
+/*  spx_platform_mgr.h                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,74 +28,21 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef SPX_ENGINE_H
-#define SPX_ENGINE_H
+#ifndef SPX_OS_MGR_H
+#define SPX_OS_MGR_H
 
 #include "gdextension_spx_ext.h"
 #include "spx_base_mgr.h"
 
-#include <cstdint>
-class SceneTree;
-class Window;
-class Node;
-class SpxInputMgr;
-class SpxAudioMgr;
-class SpxPhysicMgr;
-class SpxSpriteMgr;
-class SpxUiMgr;
-class SpxSceneMgr;
-class SpxCameraMgr;
-class SpxPlatformMgr;
-
-class SpxEngine : SpxBaseMgr {
-	static SpxEngine *singleton;
-
+class SpxPlatformMgr : SpxBaseMgr {
+	SPXCLASS(SpxPlatformMgr, SpxBaseMgr)
 public:
-	static SpxEngine *get_singleton() { return singleton; }
-	static bool has_initialed() { return singleton != nullptr; }
-	static void register_callbacks(GDExtensionSpxCallbackInfoPtr callback_ptr);
-
-private:
-	Vector<SpxBaseMgr *> mgrs;
-	SpxInputMgr *input;
-	SpxAudioMgr *audio;
-	SpxPhysicMgr *physic;
-	SpxSpriteMgr *sprite;
-	SpxUiMgr *ui;
-	SpxSceneMgr *scene;
-	SpxCameraMgr *camera;
-	SpxPlatformMgr *platform;
-
-public:
-	SpxInputMgr *get_input() { return input; }
-	SpxAudioMgr *get_audio() { return audio; }
-	SpxPhysicMgr *get_physic() { return physic; }
-	SpxSpriteMgr *get_sprite() { return sprite; }
-	SpxUiMgr *get_ui() { return ui; }
-	SpxSceneMgr *get_scene() { return scene; }
-	SpxCameraMgr *get_camera() { return camera; }
-	SpxPlatformMgr *get_platform() { return platform; }
-
-private:
-	SceneTree *tree;
-	Node *spx_root;
-	GdInt global_id;
-	SpxCallbackInfo callbacks;
-
-public:
-	SpxCallbackInfo *get_callbacks();
-
-public:
-	GdInt get_unique_id() override;
-	Node *get_spx_root() override;
-	SceneTree *get_tree() override;
-	Window *get_root();
-	void set_root_node(SceneTree *p_tree, Node *p_node);
-
-	void on_awake() override;
-	void on_fixed_update(float delta) override;
-	void on_update(float delta) override;
-	void on_destroy() override;
+	void set_window_size(GdInt width, GdInt height);
+	GdVec2 get_window_size();
+	void set_window_title(GdString title);
+	GdString get_window_title();
+	void set_window_fullscreen(GdBool enable);
+	GdBool is_window_fullscreen();
 };
 
-#endif // SPX_ENGINE_H
+#endif // SPX_OS_MGR_H

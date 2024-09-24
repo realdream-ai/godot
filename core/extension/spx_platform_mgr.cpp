@@ -1,5 +1,5 @@
-/**************************************************************************/
-/*  spx_engine.h                                                          */
+﻿/**************************************************************************/
+/*  spx_platform_mgr.cpp                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,74 +28,29 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef SPX_ENGINE_H
-#define SPX_ENGINE_H
+#include "spx_platform_mgr.h"
 
-#include "gdextension_spx_ext.h"
-#include "spx_base_mgr.h"
+void SpxPlatformMgr::set_window_size(GdInt width, GdInt height) {
+	get_tree()->set_window_size(width, height);
+}
 
-#include <cstdint>
-class SceneTree;
-class Window;
-class Node;
-class SpxInputMgr;
-class SpxAudioMgr;
-class SpxPhysicMgr;
-class SpxSpriteMgr;
-class SpxUiMgr;
-class SpxSceneMgr;
-class SpxCameraMgr;
-class SpxPlatformMgr;
+GdVec2 SpxPlatformMgr::get_window_size() {
+	return get_tree()->get_window_size();
+}
 
-class SpxEngine : SpxBaseMgr {
-	static SpxEngine *singleton;
+void SpxPlatformMgr::set_window_title(GdString title) {
+	get_tree()->set_window_title(SpxStr(title));
+}
 
-public:
-	static SpxEngine *get_singleton() { return singleton; }
-	static bool has_initialed() { return singleton != nullptr; }
-	static void register_callbacks(GDExtensionSpxCallbackInfoPtr callback_ptr);
+GdString SpxPlatformMgr::get_window_title() {
+	SpxBaseMgr::temp_return_str = String("Godot");
+	return &SpxBaseMgr::temp_return_str;
+}
+void SpxPlatformMgr::set_window_fullscreen(GdBool enable) {
+	get_tree()->set_window_fullscreen(enable);
+}
 
-private:
-	Vector<SpxBaseMgr *> mgrs;
-	SpxInputMgr *input;
-	SpxAudioMgr *audio;
-	SpxPhysicMgr *physic;
-	SpxSpriteMgr *sprite;
-	SpxUiMgr *ui;
-	SpxSceneMgr *scene;
-	SpxCameraMgr *camera;
-	SpxPlatformMgr *platform;
+void SpxPlatformMgr::is_window_fullscreen() {
+	return get_tree()->is_window_fullscreen();
+}
 
-public:
-	SpxInputMgr *get_input() { return input; }
-	SpxAudioMgr *get_audio() { return audio; }
-	SpxPhysicMgr *get_physic() { return physic; }
-	SpxSpriteMgr *get_sprite() { return sprite; }
-	SpxUiMgr *get_ui() { return ui; }
-	SpxSceneMgr *get_scene() { return scene; }
-	SpxCameraMgr *get_camera() { return camera; }
-	SpxPlatformMgr *get_platform() { return platform; }
-
-private:
-	SceneTree *tree;
-	Node *spx_root;
-	GdInt global_id;
-	SpxCallbackInfo callbacks;
-
-public:
-	SpxCallbackInfo *get_callbacks();
-
-public:
-	GdInt get_unique_id() override;
-	Node *get_spx_root() override;
-	SceneTree *get_tree() override;
-	Window *get_root();
-	void set_root_node(SceneTree *p_tree, Node *p_node);
-
-	void on_awake() override;
-	void on_fixed_update(float delta) override;
-	void on_update(float delta) override;
-	void on_destroy() override;
-};
-
-#endif // SPX_ENGINE_H

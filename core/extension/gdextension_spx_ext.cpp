@@ -39,6 +39,7 @@
 #include "spx_camera_mgr.h"
 #include "spx_input_mgr.h"
 #include "spx_physic_mgr.h"
+#include "spx_platform_mgr.h"
 #include "spx_scene_mgr.h"
 #include "spx_sprite_mgr.h"
 #include "spx_ui_mgr.h"
@@ -47,6 +48,7 @@
 #define cameraMgr SpxEngine::get_singleton()->get_camera()
 #define inputMgr SpxEngine::get_singleton()->get_input()
 #define physicMgr SpxEngine::get_singleton()->get_physic()
+#define platformMgr SpxEngine::get_singleton()->get_platform()
 #define sceneMgr SpxEngine::get_singleton()->get_scene()
 #define spriteMgr SpxEngine::get_singleton()->get_sprite()
 #define uiMgr SpxEngine::get_singleton()->get_ui()
@@ -132,6 +134,24 @@ static void gdextension_spx_physic_raycast(GdVec2 from,GdVec2 to,GdInt collision
 }
 static void gdextension_spx_physic_check_collision(GdVec2 from,GdVec2 to,GdInt collision_mask,GdBool collide_with_areas,GdBool collide_with_bodies,GdBool* ret_val) {
 	*ret_val = physicMgr->check_collision(from, to, collision_mask, collide_with_areas, collide_with_bodies);
+}
+static void gdextension_spx_platform_set_window_size(GdInt width,GdInt height) {
+	 platformMgr->set_window_size(width, height);
+}
+static void gdextension_spx_platform_get_window_size(GdVec2* ret_val) {
+	*ret_val = platformMgr->get_window_size();
+}
+static void gdextension_spx_platform_set_window_title(GdString title) {
+	 platformMgr->set_window_title(title);
+}
+static void gdextension_spx_platform_get_window_title(GdString* ret_val) {
+	*ret_val = platformMgr->get_window_title();
+}
+static void gdextension_spx_platform_set_window_fullscreen(GdBool enable) {
+	 platformMgr->set_window_fullscreen(enable);
+}
+static void gdextension_spx_platform_is_window_fullscreen(GdBool* ret_val) {
+	*ret_val = platformMgr->is_window_fullscreen();
 }
 static void gdextension_spx_scene_change_scene_to_file(GdString path) {
 	 sceneMgr->change_scene_to_file(path);
@@ -498,6 +518,12 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_input_is_action_just_released);
 	REGISTER_SPX_INTERFACE_FUNC(spx_physic_raycast);
 	REGISTER_SPX_INTERFACE_FUNC(spx_physic_check_collision);
+	REGISTER_SPX_INTERFACE_FUNC(spx_platform_set_window_size);
+	REGISTER_SPX_INTERFACE_FUNC(spx_platform_get_window_size);
+	REGISTER_SPX_INTERFACE_FUNC(spx_platform_set_window_title);
+	REGISTER_SPX_INTERFACE_FUNC(spx_platform_get_window_title);
+	REGISTER_SPX_INTERFACE_FUNC(spx_platform_set_window_fullscreen);
+	REGISTER_SPX_INTERFACE_FUNC(spx_platform_is_window_fullscreen);
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_change_scene_to_file);
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_reload_current_scene);
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_unload_current_scene);
