@@ -29,28 +29,32 @@
 /**************************************************************************/
 
 #include "spx_platform_mgr.h"
+#include "scene/main/window.h"
 
 void SpxPlatformMgr::set_window_size(GdInt width, GdInt height) {
-	get_tree()->set_window_size(width, height);
+	get_root()->set_size(Size2i(width, height));
 }
 
 GdVec2 SpxPlatformMgr::get_window_size() {
-	return get_tree()->get_window_size();
+	auto size = get_root()->get_size();
+	return GdVec2(size.x, size.y);
 }
 
 void SpxPlatformMgr::set_window_title(GdString title) {
-	get_tree()->set_window_title(SpxStr(title));
+	get_root()->set_title(SpxStr(title));
 }
 
 GdString SpxPlatformMgr::get_window_title() {
-	SpxBaseMgr::temp_return_str = String("Godot");
+	auto title = get_root()->get_title();
+	SpxBaseMgr::temp_return_str = title;
 	return &SpxBaseMgr::temp_return_str;
 }
 void SpxPlatformMgr::set_window_fullscreen(GdBool enable) {
-	get_tree()->set_window_fullscreen(enable);
+	auto mode = enable? Window::MODE_FULLSCREEN : Window::MODE_WINDOWED;
+	get_root()->set_mode(mode);
 }
 
-void SpxPlatformMgr::is_window_fullscreen() {
-	return get_tree()->is_window_fullscreen();
+GdBool SpxPlatformMgr::is_window_fullscreen() {
+	return get_root()->get_mode() == Window::MODE_FULLSCREEN;
 }
 
