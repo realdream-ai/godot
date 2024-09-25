@@ -30,13 +30,13 @@
 
 #include "spx_input_mgr.h"
 #include "gdextension_spx_ext.h"
+#include "scene/main/window.h"
 // input
 GdVec2 SpxInputMgr::get_mouse_pos() {
 	auto pos = Input::get_singleton()->get_mouse_position();
-	return GdVec2(pos.x, pos.y);
+	auto size = get_root()->get_size();
+	return GdVec2(pos.x - size.x*0.5, (size.y - pos.y) - size.y*0.5);
 }
-
-
 
 GdBool SpxInputMgr::get_mouse_state(GdInt mouse_id) {
 	if (mouse_id < (int)MouseButton::LEFT && (int)MouseButton::RIGHT < mouse_id) {
