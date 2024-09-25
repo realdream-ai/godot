@@ -32,26 +32,29 @@
 #include "scene/main/window.h"
 
 void SpxPlatformMgr::set_window_size(GdInt width, GdInt height) {
-	get_root()->set_size(Size2i(width, height));
+	print_line("SpxPlatformMgr::set_window_size", width, height);
+	DisplayServer::get_singleton()->window_set_size(Size2i(width, height));
 }
 
 GdVec2 SpxPlatformMgr::get_window_size() {
-	auto size = get_root()->get_size();
+	auto size = DisplayServer::get_singleton()->window_get_size();
 	return GdVec2(size.x, size.y);
 }
 
 void SpxPlatformMgr::set_window_title(GdString title) {
-	get_root()->set_title(SpxStr(title));
+	DisplayServer::get_singleton()->window_set_title(SpxStr(title));
 }
 
 GdString SpxPlatformMgr::get_window_title() {
-	auto title = get_root()->get_title();
+	auto title = "";
 	SpxBaseMgr::temp_return_str = title;
 	return &SpxBaseMgr::temp_return_str;
 }
+
 void SpxPlatformMgr::set_window_fullscreen(GdBool enable) {
-	auto mode = enable? Window::MODE_FULLSCREEN : Window::MODE_WINDOWED;
-	get_root()->set_mode(mode);
+	print_line("SpxPlatformMgr::set_window_fullscreen", enable);
+	auto mode = enable? DisplayServer::WINDOW_MODE_FULLSCREEN : DisplayServer::WINDOW_MODE_WINDOWED;
+	DisplayServer::get_singleton()->window_set_mode(mode);
 }
 
 GdBool SpxPlatformMgr::is_window_fullscreen() {
