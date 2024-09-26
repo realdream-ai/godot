@@ -185,6 +185,14 @@ void gdspx_platform_is_window_fullscreen(GdBool* ret_val) {
 	*ret_val = platformMgr->is_window_fullscreen();
 }
 EMSCRIPTEN_KEEPALIVE
+void gdspx_platform_set_debug_mode(GdBool* enable) {
+	 platformMgr->set_debug_mode(*enable);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_platform_is_debug_mode(GdBool* ret_val) {
+	*ret_val = platformMgr->is_debug_mode();
+}
+EMSCRIPTEN_KEEPALIVE
 void gdspx_scene_change_scene_to_file(GdString* path) {
 	 sceneMgr->change_scene_to_file(*path);
 }

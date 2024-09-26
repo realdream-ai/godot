@@ -34,6 +34,7 @@
 class Spx {
 public:
 	static bool initialed;
+	static bool debug_mode;
 public:
 	static void register_types();
 	static void on_start(void *p_tree);

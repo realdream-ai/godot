@@ -35,6 +35,7 @@
 #include "scene/2d/node_2d.h"
 #include "scene/2d/physics_body_2d.h"
 #include "scene/2d/sprite_2d.h"
+#include "spx.h"
 class AnimatedSprite2D;
 class Area2D;
 class CollisionShape2D;

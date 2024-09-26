@@ -153,6 +153,12 @@ static void gdextension_spx_platform_set_window_fullscreen(GdBool enable) {
 static void gdextension_spx_platform_is_window_fullscreen(GdBool* ret_val) {
 	*ret_val = platformMgr->is_window_fullscreen();
 }
+static void gdextension_spx_platform_set_debug_mode(GdBool enable) {
+	 platformMgr->set_debug_mode(enable);
+}
+static void gdextension_spx_platform_is_debug_mode(GdBool* ret_val) {
+	*ret_val = platformMgr->is_debug_mode();
+}
 static void gdextension_spx_scene_change_scene_to_file(GdString path) {
 	 sceneMgr->change_scene_to_file(path);
 }
@@ -524,6 +530,8 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_get_window_title);
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_set_window_fullscreen);
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_is_window_fullscreen);
+	REGISTER_SPX_INTERFACE_FUNC(spx_platform_set_debug_mode);
+	REGISTER_SPX_INTERFACE_FUNC(spx_platform_is_debug_mode);
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_change_scene_to_file);
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_reload_current_scene);
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_unload_current_scene);

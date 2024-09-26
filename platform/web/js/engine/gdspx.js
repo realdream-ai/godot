@@ -295,6 +295,22 @@ function gdspx_platform_is_window_fullscreen() {
 	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
+function gdspx_platform_set_debug_mode(enable) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_platform_set_debug_mode']; 
+	
+	_arg0 = ToGdBool(enable);
+	_gdFuncPtr(_arg0);
+	FreeGdBool(_arg0); 
+
+}
+function gdspx_platform_is_debug_mode() {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_platform_is_debug_mode']; 
+	_retValue = AllocGdBool();
+	_gdFuncPtr(_retValue);
+	_finalRetValue = ToJsBool(_retValue);
+	FreeGdBool(_retValue); 
+	return _finalRetValue
+}
 function gdspx_scene_change_scene_to_file(path) {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_scene_change_scene_to_file']; 
 	

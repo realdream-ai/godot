@@ -38,6 +38,7 @@
 
 #define SPX_ENGINE SpxEngine::get_singleton()
 bool Spx::initialed = false;
+bool Spx::debug_mode = false;
 
 void Spx::register_types() {
 	ClassDB::register_class<SpxSprite>();

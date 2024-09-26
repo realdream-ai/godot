@@ -43,6 +43,8 @@ public:
 	GdString get_window_title();
 	void set_window_fullscreen(GdBool enable);
 	GdBool is_window_fullscreen();
+	void set_debug_mode(GdBool enable);
+	GdBool is_debug_mode();
 };
 
 #endif // SPX_OS_MGR_H

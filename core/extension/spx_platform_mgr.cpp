@@ -29,6 +29,7 @@
 /**************************************************************************/
 
 #include "spx_platform_mgr.h"
+#include "spx.h"
 #include "scene/main/window.h"
 
 void SpxPlatformMgr::set_window_size(GdInt width, GdInt height) {
@@ -61,3 +62,11 @@ GdBool SpxPlatformMgr::is_window_fullscreen() {
 	return get_root()->get_mode() == Window::MODE_FULLSCREEN;
 }
 
+
+void SpxPlatformMgr::set_debug_mode(GdBool enable) {
+	Spx::debug_mode = enable;
+}
+
+GdBool SpxPlatformMgr::is_debug_mode() {
+	return Spx::debug_mode;
+}

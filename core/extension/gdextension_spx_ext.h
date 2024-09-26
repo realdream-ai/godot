@@ -232,6 +232,8 @@ typedef void (*GDExtensionSpxPlatformSetWindowTitle)(GdString title);
 typedef void (*GDExtensionSpxPlatformGetWindowTitle)(GdString* ret_value);
 typedef void (*GDExtensionSpxPlatformSetWindowFullscreen)(GdBool enable);
 typedef void (*GDExtensionSpxPlatformIsWindowFullscreen)(GdBool* ret_value);
+typedef void (*GDExtensionSpxPlatformSetDebugMode)(GdBool enable);
+typedef void (*GDExtensionSpxPlatformIsDebugMode)(GdBool* ret_value);
 // SpxScene
 typedef void (*GDExtensionSpxSceneChangeSceneToFile)(GdString path);
 typedef void (*GDExtensionSpxSceneReloadCurrentScene)(GdInt* ret_value);
