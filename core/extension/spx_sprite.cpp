@@ -104,36 +104,27 @@ void SpxSprite::_notification(int p_what) {
 			on_destroy_call();
 			break;
 		}
-		case NOTIFICATION_READY: {
-			//set_process(true);
+		case NOTIFICATION_DRAW: {
+			_draw();
 			break;
-		}
+		} 
 		default:
 			break;
 	}
 }
 
 void SpxSprite::_draw() {
-	if(Spx::debug_mode)
-	{
-		if (trigger2d != nullptr && trigger2d->get_shape() != nullptr) {
-			Ref<Shape2D> trigger_shape = trigger2d->get_shape();
-			trigger_shape->draw(get_canvas_item(), Color(1, 0, 0));
+	if(!Spx::debug_mode){
+		return ;
+	}
+	if (trigger2d != nullptr && trigger2d->get_shape() != nullptr) {
+		Ref<Shape2D> trigger_shape = trigger2d->get_shape();
+		trigger_shape->draw(get_canvas_item(), Color(1, 0, 0, 0.2));
+	}
 
-			auto rect = trigger2d->get_shape()->get_rect();
-			rect.position += get_global_position();
-			draw_rect(rect, Color(1, 0, 0, 0.5));
-		}
-
-		if (collider2d != nullptr && collider2d->get_shape() != nullptr) {
-			Ref<Shape2D> collider_shape = collider2d->get_shape();
-			collider_shape->draw(get_canvas_item(), Color(0, 0, 1));
-
-			auto rect = collider2d->get_shape()->get_rect();
-			rect.position += get_global_position();
-			draw_rect(rect, Color(1, 0, 0, 0.5));
-		}
-
+	if (collider2d != nullptr && collider2d->get_shape() != nullptr) {
+		Ref<Shape2D> collider_shape = collider2d->get_shape();
+		collider_shape->draw(get_canvas_item(), Color(0, 0, 1,0.2));
 	}
 }
 
