@@ -195,6 +195,12 @@ static void gdextension_spx_sprite_set_child_scale(GdObj obj,GdString path,GdVec
 static void gdextension_spx_sprite_get_child_scale(GdObj obj,GdString path,GdVec2* ret_val) {
 	*ret_val = spriteMgr->get_child_scale(obj, path);
 }
+static void gdextension_spx_sprite_check_collision(GdObj obj,GdObj target,GdBool is_src_trigger,GdBool is_dst_trigger,GdBool* ret_val) {
+	*ret_val = spriteMgr->check_collision(obj, target, is_src_trigger, is_dst_trigger);
+}
+static void gdextension_spx_sprite_check_collision_with_point(GdObj obj,GdVec2 point,GdBool is_trigger,GdBool* ret_val) {
+	*ret_val = spriteMgr->check_collision_with_point(obj, point, is_trigger);
+}
 static void gdextension_spx_sprite_create_sprite(GdString path,GdObj* ret_val) {
 	*ret_val = spriteMgr->create_sprite(path);
 }
@@ -544,6 +550,8 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_child_rotation);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_child_scale);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_child_scale);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_check_collision);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_check_collision_with_point);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_create_sprite);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_clone_sprite);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_destroy_sprite);

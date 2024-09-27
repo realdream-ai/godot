@@ -433,6 +433,36 @@ function gdspx_sprite_get_child_scale(obj,path) {
 	FreeGdVec2(_retValue); 
 	return _finalRetValue
 }
+function gdspx_sprite_check_collision(obj,target,is_src_trigger,is_dst_trigger) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_sprite_check_collision']; 
+	_retValue = AllocGdBool();
+	_arg0 = ToGdObj(obj);
+	_arg1 = ToGdObj(target);
+	_arg2 = ToGdBool(is_src_trigger);
+	_arg3 = ToGdBool(is_dst_trigger);
+	_gdFuncPtr(_arg0, _arg1, _arg2, _arg3, _retValue);
+	FreeGdObj(_arg0); 
+	FreeGdObj(_arg1); 
+	FreeGdBool(_arg2); 
+	FreeGdBool(_arg3); 
+	_finalRetValue = ToJsBool(_retValue);
+	FreeGdBool(_retValue); 
+	return _finalRetValue
+}
+function gdspx_sprite_check_collision_with_point(obj,point,is_trigger) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_sprite_check_collision_with_point']; 
+	_retValue = AllocGdBool();
+	_arg0 = ToGdObj(obj);
+	_arg1 = ToGdVec2(point);
+	_arg2 = ToGdBool(is_trigger);
+	_gdFuncPtr(_arg0, _arg1, _arg2, _retValue);
+	FreeGdObj(_arg0); 
+	FreeGdVec2(_arg1); 
+	FreeGdBool(_arg2); 
+	_finalRetValue = ToJsBool(_retValue);
+	FreeGdBool(_retValue); 
+	return _finalRetValue
+}
 function gdspx_sprite_create_sprite(path) {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_sprite_create_sprite']; 
 	_retValue = AllocGdObj();
