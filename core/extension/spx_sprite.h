@@ -149,6 +149,10 @@ public:
 	void set_trigger_enabled(GdBool trigger);
 	GdBool is_trigger_enabled();
 
+	// collision
+	CollisionShape2D* get_collider(bool is_trigger = false);
+	GdBool check_collision(SpxSprite *other, GdBool is_src_trigger = true,GdBool is_dst_trigger = true);
+	GdBool check_collision_with_point(GdVec2 point, GdBool is_trigger = true);
 };
 
 template <typename T> T *SpxSprite::get_component(Node *node, GdBool recursive) {

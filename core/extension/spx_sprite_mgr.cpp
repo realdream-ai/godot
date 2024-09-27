@@ -57,6 +57,18 @@ StringName SpxSpriteMgr::default_texture_anim = "";
 		return ; \
 	}
 
+#define check_and_get_target_sprite_v(TARGET) \
+	auto sprite_##TARGET = get_sprite(TARGET);\
+	if (sprite_##TARGET == nullptr) {\
+		print_error("try to get property of a null sprite gid=" + itos(TARGET)); \
+	return ; \
+}
+#define check_and_get_target_sprite_r(TARGET,VALUE) \
+	auto sprite_##TARGET = get_sprite(TARGET);\
+	if (sprite_##TARGET == nullptr) {\
+		print_error("try to get property of a null sprite gid=" + itos(TARGET)); \
+	return VALUE; \
+}
 
 #define SPX_CALLBACK SpxEngine::get_singleton()->get_callbacks()
 
@@ -173,6 +185,17 @@ GdVec2 SpxSpriteMgr::get_child_scale(GdObj obj, GdString path) {
 		return child->get_scale();
 	}
 	return GdVec2();
+}
+
+GdBool SpxSpriteMgr::check_collision(GdObj obj, GdObj target, GdBool is_src_trigger, GdBool is_dst_trigger) {
+	check_and_get_sprite_r(false)
+	check_and_get_target_sprite_r(target,false)
+	return sprite->check_collision(sprite_target,is_src_trigger,is_dst_trigger);
+}
+
+GdBool SpxSpriteMgr::check_collision_with_point(GdObj obj, GdVec2 point, GdBool is_trigger) {
+	check_and_get_sprite_r(false)
+	return sprite->check_collision_with_point(point, is_trigger);
 }
 
 // sprite

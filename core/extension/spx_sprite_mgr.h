@@ -66,6 +66,8 @@ public:
 	void set_child_scale(GdObj obj, GdString path, GdVec2 scale);
 	GdVec2 get_child_scale(GdObj obj, GdString path);
 
+	GdBool check_collision(GdObj obj,GdObj target, GdBool is_src_trigger,GdBool is_dst_trigger);
+	GdBool check_collision_with_point(GdObj obj,GdVec2 point, GdBool is_trigger = true);
 	//
 	GdObj create_sprite(GdString path);
 	GdObj clone_sprite(GdObj obj);

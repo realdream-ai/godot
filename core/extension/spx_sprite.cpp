@@ -438,3 +438,29 @@ void SpxSprite::set_trigger_enabled(GdBool trigger) {
 GdBool SpxSprite::is_trigger_enabled() {
 	return area2d->is_visible();
 }
+
+CollisionShape2D* SpxSprite::get_collider(bool is_trigger) {
+	return is_trigger ? trigger2d : collider2d;
+}
+
+GdBool SpxSprite::check_collision(SpxSprite *other, GdBool is_src_trigger ,GdBool is_dst_trigger ) {
+	if( other == nullptr)
+		return false;
+	auto this_shape = is_src_trigger ? this->trigger2d : this->collider2d;
+	auto other_shape = is_dst_trigger ? other->trigger2d : other->collider2d;
+	if (!this_shape->get_shape().is_valid()) {
+		return false;
+	}
+	if (!other_shape->get_shape().is_valid()) {
+		return false;
+	}
+	return this_shape->get_shape()->collide(this_shape->get_global_transform(), other_shape->get_shape(), other_shape->get_global_transform());
+}
+
+GdBool SpxSprite::check_collision_with_point(GdVec2 point, GdBool is_trigger) {
+	auto this_shape = is_trigger ? this->trigger2d : this->collider2d;
+	if (!this_shape->get_shape().is_valid()) {
+		return false;
+	}
+	return this_shape->get_shape()->_edit_is_selected_on_click(point,0);
+}
