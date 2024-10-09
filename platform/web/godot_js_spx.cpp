@@ -57,32 +57,16 @@
 
 extern "C" {
 EMSCRIPTEN_KEEPALIVE
-void gdspx_audio_play_audio(GdString* path) {
-	 audioMgr->play_audio(*path);
+void gdspx_audio_stop_all() {
+	 audioMgr->stop_all();
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_audio_set_audio_volume(GdFloat* volume) {
-	 audioMgr->set_audio_volume(*volume);
-}
-EMSCRIPTEN_KEEPALIVE
-void gdspx_audio_get_audio_volume(GdFloat* ret_val) {
-	*ret_val = audioMgr->get_audio_volume();
-}
-EMSCRIPTEN_KEEPALIVE
-void gdspx_audio_is_music_playing(GdBool* ret_val) {
-	*ret_val = audioMgr->is_music_playing();
+void gdspx_audio_play_sfx(GdString* path) {
+	 audioMgr->play_sfx(*path);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_audio_play_music(GdString* path) {
 	 audioMgr->play_music(*path);
-}
-EMSCRIPTEN_KEEPALIVE
-void gdspx_audio_set_music_volume(GdFloat* volume) {
-	 audioMgr->set_music_volume(*volume);
-}
-EMSCRIPTEN_KEEPALIVE
-void gdspx_audio_get_music_volume(GdFloat* ret_val) {
-	*ret_val = audioMgr->get_music_volume();
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_audio_pause_music() {
@@ -99,6 +83,34 @@ void gdspx_audio_get_music_timer(GdFloat* ret_val) {
 EMSCRIPTEN_KEEPALIVE
 void gdspx_audio_set_music_timer(GdFloat* time) {
 	 audioMgr->set_music_timer(*time);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_audio_is_music_playing(GdBool* ret_val) {
+	*ret_val = audioMgr->is_music_playing();
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_audio_set_sfx_volume(GdFloat* volume) {
+	 audioMgr->set_sfx_volume(*volume);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_audio_get_sfx_volume(GdFloat* ret_val) {
+	*ret_val = audioMgr->get_sfx_volume();
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_audio_set_music_volume(GdFloat* volume) {
+	 audioMgr->set_music_volume(*volume);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_audio_get_music_volume(GdFloat* ret_val) {
+	*ret_val = audioMgr->get_music_volume();
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_audio_set_master_volume(GdFloat* volume) {
+	 audioMgr->set_master_volume(*volume);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_audio_get_master_volume(GdFloat* ret_val) {
+	*ret_val = audioMgr->get_master_volume();
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_camera_get_camera_position(GdVec2* ret_val) {

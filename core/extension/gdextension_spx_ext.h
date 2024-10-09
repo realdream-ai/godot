@@ -196,17 +196,20 @@ typedef struct {
 
 
 // SpxAudio
-typedef void (*GDExtensionSpxAudioPlayAudio)(GdString path);
-typedef void (*GDExtensionSpxAudioSetAudioVolume)(GdFloat volume);
-typedef void (*GDExtensionSpxAudioGetAudioVolume)(GdFloat* ret_value);
-typedef void (*GDExtensionSpxAudioIsMusicPlaying)(GdBool* ret_value);
+typedef void (*GDExtensionSpxAudioStopAll)();
+typedef void (*GDExtensionSpxAudioPlaySfx)(GdString path);
 typedef void (*GDExtensionSpxAudioPlayMusic)(GdString path);
-typedef void (*GDExtensionSpxAudioSetMusicVolume)(GdFloat volume);
-typedef void (*GDExtensionSpxAudioGetMusicVolume)(GdFloat* ret_value);
 typedef void (*GDExtensionSpxAudioPauseMusic)();
 typedef void (*GDExtensionSpxAudioResumeMusic)();
 typedef void (*GDExtensionSpxAudioGetMusicTimer)(GdFloat* ret_value);
 typedef void (*GDExtensionSpxAudioSetMusicTimer)(GdFloat time);
+typedef void (*GDExtensionSpxAudioIsMusicPlaying)(GdBool* ret_value);
+typedef void (*GDExtensionSpxAudioSetSfxVolume)(GdFloat volume);
+typedef void (*GDExtensionSpxAudioGetSfxVolume)(GdFloat* ret_value);
+typedef void (*GDExtensionSpxAudioSetMusicVolume)(GdFloat volume);
+typedef void (*GDExtensionSpxAudioGetMusicVolume)(GdFloat* ret_value);
+typedef void (*GDExtensionSpxAudioSetMasterVolume)(GdFloat volume);
+typedef void (*GDExtensionSpxAudioGetMasterVolume)(GdFloat* ret_value);
 // SpxCamera
 typedef void (*GDExtensionSpxCameraGetCameraPosition)(GdVec2* ret_value);
 typedef void (*GDExtensionSpxCameraSetCameraPosition)(GdVec2 position);

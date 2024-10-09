@@ -39,24 +39,34 @@ class AudioStreamPlayer2D;
 class SpxAudioMgr : SpxBaseMgr {
 	SPXCLASS(SpxAudio, SpxBaseMgr)
 private:
-	AudioStreamPlayer2D *audio;
+	List<AudioStreamPlayer2D*> audios;
 	AudioStreamPlayer2D *music;
 
 public:
 	void on_awake() override;
 	void on_destroy() override;
+	void on_update(float delta) override;
+private:
+	void set_volume(int bus,GdFloat volume);
+	GdFloat get_volume(int bus);
 public:
-	void play_audio(GdString path);
-	void set_audio_volume(GdFloat volume);
-	GdFloat get_audio_volume();
-	GdBool is_music_playing();
+	void stop_all();
+
+	void play_sfx(GdString path);
+
 	void play_music(GdString path);
-	void set_music_volume(GdFloat volume);
-	GdFloat get_music_volume();
 	void pause_music();
 	void resume_music();
 	GdFloat get_music_timer();
 	void set_music_timer(GdFloat time);
+	GdBool is_music_playing();
+
+	void set_sfx_volume(GdFloat volume);
+	GdFloat get_sfx_volume();
+	void set_music_volume(GdFloat volume);
+	GdFloat get_music_volume();
+	void set_master_volume(GdFloat volume);
+	GdFloat get_master_volume();
 };
 
 #endif // SPX_AUDIO_MGR_H

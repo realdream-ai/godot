@@ -57,26 +57,14 @@
 static void gdextension_spx_global_register_callbacks(GDExtensionSpxCallbackInfoPtr callback_ptr) {
 	SpxEngine::register_callbacks(callback_ptr);
 }
-static void gdextension_spx_audio_play_audio(GdString path) {
-	 audioMgr->play_audio(path);
+static void gdextension_spx_audio_stop_all() {
+	 audioMgr->stop_all();
 }
-static void gdextension_spx_audio_set_audio_volume(GdFloat volume) {
-	 audioMgr->set_audio_volume(volume);
-}
-static void gdextension_spx_audio_get_audio_volume(GdFloat* ret_val) {
-	*ret_val = audioMgr->get_audio_volume();
-}
-static void gdextension_spx_audio_is_music_playing(GdBool* ret_val) {
-	*ret_val = audioMgr->is_music_playing();
+static void gdextension_spx_audio_play_sfx(GdString path) {
+	 audioMgr->play_sfx(path);
 }
 static void gdextension_spx_audio_play_music(GdString path) {
 	 audioMgr->play_music(path);
-}
-static void gdextension_spx_audio_set_music_volume(GdFloat volume) {
-	 audioMgr->set_music_volume(volume);
-}
-static void gdextension_spx_audio_get_music_volume(GdFloat* ret_val) {
-	*ret_val = audioMgr->get_music_volume();
 }
 static void gdextension_spx_audio_pause_music() {
 	 audioMgr->pause_music();
@@ -89,6 +77,27 @@ static void gdextension_spx_audio_get_music_timer(GdFloat* ret_val) {
 }
 static void gdextension_spx_audio_set_music_timer(GdFloat time) {
 	 audioMgr->set_music_timer(time);
+}
+static void gdextension_spx_audio_is_music_playing(GdBool* ret_val) {
+	*ret_val = audioMgr->is_music_playing();
+}
+static void gdextension_spx_audio_set_sfx_volume(GdFloat volume) {
+	 audioMgr->set_sfx_volume(volume);
+}
+static void gdextension_spx_audio_get_sfx_volume(GdFloat* ret_val) {
+	*ret_val = audioMgr->get_sfx_volume();
+}
+static void gdextension_spx_audio_set_music_volume(GdFloat volume) {
+	 audioMgr->set_music_volume(volume);
+}
+static void gdextension_spx_audio_get_music_volume(GdFloat* ret_val) {
+	*ret_val = audioMgr->get_music_volume();
+}
+static void gdextension_spx_audio_set_master_volume(GdFloat volume) {
+	 audioMgr->set_master_volume(volume);
+}
+static void gdextension_spx_audio_get_master_volume(GdFloat* ret_val) {
+	*ret_val = audioMgr->get_master_volume();
 }
 static void gdextension_spx_camera_get_camera_position(GdVec2* ret_val) {
 	*ret_val = cameraMgr->get_camera_position();
@@ -504,17 +513,20 @@ static void gdextension_spx_ui_get_rect(GdObj obj,GdRect2* ret_val) {
 void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_global_register_callbacks);
 
-	REGISTER_SPX_INTERFACE_FUNC(spx_audio_play_audio);
-	REGISTER_SPX_INTERFACE_FUNC(spx_audio_set_audio_volume);
-	REGISTER_SPX_INTERFACE_FUNC(spx_audio_get_audio_volume);
-	REGISTER_SPX_INTERFACE_FUNC(spx_audio_is_music_playing);
+	REGISTER_SPX_INTERFACE_FUNC(spx_audio_stop_all);
+	REGISTER_SPX_INTERFACE_FUNC(spx_audio_play_sfx);
 	REGISTER_SPX_INTERFACE_FUNC(spx_audio_play_music);
-	REGISTER_SPX_INTERFACE_FUNC(spx_audio_set_music_volume);
-	REGISTER_SPX_INTERFACE_FUNC(spx_audio_get_music_volume);
 	REGISTER_SPX_INTERFACE_FUNC(spx_audio_pause_music);
 	REGISTER_SPX_INTERFACE_FUNC(spx_audio_resume_music);
 	REGISTER_SPX_INTERFACE_FUNC(spx_audio_get_music_timer);
 	REGISTER_SPX_INTERFACE_FUNC(spx_audio_set_music_timer);
+	REGISTER_SPX_INTERFACE_FUNC(spx_audio_is_music_playing);
+	REGISTER_SPX_INTERFACE_FUNC(spx_audio_set_sfx_volume);
+	REGISTER_SPX_INTERFACE_FUNC(spx_audio_get_sfx_volume);
+	REGISTER_SPX_INTERFACE_FUNC(spx_audio_set_music_volume);
+	REGISTER_SPX_INTERFACE_FUNC(spx_audio_get_music_volume);
+	REGISTER_SPX_INTERFACE_FUNC(spx_audio_set_master_volume);
+	REGISTER_SPX_INTERFACE_FUNC(spx_audio_get_master_volume);
 	REGISTER_SPX_INTERFACE_FUNC(spx_camera_get_camera_position);
 	REGISTER_SPX_INTERFACE_FUNC(spx_camera_set_camera_position);
 	REGISTER_SPX_INTERFACE_FUNC(spx_camera_get_camera_zoom);

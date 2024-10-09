@@ -29,44 +29,80 @@
 /**************************************************************************/
 
 #include "spx_audio_mgr.h"
+
+#include "modules/minimp3/audio_stream_mp3.h"
 #include "scene/2d/audio_stream_player_2d.h"
+
+const int BUS_MASTER = 0;
+const int BUS_SFX = 1;
+const int BUS_MUSIC = 2;
+const StringName STR_BUS_MASTER = "Master";
+const StringName STR_BUS_SFX = "Master";
+const StringName STR_BUS_MUSIC = "Master";
 
 void SpxAudioMgr::on_awake() {
 	SpxBaseMgr::on_awake();
-	audio = memnew(AudioStreamPlayer2D);
-	owner->add_child(audio);
+	// add default bus : music and sfx
+	AudioServer::get_singleton()->set_bus_count(3);
+	AudioServer::get_singleton()->set_bus_name(BUS_SFX, STR_BUS_SFX);
+	AudioServer::get_singleton()->set_bus_name(BUS_MUSIC, STR_BUS_MUSIC);
+
+	AudioServer::get_singleton()->set_bus_send(BUS_SFX, STR_BUS_MASTER);
+	AudioServer::get_singleton()->set_bus_send(BUS_MUSIC, STR_BUS_MASTER);
+
 	music = memnew(AudioStreamPlayer2D);
+	music->set_bus(STR_BUS_MASTER);
 	owner->add_child(music);
 }
 
-void SpxAudioMgr::on_destroy() {
-	if (audio) {
-		audio->queue_free();
-		audio = nullptr;
+void SpxAudioMgr::stop_all() {
+	for (List<AudioStreamPlayer2D *>::Element *item = audios.front(); item;) {
+		item->get()->queue_free();
+		item = item->next();
 	}
+	audios.clear();
+	if (music) {
+		pause_music();
+	}
+}
+
+void SpxAudioMgr::on_destroy() {
+	stop_all();
 	if (music) {
 		music->queue_free();
 		music = nullptr;
 	}
 	SpxBaseMgr::on_destroy();
 }
+void SpxAudioMgr::on_update(float delta) {
+	SpxBaseMgr::on_update(delta);
 
-void SpxAudioMgr::play_audio(GdString path) {
+	// check the audio is done
+	for (auto item = audios.front(); item;) {
+		const auto audio = item->get();
+		auto *next = item->next();
+		if (!audio->is_playing()) {
+			print_line("audio done ", audio->get_name());
+			audio->queue_free();
+			audios.erase(item);
+		}
+		item = next;
+	}
+}
+
+void SpxAudioMgr::play_sfx(GdString path) {
 	Ref<Resource> res = ResourceLoader::load(SpxStr(path));
 	ERR_FAIL_COND(res.is_null());
 	ERR_FAIL_COND(!res->is_class("AudioStream"));
 
 	Ref<AudioStream> stream = res;
+	auto audio = memnew(AudioStreamPlayer2D);
+	audio->set_bus(STR_BUS_SFX);
+	owner->add_child(audio);
 	audio->set_stream(stream);
 	audio->play();
-}
-
-void SpxAudioMgr::set_audio_volume(GdFloat volume) {
-	audio->set_volume_db(volume);
-}
-
-GdFloat SpxAudioMgr::get_audio_volume() {
-	return audio->get_volume_db();
+	audio->set_name(SpxStr(path));
+	audios.push_back(audio);
 }
 
 GdBool SpxAudioMgr::is_music_playing() {
@@ -78,16 +114,15 @@ void SpxAudioMgr::play_music(GdString path) {
 	ERR_FAIL_COND(res.is_null());
 	ERR_FAIL_COND(!res->is_class("AudioStream"));
 	Ref<AudioStream> stream = res;
+
+	// set loop
+	Ref<AudioStreamMP3> mp3_stream = stream;
+	if (mp3_stream.is_valid()) {
+		mp3_stream->set_loop(true);
+	}
+
 	music->set_stream(stream);
 	music->play();
-}
-
-void SpxAudioMgr::set_music_volume(GdFloat volume) {
-	music->set_volume_db(volume);
-}
-
-GdFloat SpxAudioMgr::get_music_volume() {
-	return music->get_volume_db();
 }
 
 void SpxAudioMgr::pause_music() {
@@ -104,4 +139,36 @@ GdFloat SpxAudioMgr::get_music_timer() {
 
 void SpxAudioMgr::set_music_timer(GdFloat time) {
 	music->seek(time);
+}
+
+void SpxAudioMgr::set_volume(int bus, GdFloat volume) {
+	auto dbval = Math::linear_to_db(volume);
+	AudioServer::get_singleton()->set_bus_volume_db(bus, dbval);
+}
+GdFloat SpxAudioMgr::get_volume(int bus) {
+	auto dbval = AudioServer::get_singleton()->get_bus_volume_db(bus);
+	return Math::linear_to_db(dbval);
+}
+
+void SpxAudioMgr::set_sfx_volume(GdFloat volume) {
+	set_volume(BUS_SFX, volume);
+}
+
+GdFloat SpxAudioMgr::get_sfx_volume() {
+	return get_volume(BUS_SFX);
+}
+
+void SpxAudioMgr::set_music_volume(GdFloat volume) {
+	set_volume(BUS_MUSIC, volume);
+}
+
+GdFloat SpxAudioMgr::get_music_volume() {
+	return get_volume(BUS_MUSIC);
+}
+
+void SpxAudioMgr::set_master_volume(GdFloat volume) {
+	set_volume(BUS_MASTER, volume);
+}
+GdFloat SpxAudioMgr::get_master_volume() {
+	return get_volume(BUS_MASTER);
 }
