@@ -82,7 +82,6 @@ void SpxAudioMgr::on_update(float delta) {
 		const auto audio = item->get();
 		auto *next = item->next();
 		if (!audio->is_playing()) {
-			print_line("audio done ", audio->get_name());
 			audio->queue_free();
 			audios.erase(item);
 		}
