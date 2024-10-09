@@ -1255,6 +1255,18 @@ function gdspx_sprite_is_trigger_enabled(obj) {
 	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
+function gdspx_ui_bind_node(obj,rel_path) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_ui_bind_node']; 
+	_retValue = AllocGdObj();
+	_arg0 = ToGdObj(obj);
+	_arg1 = ToGdString(rel_path);
+	_gdFuncPtr(_arg0, _arg1, _retValue);
+	FreeGdObj(_arg0); 
+	FreeGdString(_arg1); 
+	_finalRetValue = ToJsObj(_retValue);
+	FreeGdObj(_retValue); 
+	return _finalRetValue
+}
 function gdspx_ui_create_node(path) {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_ui_create_node']; 
 	_retValue = AllocGdObj();

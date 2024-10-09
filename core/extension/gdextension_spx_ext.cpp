@@ -438,6 +438,9 @@ static void gdextension_spx_sprite_set_trigger_enabled(GdObj obj,GdBool trigger)
 static void gdextension_spx_sprite_is_trigger_enabled(GdObj obj,GdBool* ret_val) {
 	*ret_val = spriteMgr->is_trigger_enabled(obj);
 }
+static void gdextension_spx_ui_bind_node(GdObj obj,GdString rel_path,GdObj* ret_val) {
+	*ret_val = uiMgr->bind_node(obj, rel_path);
+}
 static void gdextension_spx_ui_create_node(GdString path,GdObj* ret_val) {
 	*ret_val = uiMgr->create_node(path);
 }
@@ -640,6 +643,7 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_trigger_capsule);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_trigger_enabled);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_is_trigger_enabled);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_bind_node);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_create_node);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_create_button);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_create_label);

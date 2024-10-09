@@ -46,7 +46,7 @@ private:
 public:
 	void on_awake() override;
 	void on_node_destroy(SpxUi *node);
-	SpxUi* on_create_node(Control *control,GdInt type);
+	SpxUi* on_create_node(Control *control,GdInt type,bool is_attach = true);
 	SpxUi *get_node(GdObj obj);
 
 	static ESpxUiType get_node_type(Node* obj);

@@ -117,9 +117,11 @@ Control *SpxUiMgr::create_control(GdString path) {
 
 
 
-SpxUi *SpxUiMgr::on_create_node(Control *control, GdInt type) {
+SpxUi *SpxUiMgr::on_create_node(Control *control, GdInt type,bool is_attach) {
 	SpxUi *node = memnew(SpxUi);
-	owner->add_child(control);
+	if(is_attach) {
+		owner->add_child(control);
+	}
 	node->set_type(type);
 	node->set_control_item(control);
 	node->set_gid(get_unique_id());
@@ -190,17 +192,17 @@ GdObj SpxUiMgr::bind_node(GdObj obj, GdString rel_path) {
 		return NULL_OBJECT_ID;
 	}
 	auto path = SpxStr(rel_path);
-	auto child = parent_node->control->find_child(path);
-	if(child == nullptr) {
+	if(! parent_node->control->has_node(path)) {
 		print_line("bind_node error :can not find a child node ", obj, path);
 		return NULL_OBJECT_ID;
 	}
+	auto child = parent_node->control->get_node(path);
 	auto type = get_node_type(child);
 	if(type == ESpxUiType::None) {
 		print_line("bind_node error : unknown type ", obj, path);
 		return NULL_OBJECT_ID;
 	}
-	auto node = on_create_node( (Control*) child, (GdInt)type);
+	auto node = on_create_node( (Control*) child, (GdInt)type,false);
 	return node->get_gid();
 }
 

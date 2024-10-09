@@ -565,6 +565,10 @@ void gdspx_sprite_is_trigger_enabled(GdObj* obj,GdBool* ret_val) {
 	*ret_val = spriteMgr->is_trigger_enabled(*obj);
 }
 EMSCRIPTEN_KEEPALIVE
+void gdspx_ui_bind_node(GdObj* obj,GdString* rel_path,GdObj* ret_val) {
+	*ret_val = uiMgr->bind_node(*obj, *rel_path);
+}
+EMSCRIPTEN_KEEPALIVE
 void gdspx_ui_create_node(GdString* path,GdObj* ret_val) {
 	*ret_val = uiMgr->create_node(*path);
 }
