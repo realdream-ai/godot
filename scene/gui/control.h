@@ -44,8 +44,17 @@ class Panel;
 class ThemeOwner;
 class ThemeContext;
 
+class ISpxUi {
+public:
+	virtual void on_destroy_call() = 0;
+	virtual void on_start() = 0;
+	virtual int64_t get_gid() = 0;
+};
+
 class Control : public CanvasItem {
 	GDCLASS(Control, CanvasItem);
+public:
+	ISpxUi *spx_owner = nullptr;
 
 public:
 	enum Anchor {

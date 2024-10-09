@@ -56,7 +56,7 @@ SpxUi *SpxUiMgr::get_node(GdObj obj) {
 	return nullptr;
 }
 
-ESpxUiType SpxUiMgr::get_type(Control *obj) {
+ESpxUiType SpxUiMgr::get_node_type(Node *obj) {
 	if (obj == nullptr) {
 		return ESpxUiType::None;
 	}
@@ -72,13 +72,17 @@ ESpxUiType SpxUiMgr::get_type(Control *obj) {
 	if (dynamic_cast<SpxToggle *>(obj)) {
 		return ESpxUiType::Toggle;
 	}
+
+
+	if (dynamic_cast<SpxControl *>(obj)) {
+		return ESpxUiType::Control;
+	}
 	return ESpxUiType::None;
 }
 
-void SpxUiMgr::on_click(SpxUi *node) {
+void SpxUiMgr::on_click(ISpxUi *node) {
 	SPX_CALLBACK->func_on_ui_clicked(node->get_gid());
 }
-
 
 void SpxUiMgr::on_awake() {
 	SpxBaseMgr::on_awake();
@@ -117,7 +121,7 @@ SpxUi *SpxUiMgr::on_create_node(Control *control, GdInt type) {
 	SpxUi *node = memnew(SpxUi);
 	owner->add_child(control);
 	node->set_type(type);
-	node->set_canvas_item(control);
+	node->set_control_item(control);
 	node->set_gid(get_unique_id());
 	node->on_start();
 	uiMgr->id_objects[node->get_gid()] = node;
@@ -138,7 +142,7 @@ GdObj SpxUiMgr::create_node(GdString path) {
 		print_error("Failed to create node " + SpxStr(path));
 		return NULL_OBJECT_ID;
 	}
-	auto type = get_type(control);
+	auto type = get_node_type(control);
 	auto node = on_create_node(control, (GdInt)type);
 	return node->get_gid();
 }
@@ -179,7 +183,26 @@ GdBool SpxUiMgr::destroy_node(GdObj obj) {
 	node->queue_free();
 	return true;
 }
-
+GdObj SpxUiMgr::bind_node(GdObj obj, GdString rel_path) {
+	auto parent_node  = get_node(obj);
+	if(parent_node == nullptr) {
+		print_line("bind_node error :can not find a node ", obj);
+		return NULL_OBJECT_ID;
+	}
+	auto path = SpxStr(rel_path);
+	auto child = parent_node->control->find_child(path);
+	if(child == nullptr) {
+		print_line("bind_node error :can not find a child node ", obj, path);
+		return NULL_OBJECT_ID;
+	}
+	auto type = get_node_type(child);
+	if(type == ESpxUiType::None) {
+		print_line("bind_node error : unknown type ", obj, path);
+		return NULL_OBJECT_ID;
+	}
+	auto node = on_create_node( (Control*) child, (GdInt)type);
+	return node->get_gid();
+}
 
 GdInt SpxUiMgr::get_type(GdObj obj) {
 	check_and_get_node_r(0)

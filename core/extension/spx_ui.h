@@ -40,82 +40,41 @@
 
 enum class ESpxUiType {
 	None = 0,
-	Label = 1,
-	Button = 2,
-	Image = 3,
-	Toggle = 4,
+	Control = 1,
+	Label = 2,
+	Button = 3,
+	Image = 4,
+	Toggle = 5,
 };
 
 class SpxUi;
 
+typedef Label SpxLabel;
+typedef TextureRect SpxImage;
+typedef Button SpxButton;
+typedef CheckButton SpxToggle;
+typedef Control SpxControl;
 
-class SpxLabel : public Label {
-	GDCLASS(SpxLabel, Label);
-
+class SpxUi :ISpxUi{
 public:
-	static void _bind_methods();
-	SpxUi *owner = nullptr;
-
-private:
-	void _notification(int p_what);
-
-public:
-};
-
-class SpxButton : public Button {
-	GDCLASS(SpxButton, Button);
-
-public:
-	static void _bind_methods();
-	SpxUi *owner = nullptr;
-
-private:
-	void _notification(int p_what);
-	void pressed() override;
-};
-
-class SpxImage : public TextureRect {
-	GDCLASS(SpxImage, TextureRect);
-
-public:
-	static void _bind_methods();
-	SpxUi *owner = nullptr;
-
-private:
-	void _notification(int p_what);
-};
-
-class SpxToggle : public CheckButton {
-	GDCLASS(SpxToggle, CheckButton);
-
-public:
-	static void _bind_methods();
-	SpxUi *owner = nullptr;
-
-private:
-	void _notification(int p_what);
-};
-
-class SpxUi {
 	GdObj gid;
 	GdInt type;
+public:
+	SpxControl *control = nullptr;
+
+	SpxControl *get_control();
+	SpxLabel *get_label();
+	SpxImage *get_image();
+	SpxButton *get_button();
+	SpxToggle *get_toggle();
 
 public:
-	SpxLabel *label = nullptr;
-	SpxImage *image = nullptr;
-	SpxButton *button = nullptr;
-	SpxToggle *toggle = nullptr;
-
-protected:
-	void _notification(int p_what);
-
-public:
-	void on_destroy_call();
-	void on_start();
+	virtual void on_destroy_call() override;
+	virtual void on_start()  override;
 	void set_type(GdInt etype);
 
-	Control *get_canvas_item() const;
-	void set_canvas_item(Control *control);
+	Control *get_control_item() const;
+	void set_control_item(Control *ctrl);
 
 public:
 	void set_gid(GdObj id);

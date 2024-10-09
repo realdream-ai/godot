@@ -34,6 +34,7 @@
 #include "gdextension_spx_ext.h"
 #include "spx_engine.h"
 #include "spx_ui.h"
+class Node;
 class SpxUiMgr : SpxBaseMgr {
 	SPXCLASS(SpxUIMgr, SpxBaseMgr)
 
@@ -47,9 +48,12 @@ public:
 	void on_node_destroy(SpxUi *node);
 	SpxUi* on_create_node(Control *control,GdInt type);
 	SpxUi *get_node(GdObj obj);
-	ESpxUiType get_type(Control* obj);
-	void on_click(SpxUi *node);
+
+	static ESpxUiType get_node_type(Node* obj);
+	void on_click(ISpxUi *node);
 public:
+
+	GdObj bind_node(GdObj obj, GdString rel_path);
 
 	GdObj create_node(GdString path);
 	GdObj create_button(GdString path,GdString text);
