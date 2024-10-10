@@ -118,6 +118,10 @@ public:
 	void set_global_position(GdVec2 value);
 	GdFloat get_rotation();
 	void set_rotation(GdFloat value);
+
+
+	GdBool get_flip(GdBool horizontal);
+	void set_flip(GdBool horizontal, GdBool is_flip);
 };
 
 #endif // SPX_UI_H

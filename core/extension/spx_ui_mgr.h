@@ -97,6 +97,9 @@ public:
 	void set_global_position(GdObj obj,GdVec2 value);
 	GdFloat get_rotation(GdObj obj);
 	void set_rotation(GdObj obj,GdFloat value);
+
+	GdBool get_flip(GdObj obj,GdBool horizontal);
+	void set_flip(GdObj obj,GdBool horizontal, GdBool is_flip);
 };
 
 #endif // SPX_UI_MGR_H

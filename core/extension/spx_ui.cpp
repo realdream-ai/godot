@@ -22,13 +22,12 @@
 		return;                               \
 	}
 
-#define get_spx_control_type(VALUE)								\
-	if (type != (int)ESpxUiType::##VALUE){						\
-		print_error("convert ui node type miss error  "#VALUE);	\
-		return nullptr;											\
-    }															\
+#define get_spx_control_type(VALUE)                              \
+	if (type != (int)ESpxUiType::##VALUE) {                      \
+		print_error("convert ui node type miss error  " #VALUE); \
+		return nullptr;                                          \
+	}                                                            \
 	return (Spx##VALUE *)control;
-
 
 Control *SpxUi::get_control_item() const {
 	return control;
@@ -42,16 +41,13 @@ void SpxUi::set_control_item(Control *ctrl) {
 SpxControl *SpxUi::get_control() {
 	return control;
 }
-SpxLabel *SpxUi::get_label() {
+SpxLabel *SpxUi::get_label(){
 	get_spx_control_type(Label)
-}
-SpxImage *SpxUi::get_image() {
+} SpxImage *SpxUi::get_image(){
 	get_spx_control_type(Image)
-}
-SpxButton *SpxUi::get_button() {
+} SpxButton *SpxUi::get_button(){
 	get_spx_control_type(Button)
-}
-SpxToggle *SpxUi::get_toggle() {
+} SpxToggle *SpxUi::get_toggle() {
 	get_spx_control_type(Toggle)
 }
 
@@ -97,7 +93,7 @@ GdBool SpxUi::is_interactable() {
 
 void SpxUi::set_rect(GdRect2 rect) {
 	check_and_get_node_v()
-	node->set_rect(rect);
+			node->set_rect(rect);
 }
 
 GdRect2 SpxUi::get_rect() {
@@ -106,22 +102,20 @@ GdRect2 SpxUi::get_rect() {
 
 void SpxUi::set_color(GdColor color) {
 	check_and_get_node_v()
-	node->add_theme_color_override(UI_DEFAULT_THEME_NAME, color);
+			node->add_theme_color_override(UI_DEFAULT_THEME_NAME, color);
 }
 
 GdColor SpxUi::get_color() {
-	check_and_get_node_r(GdColor())
-	return node->get_theme_color(UI_DEFAULT_THEME_NAME);
+	check_and_get_node_r(GdColor()) return node->get_theme_color(UI_DEFAULT_THEME_NAME);
 }
 
 void SpxUi::set_font_size(GdInt size) {
 	check_and_get_node_v()
-	node->add_theme_font_size_override(UI_DEFAULT_THEME_NAME, size);
+			node->add_theme_font_size_override(UI_DEFAULT_THEME_NAME, size);
 }
 
 GdInt SpxUi::get_font_size() {
-	check_and_get_node_r(0)
-	return node->get_theme_font_size(UI_DEFAULT_THEME_NAME);
+	check_and_get_node_r(0) return node->get_theme_font_size(UI_DEFAULT_THEME_NAME);
 }
 
 void SpxUi::set_font(GdString path) {
@@ -134,12 +128,11 @@ GdString SpxUi::get_font() {
 
 void SpxUi::set_visible(GdBool visible) {
 	check_and_get_node_v()
-	node->set_visible(visible);
+			node->set_visible(visible);
 }
 
 GdBool SpxUi::get_visible() {
-	check_and_get_node_r(false)
-	return node->is_visible();
+	check_and_get_node_r(false) return node->is_visible();
 }
 
 void SpxUi::set_text(GdString text) {
@@ -268,7 +261,6 @@ void SpxUi::set_position(GdVec2 value) {
 	return get_control()->set_position(value);
 }
 
-
 GdVec2 SpxUi::get_global_position() {
 	return get_control()->get_global_position();
 }
@@ -281,4 +273,16 @@ GdFloat SpxUi::get_rotation() {
 }
 void SpxUi::set_rotation(GdFloat value) {
 	return get_control()->set_rotation(value);
+}
+GdBool SpxUi::get_flip(GdBool horizontal) {
+	auto image = get_image();
+	return horizontal ? image->is_flipped_h() : image->is_flipped_v();
+}
+void SpxUi::set_flip(GdBool horizontal, GdBool is_flip) {
+	auto image = get_image();
+	if (horizontal) {
+		image->set_flip_h(is_flip);
+	} else {
+		image->set_flip_v(is_flip);
+	}
 }

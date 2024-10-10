@@ -352,3 +352,11 @@ void SpxUiMgr::set_rotation(GdObj obj, GdFloat value) {
 	check_and_get_node_v()
 	node->set_rotation(value);
 }
+GdBool SpxUiMgr::get_flip(GdObj obj, GdBool horizontal) {
+	check_and_get_node_r(GdBool())
+	return node->get_flip(horizontal);
+}
+void SpxUiMgr::set_flip(GdObj obj, GdBool horizontal, GdBool is_flip) {
+	check_and_get_node_v()
+	node->set_flip(horizontal,is_flip);
+}

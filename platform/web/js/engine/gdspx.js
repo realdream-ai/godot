@@ -1667,3 +1667,27 @@ function gdspx_ui_set_rotation(obj,value) {
 	FreeGdFloat(_arg1); 
 
 }
+function gdspx_ui_get_flip(obj,horizontal) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_ui_get_flip']; 
+	_retValue = AllocGdBool();
+	_arg0 = ToGdObj(obj);
+	_arg1 = ToGdBool(horizontal);
+	_gdFuncPtr(_arg0, _arg1, _retValue);
+	FreeGdObj(_arg0); 
+	FreeGdBool(_arg1); 
+	_finalRetValue = ToJsBool(_retValue);
+	FreeGdBool(_retValue); 
+	return _finalRetValue
+}
+function gdspx_ui_set_flip(obj,horizontal,is_flip) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_ui_set_flip']; 
+	
+	_arg0 = ToGdObj(obj);
+	_arg1 = ToGdBool(horizontal);
+	_arg2 = ToGdBool(is_flip);
+	_gdFuncPtr(_arg0, _arg1, _arg2);
+	FreeGdObj(_arg0); 
+	FreeGdBool(_arg1); 
+	FreeGdBool(_arg2); 
+
+}

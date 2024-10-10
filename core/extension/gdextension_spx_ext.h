@@ -370,6 +370,8 @@ typedef void (*GDExtensionSpxUiGetGlobalPosition)(GdObj obj, GdVec2* ret_value);
 typedef void (*GDExtensionSpxUiSetGlobalPosition)(GdObj obj,GdVec2 value);
 typedef void (*GDExtensionSpxUiGetRotation)(GdObj obj, GdFloat* ret_value);
 typedef void (*GDExtensionSpxUiSetRotation)(GdObj obj,GdFloat value);
+typedef void (*GDExtensionSpxUiGetFlip)(GdObj obj,GdBool horizontal, GdBool* ret_value);
+typedef void (*GDExtensionSpxUiSetFlip)(GdObj obj,GdBool horizontal, GdBool is_flip);
 
 
 #ifdef __cplusplus

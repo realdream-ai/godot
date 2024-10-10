@@ -558,6 +558,12 @@ static void gdextension_spx_ui_get_rotation(GdObj obj,GdFloat* ret_val) {
 static void gdextension_spx_ui_set_rotation(GdObj obj,GdFloat value) {
 	 uiMgr->set_rotation(obj, value);
 }
+static void gdextension_spx_ui_get_flip(GdObj obj,GdBool horizontal,GdBool* ret_val) {
+	*ret_val = uiMgr->get_flip(obj, horizontal);
+}
+static void gdextension_spx_ui_set_flip(GdObj obj,GdBool horizontal,GdBool is_flip) {
+	 uiMgr->set_flip(obj, horizontal, is_flip);
+}
 
 
 
@@ -731,5 +737,7 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_global_position);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_rotation);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_rotation);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_flip);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_flip);
 	
 }

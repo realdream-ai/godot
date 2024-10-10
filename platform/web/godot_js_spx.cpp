@@ -724,5 +724,13 @@ EMSCRIPTEN_KEEPALIVE
 void gdspx_ui_set_rotation(GdObj* obj,GdFloat* value) {
 	 uiMgr->set_rotation(*obj, *value);
 }
+EMSCRIPTEN_KEEPALIVE
+void gdspx_ui_get_flip(GdObj* obj,GdBool* horizontal,GdBool* ret_val) {
+	*ret_val = uiMgr->get_flip(*obj, *horizontal);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_ui_set_flip(GdObj* obj,GdBool* horizontal,GdBool* is_flip) {
+	 uiMgr->set_flip(*obj, *horizontal, *is_flip);
+}
 
 }
