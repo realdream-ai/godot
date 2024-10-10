@@ -1507,3 +1507,163 @@ function gdspx_ui_get_rect(obj) {
 	FreeGdRect2(_retValue); 
 	return _finalRetValue
 }
+function gdspx_ui_get_layout_direction(obj) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_ui_get_layout_direction']; 
+	_retValue = AllocGdInt();
+	_arg0 = ToGdObj(obj);
+	_gdFuncPtr(_arg0, _retValue);
+	FreeGdObj(_arg0); 
+	_finalRetValue = ToJsInt(_retValue);
+	FreeGdInt(_retValue); 
+	return _finalRetValue
+}
+function gdspx_ui_set_layout_direction(obj,value) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_ui_set_layout_direction']; 
+	
+	_arg0 = ToGdObj(obj);
+	_arg1 = ToGdInt(value);
+	_gdFuncPtr(_arg0, _arg1);
+	FreeGdObj(_arg0); 
+	FreeGdInt(_arg1); 
+
+}
+function gdspx_ui_get_layout_mode(obj) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_ui_get_layout_mode']; 
+	_retValue = AllocGdInt();
+	_arg0 = ToGdObj(obj);
+	_gdFuncPtr(_arg0, _retValue);
+	FreeGdObj(_arg0); 
+	_finalRetValue = ToJsInt(_retValue);
+	FreeGdInt(_retValue); 
+	return _finalRetValue
+}
+function gdspx_ui_set_layout_mode(obj,value) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_ui_set_layout_mode']; 
+	
+	_arg0 = ToGdObj(obj);
+	_arg1 = ToGdInt(value);
+	_gdFuncPtr(_arg0, _arg1);
+	FreeGdObj(_arg0); 
+	FreeGdInt(_arg1); 
+
+}
+function gdspx_ui_get_anchors_preset(obj) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_ui_get_anchors_preset']; 
+	_retValue = AllocGdInt();
+	_arg0 = ToGdObj(obj);
+	_gdFuncPtr(_arg0, _retValue);
+	FreeGdObj(_arg0); 
+	_finalRetValue = ToJsInt(_retValue);
+	FreeGdInt(_retValue); 
+	return _finalRetValue
+}
+function gdspx_ui_set_anchors_preset(obj,value) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_ui_set_anchors_preset']; 
+	
+	_arg0 = ToGdObj(obj);
+	_arg1 = ToGdInt(value);
+	_gdFuncPtr(_arg0, _arg1);
+	FreeGdObj(_arg0); 
+	FreeGdInt(_arg1); 
+
+}
+function gdspx_ui_get_scale(obj) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_ui_get_scale']; 
+	_retValue = AllocGdVec2();
+	_arg0 = ToGdObj(obj);
+	_gdFuncPtr(_arg0, _retValue);
+	FreeGdObj(_arg0); 
+	_finalRetValue = ToJsVec2(_retValue);
+	FreeGdVec2(_retValue); 
+	return _finalRetValue
+}
+function gdspx_ui_set_scale(obj,value) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_ui_set_scale']; 
+	
+	_arg0 = ToGdObj(obj);
+	_arg1 = ToGdVec2(value);
+	_gdFuncPtr(_arg0, _arg1);
+	FreeGdObj(_arg0); 
+	FreeGdVec2(_arg1); 
+
+}
+function gdspx_ui_get_position(obj) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_ui_get_position']; 
+	_retValue = AllocGdVec2();
+	_arg0 = ToGdObj(obj);
+	_gdFuncPtr(_arg0, _retValue);
+	FreeGdObj(_arg0); 
+	_finalRetValue = ToJsVec2(_retValue);
+	FreeGdVec2(_retValue); 
+	return _finalRetValue
+}
+function gdspx_ui_set_position(obj,value) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_ui_set_position']; 
+	
+	_arg0 = ToGdObj(obj);
+	_arg1 = ToGdVec2(value);
+	_gdFuncPtr(_arg0, _arg1);
+	FreeGdObj(_arg0); 
+	FreeGdVec2(_arg1); 
+
+}
+function gdspx_ui_get_size(obj) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_ui_get_size']; 
+	_retValue = AllocGdVec2();
+	_arg0 = ToGdObj(obj);
+	_gdFuncPtr(_arg0, _retValue);
+	FreeGdObj(_arg0); 
+	_finalRetValue = ToJsVec2(_retValue);
+	FreeGdVec2(_retValue); 
+	return _finalRetValue
+}
+function gdspx_ui_set_size(obj,value) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_ui_set_size']; 
+	
+	_arg0 = ToGdObj(obj);
+	_arg1 = ToGdVec2(value);
+	_gdFuncPtr(_arg0, _arg1);
+	FreeGdObj(_arg0); 
+	FreeGdVec2(_arg1); 
+
+}
+function gdspx_ui_get_global_position(obj) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_ui_get_global_position']; 
+	_retValue = AllocGdVec2();
+	_arg0 = ToGdObj(obj);
+	_gdFuncPtr(_arg0, _retValue);
+	FreeGdObj(_arg0); 
+	_finalRetValue = ToJsVec2(_retValue);
+	FreeGdVec2(_retValue); 
+	return _finalRetValue
+}
+function gdspx_ui_set_global_position(obj,value) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_ui_set_global_position']; 
+	
+	_arg0 = ToGdObj(obj);
+	_arg1 = ToGdVec2(value);
+	_gdFuncPtr(_arg0, _arg1);
+	FreeGdObj(_arg0); 
+	FreeGdVec2(_arg1); 
+
+}
+function gdspx_ui_get_rotation(obj) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_ui_get_rotation']; 
+	_retValue = AllocGdFloat();
+	_arg0 = ToGdObj(obj);
+	_gdFuncPtr(_arg0, _retValue);
+	FreeGdObj(_arg0); 
+	_finalRetValue = ToJsFloat(_retValue);
+	FreeGdFloat(_retValue); 
+	return _finalRetValue
+}
+function gdspx_ui_set_rotation(obj,value) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_ui_set_rotation']; 
+	
+	_arg0 = ToGdObj(obj);
+	_arg1 = ToGdFloat(value);
+	_gdFuncPtr(_arg0, _arg1);
+	FreeGdObj(_arg0); 
+	FreeGdFloat(_arg1); 
+
+}

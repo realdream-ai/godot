@@ -354,6 +354,22 @@ typedef void (*GDExtensionSpxUiSetInteractable)(GdObj obj, GdBool interactable);
 typedef void (*GDExtensionSpxUiGetInteractable)(GdObj obj, GdBool* ret_value);
 typedef void (*GDExtensionSpxUiSetRect)(GdObj obj, GdRect2 rect);
 typedef void (*GDExtensionSpxUiGetRect)(GdObj obj, GdRect2* ret_value);
+typedef void (*GDExtensionSpxUiGetLayoutDirection)(GdObj obj, GdInt* ret_value);
+typedef void (*GDExtensionSpxUiSetLayoutDirection)(GdObj obj,GdInt value);
+typedef void (*GDExtensionSpxUiGetLayoutMode)(GdObj obj, GdInt* ret_value);
+typedef void (*GDExtensionSpxUiSetLayoutMode)(GdObj obj,GdInt value);
+typedef void (*GDExtensionSpxUiGetAnchorsPreset)(GdObj obj, GdInt* ret_value);
+typedef void (*GDExtensionSpxUiSetAnchorsPreset)(GdObj obj,GdInt value);
+typedef void (*GDExtensionSpxUiGetScale)(GdObj obj, GdVec2* ret_value);
+typedef void (*GDExtensionSpxUiSetScale)(GdObj obj,GdVec2 value);
+typedef void (*GDExtensionSpxUiGetPosition)(GdObj obj, GdVec2* ret_value);
+typedef void (*GDExtensionSpxUiSetPosition)(GdObj obj,GdVec2 value);
+typedef void (*GDExtensionSpxUiGetSize)(GdObj obj, GdVec2* ret_value);
+typedef void (*GDExtensionSpxUiSetSize)(GdObj obj,GdVec2 value);
+typedef void (*GDExtensionSpxUiGetGlobalPosition)(GdObj obj, GdVec2* ret_value);
+typedef void (*GDExtensionSpxUiSetGlobalPosition)(GdObj obj,GdVec2 value);
+typedef void (*GDExtensionSpxUiGetRotation)(GdObj obj, GdFloat* ret_value);
+typedef void (*GDExtensionSpxUiSetRotation)(GdObj obj,GdFloat value);
 
 
 #ifdef __cplusplus

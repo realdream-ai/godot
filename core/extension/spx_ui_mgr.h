@@ -79,6 +79,24 @@ public:
 	GdBool get_interactable(GdObj obj);
 	void set_rect(GdObj obj, GdRect2 rect);
 	GdRect2 get_rect(GdObj obj);
+
+
+	GdInt get_layout_direction(GdObj obj);
+	void set_layout_direction(GdObj obj,GdInt value);
+	GdInt get_layout_mode(GdObj obj);
+	void set_layout_mode(GdObj obj,GdInt value);
+	GdInt get_anchors_preset(GdObj obj);
+	void set_anchors_preset(GdObj obj,GdInt value);
+	GdVec2 get_scale(GdObj obj);
+	void set_scale(GdObj obj,GdVec2 value);
+	GdVec2 get_position(GdObj obj);
+	void set_position(GdObj obj,GdVec2 value);
+	GdVec2 get_size(GdObj obj);
+	void set_size(GdObj obj,GdVec2 value);
+	GdVec2 get_global_position(GdObj obj);
+	void set_global_position(GdObj obj,GdVec2 value);
+	GdFloat get_rotation(GdObj obj);
+	void set_rotation(GdObj obj,GdFloat value);
 };
 
 #endif // SPX_UI_MGR_H

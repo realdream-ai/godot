@@ -98,6 +98,26 @@ public:
 	GdBool get_visible();
 	void set_texture(GdString path);
 	GdString get_texture();
+
+
+	GdInt get_layout_direction();
+	void set_layout_direction(GdInt value);
+	GdInt get_layout_mode();
+	void set_layout_mode(GdInt value);
+	GdInt get_anchors_preset();
+	void set_anchors_preset(GdInt value);
+
+	GdVec2 get_scale();
+	void set_scale(GdVec2 value);
+	GdVec2 get_position();
+	void set_position(GdVec2 value);
+	GdVec2 get_size();
+	void set_size(GdVec2 value);
+
+	GdVec2 get_global_position();
+	void set_global_position(GdVec2 value);
+	GdFloat get_rotation();
+	void set_rotation(GdFloat value);
 };
 
 #endif // SPX_UI_H

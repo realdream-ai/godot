@@ -510,6 +510,54 @@ static void gdextension_spx_ui_set_rect(GdObj obj,GdRect2 rect) {
 static void gdextension_spx_ui_get_rect(GdObj obj,GdRect2* ret_val) {
 	*ret_val = uiMgr->get_rect(obj);
 }
+static void gdextension_spx_ui_get_layout_direction(GdObj obj,GdInt* ret_val) {
+	*ret_val = uiMgr->get_layout_direction(obj);
+}
+static void gdextension_spx_ui_set_layout_direction(GdObj obj,GdInt value) {
+	 uiMgr->set_layout_direction(obj, value);
+}
+static void gdextension_spx_ui_get_layout_mode(GdObj obj,GdInt* ret_val) {
+	*ret_val = uiMgr->get_layout_mode(obj);
+}
+static void gdextension_spx_ui_set_layout_mode(GdObj obj,GdInt value) {
+	 uiMgr->set_layout_mode(obj, value);
+}
+static void gdextension_spx_ui_get_anchors_preset(GdObj obj,GdInt* ret_val) {
+	*ret_val = uiMgr->get_anchors_preset(obj);
+}
+static void gdextension_spx_ui_set_anchors_preset(GdObj obj,GdInt value) {
+	 uiMgr->set_anchors_preset(obj, value);
+}
+static void gdextension_spx_ui_get_scale(GdObj obj,GdVec2* ret_val) {
+	*ret_val = uiMgr->get_scale(obj);
+}
+static void gdextension_spx_ui_set_scale(GdObj obj,GdVec2 value) {
+	 uiMgr->set_scale(obj, value);
+}
+static void gdextension_spx_ui_get_position(GdObj obj,GdVec2* ret_val) {
+	*ret_val = uiMgr->get_position(obj);
+}
+static void gdextension_spx_ui_set_position(GdObj obj,GdVec2 value) {
+	 uiMgr->set_position(obj, value);
+}
+static void gdextension_spx_ui_get_size(GdObj obj,GdVec2* ret_val) {
+	*ret_val = uiMgr->get_size(obj);
+}
+static void gdextension_spx_ui_set_size(GdObj obj,GdVec2 value) {
+	 uiMgr->set_size(obj, value);
+}
+static void gdextension_spx_ui_get_global_position(GdObj obj,GdVec2* ret_val) {
+	*ret_val = uiMgr->get_global_position(obj);
+}
+static void gdextension_spx_ui_set_global_position(GdObj obj,GdVec2 value) {
+	 uiMgr->set_global_position(obj, value);
+}
+static void gdextension_spx_ui_get_rotation(GdObj obj,GdFloat* ret_val) {
+	*ret_val = uiMgr->get_rotation(obj);
+}
+static void gdextension_spx_ui_set_rotation(GdObj obj,GdFloat value) {
+	 uiMgr->set_rotation(obj, value);
+}
 
 
 
@@ -667,5 +715,21 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_interactable);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_rect);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_rect);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_layout_direction);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_layout_direction);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_layout_mode);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_layout_mode);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_anchors_preset);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_anchors_preset);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_scale);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_scale);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_position);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_position);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_size);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_size);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_global_position);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_global_position);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_rotation);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_rotation);
 	
 }

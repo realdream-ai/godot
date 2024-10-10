@@ -228,3 +228,57 @@ GdString SpxUi::get_texture() {
 	SpxBaseMgr::temp_return_str = value->get_name();
 	return &SpxBaseMgr::temp_return_str;
 }
+
+GdInt SpxUi::get_layout_direction() {
+	return get_control()->get_layout_direction();
+}
+void SpxUi::set_layout_direction(GdInt value) {
+	get_control()->set_layout_direction((Control::LayoutDirection)value);
+}
+GdInt SpxUi::get_layout_mode() {
+	return get_control()->get_layout_mode();
+}
+void SpxUi::set_layout_mode(GdInt value) {
+	get_control()->set_layout_mode((Control::LayoutMode)value);
+}
+GdInt SpxUi::get_anchors_preset() {
+	return get_control()->get_anchors_preset();
+}
+void SpxUi::set_anchors_preset(GdInt value) {
+	return get_control()->set_anchors_preset((Control::LayoutPreset)value);
+}
+GdVec2 SpxUi::get_scale() {
+	return get_control()->get_scale();
+}
+void SpxUi::set_scale(GdVec2 value) {
+	return get_control()->set_scale(value);
+}
+
+GdVec2 SpxUi::get_size() {
+	return get_control()->get_size();
+}
+void SpxUi::set_size(GdVec2 value) {
+	return get_control()->set_size(value);
+}
+
+GdVec2 SpxUi::get_position() {
+	return get_control()->get_position();
+}
+void SpxUi::set_position(GdVec2 value) {
+	return get_control()->set_position(value);
+}
+
+
+GdVec2 SpxUi::get_global_position() {
+	return get_control()->get_global_position();
+}
+void SpxUi::set_global_position(GdVec2 value) {
+	return get_control()->set_global_position(value);
+}
+
+GdFloat SpxUi::get_rotation() {
+	return get_control()->get_rotation();
+}
+void SpxUi::set_rotation(GdFloat value) {
+	return get_control()->set_rotation(value);
+}

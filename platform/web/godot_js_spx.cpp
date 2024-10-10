@@ -660,5 +660,69 @@ EMSCRIPTEN_KEEPALIVE
 void gdspx_ui_get_rect(GdObj* obj,GdRect2* ret_val) {
 	*ret_val = uiMgr->get_rect(*obj);
 }
+EMSCRIPTEN_KEEPALIVE
+void gdspx_ui_get_layout_direction(GdObj* obj,GdInt* ret_val) {
+	*ret_val = uiMgr->get_layout_direction(*obj);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_ui_set_layout_direction(GdObj* obj,GdInt* value) {
+	 uiMgr->set_layout_direction(*obj, *value);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_ui_get_layout_mode(GdObj* obj,GdInt* ret_val) {
+	*ret_val = uiMgr->get_layout_mode(*obj);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_ui_set_layout_mode(GdObj* obj,GdInt* value) {
+	 uiMgr->set_layout_mode(*obj, *value);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_ui_get_anchors_preset(GdObj* obj,GdInt* ret_val) {
+	*ret_val = uiMgr->get_anchors_preset(*obj);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_ui_set_anchors_preset(GdObj* obj,GdInt* value) {
+	 uiMgr->set_anchors_preset(*obj, *value);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_ui_get_scale(GdObj* obj,GdVec2* ret_val) {
+	*ret_val = uiMgr->get_scale(*obj);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_ui_set_scale(GdObj* obj,GdVec2* value) {
+	 uiMgr->set_scale(*obj, *value);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_ui_get_position(GdObj* obj,GdVec2* ret_val) {
+	*ret_val = uiMgr->get_position(*obj);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_ui_set_position(GdObj* obj,GdVec2* value) {
+	 uiMgr->set_position(*obj, *value);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_ui_get_size(GdObj* obj,GdVec2* ret_val) {
+	*ret_val = uiMgr->get_size(*obj);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_ui_set_size(GdObj* obj,GdVec2* value) {
+	 uiMgr->set_size(*obj, *value);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_ui_get_global_position(GdObj* obj,GdVec2* ret_val) {
+	*ret_val = uiMgr->get_global_position(*obj);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_ui_set_global_position(GdObj* obj,GdVec2* value) {
+	 uiMgr->set_global_position(*obj, *value);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_ui_get_rotation(GdObj* obj,GdFloat* ret_val) {
+	*ret_val = uiMgr->get_rotation(*obj);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_ui_set_rotation(GdObj* obj,GdFloat* value) {
+	 uiMgr->set_rotation(*obj, *value);
+}
 
 }

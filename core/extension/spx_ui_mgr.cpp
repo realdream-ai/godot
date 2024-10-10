@@ -280,3 +280,75 @@ GdString SpxUiMgr::get_texture(GdObj obj) {
 	check_and_get_node_r(nullptr)
 	return node->get_texture();
 }
+
+
+GdInt SpxUiMgr::get_layout_direction(GdObj obj) {
+	check_and_get_node_r(0)
+	return node->get_layout_direction();
+}
+void SpxUiMgr::set_layout_direction(GdObj obj,GdInt value) {
+	check_and_get_node_v()
+	node->set_layout_direction(value);
+}
+GdInt SpxUiMgr::get_layout_mode(GdObj obj) {
+	check_and_get_node_r(0)
+	return node->get_layout_mode();
+}
+void SpxUiMgr::set_layout_mode(GdObj obj,GdInt value) {
+	check_and_get_node_v()
+	node->set_layout_mode(value);
+}
+GdInt SpxUiMgr::get_anchors_preset(GdObj obj) {
+	check_and_get_node_r(0)
+	return node->get_anchors_preset();
+}
+void SpxUiMgr::set_anchors_preset(GdObj obj, GdInt value) {
+	check_and_get_node_v()
+	node->set_anchors_preset(value);
+}
+
+GdVec2 SpxUiMgr::get_scale(GdObj obj) {
+	check_and_get_node_r(GdVec2())
+	return node->get_scale();
+
+}
+void SpxUiMgr::set_scale(GdObj obj, GdVec2 value) {
+	check_and_get_node_v()
+	node->set_scale(value);
+}
+GdVec2 SpxUiMgr::get_position(GdObj obj) {
+	check_and_get_node_r(GdVec2())
+	return node->get_position();
+
+}
+void SpxUiMgr::set_position(GdObj obj, GdVec2 value) {
+	check_and_get_node_v()
+	node->set_position(value);
+}
+GdVec2 SpxUiMgr::get_size(GdObj obj) {
+	check_and_get_node_r(GdVec2())
+	return node->get_size();
+
+}
+void SpxUiMgr::set_size(GdObj obj, GdVec2 value) {
+	check_and_get_node_v()
+	node->set_size(value);
+}
+
+GdVec2 SpxUiMgr::get_global_position(GdObj obj) {
+	check_and_get_node_r(GdVec2())
+	return node->get_global_position();
+}
+void SpxUiMgr::set_global_position(GdObj obj, GdVec2 value) {
+	check_and_get_node_v()
+	node->set_global_position(value);
+}
+GdFloat SpxUiMgr::get_rotation(GdObj obj) {
+	check_and_get_node_r(GdFloat())
+	return node->get_rotation();
+
+}
+void SpxUiMgr::set_rotation(GdObj obj, GdFloat value) {
+	check_and_get_node_v()
+	node->set_rotation(value);
+}
