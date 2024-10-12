@@ -102,11 +102,12 @@ GdRect2 SpxUi::get_rect() {
 
 void SpxUi::set_color(GdColor color) {
 	check_and_get_node_v()
-			node->add_theme_color_override(UI_DEFAULT_THEME_NAME, color);
+	node->set_modulate(color);
 }
 
 GdColor SpxUi::get_color() {
-	check_and_get_node_r(GdColor()) return node->get_theme_color(UI_DEFAULT_THEME_NAME);
+	check_and_get_node_r(GdColor())
+	return node->get_modulate();
 }
 
 void SpxUi::set_font_size(GdInt size) {
