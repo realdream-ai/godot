@@ -299,7 +299,7 @@ function ToJsRect2(ptr) {
     const HEAPF32 = GodotModule.HEAPF32;
     const floatIndex = ptr / 4;
     return {
-        center: {
+        position: {
             x: HEAPF32[floatIndex],
             y: HEAPF32[floatIndex + 1]
         },
