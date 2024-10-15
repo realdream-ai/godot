@@ -30,16 +30,17 @@
 
 #include "spx_sprite.h"
 
-#include "spx.h"
-#include "spx_engine.h"
-#include "spx_sprite_mgr.h"
 #include "scene/2d/animated_sprite_2d.h"
 #include "scene/2d/area_2d.h"
 #include "scene/2d/collision_shape_2d.h"
 #include "scene/2d/visible_on_screen_notifier_2d.h"
+#include "scene/resources/atlas_texture.h"
 #include "scene/resources/capsule_shape_2d.h"
 #include "scene/resources/circle_shape_2d.h"
 #include "scene/resources/rectangle_shape_2d.h"
+#include "spx.h"
+#include "spx_engine.h"
+#include "spx_sprite_mgr.h"
 #define SPX_CALLBACK SpxEngine::get_singleton()->get_callbacks()
 
 Node *SpxSprite::get_component(Node *node, StringName name, GdBool recursive) {
@@ -59,7 +60,6 @@ Node *SpxSprite::get_component(Node *node, StringName name, GdBool recursive) {
 	}
 	return nullptr;
 }
-
 
 void SpxSprite::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_gid", "gid"), &SpxSprite::set_gid);
@@ -85,9 +85,8 @@ void SpxSprite::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("on_sprite_screen_entered"), &SpxSprite::on_sprite_screen_entered);
 }
 
-
 void SpxSprite::on_destroy_call() {
-	if(!Spx::initialed)
+	if (!Spx::initialed)
 		return;
 	spriteMgr->on_sprite_destroy(this);
 }
@@ -107,15 +106,15 @@ void SpxSprite::_notification(int p_what) {
 		case NOTIFICATION_DRAW: {
 			_draw();
 			break;
-		} 
+		}
 		default:
 			break;
 	}
 }
 
 void SpxSprite::_draw() {
-	if(!Spx::debug_mode){
-		return ;
+	if (!Spx::debug_mode) {
+		return;
 	}
 	if (trigger2d != nullptr && trigger2d->get_shape() != nullptr) {
 		Ref<Shape2D> trigger_shape = trigger2d->get_shape();
@@ -124,7 +123,7 @@ void SpxSprite::_draw() {
 
 	if (collider2d != nullptr && collider2d->get_shape() != nullptr) {
 		Ref<Shape2D> collider_shape = collider2d->get_shape();
-		collider_shape->draw(get_canvas_item(), Color(0, 0, 1,0.2));
+		collider_shape->draw(get_canvas_item(), Color(0, 0, 1, 0.2));
 	}
 }
 
@@ -135,7 +134,7 @@ void SpxSprite::on_start() {
 		anim2d->set_sprite_frames(memnew(SpriteFrames));
 	}
 	visible_notifier = (get_component<VisibleOnScreenNotifier2D>());
-	if(visible_notifier == nullptr) {
+	if (visible_notifier == nullptr) {
 		visible_notifier = memnew(VisibleOnScreenNotifier2D);
 		add_child(visible_notifier);
 	}
@@ -156,7 +155,7 @@ void SpxSprite::on_start() {
 		anim2d->connect("animation_looped", Callable(this, "on_sprite_animation_looped"));
 		anim2d->connect("animation_finished", Callable(this, "on_sprite_animation_finished"));
 	}
-	if(visible_notifier != nullptr) {
+	if (visible_notifier != nullptr) {
 		visible_notifier->connect("screen_exited", Callable(this, "on_sprite_screen_exited"));
 		visible_notifier->connect("screen_entered", Callable(this, "on_sprite_screen_entered"));
 	}
@@ -231,6 +230,26 @@ void SpxSprite::set_color(GdColor color) {
 
 GdColor SpxSprite::get_color() {
 	return anim2d->get_self_modulate();
+}
+void SpxSprite::set_texture_altas(GdString path, GdRect2 rect2) {
+	auto path_str = SpxStr(path);
+	Ref<Texture2D> texture = ResourceLoader::load(path_str);
+
+	Ref<AtlasTexture> atlas_texture_frame = memnew(AtlasTexture);
+	atlas_texture_frame->set_atlas(texture);
+	atlas_texture_frame->set_region(rect2);
+
+	if (texture.is_valid()) {
+		auto frames = anim2d->get_sprite_frames();
+		if (frames->get_frame_count(SpxSpriteMgr::default_texture_anim) == 0) {
+			frames->add_frame(SpxSpriteMgr::default_texture_anim, atlas_texture_frame);
+		} else {
+			frames->set_frame(SpxSpriteMgr::default_texture_anim, 0, atlas_texture_frame);
+		}
+		anim2d->set_animation(SpxSpriteMgr::default_texture_anim);
+	} else {
+		print_error("can not find a texture: " + path_str);
+	}
 }
 
 void SpxSprite::set_texture(GdString path) {
@@ -338,7 +357,6 @@ GdBool SpxSprite::is_anim_flipped_v() const {
 	return anim2d->is_flipped_v();
 }
 
-
 void SpxSprite::set_gravity(GdFloat gravity) {
 	// TODO
 }
@@ -346,7 +364,6 @@ void SpxSprite::set_gravity(GdFloat gravity) {
 GdFloat SpxSprite::get_gravity() {
 	return 0;
 }
-
 
 void SpxSprite::set_mass(GdFloat mass) {
 }
@@ -439,12 +456,12 @@ GdBool SpxSprite::is_trigger_enabled() {
 	return area2d->is_visible();
 }
 
-CollisionShape2D* SpxSprite::get_collider(bool is_trigger) {
+CollisionShape2D *SpxSprite::get_collider(bool is_trigger) {
 	return is_trigger ? trigger2d : collider2d;
 }
 
-GdBool SpxSprite::check_collision(SpxSprite *other, GdBool is_src_trigger ,GdBool is_dst_trigger ) {
-	if( other == nullptr)
+GdBool SpxSprite::check_collision(SpxSprite *other, GdBool is_src_trigger, GdBool is_dst_trigger) {
+	if (other == nullptr)
 		return false;
 	auto this_shape = is_src_trigger ? this->trigger2d : this->collider2d;
 	auto other_shape = is_dst_trigger ? other->trigger2d : other->collider2d;
@@ -462,5 +479,5 @@ GdBool SpxSprite::check_collision_with_point(GdVec2 point, GdBool is_trigger) {
 	if (!this_shape->get_shape().is_valid()) {
 		return false;
 	}
-	return this_shape->get_shape()->_edit_is_selected_on_click(point,0);
+	return this_shape->get_shape()->_edit_is_selected_on_click(point, 0);
 }

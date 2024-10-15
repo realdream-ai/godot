@@ -267,6 +267,7 @@ typedef void (*GDExtensionSpxSpriteSetScale)(GdObj obj, GdVec2 scale);
 typedef void (*GDExtensionSpxSpriteGetScale)(GdObj obj, GdVec2* ret_value);
 typedef void (*GDExtensionSpxSpriteSetColor)(GdObj obj, GdColor color);
 typedef void (*GDExtensionSpxSpriteGetColor)(GdObj obj, GdColor* ret_value);
+typedef void (*GDExtensionSpxSpriteSetTextureAltas)(GdObj obj, GdString path, GdRect2 rect2);
 typedef void (*GDExtensionSpxSpriteSetTexture)(GdObj obj, GdString path);
 typedef void (*GDExtensionSpxSpriteGetTexture)(GdObj obj, GdString* ret_value);
 typedef void (*GDExtensionSpxSpriteSetVisible)(GdObj obj, GdBool visible);

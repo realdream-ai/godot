@@ -315,6 +315,10 @@ void gdspx_sprite_get_color(GdObj* obj,GdColor* ret_val) {
 	*ret_val = spriteMgr->get_color(*obj);
 }
 EMSCRIPTEN_KEEPALIVE
+void gdspx_sprite_set_texture_altas(GdObj* obj,GdString* path,GdRect2* rect2) {
+	 spriteMgr->set_texture_altas(*obj, *path, *rect2);
+}
+EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_set_texture(GdObj* obj,GdString* path) {
 	 spriteMgr->set_texture(*obj, *path);
 }

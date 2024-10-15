@@ -99,7 +99,9 @@ public:
 	// render
 	void set_color(GdColor color);
 	GdColor get_color();
+	void set_texture_altas(GdString path, GdRect2 rect2);
 	void set_texture(GdString path);
+
 	GdString get_texture();
 
 	// animation

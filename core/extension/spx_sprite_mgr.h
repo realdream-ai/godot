@@ -81,6 +81,8 @@ public:
 	GdVec2 get_scale(GdObj obj);
 	void set_color(GdObj obj, GdColor color);
 	GdColor get_color(GdObj obj);
+
+	void set_texture_altas(GdObj obj, GdString path, GdRect2 rect2);
 	void set_texture(GdObj obj, GdString path);
 	GdString get_texture(GdObj obj);
 	void set_visible(GdObj obj, GdBool visible);
