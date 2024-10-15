@@ -46,6 +46,7 @@ class SpxUiMgr;
 class SpxSceneMgr;
 class SpxCameraMgr;
 class SpxPlatformMgr;
+class SpxResMgr;
 
 class SpxEngine : SpxBaseMgr {
 	static SpxEngine *singleton;
@@ -65,6 +66,7 @@ private:
 	SpxSceneMgr *scene;
 	SpxCameraMgr *camera;
 	SpxPlatformMgr *platform;
+	SpxResMgr *res;
 
 public:
 	SpxInputMgr *get_input() { return input; }
@@ -75,6 +77,7 @@ public:
 	SpxSceneMgr *get_scene() { return scene; }
 	SpxCameraMgr *get_camera() { return camera; }
 	SpxPlatformMgr *get_platform() { return platform; }
+	SpxResMgr *get_res() { return res; }
 
 private:
 	SceneTree *tree;

@@ -333,6 +333,16 @@ function gdspx_platform_is_debug_mode() {
 	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
+function gdspx_res_get_image_size(path) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_res_get_image_size']; 
+	_retValue = AllocGdVec2();
+	_arg0 = ToGdString(path);
+	_gdFuncPtr(_arg0, _retValue);
+	FreeGdString(_arg0); 
+	_finalRetValue = ToJsVec2(_retValue);
+	FreeGdVec2(_retValue); 
+	return _finalRetValue
+}
 function gdspx_scene_change_scene_to_file(path) {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_scene_change_scene_to_file']; 
 	

@@ -40,6 +40,7 @@
 #include "spx_input_mgr.h"
 #include "spx_physic_mgr.h"
 #include "spx_platform_mgr.h"
+#include "spx_res_mgr.h"
 #include "spx_scene_mgr.h"
 #include "spx_sprite_mgr.h"
 #include "spx_ui_mgr.h"
@@ -49,6 +50,7 @@
 #define inputMgr SpxEngine::get_singleton()->get_input()
 #define physicMgr SpxEngine::get_singleton()->get_physic()
 #define platformMgr SpxEngine::get_singleton()->get_platform()
+#define resMgr SpxEngine::get_singleton()->get_res()
 #define sceneMgr SpxEngine::get_singleton()->get_scene()
 #define spriteMgr SpxEngine::get_singleton()->get_sprite()
 #define uiMgr SpxEngine::get_singleton()->get_ui()
@@ -167,6 +169,9 @@ static void gdextension_spx_platform_set_debug_mode(GdBool enable) {
 }
 static void gdextension_spx_platform_is_debug_mode(GdBool* ret_val) {
 	*ret_val = platformMgr->is_debug_mode();
+}
+static void gdextension_spx_res_get_image_size(GdString path,GdVec2* ret_val) {
+	*ret_val = resMgr->get_image_size(path);
 }
 static void gdextension_spx_scene_change_scene_to_file(GdString path) {
 	 sceneMgr->change_scene_to_file(path);
@@ -607,6 +612,7 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_is_window_fullscreen);
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_set_debug_mode);
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_is_debug_mode);
+	REGISTER_SPX_INTERFACE_FUNC(spx_res_get_image_size);
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_change_scene_to_file);
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_reload_current_scene);
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_unload_current_scene);

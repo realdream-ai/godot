@@ -41,6 +41,7 @@
 #include "spx_camera_mgr.h"
 #include "spx_scene_mgr.h"
 #include "spx_platform_mgr.h"
+#include "spx_res_mgr.h"
 SpxEngine *SpxEngine::singleton = nullptr;
 
 void SpxEngine::register_callbacks(GDExtensionSpxCallbackInfoPtr callback_ptr) {
@@ -66,6 +67,9 @@ void SpxEngine::register_callbacks(GDExtensionSpxCallbackInfoPtr callback_ptr) {
 	singleton->mgrs.append((SpxBaseMgr *)singleton->camera);
 	singleton->platform = memnew(SpxPlatformMgr);
 	singleton->mgrs.append((SpxBaseMgr *)singleton->platform);
+	singleton->res = memnew(SpxResMgr);
+	singleton->mgrs.append((SpxBaseMgr *)singleton->res);
+
 
 	singleton->callbacks = *(SpxCallbackInfo *)callback_ptr;
 	singleton->global_id = 1;
@@ -142,6 +146,7 @@ void SpxEngine::on_destroy() {
 	memdelete(scene);
 	memdelete(camera);
 	memdelete(platform);
+	memdelete(res);
 	mgrs.clear();
 	singleton = nullptr;
 }

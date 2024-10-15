@@ -40,6 +40,7 @@
 #include "core/extension/spx_input_mgr.h"
 #include "core/extension/spx_physic_mgr.h"
 #include "core/extension/spx_platform_mgr.h"
+#include "core/extension/spx_res_mgr.h"
 #include "core/extension/spx_scene_mgr.h"
 #include "core/extension/spx_sprite_mgr.h"
 #include "core/extension/spx_ui_mgr.h"
@@ -50,6 +51,7 @@
 #define inputMgr SpxEngine::get_singleton()->get_input()
 #define physicMgr SpxEngine::get_singleton()->get_physic()
 #define platformMgr SpxEngine::get_singleton()->get_platform()
+#define resMgr SpxEngine::get_singleton()->get_res()
 #define sceneMgr SpxEngine::get_singleton()->get_scene()
 #define spriteMgr SpxEngine::get_singleton()->get_sprite()
 #define uiMgr SpxEngine::get_singleton()->get_ui()
@@ -203,6 +205,10 @@ void gdspx_platform_set_debug_mode(GdBool* enable) {
 EMSCRIPTEN_KEEPALIVE
 void gdspx_platform_is_debug_mode(GdBool* ret_val) {
 	*ret_val = platformMgr->is_debug_mode();
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_res_get_image_size(GdString* path,GdVec2* ret_val) {
+	*ret_val = resMgr->get_image_size(*path);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_scene_change_scene_to_file(GdString* path) {
