@@ -23,7 +23,7 @@
 	}
 
 #define get_spx_control_type(VALUE)                              \
-	if (type != (int)ESpxUiType::##VALUE) {                      \
+	if (type != (int)ESpxUiType::VALUE) {                      \
 		print_error("convert ui node type miss error  " #VALUE); \
 		return nullptr;                                          \
 	}                                                            \
