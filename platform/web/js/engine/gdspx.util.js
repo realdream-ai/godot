@@ -141,13 +141,12 @@ function ToGdString(str) {
 }
 
 function ToJsString(gdstrPtr) {
+    func = GodotEngine.rtenv['_gdspx_get_string_len']; 
+    length = func(gdstrPtr)
     func = GodotEngine.rtenv['_gdspx_get_string']; 
     ptr = func(gdstrPtr)
     const HEAPU8 = GodotModule.HEAPU8;
-    let length = 0;
-    while (HEAPU8[ptr + length] !== 0) {
-        length++;
-    }
+    console.log("ToJsString3", length)
     const stringBytes = HEAPU8.subarray(ptr, ptr + length);
     result = decodeFromSharedBuffer(stringBytes,length)
     return result;

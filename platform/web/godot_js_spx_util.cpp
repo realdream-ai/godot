@@ -218,10 +218,25 @@ GdString* gdspx_new_string(const char* str) {
 
 EMSCRIPTEN_KEEPALIVE
 const char* gdspx_get_string(GdString* ptr) {
-    auto cstr = ((const String *)ptr)->utf8();
-    return cstr.get_data();
+	print_line("gdspx_get_string raw",(int64_t)(*ptr));
+    auto csutf =(*(const String **)ptr)->utf8();
+    auto cstr = csutf.get_data();
+    auto value = (*(const String **)ptr)->get_data();
+    String tempStr = "==5==";
+    for(int i=0;i<csutf.length() && i<10;i++){
+        tempStr+=cstr[i];
+    }
+    print_line(tempStr,"length = " + itos(csutf.length()));
+    return (const char*)cstr;
 }
 
+EMSCRIPTEN_KEEPALIVE
+int32_t gdspx_get_string_len(GdString* ptr) {
+	print_line("gdspx_get_string raw",(int64_t)(*ptr));
+    auto csutf =(*(const String **)ptr)->utf8();
+    print_line("gdspx_get_string_len = " + itos(csutf.length()));
+    return csutf.length();
+}
 
 EMSCRIPTEN_KEEPALIVE
 void gdspx_free_string(GdString* p_gdstr) {
