@@ -38,7 +38,7 @@ class SpxResMgr : SpxBaseMgr {
 	SPXCLASS(SpxPlatformMgr, SpxBaseMgr)
 public:
 	GdVec2 get_image_size(GdString path);
-
+	GdString read_all_text(GdString path);
 };
 
 #endif // SPX_RES_MGR_H

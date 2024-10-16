@@ -211,6 +211,10 @@ void gdspx_res_get_image_size(GdString* path,GdVec2* ret_val) {
 	*ret_val = resMgr->get_image_size(*path);
 }
 EMSCRIPTEN_KEEPALIVE
+void gdspx_res_read_all_text(GdString* path,GdString* ret_val) {
+	*ret_val = resMgr->read_all_text(*path);
+}
+EMSCRIPTEN_KEEPALIVE
 void gdspx_scene_change_scene_to_file(GdString* path) {
 	 sceneMgr->change_scene_to_file(*path);
 }

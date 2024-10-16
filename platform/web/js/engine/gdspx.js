@@ -343,6 +343,16 @@ function gdspx_res_get_image_size(path) {
 	FreeGdVec2(_retValue); 
 	return _finalRetValue
 }
+function gdspx_res_read_all_text(path) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_res_read_all_text']; 
+	_retValue = AllocGdString();
+	_arg0 = ToGdString(path);
+	_gdFuncPtr(_arg0, _retValue);
+	FreeGdString(_arg0); 
+	_finalRetValue = ToJsString(_retValue);
+	FreeGdString(_retValue); 
+	return _finalRetValue
+}
 function gdspx_scene_change_scene_to_file(path) {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_scene_change_scene_to_file']; 
 	

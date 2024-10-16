@@ -173,6 +173,9 @@ static void gdextension_spx_platform_is_debug_mode(GdBool* ret_val) {
 static void gdextension_spx_res_get_image_size(GdString path,GdVec2* ret_val) {
 	*ret_val = resMgr->get_image_size(path);
 }
+static void gdextension_spx_res_read_all_text(GdString path,GdString* ret_val) {
+	*ret_val = resMgr->read_all_text(path);
+}
 static void gdextension_spx_scene_change_scene_to_file(GdString path) {
 	 sceneMgr->change_scene_to_file(path);
 }
@@ -616,6 +619,7 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_set_debug_mode);
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_is_debug_mode);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_get_image_size);
+	REGISTER_SPX_INTERFACE_FUNC(spx_res_read_all_text);
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_change_scene_to_file);
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_reload_current_scene);
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_unload_current_scene);

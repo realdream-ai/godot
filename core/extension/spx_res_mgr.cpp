@@ -29,9 +29,9 @@
 /**************************************************************************/
 
 #include "spx_res_mgr.h"
-#include "spx.h"
+#include "core/io/file_access.h"
 #include "scene/main/window.h"
-
+#include "spx.h"
 
 GdVec2 SpxResMgr::get_image_size(GdString path) {
 	auto path_str = SpxStr(path);
@@ -41,4 +41,22 @@ GdVec2 SpxResMgr::get_image_size(GdString path) {
 	} else {
 		print_error("can not find a texture: " + path_str);
 	}
+}
+GdString SpxResMgr::read_all_text(GdString p_path) {
+	auto path = SpxStr(p_path);
+	Ref<FileAccess> file = FileAccess::open(path, FileAccess::READ);
+	SpxBaseMgr::temp_return_str = "";
+	if (file.is_null()) {
+		print_line("Unable to open file.", path);
+	} else {
+		String file_content;
+		// TODO use a faster way to read all text from a file
+		while (!file->eof_reached()) {
+			String line = file->get_line();
+			file_content += line + "\n";
+		}
+		SpxBaseMgr::temp_return_str = file_content.utf8();
+	}
+	file->close();
+	return &SpxBaseMgr::temp_return_str;
 }
