@@ -291,7 +291,7 @@ function FreeGdColor(ptr) {
 // Rect2-related functions
 function ToGdRect2(rect) {
     func = GodotEngine.rtenv['_gdspx_new_rect2']; 
-    return func(rect.position.x, rect.position.y, rect.size.width, rect.size.height);
+    return func(rect.position.x, rect.position.y, rect.size.x, rect.size.y);
 }
 
 function ToJsRect2(ptr) {
