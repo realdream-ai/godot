@@ -146,30 +146,13 @@ function ToJsString(gdstrPtr) {
     func = GodotEngine.rtenv['_gdspx_get_string']; 
     ptr = func(gdstrPtr)
     const HEAPU8 = GodotModule.HEAPU8;
-    console.log("ToJsString3", length)
     const stringBytes = HEAPU8.subarray(ptr, ptr + length);
-    result = decodeFromSharedBuffer(stringBytes,length)
+    const nonSharedBytes = stringBytes.slice();
+    const decoder = new TextDecoder("utf-8")
+    result = decoder.decode(nonSharedBytes)
+    GodotEngine.rtenv['_gdspx_free_cstr'](ptr);
     return result;
 }
-
-function decodeFromSharedBuffer(sharedBuffer, maxLength) {
-  const decoder = new TextDecoder()
-  const copyLength = Math.min(sharedBuffer.byteLength, maxLength)
-
-  // Create a temporary ArrayBuffer and copy the contents of the shared buffer
-  // into it.
-  const tempBuffer = new ArrayBuffer(copyLength)
-  const tempView = new Uint8Array(tempBuffer)
-
-  let sharedView = new Uint8Array(sharedBuffer)
-  if (sharedBuffer.byteLength != copyLength) {
-    sharedView = sharedView.subarray(0, copyLength)
-  }
-  tempView.set(sharedView)
-
-  return decoder.decode(tempBuffer)
-}
-
 
 function AllocGdString() {
     return GodotEngine.rtenv['_gdspx_alloc_string']();

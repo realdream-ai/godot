@@ -50,7 +50,6 @@ GdString SpxResMgr::read_all_text(GdString p_path) {
 		print_line("Unable to open file.", path);
 	} else {
 		String file_content;
-		// TODO use a faster way to read all text from a file
 		while (!file->eof_reached()) {
 			String line = file->get_line();
 			file_content += line + "\n";
