@@ -228,6 +228,7 @@ typedef void (*GDExtensionSpxInputIsActionJustReleased)(GdString action, GdBool*
 // SpxPhysic
 typedef void (*GDExtensionSpxPhysicRaycast)(GdVec2 from, GdVec2 to, GdInt collision_mask, GdObj* ret_value);
 typedef void (*GDExtensionSpxPhysicCheckCollision)(GdVec2 from, GdVec2 to, GdInt collision_mask, GdBool collide_with_areas, GdBool collide_with_bodies, GdBool* ret_value);
+typedef void (*GDExtensionSpxPhysicCheckTouchedCameraBoundary)(GdObj obj,GdInt board_type, GdBool* ret_value);
 // SpxPlatform
 typedef void (*GDExtensionSpxPlatformSetWindowSize)(GdInt width, GdInt height);
 typedef void (*GDExtensionSpxPlatformGetWindowSize)(GdVec2* ret_value);
@@ -266,6 +267,8 @@ typedef void (*GDExtensionSpxSpriteSetRotation)(GdObj obj, GdFloat rot);
 typedef void (*GDExtensionSpxSpriteGetRotation)(GdObj obj, GdFloat* ret_value);
 typedef void (*GDExtensionSpxSpriteSetScale)(GdObj obj, GdVec2 scale);
 typedef void (*GDExtensionSpxSpriteGetScale)(GdObj obj, GdVec2* ret_value);
+typedef void (*GDExtensionSpxSpriteSetRenderScale)(GdObj obj, GdVec2 scale);
+typedef void (*GDExtensionSpxSpriteGetRenderScale)(GdObj obj, GdVec2* ret_value);
 typedef void (*GDExtensionSpxSpriteSetColor)(GdObj obj, GdColor color);
 typedef void (*GDExtensionSpxSpriteGetColor)(GdObj obj, GdColor* ret_value);
 typedef void (*GDExtensionSpxSpriteSetTextureAltas)(GdObj obj, GdString path, GdRect2 rect2);

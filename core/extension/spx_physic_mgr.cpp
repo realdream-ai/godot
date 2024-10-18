@@ -30,11 +30,20 @@
 
 #include "spx_physic_mgr.h"
 
-#include "spx_sprite.h"
-#include "scene/resources/circle_shape_2d.h"
 #include "scene/resources/world_2d.h"
 #include "servers/physics_server_2d.h"
 #include "servers/physics_server_3d.h"
+#include "spx_sprite.h"
+#include "spx_sprite_mgr.h"
+
+#include "scene/2d/camera_2d.h"
+#include "scene/2d/collision_shape_2d.h"
+#include "scene/main/window.h"
+#include "scene/resources/rectangle_shape_2d.h"
+#include "spx_engine.h"
+#include "spx_sprite_mgr.h"
+
+#define spriteMgr SpxEngine::get_singleton()->get_sprite()
 
 GdObj SpxPhysicMgr::raycast(GdVec2 from, GdVec2 to, GdInt collision_mask) {
 	auto node = (Node2D *)get_root();
@@ -43,15 +52,15 @@ GdObj SpxPhysicMgr::raycast(GdVec2 from, GdVec2 to, GdInt collision_mask) {
 	PhysicsDirectSpaceState2D::RayResult result;
 	PhysicsDirectSpaceState2D::RayParameters params;
 	// flip y axis
-	from =  GdVec2{ from.x, -from.y };
-	to =  GdVec2{ to.x, -to.y };
+	from = GdVec2{ from.x, -from.y };
+	to = GdVec2{ to.x, -to.y };
 	params.from = from;
 	params.to = to;
 	params.collision_mask = (uint32_t)collision_mask;
 	bool hit = space_state->intersect_ray(params, result);
 	if (hit) {
 		SpxSprite *collider = dynamic_cast<SpxSprite *>(result.collider);
-		if(collider != nullptr) {
+		if (collider != nullptr) {
 			return collider->get_gid();
 		}
 	}
@@ -65,8 +74,8 @@ GdBool SpxPhysicMgr::check_collision(GdVec2 from, GdVec2 to, GdInt collision_mas
 	PhysicsDirectSpaceState2D::RayParameters params;
 
 	// flip y axis
-	from =  GdVec2{ from.x, -from.y };
-	to =  GdVec2{ to.x, -to.y };
+	from = GdVec2{ from.x, -from.y };
+	to = GdVec2{ to.x, -to.y };
 	params.from = from;
 	params.to = to;
 	params.collision_mask = (uint32_t)collision_mask;
@@ -74,4 +83,66 @@ GdBool SpxPhysicMgr::check_collision(GdVec2 from, GdVec2 to, GdInt collision_mas
 	params.collide_with_bodies = collide_with_bodies;
 	bool hit = space_state->intersect_ray(params, result);
 	return hit;
+}
+const GdInt BOUND_CAM_LEFT = 1 << 0;
+const GdInt BOUND_CAM_TOP = 1 << 1;
+const GdInt BOUND_CAM_RIGHT = 1 << 2;
+const GdInt BOUND_CAM_BOTTOM = 1 << 3;
+const GdInt BOUND_CAM_ALL = BOUND_CAM_LEFT | BOUND_CAM_TOP | BOUND_CAM_TOP | BOUND_CAM_BOTTOM;
+
+GdInt SpxPhysicMgr::check_touched_camera_boundaries(GdObj obj) {
+	auto sprite = spriteMgr->get_sprite(obj);
+	if (sprite == nullptr) {
+		print_error("try to get property of a null sprite gid=" + itos(obj));
+		return false;
+	}
+	Transform2D sprite_transform = sprite->get_global_transform();
+
+	CollisionShape2D *collision_shape = sprite->get_trigger();
+	if (!collision_shape) {
+		return false;
+	}
+	Ref<Shape2D> sprite_shape = collision_shape->get_shape();
+	if (sprite_shape.is_null()) {
+		return false;
+	}
+
+	Camera2D *camera = get_tree()->get_root()->get_camera_2d();
+	if (!camera) {
+		return false;
+	}
+	Transform2D camera_transform = camera->get_global_transform();
+
+	Vector2 viewport_size = camera->get_viewport_rect().size;
+	Vector2 zoom = camera->get_zoom();
+	Vector2 half_size = (viewport_size * zoom) * 0.5;
+	Vector2 camera_position = camera_transform.get_origin();
+
+	Ref<RectangleShape2D> vertical_edge_shape;
+	vertical_edge_shape.instantiate();
+	vertical_edge_shape->set_size(Vector2(1, half_size.y));
+
+	Ref<RectangleShape2D> horizontal_edge_shape;
+	horizontal_edge_shape.instantiate();
+	horizontal_edge_shape->set_size(Vector2(half_size.x, 1));
+
+	Transform2D left_edge_transform(0, camera_position + Vector2(-half_size.x, 0));
+	Transform2D right_edge_transform(0, camera_position + Vector2(half_size.x, 0));
+	Transform2D top_edge_transform(0, camera_position + Vector2(0, -half_size.y));
+	Transform2D bottom_edge_transform(0, camera_position + Vector2(0, half_size.y));
+
+	bool is_colliding_left = sprite_shape->collide(sprite_transform, vertical_edge_shape, left_edge_transform);
+	bool is_colliding_right = sprite_shape->collide(sprite_transform, vertical_edge_shape, right_edge_transform);
+	bool is_colliding_top = sprite_shape->collide(sprite_transform, horizontal_edge_shape, top_edge_transform);
+	bool is_colliding_bottom = sprite_shape->collide(sprite_transform, horizontal_edge_shape, bottom_edge_transform);
+	GdInt result = 0;
+	result += is_colliding_top ? 1 << BOUND_CAM_TOP : 0;
+	result += is_colliding_right ? 1 << BOUND_CAM_RIGHT : 0;
+	result += is_colliding_bottom ? 1 << BOUND_CAM_BOTTOM : 0;
+	result += is_colliding_left ? 1 << BOUND_CAM_LEFT : 0;
+	return is_colliding_left || is_colliding_right || is_colliding_top || is_colliding_bottom;
+}
+GdBool SpxPhysicMgr::check_touched_camera_boundary(GdObj obj, GdInt board_type) {
+	auto result = check_touched_camera_boundaries(obj);
+	return (result & board_type) != 0;
 }

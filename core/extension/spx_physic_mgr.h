@@ -40,6 +40,8 @@ class SpxPhysicMgr : SpxBaseMgr {
 public:
 	GdObj raycast(GdVec2 from, GdVec2 to, GdInt collision_mask);
 	GdBool check_collision(GdVec2 from, GdVec2 to, GdInt collision_mask, GdBool collide_with_areas, GdBool collide_with_bodies);
+	GdInt check_touched_camera_boundaries(GdObj obj) ;
+	GdBool check_touched_camera_boundary(GdObj obj,GdInt board_type);
 };
 
 #endif // SPX_PHYSIC_MGR_H

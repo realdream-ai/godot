@@ -59,7 +59,8 @@ protected:
 	CollisionShape2D *trigger2d;
 	CollisionShape2D *collider2d;
 	VisibleOnScreenNotifier2D *visible_notifier;
-
+public:
+	CollisionShape2D * get_trigger(){ return trigger2d;}
 public:
 	template <typename T>
 	T *get_component(GdBool recursive = false);
@@ -155,6 +156,9 @@ public:
 	CollisionShape2D* get_collider(bool is_trigger = false);
 	GdBool check_collision(SpxSprite *other, GdBool is_src_trigger = true,GdBool is_dst_trigger = true);
 	GdBool check_collision_with_point(GdVec2 point, GdBool is_trigger = true);
+
+	void set_render_scale(GdVec2 scale);
+	GdVec2 get_render_scale();
 };
 
 template <typename T> T *SpxSprite::get_component(Node *node, GdBool recursive) {

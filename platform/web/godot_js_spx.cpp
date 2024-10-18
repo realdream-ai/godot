@@ -175,6 +175,10 @@ void gdspx_physic_check_collision(GdVec2* from,GdVec2* to,GdInt* collision_mask,
 	*ret_val = physicMgr->check_collision(*from, *to, *collision_mask, *collide_with_areas, *collide_with_bodies);
 }
 EMSCRIPTEN_KEEPALIVE
+void gdspx_physic_check_touched_camera_boundary(GdObj* obj,GdInt* board_type,GdBool* ret_val) {
+	*ret_val = physicMgr->check_touched_camera_boundary(*obj, *board_type);
+}
+EMSCRIPTEN_KEEPALIVE
 void gdspx_platform_set_window_size(GdInt* width,GdInt* height) {
 	 platformMgr->set_window_size(*width, *height);
 }
@@ -309,6 +313,14 @@ void gdspx_sprite_set_scale(GdObj* obj,GdVec2* scale) {
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_get_scale(GdObj* obj,GdVec2* ret_val) {
 	*ret_val = spriteMgr->get_scale(*obj);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_sprite_set_render_scale(GdObj* obj,GdVec2* scale) {
+	 spriteMgr->set_render_scale(*obj, *scale);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_sprite_get_render_scale(GdObj* obj,GdVec2* ret_val) {
+	*ret_val = spriteMgr->get_render_scale(*obj);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_set_color(GdObj* obj,GdColor* color) {

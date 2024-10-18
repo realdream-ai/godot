@@ -267,6 +267,18 @@ function gdspx_physic_check_collision(from,to,collision_mask,collide_with_areas,
 	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
+function gdspx_physic_check_touched_camera_boundary(obj,board_type) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_physic_check_touched_camera_boundary']; 
+	_retValue = AllocGdBool();
+	_arg0 = ToGdObj(obj);
+	_arg1 = ToGdInt(board_type);
+	_gdFuncPtr(_arg0, _arg1, _retValue);
+	FreeGdObj(_arg0); 
+	FreeGdInt(_arg1); 
+	_finalRetValue = ToJsBool(_retValue);
+	FreeGdBool(_retValue); 
+	return _finalRetValue
+}
 function gdspx_platform_set_window_size(width,height) {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_platform_set_window_size']; 
 	
@@ -597,6 +609,26 @@ function gdspx_sprite_set_scale(obj,scale) {
 }
 function gdspx_sprite_get_scale(obj) {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_sprite_get_scale']; 
+	_retValue = AllocGdVec2();
+	_arg0 = ToGdObj(obj);
+	_gdFuncPtr(_arg0, _retValue);
+	FreeGdObj(_arg0); 
+	_finalRetValue = ToJsVec2(_retValue);
+	FreeGdVec2(_retValue); 
+	return _finalRetValue
+}
+function gdspx_sprite_set_render_scale(obj,scale) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_sprite_set_render_scale']; 
+	
+	_arg0 = ToGdObj(obj);
+	_arg1 = ToGdVec2(scale);
+	_gdFuncPtr(_arg0, _arg1);
+	FreeGdObj(_arg0); 
+	FreeGdVec2(_arg1); 
+
+}
+function gdspx_sprite_get_render_scale(obj) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_sprite_get_render_scale']; 
 	_retValue = AllocGdVec2();
 	_arg0 = ToGdObj(obj);
 	_gdFuncPtr(_arg0, _retValue);

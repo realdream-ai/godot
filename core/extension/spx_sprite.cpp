@@ -481,3 +481,9 @@ GdBool SpxSprite::check_collision_with_point(GdVec2 point, GdBool is_trigger) {
 	}
 	return this_shape->get_shape()->_edit_is_selected_on_click(point, 0);
 }
+void SpxSprite::set_render_scale(GdVec2 scale) {
+	anim2d->set_scale(scale);
+}
+GdVec2 SpxSprite::get_render_scale() {
+	return anim2d->get_scale();
+}

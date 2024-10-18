@@ -146,6 +146,9 @@ static void gdextension_spx_physic_raycast(GdVec2 from,GdVec2 to,GdInt collision
 static void gdextension_spx_physic_check_collision(GdVec2 from,GdVec2 to,GdInt collision_mask,GdBool collide_with_areas,GdBool collide_with_bodies,GdBool* ret_val) {
 	*ret_val = physicMgr->check_collision(from, to, collision_mask, collide_with_areas, collide_with_bodies);
 }
+static void gdextension_spx_physic_check_touched_camera_boundary(GdObj obj,GdInt board_type,GdBool* ret_val) {
+	*ret_val = physicMgr->check_touched_camera_boundary(obj, board_type);
+}
 static void gdextension_spx_platform_set_window_size(GdInt width,GdInt height) {
 	 platformMgr->set_window_size(width, height);
 }
@@ -247,6 +250,12 @@ static void gdextension_spx_sprite_set_scale(GdObj obj,GdVec2 scale) {
 }
 static void gdextension_spx_sprite_get_scale(GdObj obj,GdVec2* ret_val) {
 	*ret_val = spriteMgr->get_scale(obj);
+}
+static void gdextension_spx_sprite_set_render_scale(GdObj obj,GdVec2 scale) {
+	 spriteMgr->set_render_scale(obj, scale);
+}
+static void gdextension_spx_sprite_get_render_scale(GdObj obj,GdVec2* ret_val) {
+	*ret_val = spriteMgr->get_render_scale(obj);
 }
 static void gdextension_spx_sprite_set_color(GdObj obj,GdColor color) {
 	 spriteMgr->set_color(obj, color);
@@ -610,6 +619,7 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_input_is_action_just_released);
 	REGISTER_SPX_INTERFACE_FUNC(spx_physic_raycast);
 	REGISTER_SPX_INTERFACE_FUNC(spx_physic_check_collision);
+	REGISTER_SPX_INTERFACE_FUNC(spx_physic_check_touched_camera_boundary);
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_set_window_size);
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_get_window_size);
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_set_window_title);
@@ -644,6 +654,8 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_rotation);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_scale);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_scale);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_render_scale);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_render_scale);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_color);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_color);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_texture_altas);
