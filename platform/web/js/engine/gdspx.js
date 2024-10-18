@@ -365,6 +365,16 @@ function gdspx_res_read_all_text(path) {
 	FreeGdString(_retValue); 
 	return _finalRetValue
 }
+function gdspx_res_has_file(path) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_res_has_file']; 
+	_retValue = AllocGdBool();
+	_arg0 = ToGdString(path);
+	_gdFuncPtr(_arg0, _retValue);
+	FreeGdString(_arg0); 
+	_finalRetValue = ToJsBool(_retValue);
+	FreeGdBool(_retValue); 
+	return _finalRetValue
+}
 function gdspx_scene_change_scene_to_file(path) {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_scene_change_scene_to_file']; 
 	

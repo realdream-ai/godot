@@ -219,6 +219,10 @@ void gdspx_res_read_all_text(GdString* path,GdString* ret_val) {
 	*ret_val = resMgr->read_all_text(*path);
 }
 EMSCRIPTEN_KEEPALIVE
+void gdspx_res_has_file(GdString* path,GdBool* ret_val) {
+	*ret_val = resMgr->has_file(*path);
+}
+EMSCRIPTEN_KEEPALIVE
 void gdspx_scene_change_scene_to_file(GdString* path) {
 	 sceneMgr->change_scene_to_file(*path);
 }

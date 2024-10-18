@@ -241,6 +241,7 @@ typedef void (*GDExtensionSpxPlatformIsDebugMode)(GdBool* ret_value);
 // SpxRes
 typedef void (*GDExtensionSpxResGetImageSize)(GdString path, GdVec2* ret_value);
 typedef void (*GDExtensionSpxResReadAllText)(GdString path, GdString* ret_value);
+typedef void (*GDExtensionSpxResHasFile)(GdString path, GdBool* ret_value);
 // SpxScene
 typedef void (*GDExtensionSpxSceneChangeSceneToFile)(GdString path);
 typedef void (*GDExtensionSpxSceneReloadCurrentScene)(GdInt* ret_value);
