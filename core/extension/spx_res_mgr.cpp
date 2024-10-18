@@ -41,6 +41,7 @@ GdVec2 SpxResMgr::get_image_size(GdString path) {
 	} else {
 		print_error("can not find a texture: " + path_str);
 	}
+	return GdVec2(1,1);
 }
 GdString SpxResMgr::read_all_text(GdString p_path) {
 	auto path = SpxStr(p_path);

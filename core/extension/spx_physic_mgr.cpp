@@ -136,11 +136,11 @@ GdInt SpxPhysicMgr::check_touched_camera_boundaries(GdObj obj) {
 	bool is_colliding_top = sprite_shape->collide(sprite_transform, horizontal_edge_shape, top_edge_transform);
 	bool is_colliding_bottom = sprite_shape->collide(sprite_transform, horizontal_edge_shape, bottom_edge_transform);
 	GdInt result = 0;
-	result += is_colliding_top ? 1 << BOUND_CAM_TOP : 0;
-	result += is_colliding_right ? 1 << BOUND_CAM_RIGHT : 0;
-	result += is_colliding_bottom ? 1 << BOUND_CAM_BOTTOM : 0;
-	result += is_colliding_left ? 1 << BOUND_CAM_LEFT : 0;
-	return is_colliding_left || is_colliding_right || is_colliding_top || is_colliding_bottom;
+	result += is_colliding_top ? BOUND_CAM_TOP : 0;
+	result += is_colliding_right ?  BOUND_CAM_RIGHT : 0;
+	result += is_colliding_bottom ? BOUND_CAM_BOTTOM : 0;
+	result += is_colliding_left ? BOUND_CAM_LEFT : 0;
+	return result;
 }
 GdBool SpxPhysicMgr::check_touched_camera_boundary(GdObj obj, GdInt board_type) {
 	auto result = check_touched_camera_boundaries(obj);
