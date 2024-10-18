@@ -195,6 +195,7 @@ GdBool SpxSpriteMgr::check_collision(GdObj obj, GdObj target, GdBool is_src_trig
 
 GdBool SpxSpriteMgr::check_collision_with_point(GdObj obj, GdVec2 point, GdBool is_trigger) {
 	check_and_get_sprite_r(false)
+	point.y = - point.y;
 	return sprite->check_collision_with_point(point, is_trigger);
 }
 

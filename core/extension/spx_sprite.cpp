@@ -475,11 +475,20 @@ GdBool SpxSprite::check_collision(SpxSprite *other, GdBool is_src_trigger, GdBoo
 }
 
 GdBool SpxSprite::check_collision_with_point(GdVec2 point, GdBool is_trigger) {
+	auto pos = this->get_position();
 	auto this_shape = is_trigger ? this->trigger2d : this->collider2d;
 	if (!this_shape->get_shape().is_valid()) {
 		return false;
 	}
-	return this_shape->get_shape()->_edit_is_selected_on_click(point, 0);
+
+	Ref<CircleShape2D> point_shape;
+	point_shape.instantiate();
+	point_shape->set_radius(3);
+
+	Transform2D point_transform(0, point);
+	Transform2D sprite_transform = get_global_transform();
+	bool is_colliding = this_shape->get_shape()->collide(sprite_transform, point_shape, point_transform);
+	return is_colliding;
 }
 void SpxSprite::set_render_scale(GdVec2 scale) {
 	anim2d->set_scale(scale);
