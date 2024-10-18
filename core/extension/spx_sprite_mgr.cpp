@@ -295,6 +295,15 @@ GdVec2 SpxSpriteMgr::get_scale(GdObj obj) {
 	return sprite->get_scale();
 }
 
+void SpxSpriteMgr::set_render_scale(GdObj obj, GdVec2 scale) {
+	check_and_get_sprite_v()
+	sprite->set_render_scale(scale);
+}
+GdVec2 SpxSpriteMgr::get_render_scale(GdObj obj) {
+	check_and_get_sprite_r(GdVec2())
+	return sprite->get_render_scale();
+}
+
 void SpxSpriteMgr::set_color(GdObj obj, GdColor color) {
 	check_and_get_sprite_v()
 	sprite->set_color(color);
@@ -303,6 +312,7 @@ void SpxSpriteMgr::set_color(GdObj obj, GdColor color) {
 GdColor SpxSpriteMgr::get_color(GdObj obj) {
 	check_and_get_sprite_r(GdColor()) return sprite->get_color();
 }
+
 void SpxSpriteMgr::set_texture_altas(GdObj obj, GdString path, GdRect2 rect2) {
 	check_and_get_sprite_v()
 	sprite->set_texture_altas(path, rect2);

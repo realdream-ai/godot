@@ -79,6 +79,8 @@ public:
 	GdFloat get_rotation(GdObj obj);
 	void set_scale(GdObj obj, GdVec2 scale);
 	GdVec2 get_scale(GdObj obj);
+	void set_render_scale(GdObj obj, GdVec2 scale);
+	GdVec2 get_render_scale(GdObj obj);
 	void set_color(GdObj obj, GdColor color);
 	GdColor get_color(GdObj obj);
 
