@@ -764,7 +764,6 @@ function downloadAndSaveFile(url, savePath) {
                 return response.arrayBuffer(); 
             })
             .then(data => {
-				console.log("aaaassss12",data)
 				resolve(data); 
             })
             .catch(error => {
@@ -775,7 +774,6 @@ function downloadAndSaveFile(url, savePath) {
 }
 
 document.getElementById('startButton').onclick = function () {
-	console.log("aaaaaaaaaaaaaaa2")
     const url = 'http://127.0.0.1:8020/demo.zip'; // TODO replace it to the real URL
     const savePath = '/tmp/preload.zip';  
     downloadAndSaveFile(url, savePath).then(function (zipData) {
