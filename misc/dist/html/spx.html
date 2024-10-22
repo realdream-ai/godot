@@ -283,9 +283,9 @@ a:active {
 		<div id="tabs-buttons">
 			<button id="btn-tab-loader" class="btn tab-btn" onclick="showTab('loader')">Loader</button>
 			<button id="btn-tab-editor" class="btn tab-btn" disabled="disabled" onclick="showTab('editor')">Editor</button>
-			<button id="btn-close-editor" class="btn close-btn" disabled="disabled" onclick="closeEditor()">×</button>
+			<button id="btn-close-editor" class="btn close-btn" disabled="disabled" onclick="closeEditor()">?</button>
 			<button id="btn-tab-game" class="btn tab-btn" disabled="disabled" onclick="showTab('game')">Game</button>
-			<button id="btn-close-game" class="btn close-btn" disabled="disabled" onclick="closeGame()">×</button>
+			<button id="btn-close-game" class="btn close-btn" disabled="disabled" onclick="closeGame()">?</button>
 			<button id="btn-tab-update" class="btn tab-btn" style="display: none;">Update</button>
 		</div>
 		<div id="tabs">
@@ -769,14 +769,14 @@ function downloadAndSaveFile(url, savePath) {
             })
             .catch(error => {
                 console.error('Error downloading file:', error);
-                reject(error); // 处理错误
+                reject(error); // ??????
             });
     });
 }
 
 document.getElementById('startButton').onclick = function () {
 	console.log("aaaaaaaaaaaaaaa2")
-    const url = 'http://127.0.0.1:8016/demo.zip'; // TODO replace it to the real URL
+    const url = 'http://127.0.0.1:8020/demo.zip'; // TODO replace it to the real URL
     const savePath = '/tmp/preload.zip';  
     downloadAndSaveFile(url, savePath).then(function (zipData) {
         console.log('File downloaded and saved successfully');
