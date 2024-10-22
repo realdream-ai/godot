@@ -281,6 +281,12 @@ a:active {
 			</div>
 		</div>
 		<div id="tabs-buttons">
+			<button id="btn-tab-loader" class="btn tab-btn" onclick="showTab('loader')">Loader</button>
+			<button id="btn-tab-editor" class="btn tab-btn" disabled="disabled" onclick="showTab('editor')">Editor</button>
+			<button id="btn-close-editor" class="btn close-btn" disabled="disabled" onclick="closeEditor()">×</button>
+			<button id="btn-tab-game" class="btn tab-btn" disabled="disabled" onclick="showTab('game')">Game</button>
+			<button id="btn-close-game" class="btn close-btn" disabled="disabled" onclick="closeGame()">×</button>
+			<button id="btn-tab-update" class="btn tab-btn" style="display: none;">Update</button>
 		</div>
 		<div id="tabs">
 			<div id="tab-loader">
@@ -435,7 +441,6 @@ function clearPersistence() { // eslint-disable-line no-unused-vars
 	Promise.all([
 		deleteDB('/home/web_user'),
 	]).then(function (results) {
-		console.log("=====video_driver ===222" , video_driver)
 		alert('Done.');
 	}).catch(function (err) {
 		alert('Error deleting local files. Please retry after reloading the page.');
@@ -445,7 +450,6 @@ function clearPersistence() { // eslint-disable-line no-unused-vars
 function selectVideoMode() {
 	const select = document.getElementById('videoMode');
 	video_driver = select.selectedOptions[0].value;
-	console.log("=====video_driver ===222" , video_driver)
 }
 
 const tabs = [
@@ -468,6 +472,11 @@ function showTab(name) {
 }
 
 function setButtonEnabled(id, enabled) {
+	if (enabled) {
+		document.getElementById(id).disabled = '';
+	} else {
+		document.getElementById(id).disabled = 'disabled';
+	}
 }
 
 function setLoaderEnabled(enabled) {
@@ -587,6 +596,17 @@ function startEditor(zip) {
 		statusMode = mode;
 	};
 
+	setStatusNotice = function (text) {
+		while (statusNotice.lastChild) {
+			statusNotice.removeChild(statusNotice.lastChild);
+		}
+		const lines = text.split('\n');
+		lines.forEach((line) => {
+			statusNotice.appendChild(document.createTextNode(line));
+			statusNotice.appendChild(document.createElement('br'));
+		});
+	};
+
 	const gameConfig = {
 		'persistentPaths': persistentPaths,
 		'unloadAfterInit': false,
@@ -599,39 +619,121 @@ function startEditor(zip) {
 			game = null;
 		},
 	};
+
+	let OnEditorExit = function () {
+		showTab('loader');
+		setLoaderEnabled(true);
+	};
 	function Execute(args) {
-		console.log(args)
-		if (game) {
-			console.error('A game is already running. Close it first');
-			return;
+		const is_editor = args.filter(function (v) {
+			return v === '--editor' || v === '-e';
+		}).length !== 0;
+		const is_project_manager = args.filter(function (v) {
+			return v === '--project-manager';
+		}).length !== 0;
+		const is_game = !is_editor && !is_project_manager;
+		if (video_driver) {
+			args.push('--rendering-driver', video_driver);
 		}
-		selectVideoMode();
-		setLoaderEnabled(false);
-		setGameTabEnabled(true);
-		game = new Engine(gameConfig);
-		showTab('game');
-		game.init('godot.editor').then(function () {
+
+		if (is_game) {
+			if (game) {
+				console.error('A game is already running. Close it first');
+				return;
+			}
+			setGameTabEnabled(true);
+			game = new Engine(gameConfig);
+			showTab('game');
+			game.init().then(function () {
+				requestAnimationFrame(function () {
+					game.start({ 'args': args, 'canvas': gameCanvas }).then(function () {
+						gameCanvas.focus();
+					});
+				});
+			});
+		} else { // New editor instances will be run in the same canvas. We want to wait for it to exit.
+			OnEditorExit = function (code) {
+				setLoaderEnabled(true);
+				setTimeout(function () {
+					editor.init().then(function () {
+						setLoaderEnabled(false);
+						OnEditorExit = function () {
+							showTab('loader');
+							setLoaderEnabled(true);
+						};
+						editor.start({ 'args': args, 'persistentDrops': is_project_manager, 'canvas': editorCanvas });
+					});
+				}, 0);
+				OnEditorExit = null;
+			};
+		}
+	}
+
+	const editorConfig = {
+		'unloadAfterInit': false,
+		'onProgress': function progressFunction(current, total) {
+			if (total > 0) {
+				statusProgressInner.style.width = `${(current / total) * 100}%`;
+				setStatusMode('progress');
+				if (current === total) {
+					// wait for progress bar animation
+					setTimeout(() => {
+						setStatusMode('indeterminate');
+					}, 100);
+				}
+			} else {
+				setStatusMode('indeterminate');
+			}
+		},
+		'canvas': editorCanvas,
+		'canvasResizePolicy': 0,
+		'onExit': function () {
+			editorCanvas = replaceCanvas(editorCanvas);
+			if (OnEditorExit) {
+				OnEditorExit();
+			}
+		},
+		'onExecute': Execute,
+		'persistentPaths': persistentPaths,
+	};
+	editor = new Engine(editorConfig);
+
+	function displayFailureNotice(err) {
+		const msg = err.message || err;
+		console.error(msg);
+		setStatusNotice(msg);
+		setStatusMode('notice');
+		initializing = false;
+	}
+
+	if (!Engine.isWebGLAvailable()) {
+		displayFailureNotice('WebGL not available');
+	} else {
+		setStatusMode('indeterminate');
+		editor.init('godot.editor').then(function () {
+			if (zip) {
+				editor.copyToFS('/tmp/preload.zip', zip);
+			}
 			try {
 				// Avoid user creating project in the persistent root folder.
 				editor.copyToFS('/home/web_user/keep', new Uint8Array());
 			} catch (e) {
 				// File exists
 			}
-			
-			requestAnimationFrame(function () {
-				game.start({ 
-					//'args': args,
-					//'args': ['--single-window', '--path', '/home/web_user/aaaa', '--editor'],
-					'args': ['--path', '/home/web_user/preload', '--editor-pid', '0'],
-					'canvas': gameCanvas }).then(function () {
-					gameCanvas.focus();
-					setStatusMode('hidden');
-					initializing = false;
-				});
+			selectVideoMode();
+			showTab('editor');
+			setLoaderEnabled(false);
+			const args = ['--project-manager', '--single-window'];
+			if (video_driver) {
+				args.push('--rendering-driver', video_driver);
+			}
+			editor.start({ 'args': args, 'persistentDrops': true }).then(function () {
+				setStatusMode('hidden');
+				initializing = false;
+				console.log("start_game succ!")
 			});
-		});
+		}).catch(displayFailureNotice);
 	}
-	Execute([])
 }
 
 function preloadZip(target) {
@@ -645,12 +747,46 @@ function preloadZip(target) {
 		}
 	});
 }
-
+/*
 document.getElementById('startButton').onclick = function () {
 	preloadZip(document.getElementById('zip-file')).then(function (zip) {
 		startEditor(zip);
 	});
 };
+*/
+function downloadAndSaveFile(url, savePath) {
+    return new Promise(function (resolve, reject) {
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.arrayBuffer(); 
+            })
+            .then(data => {
+				console.log("aaaassss12",data)
+				resolve(data); 
+            })
+            .catch(error => {
+                console.error('Error downloading file:', error);
+                reject(error); // 处理错误
+            });
+    });
+}
+
+document.getElementById('startButton').onclick = function () {
+	console.log("aaaaaaaaaaaaaaa2")
+    const url = 'http://127.0.0.1:8016/demo.zip'; // TODO replace it to the real URL
+    const savePath = '/tmp/preload.zip';  
+    downloadAndSaveFile(url, savePath).then(function (zipData) {
+        console.log('File downloaded and saved successfully');
+		startEditor(zipData);
+    }).catch(function (error) {
+        console.error('Failed to download and save the file:', error);
+    });
+};
+
+
 		</script>
 	</body>
 </html>
