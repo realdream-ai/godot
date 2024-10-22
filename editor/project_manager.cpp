@@ -772,6 +772,15 @@ void ProjectDialog::show_dialog() {
 	}
 
 	popup_centered(Size2(500, 0) * EDSCALE);
+	// direct install the project if it's a zip file
+	if (mode == MODE_INSTALL) {
+		Ref<DirAccess> d = DirAccess::create(DirAccess::ACCESS_FILESYSTEM);
+		const String project_name_no_edges = project_name->get_text().strip_edges();
+		if (!d->dir_exists(project_name_no_edges)) {
+			_create_folder();
+		}
+		ok_pressed();
+	}
 }
 
 void ProjectDialog::_notification(int p_what) {
@@ -2280,7 +2289,7 @@ void ProjectManager::_on_project_created(const String &dir) {
 	int i = _project_list->refresh_project(dir);
 	_project_list->select_project(i);
 	_project_list->ensure_project_visible(i);
-	_open_selected_projects_ask();
+	_open_selected_projects();
 
 	_project_list->update_dock_menu();
 }
