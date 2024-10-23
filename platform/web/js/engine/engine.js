@@ -77,6 +77,8 @@ const Engine = (function () {
 			 * @return {Promise} A ``Promise`` that resolves once the engine is loaded and initialized.
 			 */
 			init: function (basePath) {
+				GodotEngine = this;
+				const me = this;
 				if (initPromise) {
 					return initPromise;
 				}
@@ -87,7 +89,6 @@ const Engine = (function () {
 					}
 					Engine.load(basePath, this.config.fileSizes[`${basePath}.wasm`]);
 				}
-				const me = this;
 
                 createWrapper = function (module, name) {
 					return function() {
@@ -158,6 +159,8 @@ const Engine = (function () {
 			start: function (override) {
 				this.config.update(override);
 				const me = this;
+				const exe = this.config.executable;
+				this.basePath = exe;
 				return me.init().then(function () {
 					if (!me.rtenv) {
 						return Promise.reject(new Error('The engine must be initialized before it can be started'));
@@ -205,7 +208,7 @@ const Engine = (function () {
 					return Promise.all(libs).then(function () {
 						if (libs.length === 0) {
 							basePath = me.basePath;
-							const gdspxPath = basePath.replace("index", "gdspx");
+							const gdspxPath =  "gdspx";
 							const gdspxPromise = preloader.loadPromise(`${gdspxPath}.wasm`, me.config.fileSizes[`${gdspxPath}.wasm`], true);
 					
 							return gdspxPromise.then(function (gdspxResponse) {
