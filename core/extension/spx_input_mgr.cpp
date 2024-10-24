@@ -31,6 +31,16 @@
 #include "spx_input_mgr.h"
 #include "gdextension_spx_ext.h"
 #include "scene/main/window.h"
+
+void SpxInputMgr::on_start() {
+	SpxBaseMgr::on_start();
+	input_proxy = memnew(SpxInputProxy);
+	input_proxy->set_name( "input_proxy");
+	get_spx_root()->add_child(input_proxy);
+	input_proxy->ready();
+	print_line("register keyboard events");
+}
+
 // input
 GdVec2 SpxInputMgr::get_mouse_pos() {
 	auto pos = Input::get_singleton()->get_mouse_position();

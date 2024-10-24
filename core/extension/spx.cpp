@@ -31,10 +31,11 @@
 #include "spx.h"
 #include "gdextension_spx_ext.h"
 #include "scene/main/node.h"
+#include "scene/main/window.h"
 #include "spx_engine.h"
+#include "spx_input_proxy.h"
 #include "spx_sprite.h"
 #include "spx_ui.h"
-#include "scene/main/window.h"
 
 #define SPX_ENGINE SpxEngine::get_singleton()
 bool Spx::initialed = false;
@@ -42,6 +43,7 @@ bool Spx::debug_mode = false;
 
 void Spx::register_types() {
 	ClassDB::register_class<SpxSprite>();
+	ClassDB::register_class<SpxInputProxy>();
 }
 
 void Spx::on_start(void *p_tree) {

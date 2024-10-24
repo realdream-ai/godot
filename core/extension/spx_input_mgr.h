@@ -33,9 +33,16 @@
 
 #include "gdextension_spx_ext.h"
 #include "spx_base_mgr.h"
+#include "spx_input_proxy.h"
+
+
 
 class SpxInputMgr : SpxBaseMgr {
 	SPXCLASS(SpxInputMgr, SpxBaseMgr)
+public:
+	virtual void on_start() override;
+protected:
+	SpxInputProxy *input_proxy;
 public:
 	GdVec2 get_mouse_pos();
 	GdBool get_key(GdInt key);
