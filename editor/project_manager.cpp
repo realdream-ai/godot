@@ -2326,6 +2326,9 @@ void ProjectManager::_open_selected_projects() {
 		args.push_back(path);
 
 		args.push_back("--editor");
+		args.push_back("--headless");
+		args.push_back("--quit-after");
+		args.push_back("30");
 
 		Error err = OS::get_singleton()->create_instance(args);
 		ERR_FAIL_COND(err);
