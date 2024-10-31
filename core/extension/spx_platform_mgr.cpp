@@ -36,9 +36,8 @@ void SpxPlatformMgr::set_window_position(GdVec2 pos) {
 	DisplayServer::get_singleton()->window_set_position(Size2i(pos.x, pos.y));
 }
 GdVec2 SpxPlatformMgr::get_window_position() {
-	auto size = DisplayServer::get_singleton()->window_get_size();
-	return GdVec2(size.x, size.y);
-
+	auto pos = DisplayServer::get_singleton()->window_get_position();
+	return GdVec2(pos.x, pos.y);
 }
 void SpxPlatformMgr::set_window_size(GdInt width, GdInt height) {
 	DisplayServer::get_singleton()->window_set_size(Size2i(width, height));
