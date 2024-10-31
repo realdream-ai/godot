@@ -179,6 +179,14 @@ void gdspx_physic_check_touched_camera_boundary(GdObj* obj,GdInt* board_type,GdB
 	*ret_val = physicMgr->check_touched_camera_boundary(*obj, *board_type);
 }
 EMSCRIPTEN_KEEPALIVE
+void gdspx_platform_set_window_position(GdVec2* pos) {
+	 platformMgr->set_window_position(*pos);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_platform_get_window_position(GdVec2* ret_val) {
+	*ret_val = platformMgr->get_window_position();
+}
+EMSCRIPTEN_KEEPALIVE
 void gdspx_platform_set_window_size(GdInt* width,GdInt* height) {
 	 platformMgr->set_window_size(*width, *height);
 }

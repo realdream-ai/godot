@@ -149,6 +149,12 @@ static void gdextension_spx_physic_check_collision(GdVec2 from,GdVec2 to,GdInt c
 static void gdextension_spx_physic_check_touched_camera_boundary(GdObj obj,GdInt board_type,GdBool* ret_val) {
 	*ret_val = physicMgr->check_touched_camera_boundary(obj, board_type);
 }
+static void gdextension_spx_platform_set_window_position(GdVec2 pos) {
+	 platformMgr->set_window_position(pos);
+}
+static void gdextension_spx_platform_get_window_position(GdVec2* ret_val) {
+	*ret_val = platformMgr->get_window_position();
+}
 static void gdextension_spx_platform_set_window_size(GdInt width,GdInt height) {
 	 platformMgr->set_window_size(width, height);
 }
@@ -623,6 +629,8 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_physic_raycast);
 	REGISTER_SPX_INTERFACE_FUNC(spx_physic_check_collision);
 	REGISTER_SPX_INTERFACE_FUNC(spx_physic_check_touched_camera_boundary);
+	REGISTER_SPX_INTERFACE_FUNC(spx_platform_set_window_position);
+	REGISTER_SPX_INTERFACE_FUNC(spx_platform_get_window_position);
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_set_window_size);
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_get_window_size);
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_set_window_title);

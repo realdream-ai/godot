@@ -279,6 +279,22 @@ function gdspx_physic_check_touched_camera_boundary(obj,board_type) {
 	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
+function gdspx_platform_set_window_position(pos) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_platform_set_window_position']; 
+	
+	_arg0 = ToGdVec2(pos);
+	_gdFuncPtr(_arg0);
+	FreeGdVec2(_arg0); 
+
+}
+function gdspx_platform_get_window_position() {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_platform_get_window_position']; 
+	_retValue = AllocGdVec2();
+	_gdFuncPtr(_retValue);
+	_finalRetValue = ToJsVec2(_retValue);
+	FreeGdVec2(_retValue); 
+	return _finalRetValue
+}
 function gdspx_platform_set_window_size(width,height) {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_platform_set_window_size']; 
 	

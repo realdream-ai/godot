@@ -37,6 +37,8 @@
 class SpxPlatformMgr : SpxBaseMgr {
 	SPXCLASS(SpxPlatformMgr, SpxBaseMgr)
 public:
+	void set_window_position(GdVec2 pos);
+	GdVec2 get_window_position();
 	void set_window_size(GdInt width, GdInt height);
 	GdVec2 get_window_size();
 	void set_window_title(GdString title);

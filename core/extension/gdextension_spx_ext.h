@@ -230,6 +230,8 @@ typedef void (*GDExtensionSpxPhysicRaycast)(GdVec2 from, GdVec2 to, GdInt collis
 typedef void (*GDExtensionSpxPhysicCheckCollision)(GdVec2 from, GdVec2 to, GdInt collision_mask, GdBool collide_with_areas, GdBool collide_with_bodies, GdBool* ret_value);
 typedef void (*GDExtensionSpxPhysicCheckTouchedCameraBoundary)(GdObj obj,GdInt board_type, GdBool* ret_value);
 // SpxPlatform
+typedef void (*GDExtensionSpxPlatformSetWindowPosition)(GdVec2 pos);
+typedef void (*GDExtensionSpxPlatformGetWindowPosition)(GdVec2* ret_value);
 typedef void (*GDExtensionSpxPlatformSetWindowSize)(GdInt width, GdInt height);
 typedef void (*GDExtensionSpxPlatformGetWindowSize)(GdVec2* ret_value);
 typedef void (*GDExtensionSpxPlatformSetWindowTitle)(GdString title);
