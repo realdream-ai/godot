@@ -134,7 +134,6 @@ extern EMSCRIPTEN_KEEPALIVE int godot_web_main(int argc, char *argv[]) {
 	if(install_project_name == ""){
 		install_project_name = "Preload";
 	}
-	print_line("get_install_project_name ", install_project_name);
 #ifdef TOOLS_ENABLED
 	if (Engine::get_singleton()->is_project_manager_hint() && FileAccess::exists("/tmp/preload.zip")) {
 		PackedStringArray ps;

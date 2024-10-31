@@ -551,7 +551,6 @@ void ProjectDialog::ok_pressed() {
 					String name = String::utf8(fname);
 					if (name.ends_with("project.godot")) {
 						zip_root = name.substr(0, name.rfind("project.godot"));
-						print_line("name: " + name + " zip_root: " + zip_root);
 						break;
 					}
 
@@ -572,7 +571,6 @@ void ProjectDialog::ok_pressed() {
 					}
 
 					String path = String::utf8(fname);
-					print_line("unzip: " + path);
 					if (zip_root != "" && (path.is_empty() || path == zip_root || !zip_root.is_subsequence_of(path))) {
 						//
 					} else if (path.ends_with("/")) { // a dir
