@@ -46,6 +46,7 @@ const GodotAudio = {
 			// opts['latencyHint'] = latency / 1000;
 			const ctx = new (window.AudioContext || window.webkitAudioContext)(opts);
 			GodotAudio.ctx = ctx;
+			GodotAudio.audio_mix_rate = mix_rate
 			ctx.onstatechange = function () {
 				let state = 0;
 				switch (ctx.state) {
@@ -227,6 +228,14 @@ const GodotAudioWorklet = {
 
 		create: function (channels) {
 			const path = GodotConfig.locate_file('godot.audio.worklet.js');
+			if (GodotAudio.ctx == null) {
+				const opts = {};
+				if (GodotAudio.audio_mix_rate) {
+					opts['sampleRate'] = GodotAudio.audio_mix_rate;
+				}
+				GodotAudio.ctx = new (window.AudioContext || window.webkitAudioContext)(opts);
+				console.warn("Recreate a audio context");
+			}
 			GodotAudioWorklet.promise = GodotAudio.ctx.audioWorklet.addModule(path).then(function () {
 				GodotAudioWorklet.worklet = new AudioWorkletNode(
 					GodotAudio.ctx,
