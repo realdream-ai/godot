@@ -551,6 +551,7 @@ void ProjectDialog::ok_pressed() {
 					String name = String::utf8(fname);
 					if (name.ends_with("project.godot")) {
 						zip_root = name.substr(0, name.rfind("project.godot"));
+						print_line("name: " + name + " zip_root: " + zip_root);
 						break;
 					}
 
@@ -571,8 +572,8 @@ void ProjectDialog::ok_pressed() {
 					}
 
 					String path = String::utf8(fname);
-
-					if (path.is_empty() || path == zip_root || !zip_root.is_subsequence_of(path)) {
+					print_line("unzip: " + path);
+					if (zip_root != "" && (path.is_empty() || path == zip_root || !zip_root.is_subsequence_of(path))) {
 						//
 					} else if (path.ends_with("/")) { // a dir
 						path = path.substr(0, path.length() - 1);
@@ -2709,9 +2710,10 @@ void ProjectManager::_install_project(const String &p_zip_path, const String &p_
 
 void ProjectManager::_files_dropped(PackedStringArray p_files) {
 	// TODO: Support installing multiple ZIPs at the same time?
-	if (p_files.size() == 1 && p_files[0].ends_with(".zip")) {
+	if (p_files.size() == 2 && p_files[0].ends_with(".zip")) {
 		const String &file = p_files[0];
-		_install_project(file, file.get_file().get_basename().capitalize());
+		const String &project_name = p_files[1];
+		_install_project(file, project_name);
 		return;
 	}
 

@@ -130,10 +130,16 @@ extern EMSCRIPTEN_KEEPALIVE int godot_web_main(int argc, char *argv[]) {
 
 	Main::start();
 	os->get_main_loop()->initialize();
+	String install_project_name = Engine::get_singleton()->get_install_project_name();
+	if(install_project_name == ""){
+		install_project_name = "Preload";
+	}
+	print_line("get_install_project_name ", install_project_name);
 #ifdef TOOLS_ENABLED
 	if (Engine::get_singleton()->is_project_manager_hint() && FileAccess::exists("/tmp/preload.zip")) {
 		PackedStringArray ps;
 		ps.push_back("/tmp/preload.zip");
+		ps.push_back(install_project_name);
 		SceneTree::get_singleton()->get_root()->emit_signal(SNAME("files_dropped"), ps);
 	}
 #endif

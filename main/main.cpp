@@ -172,6 +172,7 @@ static int audio_driver_idx = -1;
 static bool single_window = false;
 static bool editor = false;
 static bool project_manager = false;
+static String install_project_name = "";
 static bool cmdline_tool = false;
 static String locale;
 static bool show_help = false;
@@ -1224,6 +1225,11 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 			editor = true;
 		} else if (I->get() == "-p" || I->get() == "--project-manager") { // starts project manager
 			project_manager = true;
+		}  else if (I->get() == "--install_project_name") { // install project zip name
+			if (I->next()) {
+				install_project_name = I->next()->get();
+				N = I->next()->next();
+			} 
 		} else if (I->get() == "--debug-server") {
 			if (I->next()) {
 				debug_server_uri = I->next()->get();
@@ -1682,6 +1688,10 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 
 	if (project_manager) {
 		Engine::get_singleton()->set_project_manager_hint(true);
+	}
+	if (install_project_name != "") {
+		print_line("install_project_name = ", install_project_name);
+		Engine::get_singleton()->set_install_project_name(install_project_name);
 	}
 #endif
 
