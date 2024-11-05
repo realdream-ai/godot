@@ -108,8 +108,9 @@ public:
 	void alert(const String &p_alert, const String &p_title = "ALERT!") override;
 
 	Error open_dynamic_library(const String p_path, void *&p_library_handle, bool p_also_set_library_path = false, String *r_resolved_path = nullptr) override;
-
+	bool indirect_call_dynamic_library(const String p_name, void* p_get_proc_address, void* p_library, void* r_initialization) override;
 	void resume_audio();
+	void register_spx_callbacks();
 
 	OS_Web();
 };

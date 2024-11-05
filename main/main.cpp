@@ -38,6 +38,7 @@
 #include "core/extension/extension_api_dump.h"
 #include "core/extension/gdextension_interface_dump.gen.h"
 #include "core/extension/gdextension_manager.h"
+#include "core/extension/spx.h"
 #include "core/input/input.h"
 #include "core/input/input_map.h"
 #include "core/io/dir_access.h"
@@ -171,6 +172,7 @@ static int audio_driver_idx = -1;
 static bool single_window = false;
 static bool editor = false;
 static bool project_manager = false;
+static String install_project_name = "";
 static bool cmdline_tool = false;
 static String locale;
 static bool show_help = false;
@@ -1223,6 +1225,11 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 			editor = true;
 		} else if (I->get() == "-p" || I->get() == "--project-manager") { // starts project manager
 			project_manager = true;
+		}  else if (I->get() == "--install_project_name") { // install project zip name
+			if (I->next()) {
+				install_project_name = I->next()->get();
+				N = I->next()->next();
+			} 
 		} else if (I->get() == "--debug-server") {
 			if (I->next()) {
 				debug_server_uri = I->next()->get();
@@ -1681,6 +1688,10 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 
 	if (project_manager) {
 		Engine::get_singleton()->set_project_manager_hint(true);
+	}
+	if (install_project_name != "") {
+		print_line("install_project_name = ", install_project_name);
+		Engine::get_singleton()->set_install_project_name(install_project_name);
 	}
 #endif
 
@@ -3167,7 +3178,7 @@ bool Main::start() {
 	}
 
 	OS::get_singleton()->set_main_loop(main_loop);
-
+	Spx::register_types();
 	SceneTree *sml = Object::cast_to<SceneTree>(main_loop);
 	if (sml) {
 #ifdef DEBUG_ENABLED
@@ -3503,6 +3514,8 @@ bool Main::start() {
 			}
 
 			OS::get_singleton()->benchmark_end_measure("game_load");
+
+			Spx::on_start(sml);
 		}
 
 #ifdef TOOLS_ENABLED
@@ -3636,7 +3649,7 @@ bool Main::iteration() {
 
 		PhysicsServer2D::get_singleton()->sync();
 		PhysicsServer2D::get_singleton()->flush_queries();
-
+		Spx::on_fixed_update(physics_step * time_scale);
 		if (OS::get_singleton()->get_main_loop()->physics_process(physics_step * time_scale)) {
 			PhysicsServer3D::get_singleton()->end_sync();
 			PhysicsServer2D::get_singleton()->end_sync();
@@ -3700,6 +3713,7 @@ bool Main::iteration() {
 	process_max = MAX(process_ticks, process_max);
 	uint64_t frame_time = OS::get_singleton()->get_ticks_usec() - ticks;
 
+	Spx::on_update(process_step * time_scale);
 	for (int i = 0; i < ScriptServer::get_language_count(); i++) {
 		ScriptServer::get_language(i)->frame();
 	}
@@ -3709,7 +3723,6 @@ bool Main::iteration() {
 	if (EngineDebugger::is_active()) {
 		EngineDebugger::get_singleton()->iteration(frame_time, process_ticks, physics_process_ticks, physics_step);
 	}
-
 	frames++;
 	Engine::get_singleton()->_process_frames++;
 
@@ -3801,6 +3814,10 @@ void Main::cleanup(bool p_force) {
 	if (!p_force) {
 		ERR_FAIL_COND(!_start_success);
 	}
+
+#ifdef TOOLS_ENABLED
+	Spx::on_destroy();
+#endif
 
 	for (int i = 0; i < TextServerManager::get_singleton()->get_interface_count(); i++) {
 		TextServerManager::get_singleton()->get_interface(i)->cleanup();

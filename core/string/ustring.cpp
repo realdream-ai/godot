@@ -1072,6 +1072,12 @@ String String::_camelcase_to_underscore() const {
 	return new_string.to_lower();
 }
 
+String String::clone() const {
+	String s;
+	s.copy_from_unchecked(&get_data()[0], length());
+	return s;
+}
+
 String String::capitalize() const {
 	String aux = this->_camelcase_to_underscore().replace("_", " ").strip_edges();
 	String cap;

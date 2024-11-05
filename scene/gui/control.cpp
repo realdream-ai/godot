@@ -3135,6 +3135,12 @@ Control *Control::make_custom_tooltip(const String &p_text) const {
 void Control::_notification(int p_notification) {
 	ERR_MAIN_THREAD_GUARD;
 	switch (p_notification) {
+		case NOTIFICATION_PREDELETE: {
+			if (spx_owner != nullptr) {
+				spx_owner->on_destroy_call();
+			}
+		} break;
+
 		case NOTIFICATION_POSTINITIALIZE: {
 			data.initialized = true;
 

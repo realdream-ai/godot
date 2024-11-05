@@ -571,8 +571,7 @@ void ProjectDialog::ok_pressed() {
 					}
 
 					String path = String::utf8(fname);
-
-					if (path.is_empty() || path == zip_root || !zip_root.is_subsequence_of(path)) {
+					if (zip_root != "" && (path.is_empty() || path == zip_root || !zip_root.is_subsequence_of(path))) {
 						//
 					} else if (path.ends_with("/")) { // a dir
 						path = path.substr(0, path.length() - 1);
@@ -772,6 +771,15 @@ void ProjectDialog::show_dialog() {
 	}
 
 	popup_centered(Size2(500, 0) * EDSCALE);
+	// direct install the project if it's a zip file
+	if (mode == MODE_INSTALL) {
+		Ref<DirAccess> d = DirAccess::create(DirAccess::ACCESS_FILESYSTEM);
+		const String project_name_no_edges = project_name->get_text().strip_edges();
+		if (!d->dir_exists(project_name_no_edges)) {
+			_create_folder();
+		}
+		ok_pressed();
+	}
 }
 
 void ProjectDialog::_notification(int p_what) {
@@ -2280,7 +2288,7 @@ void ProjectManager::_on_project_created(const String &dir) {
 	int i = _project_list->refresh_project(dir);
 	_project_list->select_project(i);
 	_project_list->ensure_project_visible(i);
-	_open_selected_projects_ask();
+	_open_selected_projects();
 
 	_project_list->update_dock_menu();
 }
@@ -2317,6 +2325,9 @@ void ProjectManager::_open_selected_projects() {
 		args.push_back(path);
 
 		args.push_back("--editor");
+		args.push_back("--headless");
+		args.push_back("--quit-after");
+		args.push_back("30");
 
 		Error err = OS::get_singleton()->create_instance(args);
 		ERR_FAIL_COND(err);
@@ -2697,9 +2708,10 @@ void ProjectManager::_install_project(const String &p_zip_path, const String &p_
 
 void ProjectManager::_files_dropped(PackedStringArray p_files) {
 	// TODO: Support installing multiple ZIPs at the same time?
-	if (p_files.size() == 1 && p_files[0].ends_with(".zip")) {
+	if (p_files.size() == 2 && p_files[0].ends_with(".zip")) {
 		const String &file = p_files[0];
-		_install_project(file, file.get_file().get_basename().capitalize());
+		const String &project_name = p_files[1];
+		_install_project(file, project_name);
 		return;
 	}
 

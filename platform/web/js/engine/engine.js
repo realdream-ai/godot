@@ -8,6 +8,8 @@
  * @module Engine
  * @header Web export JavaScript reference
  */
+var GodotModule;
+var GodotEngine;
 const Engine = (function () {
 	const preloader = new Preloader();
 
@@ -75,6 +77,8 @@ const Engine = (function () {
 			 * @return {Promise} A ``Promise`` that resolves once the engine is loaded and initialized.
 			 */
 			init: function (basePath) {
+				GodotEngine = this;
+				const me = this;
 				if (initPromise) {
 					return initPromise;
 				}
@@ -85,7 +89,12 @@ const Engine = (function () {
 					}
 					Engine.load(basePath, this.config.fileSizes[`${basePath}.wasm`]);
 				}
-				const me = this;
+
+                createWrapper = function (module, name) {
+					return function() {
+						return module["asm"][name].apply(null, arguments);
+					};
+				}
 				function doInit(promise) {
 					// Care! Promise chaining is bogus with old emscripten versions.
 					// This caused a regression with the Mono build (which uses an older emscripten version).
@@ -93,7 +102,11 @@ const Engine = (function () {
 					return new Promise(function (resolve, reject) {
 						promise.then(function (response) {
 							const cloned = new Response(response.clone().body, { 'headers': [['content-type', 'application/wasm']] });
-							Godot(me.config.getModuleConfig(loadPath, cloned)).then(function (module) {
+							// Now proceed with Godot and other logic
+							gdmodule = me.config.getModuleConfig(loadPath, cloned);
+							Godot(gdmodule).then(function (module) {
+								GodotModule = gdmodule
+								GodotModule._malloc = createWrapper(gdmodule,"malloc");
 								const paths = me.config.persistentPaths;
 								module['initFS'](paths).then(function (err) {
 									me.rtenv = module;
@@ -103,7 +116,7 @@ const Engine = (function () {
 									resolve();
 								});
 							});
-						});
+						}).catch(reject); // Reject if the original promise fails
 					});
 				}
 				preloader.setProgressFunc(this.config.onProgress);
@@ -146,11 +159,14 @@ const Engine = (function () {
 			start: function (override) {
 				this.config.update(override);
 				const me = this;
+				const exe = this.config.executable;
+				this.basePath = exe;
 				return me.init().then(function () {
 					if (!me.rtenv) {
 						return Promise.reject(new Error('The engine must be initialized before it can be started'));
 					}
 
+					initPromise = null
 					let config = {};
 					try {
 						config = me.config.getGodotConfig(function () {
@@ -169,9 +185,14 @@ const Engine = (function () {
 							+ 'Enable "Extensions Support" for your export preset and/or build your custom template with "dlink_enabled=yes".'));
 					}
 					me.config.gdextensionLibs.forEach(function (lib) {
+						// gdspx is special, it must be loaded before the others.
+						if(lib.startsWith('gdspx')) {
+							console.log('Loading gdspx dynamic library:', lib);
+							return 
+						}
 						libs.push(me.rtenv['loadDynamicLibrary'](lib, { 'loadAsync': true }));
 					});
-					return Promise.all(libs).then(function () {
+					function executeMainLogic() {
 						return new Promise(function (resolve, reject) {
 							preloader.preloadedFiles.forEach(function (file) {
 								me.rtenv['copyToFS'](file.path, file.buffer);
@@ -184,7 +205,35 @@ const Engine = (function () {
 							}
 							resolve();
 						});
+					}
+					return Promise.all(libs).then(function () {
+						if (libs.length === 0) {
+							basePath = me.basePath;
+							const gdspxPath =  "gdspx";
+							const gdspxPromise = preloader.loadPromise(`${gdspxPath}.wasm`, me.config.fileSizes[`${gdspxPath}.wasm`], true);
+					
+							return gdspxPromise.then(function (gdspxResponse) {
+								const go = new Go();
+								const gdspxCloned = new Response(gdspxResponse.clone().body, { 'headers': [['content-type', 'application/wasm']] });
+								const goModuleConfig = me.config.getModuleConfig(loadPath, gdspxCloned);
+					
+								return new Promise(function (resolve, reject) {
+										goModuleConfig.instantiateWasm(go.importObject, function (goWasmInstance, goWasmModule) {
+											go.run(goWasmInstance);
+											me.goWasm = {
+												goWasmInit: window.goWasmInit,
+											};
+											me.goWasm.goWasmInit();
+											resolve(); 
+										});
+									});
+								}).then(function () {
+									return executeMainLogic();
+								}); 
+						}
+						return executeMainLogic();
 					});
+					
 				});
 			},
 
@@ -202,9 +251,11 @@ const Engine = (function () {
 			 * @return {Promise} Promise that resolves once the game started.
 			 */
 			startGame: function (override) {
+				GodotEngine = this;
 				this.config.update(override);
 				// Add main-pack argument.
 				const exe = this.config.executable;
+				this.basePath = exe;
 				const pack = this.config.mainPack || `${exe}.pck`;
 				this.config.args = ['--main-pack', pack].concat(this.config.args);
 				// Start and init with execName as loadPath if not inited.

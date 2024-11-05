@@ -729,7 +729,12 @@ Error GDExtension::open_library(const String &p_path, const String &p_entry_symb
 #endif
 
 	void *entry_funcptr = nullptr;
-
+	
+	initialization = GDExtensionInitialization();
+	if (OS::get_singleton()->indirect_call_dynamic_library(p_entry_symbol, (void*)&gdextension_get_proc_address, (void*)this, (void*)&initialization)) {
+		level_initialized = -1;
+		return OK;
+	}
 	err = OS::get_singleton()->get_dynamic_library_symbol_handle(library, p_entry_symbol, entry_funcptr, false);
 
 	if (err != OK) {

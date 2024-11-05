@@ -36,11 +36,15 @@
 
 #include "core/config/project_settings.h"
 #include "core/debugger/engine_debugger.h"
+#include "core/extension/gdextension_interface.h"
+#include "core/extension/spx_engine.h"
+#include "core/extension/gdextension_spx_ext.h"
 #include "drivers/unix/dir_access_unix.h"
 #include "drivers/unix/file_access_unix.h"
 #include "main/main.h"
 
 #include "modules/modules_enabled.gen.h" // For websocket.
+#include "godot_js_spx.h"
 
 #include <dlfcn.h>
 #include <emscripten.h>
@@ -250,6 +254,12 @@ Error OS_Web::open_dynamic_library(const String p_path, void *&p_library_handle,
 
 	return OK;
 }
+bool OS_Web::indirect_call_dynamic_library(const String p_name, void* p_get_proc_address, void* p_library, void* r_initialization){
+	print_line("indirect_call_dynamic_library ",p_name);
+	CharString string = p_name.utf8();
+	godot_js_on_load_gdextension(string.get_data(), p_get_proc_address, p_library, r_initialization);
+	return p_name == "goWasmInit";
+}
 
 OS_Web *OS_Web::get_singleton() {
 	return static_cast<OS_Web *>(OS::get_singleton());
@@ -257,6 +267,7 @@ OS_Web *OS_Web::get_singleton() {
 
 void OS_Web::initialize_joypads() {
 }
+
 
 OS_Web::OS_Web() {
 	char locale_ptr[16];
@@ -277,6 +288,7 @@ OS_Web::OS_Web() {
 	Vector<Logger *> loggers;
 	loggers.push_back(memnew(StdLogger));
 	_set_logger(memnew(CompositeLogger(loggers)));
-
 	FileAccessUnix::close_notification_func = file_access_close_callback;
+	register_spx_callbacks();
 }
+

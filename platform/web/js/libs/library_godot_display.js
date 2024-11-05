@@ -795,7 +795,9 @@ const GodotDisplay = {
 			GodotDisplayVK.init(input_cb);
 		}
 	},
+
 };
 
 autoAddDeps(GodotDisplay, '$GodotDisplay');
 mergeInto(LibraryManager.library, GodotDisplay);
+
