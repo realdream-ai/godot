@@ -402,6 +402,9 @@ public:
 	void remove_resource_tooltip_plugin(const Ref<EditorResourceTooltipPlugin> &p_plugin);
 	Control *create_tooltip_for_path(const String &p_path) const;
 
+	void _delete_files(const Vector<String> &p_files);
+	void _update_files(const Vector<String> &p_files);
+
 	FileSystemDock();
 	~FileSystemDock();
 };

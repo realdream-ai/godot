@@ -393,6 +393,8 @@ public:
 	virtual void window_set_input_text_callback(const Callable &p_callable, WindowID p_window = MAIN_WINDOW_ID) = 0;
 
 	virtual void window_set_drop_files_callback(const Callable &p_callable, WindowID p_window = MAIN_WINDOW_ID) = 0;
+	virtual void window_set_delete_files_callback(const Callable &p_callable, WindowID p_window = MAIN_WINDOW_ID) {};
+	virtual void window_set_update_files_callback(const Callable &p_callable, WindowID p_window = MAIN_WINDOW_ID) {};
 
 	virtual void window_set_title(const String &p_title, WindowID p_window = MAIN_WINDOW_ID) = 0;
 	virtual Size2i window_get_title_size(const String &p_title, WindowID p_window = MAIN_WINDOW_ID) const { return Size2i(); }

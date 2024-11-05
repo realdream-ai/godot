@@ -268,6 +268,29 @@ OS_Web *OS_Web::get_singleton() {
 void OS_Web::initialize_joypads() {
 }
 
+void delete_directory(const String &path) {
+	if (FileAccess::exists(path)) {
+		DirAccess::remove_file_or_error(path);
+	}
+	if (DirAccess::exists(path)) {
+		Ref<DirAccess> dir = DirAccess::create_for_path(path);
+		if (!dir.is_null() &&  dir->change_dir(path) == OK) {
+			dir->erase_contents_recursive();
+			dir->remove(path);
+			dir->change_dir("..");
+		} else {
+			print_line("Failed to open directory: " + path);
+		}
+	}
+}
+void OS_Web::refresh_fs() {
+	godot_js_os_refresh_fs();
+}
+
+Error OS_Web::move_to_trash(const String &p_path) {
+	delete_directory(p_path);
+	return OK; 
+}
 
 OS_Web::OS_Web() {
 	char locale_ptr[16];

@@ -221,6 +221,10 @@ const GodotFS = {
 			}
 			FS.writeFile(path, new Uint8Array(buffer));
 		},
+
+		refresh_fs: function () {
+			GodotFS.sync()
+		},
 	},
 };
 mergeInto(LibraryManager.library, GodotFS);
@@ -297,6 +301,12 @@ const GodotOS = {
 		});
 	},
 
+	godot_js_os_refresh_fs__proxy: 'sync',
+	godot_js_os_refresh_fs__sig: 'v',
+	godot_js_os_refresh_fs: function () {
+		GodotFS.refresh_fs();
+	},
+
 	godot_js_os_has_feature__proxy: 'sync',
 	godot_js_os_has_feature__sig: 'ii',
 	godot_js_os_has_feature: function (p_ftr) {
@@ -319,6 +329,7 @@ const GodotOS = {
 		}
 		return 0;
 	},
+	
 
 	godot_js_os_execute__proxy: 'sync',
 	godot_js_os_execute__sig: 'ii',

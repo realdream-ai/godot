@@ -112,6 +112,8 @@ public:
 	void resume_audio();
 	void register_spx_callbacks();
 
+	Error move_to_trash(const String &p_path) override;
+	void refresh_fs() override;
 	OS_Web();
 };
 
