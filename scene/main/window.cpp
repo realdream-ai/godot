@@ -1165,6 +1165,8 @@ void Window::_update_window_callbacks() {
 	DisplayServer::get_singleton()->window_set_input_event_callback(callable_mp(this, &Window::_window_input), window_id);
 	DisplayServer::get_singleton()->window_set_input_text_callback(callable_mp(this, &Window::_window_input_text), window_id);
 	DisplayServer::get_singleton()->window_set_drop_files_callback(callable_mp(this, &Window::_window_drop_files), window_id);
+	DisplayServer::get_singleton()->window_set_delete_files_callback(callable_mp(this, &Window::_window_delete_files), window_id);
+	DisplayServer::get_singleton()->window_set_update_files_callback(callable_mp(this, &Window::_window_update_files), window_id);
 }
 
 Viewport *Window::get_embedder() const {
@@ -1570,6 +1572,14 @@ void Window::_window_input(const Ref<InputEvent> &p_ev) {
 
 void Window::_window_input_text(const String &p_text) {
 	push_text_input(p_text);
+}
+
+void Window::_window_update_files(const Vector<String> &p_files) {
+	emit_signal(SNAME("update_files"), p_files);
+}
+
+void Window::_window_delete_files(const Vector<String> &p_files) {
+	emit_signal(SNAME("delete_files"), p_files);
 }
 
 void Window::_window_drop_files(const Vector<String> &p_files) {
@@ -2877,6 +2887,9 @@ void Window::_bind_methods() {
 
 	ADD_SIGNAL(MethodInfo("window_input", PropertyInfo(Variant::OBJECT, "event", PROPERTY_HINT_RESOURCE_TYPE, "InputEvent")));
 	ADD_SIGNAL(MethodInfo("files_dropped", PropertyInfo(Variant::PACKED_STRING_ARRAY, "files")));
+	ADD_SIGNAL(MethodInfo("delete_files", PropertyInfo(Variant::PACKED_STRING_ARRAY, "files")));
+	ADD_SIGNAL(MethodInfo("update_files", PropertyInfo(Variant::PACKED_STRING_ARRAY, "files")));
+	
 	ADD_SIGNAL(MethodInfo("mouse_entered"));
 	ADD_SIGNAL(MethodInfo("mouse_exited"));
 	ADD_SIGNAL(MethodInfo("focus_entered"));

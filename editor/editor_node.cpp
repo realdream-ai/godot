@@ -663,6 +663,8 @@ void EditorNode::_notification(int p_what) {
 			get_tree()->set_quit_on_go_back(false);
 #endif
 			get_tree()->get_root()->connect("files_dropped", callable_mp(this, &EditorNode::_dropped_files));
+			get_tree()->get_root()->connect("delete_files", callable_mp(this, &EditorNode::_delete_files));
+			get_tree()->get_root()->connect("update_files", callable_mp(this, &EditorNode::_update_files));
 
 			command_palette->register_shortcuts_as_command();
 
@@ -5994,6 +5996,14 @@ void EditorNode::remove_tool_menu_item(const String &p_name) {
 
 PopupMenu *EditorNode::get_export_as_menu() {
 	return export_as_menu;
+}
+
+void EditorNode::_delete_files(const Vector<String> &p_files) {
+	FileSystemDock::get_singleton()->_delete_files(p_files);
+}
+
+void EditorNode::_update_files(const Vector<String> &p_files) {
+	FileSystemDock::get_singleton()->_update_files(p_files);
 }
 
 void EditorNode::_dropped_files(const Vector<String> &p_files) {

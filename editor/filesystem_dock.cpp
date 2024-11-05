@@ -2288,6 +2288,7 @@ void FileSystemDock::_file_option(int p_option, const Vector<String> &p_selected
 
 			if (remove_files.size() + remove_folders.size() > 0) {
 				remove_dialog->show(remove_folders, remove_files);
+				remove_dialog->presse_ok_immediately();
 			}
 		} break;
 
@@ -2375,6 +2376,14 @@ void FileSystemDock::_file_option(int p_option, const Vector<String> &p_selected
 			ScriptEditor::get_singleton()->open_text_file_create_dialog(dir);
 		} break;
 	}
+}
+
+void FileSystemDock::_delete_files(const Vector<String> &p_files) {
+	_file_option(FILE_REMOVE, p_files);
+}
+
+void FileSystemDock::_update_files(const Vector<String> &p_files) {
+	_file_option(FILE_REIMPORT, p_files);
 }
 
 void FileSystemDock::_resource_created() {

@@ -69,6 +69,8 @@ private:
 	Callable input_event_callback;
 	Callable input_text_callback;
 	Callable drop_files_callback;
+	Callable delete_files_callback;
+	Callable update_files_callback;
 
 	String clipboard;
 	Point2 touches[32];
@@ -120,6 +122,8 @@ private:
 	static void _send_window_event_callback(int p_notification);
 	WASM_EXPORT static void drop_files_js_callback(const char **p_filev, int p_filec);
 	static void _drop_files_js_callback(const Vector<String> &p_files);
+	WASM_EXPORT static void delete_files_js_callback(const char **p_filev, int p_filec);
+	static void _delete_files_js_callback(const Vector<String> &p_files);
 
 	void process_joypads();
 
@@ -196,6 +200,8 @@ public:
 	virtual void window_set_input_text_callback(const Callable &p_callable, WindowID p_window = MAIN_WINDOW_ID) override;
 
 	virtual void window_set_drop_files_callback(const Callable &p_callable, WindowID p_window = MAIN_WINDOW_ID) override;
+	virtual void window_set_delete_files_callback(const Callable &p_callable, WindowID p_window = MAIN_WINDOW_ID) override;
+	virtual void window_set_update_files_callback(const Callable &p_callable, WindowID p_window = MAIN_WINDOW_ID) override;
 
 	virtual void window_set_title(const String &p_title, WindowID p_window = MAIN_WINDOW_ID) override;
 

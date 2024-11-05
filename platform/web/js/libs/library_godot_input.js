@@ -507,7 +507,45 @@ const GodotInput = {
 		GodotRuntime.setHeapValue(r_standard, is_standard, 'i32');
 		return 0;
 	},
+	
 
+	godot_js_update_files_cb__proxy: 'sync',
+	godot_js_update_files_cb__sig: 'vi',
+	godot_js_update_files_cb: function (callback) {
+		const func = GodotRuntime.get_func(callback);
+		const update_files = function (ev) {
+			const files = ev.detail;  
+			const args = files || [];
+			if (!args.length) {
+				return;
+			}
+			const argc = args.length;
+			const argv = GodotRuntime.allocStringArray(args);
+			func(argv, argc);
+			GodotRuntime.freeStringArray(argv, argc);
+		};
+		const canvas = GodotConfig.canvas;
+		GodotEventListeners.add(canvas, "update_files", update_files);
+	},
+
+	godot_js_delete_files_cb__proxy: 'sync',
+	godot_js_delete_files_cb__sig: 'vi',
+	godot_js_delete_files_cb: function (callback) {
+		const func = GodotRuntime.get_func(callback);
+		const delete_files = function (ev) {
+			const files = ev.detail;  
+			const args = files || [];
+			if (!args.length) {
+				return;
+			}
+			const argc = args.length;
+			const argv = GodotRuntime.allocStringArray(args);
+			func(argv, argc);
+			GodotRuntime.freeStringArray(argv, argc);
+		};
+		const canvas = GodotConfig.canvas;
+		GodotEventListeners.add(canvas, "delete_files", delete_files);
+	},
 	/*
 	 * Drag/Drop API
 	 */

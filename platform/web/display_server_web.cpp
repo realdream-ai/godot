@@ -88,6 +88,62 @@ void DisplayServerWeb::_fullscreen_change_callback(int p_fullscreen) {
 	}
 }
 
+// Update files callback.
+void DisplayServerWeb::update_files_js_callback(const char **p_filev, int p_filec) {
+	Vector<String> files;
+	for (int i = 0; i < p_filec; i++) {
+		files.push_back(String::utf8(p_filev[i]));
+	}
+
+#ifdef PROXY_TO_PTHREAD_ENABLED
+	if (!Thread::is_main_thread()) {
+		callable_mp_static(DisplayServerWeb::_update_files_js_callback).bind(files).call_deferred();
+		return;
+	}
+#endif
+
+	_update_files_js_callback(files);
+}
+
+void DisplayServerWeb::_update_files_js_callback(const Vector<String> &p_files) {
+	DisplayServerWeb *ds = get_singleton();
+	if (!ds) {
+		ERR_FAIL_MSG("Unable to drop files because the DisplayServer is not active");
+	}
+	if (ds->update_files_callback.is_null()) {
+		return;
+	}
+	ds->update_files_callback.call(p_files);
+}
+
+// Delete files callback.
+void DisplayServerWeb::delete_files_js_callback(const char **p_filev, int p_filec) {
+	Vector<String> files;
+	for (int i = 0; i < p_filec; i++) {
+		files.push_back(String::utf8(p_filev[i]));
+	}
+
+#ifdef PROXY_TO_PTHREAD_ENABLED
+	if (!Thread::is_main_thread()) {
+		callable_mp_static(DisplayServerWeb::_delete_files_js_callback).bind(files).call_deferred();
+		return;
+	}
+#endif
+
+	_delete_files_js_callback(files);
+}
+
+void DisplayServerWeb::_delete_files_js_callback(const Vector<String> &p_files) {
+	DisplayServerWeb *ds = get_singleton();
+	if (!ds) {
+		ERR_FAIL_MSG("Unable to drop files because the DisplayServer is not active");
+	}
+	if (ds->delete_files_callback.is_null()) {
+		return;
+	}
+	ds->delete_files_callback.call(p_files);
+}
+
 // Drag and drop callback.
 void DisplayServerWeb::drop_files_js_callback(const char **p_filev, int p_filec) {
 	Vector<String> files;
@@ -1002,6 +1058,8 @@ DisplayServerWeb::DisplayServerWeb(const String &p_rendering_driver, WindowMode 
 	godot_js_input_key_cb(&DisplayServerWeb::key_callback, key_event.code, key_event.key);
 	godot_js_input_paste_cb(&DisplayServerWeb::update_clipboard_callback);
 	godot_js_input_drop_files_cb(&DisplayServerWeb::drop_files_js_callback);
+	godot_js_delete_files_cb(&DisplayServerWeb::delete_files_js_callback);
+	godot_js_update_files_cb(&DisplayServerWeb::update_files_js_callback);
 	godot_js_input_gamepad_cb(&DisplayServerWeb::gamepad_callback);
 
 	// JS Display interface (js/libs/library_godot_display.js)
@@ -1133,6 +1191,14 @@ void DisplayServerWeb::window_set_input_text_callback(const Callable &p_callable
 
 void DisplayServerWeb::window_set_drop_files_callback(const Callable &p_callable, WindowID p_window) {
 	drop_files_callback = p_callable;
+}
+
+void DisplayServerWeb::window_set_delete_files_callback(const Callable &p_callable, WindowID p_window) {
+	delete_files_callback = p_callable;
+}
+
+void DisplayServerWeb::window_set_update_files_callback(const Callable &p_callable, WindowID p_window) {
+	update_files_callback = p_callable;
 }
 
 void DisplayServerWeb::window_set_title(const String &p_title, WindowID p_window) {

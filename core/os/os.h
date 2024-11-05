@@ -282,6 +282,7 @@ public:
 	virtual String get_system_dir(SystemDir p_dir, bool p_shared_storage = true) const;
 
 	virtual Error move_to_trash(const String &p_path) { return FAILED; }
+	virtual void refresh_fs() { }
 
 	virtual int get_exit_code() const;
 	// `set_exit_code` should only be used from `SceneTree` (or from a similar
