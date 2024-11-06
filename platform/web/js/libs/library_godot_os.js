@@ -223,7 +223,9 @@ const GodotFS = {
 		},
 
 		refresh_fs: function () {
-			GodotFS.sync()
+			if ( !GodotFS._syncing ) {
+				GodotFS.sync()
+			}
 		},
 	},
 };

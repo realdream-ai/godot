@@ -653,7 +653,6 @@ void DependencyRemoveDialog::ok_pressed() {
 	if (new_favorites.size() < previous_favorites.size()) {
 		EditorSettings::get_singleton()->set_favorites(new_favorites);
 	}
-	OS::get_singleton()->refresh_fs();
 }
 
 void DependencyRemoveDialog::_bind_methods() {

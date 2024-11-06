@@ -329,6 +329,50 @@ const GodotInputDragDrop = {
 			return function (ev) {
 				GodotInputDragDrop._process_event(ev, callback);
 			};
+		}, 
+
+
+		_process_add_files_event: function (ev, callback) {
+			infos = ev.detail
+			const drops = [];
+			const files = [];
+			const DROP = `/tmp/add-file-${parseInt(Math.random() * (1 << 30), 10)}/`;
+			FS.mkdir(DROP.slice(0, -1)); // Without trailing slash
+			for (let i = 0; i < infos.length; i++) {
+				const elem = infos[i];
+				const path = elem['path'];
+				console.log("_process_add_files_event ", path)
+				GodotFS.copy_to_fs(DROP + path, new Uint8Array(elem['data']));
+				let idx = path.indexOf('/');
+				if (idx === -1) {
+					// Root file
+					drops.push(DROP + path);
+				} else {
+					// Subdir
+					const sub = path.substr(0, idx);
+					idx = sub.indexOf('/');
+					if (idx < 0 && drops.indexOf(DROP + sub) === -1) {
+						drops.push(DROP + sub);
+					}
+				}
+				files.push(DROP + path);
+			}
+			callback(drops);
+			if (GodotConfig.persistent_drops) {
+				// Delay removal at exit.
+				GodotOS.atexit(function (resolve, reject) {
+					GodotInputDragDrop.remove_drop(files, DROP);
+					resolve();
+				});
+			} else {
+				GodotInputDragDrop.remove_drop(files, DROP);
+			}
+		},
+
+		handler_add_files: function (callback) {
+			return function (ev) {
+				GodotInputDragDrop._process_add_files_event(ev, callback);
+			};
 		},
 	},
 };
@@ -507,14 +551,14 @@ const GodotInput = {
 		GodotRuntime.setHeapValue(r_standard, is_standard, 'i32');
 		return 0;
 	},
-	
+
 
 	godot_js_update_files_cb__proxy: 'sync',
 	godot_js_update_files_cb__sig: 'vi',
 	godot_js_update_files_cb: function (callback) {
 		const func = GodotRuntime.get_func(callback);
 		const update_files = function (ev) {
-			const files = ev.detail;  
+			const files = ev.detail;
 			const args = files || [];
 			if (!args.length) {
 				return;
@@ -526,6 +570,12 @@ const GodotInput = {
 		};
 		const canvas = GodotConfig.canvas;
 		GodotEventListeners.add(canvas, "update_files", update_files);
+
+		const refresh_fs = function (evt) {
+			console.log("refresh_fs called");
+			GodotFS.refresh_fs()
+		}
+		GodotEventListeners.add(canvas, 'refresh_fs', refresh_fs);
 	},
 
 	godot_js_delete_files_cb__proxy: 'sync',
@@ -533,7 +583,7 @@ const GodotInput = {
 	godot_js_delete_files_cb: function (callback) {
 		const func = GodotRuntime.get_func(callback);
 		const delete_files = function (ev) {
-			const files = ev.detail;  
+			const files = ev.detail;
 			const args = files || [];
 			if (!args.length) {
 				return;
@@ -568,7 +618,9 @@ const GodotInput = {
 			// Prevent default behavior (which would try to open the file(s))
 			ev.preventDefault();
 		}, false);
+
 		GodotEventListeners.add(canvas, 'drop', GodotInputDragDrop.handler(dropFiles));
+		GodotEventListeners.add(canvas, 'add_files', GodotInputDragDrop.handler_add_files(dropFiles));
 	},
 
 	/* Paste API */
