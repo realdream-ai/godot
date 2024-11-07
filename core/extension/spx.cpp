@@ -47,6 +47,7 @@ void Spx::register_types() {
 }
 
 void Spx::on_start(void *p_tree) {
+	print_verbose("Spx::on_start");
 	initialed = true;
 	if (!SpxEngine::has_initialed()) {
 		return;
@@ -93,6 +94,7 @@ void Spx::on_destroy() {
 	if (!SpxEngine::has_initialed()) {
 		return;
 	}
+	print_verbose("Spx::on_destroy");
 	SPX_ENGINE->on_destroy();
 	initialed = false;
 }
