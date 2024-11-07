@@ -178,6 +178,9 @@ String SpxSprite::get_spx_type_name() {
 }
 
 void SpxSprite::on_area_entered(Node *node) {
+	if (!Spx::initialed) {
+		return;
+	}
 	Node *parent_node = node->get_parent();
 	const SpxSprite *other = Object::cast_to<SpxSprite>(parent_node);
 	if (other != nullptr) {
@@ -186,6 +189,9 @@ void SpxSprite::on_area_entered(Node *node) {
 }
 
 void SpxSprite::on_area_exited(Node *node) {
+	if (!Spx::initialed) {
+		return;
+	}
 	Node *parent_node = node->get_parent();
 	const SpxSprite *other = Object::cast_to<SpxSprite>(parent_node);
 	if (other != nullptr) {
@@ -194,33 +200,57 @@ void SpxSprite::on_area_exited(Node *node) {
 }
 
 void SpxSprite::on_sprite_frames_set_changed() {
+	if (!Spx::initialed) {
+		return;
+	}
 	SPX_CALLBACK->func_on_sprite_frames_set_changed(this->gid);
 }
 
 void SpxSprite::on_sprite_animation_changed() {
+	if (!Spx::initialed) {
+		return;
+	}
 	SPX_CALLBACK->func_on_sprite_animation_changed(this->gid);
 }
 
 void SpxSprite::on_sprite_frame_changed() {
+	if (!Spx::initialed) {
+		return;
+	}
 	SPX_CALLBACK->func_on_sprite_frame_changed(this->gid);
 }
 
 void SpxSprite::on_sprite_animation_looped() {
+	if (!Spx::initialed) {
+		return;
+	}
 	SPX_CALLBACK->func_on_sprite_animation_looped(this->gid);
 }
 
 void SpxSprite::on_sprite_animation_finished() {
+	if (!Spx::initialed) {
+		return;
+	}
 	SPX_CALLBACK->func_on_sprite_animation_finished(this->gid);
 }
 
 void SpxSprite::on_sprite_vfx_finished() {
+	if (!Spx::initialed) {
+		return;
+	}
 }
 
 void SpxSprite::on_sprite_screen_exited() {
+	if (!Spx::initialed) {
+		return;
+	}
 	SPX_CALLBACK->func_on_sprite_screen_exited(this->gid);
 }
 
 void SpxSprite::on_sprite_screen_entered() {
+	if (!Spx::initialed) {
+		return;
+	}
 	SPX_CALLBACK->func_on_sprite_screen_entered(this->gid);
 }
 

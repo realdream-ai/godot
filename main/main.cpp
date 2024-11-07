@@ -3815,10 +3815,6 @@ void Main::cleanup(bool p_force) {
 		ERR_FAIL_COND(!_start_success);
 	}
 
-#ifdef TOOLS_ENABLED
-	Spx::on_destroy();
-#endif
-
 	for (int i = 0; i < TextServerManager::get_singleton()->get_interface_count(); i++) {
 		TextServerManager::get_singleton()->get_interface(i)->cleanup();
 	}
@@ -3834,6 +3830,8 @@ void Main::cleanup(bool p_force) {
 
 	// Flush before uninitializing the scene, but delete the MessageQueue as late as possible.
 	message_queue->flush();
+
+	Spx::on_destroy();
 
 	OS::get_singleton()->delete_main_loop();
 
