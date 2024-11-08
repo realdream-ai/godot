@@ -242,6 +242,18 @@ const GodotOS = {
 		request_quit: function () {},
 		_async_cbs: [],
 		_fs_sync_promise: null,
+		frame_num: 0,
+		_fs_sync_done_promise: null,
+		_fs_sync_done_resove: null,
+
+		get_sync_done_promise: async function () {
+			if(GodotOS._fs_sync_done_promise == null) {
+				GodotOS._fs_sync_done_promise = new Promise((resolve, reject) => {
+					GodotOS._fs_sync_done_resove = resolve;
+				});
+			}
+			return GodotOS._fs_sync_done_promise;
+		},
 
 		atexit: function (p_promise_cb) {
 			GodotOS._async_cbs.push(p_promise_cb);
@@ -307,6 +319,23 @@ const GodotOS = {
 	godot_js_os_refresh_fs__sig: 'v',
 	godot_js_os_refresh_fs: function () {
 		GodotFS.refresh_fs();
+	},
+
+	godot_js_os_on_fs_sync_done__proxy: 'sync',
+	godot_js_os_on_fs_sync_done__sig: 'v',
+	godot_js_os_on_fs_sync_done: async function () {
+		if(GodotOS._fs_sync_done_resove){
+			GodotOS._fs_sync_done_resove(GodotOS.frame_num)
+		}
+		GodotOS._fs_sync_done_promise = new Promise(async (resolve, reject) => {
+			GodotOS._fs_sync_done_resove = resolve;
+		})
+	},
+
+	godot_js_os_on_main_iterater__proxy: 'sync',
+	godot_js_os_on_main_iterater__sig: 'vi',
+	godot_js_os_on_main_iterater: function (p_frame_num) {
+		GodotOS.frame_num = p_frame_num;
 	},
 
 	godot_js_os_has_feature__proxy: 'sync',

@@ -46,6 +46,8 @@ extern void godot_js_config_canvas_id_get(char *p_ptr, int p_ptr_max);
 
 // OS
 extern void godot_js_os_refresh_fs();
+extern void godot_js_os_on_fs_sync_done();
+extern void godot_js_os_on_main_iterater(uint32_t p_frame_num);
 extern void godot_js_os_finish_async(void (*p_callback)());
 extern void godot_js_os_request_quit_cb(void (*p_callback)());
 extern int godot_js_os_fs_is_persistent();
