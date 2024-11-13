@@ -2280,8 +2280,8 @@ void EditorFileSystem::reimport_files(const Vector<String> &p_files) {
 	}
 
 	reimport_files.sort();
-
-	bool use_multiple_threads = GLOBAL_GET("editor/import/use_multiple_threads");
+	// gdspx disable mutil threads import
+	bool use_multiple_threads = GLOBAL_GET("editor/import/use_multiple_threads") && use_threads;
 
 	int from = 0;
 	for (int i = 0; i < reimport_files.size(); i++) {
@@ -2609,7 +2609,7 @@ EditorFileSystem::EditorFileSystem() {
 #ifdef WEB_ENABLED
 	// disable mutilthread import in web platform
 	use_threads = false;
-	print_line("EditorFileSystem disable mutil thread ");
+	print_line("EditorFileSystem disable mutil thread ",use_threads);
 #endif
 	ResourceLoader::import = _resource_import;
 	reimport_on_missing_imported_files = GLOBAL_GET("editor/import/reimport_missing_imported_files");

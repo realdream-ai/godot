@@ -378,7 +378,7 @@ const GodotEditorEventHandler = {
 		handler_update_project: async function (ev) {
 			let infos = ev.detail
 			// 1. handle delete files
-			GodotEditorEventHandler.deleteFilesCB(infos.deletedInfos);
+			GodotEditorEventHandler.deleteFilesCB(infos.deleteInfos);
 			// 2. add or update files
 			GodotEditorEventHandler.add_or_update_files(infos.dirtyInfos)
 			// 3. callback 
