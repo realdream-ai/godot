@@ -46,6 +46,10 @@
 #include <emscripten.h>
 #include <png.h>
 
+#ifdef TOOLS_ENABLED
+#include "editor/filesystem_dock.h"
+#endif
+
 #define DOM_BUTTON_LEFT 0
 #define DOM_BUTTON_MIDDLE 1
 #define DOM_BUTTON_RIGHT 2
@@ -918,6 +922,23 @@ void DisplayServerWeb::update_clipboard_callback(const char *p_text) {
 void DisplayServerWeb::_update_clipboard_callback(const String &p_text) {
 	get_singleton()->clipboard = p_text;
 }
+void DisplayServerWeb::select_dir_callback(const char *p_text) {
+	String text = p_text;
+
+#ifdef PROXY_TO_PTHREAD_ENABLED
+	if (!Thread::is_main_thread()) {
+		callable_mp_static(DisplayServerWeb::_select_dir_callback).bind(text).call_deferred();
+		return;
+	}
+#endif
+	_select_dir_callback(text);
+}
+
+void DisplayServerWeb::_select_dir_callback(const String &p_text) {
+#ifdef TOOLS_ENABLED
+	FileSystemDock::get_singleton()->navigate_to_path(p_text);
+#endif	
+}
 
 void DisplayServerWeb::clipboard_set(const String &p_text) {
 	clipboard = p_text;
@@ -1061,6 +1082,8 @@ DisplayServerWeb::DisplayServerWeb(const String &p_rendering_driver, WindowMode 
 	godot_js_delete_files_cb(&DisplayServerWeb::delete_files_js_callback);
 	godot_js_update_files_cb(&DisplayServerWeb::update_files_js_callback);
 	godot_js_input_gamepad_cb(&DisplayServerWeb::gamepad_callback);
+	godot_js_select_dir_cb(&DisplayServerWeb::select_dir_callback);
+
 
 	// JS Display interface (js/libs/library_godot_display.js)
 	godot_js_display_fullscreen_cb(&DisplayServerWeb::fullscreen_change_callback);

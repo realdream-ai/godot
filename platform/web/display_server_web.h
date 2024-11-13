@@ -126,6 +126,8 @@ private:
 	static void _delete_files_js_callback(const Vector<String> &p_files);
 	WASM_EXPORT static void update_files_js_callback(const char **p_filev, int p_filec);
 	static void _update_files_js_callback(const Vector<String> &p_files);
+	WASM_EXPORT static void select_dir_callback(const char *p_text);
+	static void _select_dir_callback(const String &p_text);
 
 	void process_joypads();
 
