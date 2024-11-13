@@ -37,14 +37,14 @@
 #include "core/config/project_settings.h"
 #include "core/debugger/engine_debugger.h"
 #include "core/extension/gdextension_interface.h"
-#include "core/extension/spx_engine.h"
 #include "core/extension/gdextension_spx_ext.h"
+#include "core/extension/spx_engine.h"
 #include "drivers/unix/dir_access_unix.h"
 #include "drivers/unix/file_access_unix.h"
 #include "main/main.h"
 
-#include "modules/modules_enabled.gen.h" // For websocket.
 #include "godot_js_spx.h"
+#include "modules/modules_enabled.gen.h" // For websocket.
 
 #include <dlfcn.h>
 #include <emscripten.h>
@@ -85,7 +85,13 @@ bool OS_Web::main_loop_iterate() {
 		last_dirty_frame = current_frames_drawn;
 	}
 	godot_js_os_on_main_iterater((uint32_t)current_frames_drawn);
-	if (current_frames_drawn == (last_dirty_frame + 10)) {
+	static int wait_frame_count = 10;
+	int target_fs_sync_frame = last_dirty_frame + wait_frame_count;
+	if (current_frames_drawn < target_fs_sync_frame) {
+		// TODO temp solution: use print_line to force fs to sync when canvas is not visible.
+		print_line("wait fs sync ");
+	}
+	if (current_frames_drawn == target_fs_sync_frame) {
 		godot_js_os_on_fs_sync_done();
 	}
 
@@ -260,8 +266,7 @@ Error OS_Web::open_dynamic_library(const String p_path, void *&p_library_handle,
 
 	return OK;
 }
-bool OS_Web::indirect_call_dynamic_library(const String p_name, void* p_get_proc_address, void* p_library, void* r_initialization){
-	print_line("indirect_call_dynamic_library ",p_name);
+bool OS_Web::indirect_call_dynamic_library(const String p_name, void *p_get_proc_address, void *p_library, void *r_initialization) {
 	CharString string = p_name.utf8();
 	godot_js_on_load_gdextension(string.get_data(), p_get_proc_address, p_library, r_initialization);
 	return p_name == "goWasmInit";
@@ -280,7 +285,7 @@ void delete_directory(const String &path) {
 	}
 	if (DirAccess::exists(path)) {
 		Ref<DirAccess> dir = DirAccess::create_for_path(path);
-		if (!dir.is_null() &&  dir->change_dir(path) == OK) {
+		if (!dir.is_null() && dir->change_dir(path) == OK) {
 			dir->erase_contents_recursive();
 			dir->remove(path);
 			dir->change_dir("..");
@@ -295,7 +300,7 @@ void OS_Web::refresh_fs() {
 
 Error OS_Web::move_to_trash(const String &p_path) {
 	delete_directory(p_path);
-	return OK; 
+	return OK;
 }
 
 OS_Web::OS_Web() {
@@ -320,4 +325,3 @@ OS_Web::OS_Web() {
 	FileAccessUnix::close_notification_func = file_access_close_callback;
 	register_spx_callbacks();
 }
-
