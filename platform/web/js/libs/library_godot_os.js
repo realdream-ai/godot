@@ -203,6 +203,13 @@ const GodotFS = {
 			});
 		},
 
+		try_sync: function () {
+			if (GodotFS._syncing) {
+				return Promise.resolve();
+			}
+			return GodotFS.sync();
+		},
+
 		// Copies a buffer to the internal file system. Creating directories recursively.
 		copy_to_fs: function (path, buffer) {
 			const idx = path.lastIndexOf('/');

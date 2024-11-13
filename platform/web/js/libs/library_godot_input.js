@@ -375,6 +375,19 @@ const GodotEditorEventHandler = {
 			}
 		},
 
+		handler_wait_fs_sync_done: async function (ev) {
+			let infos = ev.detail
+			await GodotFS.try_sync()
+			let start_frame = GodotOS.frame_num
+			await GodotOS.get_sync_done_promise()
+			if (GodotOS.frame_num - start_frame < 2) {
+				await GodotOS.get_sync_done_promise()
+			}
+			if (infos.resolve) {
+				infos.resolve()
+			}
+		},
+
 		handler_update_project: async function (ev) {
 			let infos = ev.detail
 			// 1. handle delete files
@@ -384,7 +397,7 @@ const GodotEditorEventHandler = {
 			// 3. callback 
 			let start_frame = GodotOS.frame_num
 			await GodotOS.get_sync_done_promise()
-			if(GodotOS.frame_num - start_frame < 2 ) {
+			if (GodotOS.frame_num - start_frame < 2) {
 				await GodotOS.get_sync_done_promise()
 			}
 			if (infos.resolve) {
@@ -408,7 +421,6 @@ const GodotEditorEventHandler = {
 		};
 		const canvas = GodotConfig.canvas;
 		GodotEditorEventHandler.deleteFilesCB = delete_files;
-		GodotEventListeners.add(canvas, 'update_project', GodotEditorEventHandler.handler_update_project);
 	},
 
 	godot_js_update_files_cb__proxy: 'sync',
@@ -427,7 +439,9 @@ const GodotEditorEventHandler = {
 			GodotRuntime.freeStringArray(argv, argc);
 		};
 		const canvas = GodotConfig.canvas;
-		GodotEventListeners.add(canvas, "update_files", update_files);
+		GodotEventListeners.add(canvas, "spx_update_files", update_files);	
+		GodotEventListeners.add(canvas, 'spx_update_project', GodotEditorEventHandler.handler_update_project);
+		GodotEventListeners.add(canvas, 'spx_wait_fs_sync_done', GodotEditorEventHandler.handler_wait_fs_sync_done);
 	},
 
 
