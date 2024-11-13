@@ -339,6 +339,7 @@ const GodotEditorEventHandler = {
 	$GodotEditorEventHandler: {
 		addOrUpdateFilesCB: {},
 		deleteFilesCB: {},
+		selectDirCB: {},
 
 		add_or_update_files: function (infos) {
 			const drops = [];
@@ -390,10 +391,11 @@ const GodotEditorEventHandler = {
 
 		handler_update_project: async function (ev) {
 			let infos = ev.detail
-			// 1. handle delete files
-			GodotEditorEventHandler.deleteFilesCB(infos.deleteInfos);
-			// 2. add or update files
+			GodotEditorEventHandler.selectDirCB("res://")
+			// 1. add or update files
 			GodotEditorEventHandler.add_or_update_files(infos.dirtyInfos)
+			// 2. handle delete files
+			GodotEditorEventHandler.deleteFilesCB(infos.deleteInfos);
 			// 3. callback 
 			let start_frame = GodotOS.frame_num
 			await GodotOS.get_sync_done_promise()
@@ -422,6 +424,19 @@ const GodotEditorEventHandler = {
 		const canvas = GodotConfig.canvas;
 		GodotEditorEventHandler.deleteFilesCB = delete_files;
 	},
+
+	godot_js_select_dir_cb__proxy: 'sync',
+	godot_js_select_dir_cb__sig: 'vi',
+	godot_js_select_dir_cb: function (p_callback) {
+		const func = GodotRuntime.get_func(p_callback);
+		const select_dir = function (path) {
+			const ptr = GodotRuntime.allocString(path);
+			func(ptr);
+			GodotRuntime.free(ptr);
+		};
+		GodotEditorEventHandler.selectDirCB = select_dir
+	},
+
 
 	godot_js_update_files_cb__proxy: 'sync',
 	godot_js_update_files_cb__sig: 'vi',
