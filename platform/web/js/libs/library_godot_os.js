@@ -249,7 +249,9 @@ const GodotOS = {
 		request_quit: function () {},
 		_async_cbs: [],
 		_fs_sync_promise: null,
-		frame_num: 0,
+		_frame_num: 0,
+		// os_web::wait_frame_count = 10 
+		_min_wait_frame_num: 5,
 		_fs_sync_done_promise: null,
 		_fs_sync_done_resove: null,
 
@@ -342,7 +344,7 @@ const GodotOS = {
 	godot_js_os_on_main_iterater__proxy: 'sync',
 	godot_js_os_on_main_iterater__sig: 'vi',
 	godot_js_os_on_main_iterater: function (p_frame_num) {
-		GodotOS.frame_num = p_frame_num;
+		GodotOS._frame_num = p_frame_num;
 	},
 
 	godot_js_os_has_feature__proxy: 'sync',
