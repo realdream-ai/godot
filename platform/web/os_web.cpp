@@ -77,7 +77,8 @@ void OS_Web::fs_sync_callback() {
 }
 
 bool OS_Web::main_loop_iterate() {
-	uint64_t current_frames_drawn = Engine::get_singleton()->get_frames_drawn();
+	static int current_frames_drawn = 0;
+	current_frames_drawn++;
 	if (is_userfs_persistent() && idb_needs_sync && !idb_is_syncing) {
 		idb_is_syncing = true;
 		idb_needs_sync = false;

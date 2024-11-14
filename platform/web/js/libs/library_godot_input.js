@@ -379,13 +379,17 @@ const GodotEditorEventHandler = {
 		handler_wait_fs_sync_done: async function (ev) {
 			let infos = ev.detail
 			await GodotFS.try_sync()
-			let start_frame = GodotOS.frame_num
+			await GodotEditorEventHandler.wait_fs_sync_done(infos.resolve)
+		},
+
+		wait_fs_sync_done: async function (resolve) {
+			let start_frame = GodotOS._frame_num
 			await GodotOS.get_sync_done_promise()
-			if (GodotOS.frame_num - start_frame < 2) {
+			if (GodotOS._frame_num - start_frame < GodotOS._min_wait_frame_num) {
 				await GodotOS.get_sync_done_promise()
 			}
-			if (infos.resolve) {
-				infos.resolve()
+			if (resolve) {
+				resolve()
 			}
 		},
 
@@ -397,14 +401,7 @@ const GodotEditorEventHandler = {
 			// 2. handle delete files
 			GodotEditorEventHandler.deleteFilesCB(infos.deleteInfos);
 			// 3. callback 
-			let start_frame = GodotOS.frame_num
-			await GodotOS.get_sync_done_promise()
-			if (GodotOS.frame_num - start_frame < 2) {
-				await GodotOS.get_sync_done_promise()
-			}
-			if (infos.resolve) {
-				infos.resolve()
-			}
+			await GodotEditorEventHandler.wait_fs_sync_done(infos.resolve)
 		},
 	},
 	godot_js_delete_files_cb__proxy: 'sync',
