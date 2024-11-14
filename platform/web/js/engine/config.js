@@ -133,6 +133,8 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
 		 * @type {Array.<string>}
 		 */
 		fileSizes: [],
+		wasmGdspx: null,
+		wasmEngine: null,
 		/**
 		 * A callback function for handling Godot's ``OS.execute`` calls.
 		 *
@@ -262,6 +264,10 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
 		this.args = parse('args', this.args);
 		this.onExecute = parse('onExecute', this.onExecute);
 		this.onExit = parse('onExit', this.onExit);
+
+		// Wasm data
+		this.wasmGdspx = parse('wasmGdspx', this.wasmGdspx);
+		this.wasmEngine = parse('wasmEngine', this.wasmEngine);
 	};
 
 	/**
@@ -269,8 +275,8 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
 	 * @param {string} loadPath
 	 * @param {Response} response
 	 */
-	Config.prototype.getModuleConfig = function (loadPath, response) {
-		let r = response;
+	Config.prototype.getModuleConfig = function (loadPath, buffer) {
+		let curBuffer = buffer
 		return {
 			'print': this.onPrint,
 			'printErr': this.onPrintError,
@@ -278,17 +284,9 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
 			'noExitRuntime': false,
 			'dynamicLibraries': [`${loadPath}.side.wasm`],
 			'instantiateWasm': function (imports, onSuccess) {
-				function done(result) {
+				WebAssembly.instantiate(curBuffer, imports).then((result)=> {
 					onSuccess(result['instance'], result['module']);
-				}
-				if (typeof (WebAssembly.instantiateStreaming) !== 'undefined') {
-					WebAssembly.instantiateStreaming(Promise.resolve(r), imports).then(done);
-				} else {
-					r.arrayBuffer().then(function (buffer) {
-						WebAssembly.instantiate(buffer, imports).then(done);
-					});
-				}
-				r = null;
+				});
 				return {};
 			},
 			'locateFile': function (path) {
