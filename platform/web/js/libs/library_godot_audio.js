@@ -371,6 +371,7 @@ const GodotAudioWorklet = {
 				}).catch(function (err) {
 					// Aborted?
 					GodotRuntime.error(err);
+					resolve();
 				});
 			});
 		},
