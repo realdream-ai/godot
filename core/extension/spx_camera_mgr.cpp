@@ -47,7 +47,6 @@ void SpxCameraMgr::on_awake() {
 		camera = memnew(Camera2D);
 		camera->set_name("SpxCamera2D");
 		get_spx_root()->add_child(camera);
-		print_line("no camera , create one " + camera->get_name());
 	}
 }
 

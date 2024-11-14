@@ -38,7 +38,6 @@ void SpxInputMgr::on_start() {
 	input_proxy->set_name( "input_proxy");
 	get_spx_root()->add_child(input_proxy);
 	input_proxy->ready();
-	print_line("register keyboard events");
 }
 
 // input
