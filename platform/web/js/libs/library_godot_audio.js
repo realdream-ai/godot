@@ -50,15 +50,15 @@ const GodotAudio = {
 			ctx.onstatechange = function () {
 				let state = 0;
 				switch (ctx.state) {
-				case 'suspended':
-					state = 0;
-					break;
-				case 'running':
-					state = 1;
-					break;
-				case 'closed':
-					state = 2;
-					break;
+					case 'suspended':
+						state = 0;
+						break;
+					case 'running':
+						state = 1;
+						break;
+					case 'closed':
+						state = 2;
+						break;
 
 					// no default
 				}
@@ -229,14 +229,15 @@ const GodotAudioWorklet = {
 		create: function (channels) {
 			const path = GodotConfig.locate_file('godot.audio.worklet.js');
 			if (GodotAudio.ctx == null) {
-				const opts = {};
-				if (GodotAudio.audio_mix_rate) {
-					opts['sampleRate'] = GodotAudio.audio_mix_rate;
-				}
-				GodotAudio.ctx = new (window.AudioContext || window.webkitAudioContext)(opts);
-				console.warn("Recreate a audio context");
+				GodotAudioWorklet.worklet = null;
+				GodotRuntime.error("GodotAudioWorklet create failed, GodotAudio had been closed");
+				return
 			}
 			GodotAudioWorklet.promise = GodotAudio.ctx.audioWorklet.addModule(path).then(function () {
+				if (GodotAudio.ctx == null) {
+					GodotAudioWorklet.worklet = null;
+					return Promise.reject("GodotAudio had been closed, audioWorklet would not be created");
+				}
 				GodotAudioWorklet.worklet = new AudioWorkletNode(
 					GodotAudio.ctx,
 					'godot-processor',
@@ -260,6 +261,8 @@ const GodotAudioWorklet = {
 				node.port.onmessage = function (event) {
 					GodotRuntime.error(event.data);
 				};
+			}).catch(function (error) {
+				GodotRuntime.error("GodotAudioWorklet create error:", error);
 			});
 		},
 
@@ -340,6 +343,8 @@ const GodotAudioWorklet = {
 						GodotRuntime.error(event.data);
 					}
 				};
+			}).catch(function (error) {
+				GodotRuntime.error("GodotAudioWorklet create error:", error);
 			});
 		},
 
