@@ -309,8 +309,23 @@ const GodotDisplayScreen = {
 				width = window.innerWidth * scale;
 				height = window.innerHeight * scale;
 			}
-			const csw = `${width / scale}px`;
-			const csh = `${height / scale}px`;
+			let csw = `${width / scale}px`;
+			let csh = `${height / scale}px`;
+
+			if (!(isFullscreen || wantsFullWindow)) {
+				const radio = dWidth / dHeight;
+				const displayWidth = window.innerWidth;
+				const displayHeight = window.innerHeight;
+				const winRadio = displayWidth / displayHeight;
+
+				if (winRadio > radio) {
+					csh = (displayHeight)/ scale + 'px';
+					csw = (displayHeight * radio)/ scale + 'px';
+				} else {
+					csw = (displayWidth)/ scale + 'px';
+					csh = (displayWidth / radio)/ scale + 'px';
+				}
+			}
 			if (canvas.style.width !== csw || canvas.style.height !== csh || canvas.width !== width || canvas.height !== height) {
 				// Size doesn't match.
 				// Resize canvas, set correct CSS pixel size, update GL.
