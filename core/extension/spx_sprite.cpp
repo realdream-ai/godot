@@ -116,14 +116,11 @@ void SpxSprite::_draw() {
 	if (!Spx::debug_mode) {
 		return;
 	}
-	if (trigger2d != nullptr && trigger2d->get_shape() != nullptr) {
-		Ref<Shape2D> trigger_shape = trigger2d->get_shape();
-		trigger_shape->draw(get_canvas_item(), Color(1, 0, 0, 0.2));
+	if(trigger2d != nullptr) {
+		trigger2d->set_spx_debug_color(Color(1, 0, 0, 0.2));
 	}
-
-	if (collider2d != nullptr && collider2d->get_shape() != nullptr) {
-		Ref<Shape2D> collider_shape = collider2d->get_shape();
-		collider_shape->draw(get_canvas_item(), Color(0, 0, 1, 0.2));
+	if(collider2d != nullptr) {
+		collider2d->set_spx_debug_color(Color(0, 0, 1, 0.2));
 	}
 }
 

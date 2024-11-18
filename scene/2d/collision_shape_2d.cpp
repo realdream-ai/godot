@@ -31,6 +31,7 @@
 #include "collision_shape_2d.h"
 
 #include "collision_object_2d.h"
+#include "core/extension/spx.h"
 #include "scene/2d/area_2d.h"
 #include "scene/resources/concave_polygon_shape_2d.h"
 #include "scene/resources/convex_polygon_shape_2d.h"
@@ -90,7 +91,11 @@ void CollisionShape2D::_notification(int p_what) {
 		case NOTIFICATION_DRAW: {
 			ERR_FAIL_COND(!is_inside_tree());
 
-			if (!Engine::get_singleton()->is_editor_hint() && !get_tree()->is_debugging_collisions_hint()) {
+			if (!Engine::get_singleton()->is_editor_hint() && !get_tree()->is_debugging_collisions_hint() && !Spx::debug_mode) {
+				break;
+			}
+
+			if(Spx::debug_mode && !is_enable_spx_debug) {
 				break;
 			}
 
