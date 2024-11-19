@@ -120,11 +120,11 @@ GdInt SpxPhysicMgr::check_touched_camera_boundaries(GdObj obj) {
 
 	Ref<RectangleShape2D> vertical_edge_shape;
 	vertical_edge_shape.instantiate();
-	vertical_edge_shape->set_size(Vector2(1, half_size.y));
+	vertical_edge_shape->set_size(Vector2(2, half_size.y*50));// mutil by 50 is to check the case of some collider is out of boundary
 
 	Ref<RectangleShape2D> horizontal_edge_shape;
 	horizontal_edge_shape.instantiate();
-	horizontal_edge_shape->set_size(Vector2(half_size.x, 1));
+	horizontal_edge_shape->set_size(Vector2(half_size.x*50, 2));
 
 	Transform2D left_edge_transform(0, camera_position + Vector2(-half_size.x, 0));
 	Transform2D right_edge_transform(0, camera_position + Vector2(half_size.x, 0));
