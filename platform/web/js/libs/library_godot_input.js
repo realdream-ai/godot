@@ -384,10 +384,10 @@ const GodotEditorEventHandler = {
 
 		wait_fs_sync_done: async function (resolve) {
 			let start_frame = GodotOS._frame_num
-			await GodotOS.get_sync_done_promise()
-			if (GodotOS._frame_num - start_frame < GodotOS._min_wait_frame_num) {
+			while (GodotOS._frame_num - start_frame < GodotOS._min_wait_frame_num) {
 				await GodotOS.get_sync_done_promise()
 			}
+			console.log("wait_fs_sync_done done start at ", start_frame, " => ", GodotOS._frame_num)
 			if (resolve) {
 				resolve()
 			}
@@ -451,7 +451,7 @@ const GodotEditorEventHandler = {
 			GodotRuntime.freeStringArray(argv, argc);
 		};
 		const canvas = GodotConfig.canvas;
-		GodotEventListeners.add(canvas, "spx_update_files", update_files);	
+		GodotEventListeners.add(canvas, "spx_update_files", update_files);
 		GodotEventListeners.add(canvas, 'spx_update_project', GodotEditorEventHandler.handler_update_project);
 		GodotEventListeners.add(canvas, 'spx_wait_fs_sync_done', GodotEditorEventHandler.handler_wait_fs_sync_done);
 	},

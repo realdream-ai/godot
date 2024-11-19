@@ -92,7 +92,7 @@ bool OS_Web::main_loop_iterate() {
 		// TODO temp solution: use print_line to force fs to sync when canvas is not visible.
 		print_line("wait fs sync ");
 	}
-	if (current_frames_drawn == target_fs_sync_frame) {
+	if (current_frames_drawn >= target_fs_sync_frame) {
 		godot_js_os_on_fs_sync_done();
 	}
 
