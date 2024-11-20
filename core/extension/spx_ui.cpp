@@ -102,12 +102,12 @@ GdRect2 SpxUi::get_rect() {
 
 void SpxUi::set_color(GdColor color) {
 	check_and_get_node_v()
-	node->set_modulate(color);
+	node->set_self_modulate(color);
 }
 
 GdColor SpxUi::get_color() {
 	check_and_get_node_r(GdColor())
-	return node->get_modulate();
+	return node->get_self_modulate();
 }
 
 void SpxUi::set_font_size(GdInt size) {
