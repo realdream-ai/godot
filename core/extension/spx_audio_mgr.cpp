@@ -125,11 +125,11 @@ void SpxAudioMgr::play_music(GdString path) {
 }
 
 void SpxAudioMgr::pause_music() {
-	music->stop();
+	music->set_stream_paused(true);
 }
 
 void SpxAudioMgr::resume_music() {
-	music->play();
+	music->set_stream_paused(false);
 }
 
 GdFloat SpxAudioMgr::get_music_timer() {
