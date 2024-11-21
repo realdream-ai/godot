@@ -48,6 +48,7 @@ void SpxCameraMgr::on_awake() {
 		camera->set_name("SpxCamera2D");
 		get_spx_root()->add_child(camera);
 	}
+	RenderingServer::get_singleton()->set_default_clear_color(Color(1,1,1,1));
 }
 
 GdRect2 SpxCameraMgr::get_viewport_rect() {

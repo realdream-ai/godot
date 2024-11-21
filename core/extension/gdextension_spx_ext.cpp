@@ -179,6 +179,9 @@ static void gdextension_spx_platform_set_debug_mode(GdBool enable) {
 static void gdextension_spx_platform_is_debug_mode(GdBool* ret_val) {
 	*ret_val = platformMgr->is_debug_mode();
 }
+static void gdextension_spx_res_get_bound_from_alpha(GdString path,GdRect2* ret_val) {
+	*ret_val = resMgr->get_bound_from_alpha(path);
+}
 static void gdextension_spx_res_get_image_size(GdString path,GdVec2* ret_val) {
 	*ret_val = resMgr->get_image_size(path);
 }
@@ -639,6 +642,7 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_is_window_fullscreen);
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_set_debug_mode);
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_is_debug_mode);
+	REGISTER_SPX_INTERFACE_FUNC(spx_res_get_bound_from_alpha);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_get_image_size);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_read_all_text);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_has_file);

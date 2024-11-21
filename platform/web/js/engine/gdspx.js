@@ -361,6 +361,16 @@ function gdspx_platform_is_debug_mode() {
 	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
+function gdspx_res_get_bound_from_alpha(path) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_res_get_bound_from_alpha']; 
+	_retValue = AllocGdRect2();
+	_arg0 = ToGdString(path);
+	_gdFuncPtr(_arg0, _retValue);
+	FreeGdString(_arg0); 
+	_finalRetValue = ToJsRect2(_retValue);
+	FreeGdRect2(_retValue); 
+	return _finalRetValue
+}
 function gdspx_res_get_image_size(path) {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_res_get_image_size']; 
 	_retValue = AllocGdVec2();
