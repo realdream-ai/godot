@@ -37,6 +37,7 @@
 class SpxResMgr : SpxBaseMgr {
 	SPXCLASS(SpxPlatformMgr, SpxBaseMgr)
 public:
+	GdRect2 get_bound_from_alpha(GdString path);
 	GdVec2 get_image_size(GdString path);
 	GdString read_all_text(GdString path);
 	GdBool has_file(GdString path);

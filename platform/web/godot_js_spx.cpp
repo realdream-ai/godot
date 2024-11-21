@@ -219,6 +219,10 @@ void gdspx_platform_is_debug_mode(GdBool* ret_val) {
 	*ret_val = platformMgr->is_debug_mode();
 }
 EMSCRIPTEN_KEEPALIVE
+void gdspx_res_get_bound_from_alpha(GdString* path,GdRect2* ret_val) {
+	*ret_val = resMgr->get_bound_from_alpha(*path);
+}
+EMSCRIPTEN_KEEPALIVE
 void gdspx_res_get_image_size(GdString* path,GdVec2* ret_val) {
 	*ret_val = resMgr->get_image_size(*path);
 }

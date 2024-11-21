@@ -30,8 +30,41 @@
 
 #include "spx_res_mgr.h"
 #include "core/io/file_access.h"
+#include "core/io/image.h"
 #include "scene/main/window.h"
 #include "spx.h"
+
+
+GdRect2 SpxResMgr::get_bound_from_alpha(GdString path) {
+	auto path_str = SpxStr(path);
+
+	Ref<Texture2D> image = ResourceLoader::load(path_str);
+
+	int width = image->get_width();
+	int height = image->get_height();
+
+	int min_x = width;
+	int min_y = height;
+	int max_x = 0;
+	int max_y = 0;
+	bool has_alpha = false;
+	for (int y = 0; y < height; ++y) {
+		for (int x = 0; x < width; ++x) {
+			if ( image->is_pixel_opaque(x, y)) { // Check if the pixel is not fully transparent
+				has_alpha = true;
+				if (x < min_x) min_x = x;
+				if (y < min_y) min_y = y;
+				if (x > max_x) max_x = x;
+				if (y > max_y) max_y = y;
+			}
+		}
+	}
+	if (!has_alpha) {
+		return Rect2();
+	}
+
+	return Rect2(Vector2(min_x, min_y), Vector2(max_x - min_x + 1, max_y - min_y + 1));
+}
 
 GdVec2 SpxResMgr::get_image_size(GdString path) {
 	auto path_str = SpxStr(path);
