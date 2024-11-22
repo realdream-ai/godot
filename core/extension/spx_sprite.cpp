@@ -40,6 +40,7 @@
 #include "scene/resources/rectangle_shape_2d.h"
 #include "spx.h"
 #include "spx_engine.h"
+#include "spx_res_mgr.h"
 #include "spx_sprite_mgr.h"
 #define SPX_CALLBACK SpxEngine::get_singleton()->get_callbacks()
 
@@ -260,7 +261,7 @@ GdColor SpxSprite::get_color() {
 }
 void SpxSprite::set_texture_altas(GdString path, GdRect2 rect2) {
 	auto path_str = SpxStr(path);
-	Ref<Texture2D> texture = ResourceLoader::load(path_str);
+	Ref<Texture2D> texture = resMgr->load_texture(path_str);
 
 	Ref<AtlasTexture> atlas_texture_frame = memnew(AtlasTexture);
 	atlas_texture_frame->set_atlas(texture);
@@ -281,7 +282,7 @@ void SpxSprite::set_texture_altas(GdString path, GdRect2 rect2) {
 
 void SpxSprite::set_texture(GdString path) {
 	auto path_str = SpxStr(path);
-	Ref<Texture2D> texture = ResourceLoader::load(path_str);
+	Ref<Texture2D> texture = resMgr->load_texture(path_str);
 	if (texture.is_valid()) {
 		auto frames = anim2d->get_sprite_frames();
 		if (frames->get_frame_count(SpxSpriteMgr::default_texture_anim) == 0) {

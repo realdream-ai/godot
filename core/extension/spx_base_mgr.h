@@ -46,6 +46,7 @@ public:                               \
 #define audioMgr SpxEngine::get_singleton()->get_audio()
 #define physicMgr SpxEngine::get_singleton()->get_physic()
 #define spriteMgr SpxEngine::get_singleton()->get_sprite()
+#define resMgr SpxEngine::get_singleton()->get_res()
 #define uiMgr SpxEngine::get_singleton()->get_ui()
 
 #define NULL_OBJECT_ID 0

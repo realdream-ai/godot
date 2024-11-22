@@ -92,8 +92,7 @@ void ResourceImporterWAV::get_import_options(const String &p_path, List<ImportOp
 	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "edit/loop_end"), -1));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "compress/mode", PROPERTY_HINT_ENUM, "Disabled,RAM (Ima-ADPCM)"), 0));
 }
-
-Error ResourceImporterWAV::import(const String &p_source_file, const String &p_save_path, const HashMap<StringName, Variant> &p_options, List<String> *r_platform_variants, List<String> *r_gen_files, Variant *r_metadata) {
+Error ResourceImporterWAV::import_asset(Ref<AudioStreamWAV>& sample,const String &p_source_file, const HashMap<StringName, Variant> &p_options, List<String> *r_platform_variants, List<String> *r_gen_files, Variant *r_metadata) {
 	/* STEP 1, READ WAVE FILE */
 
 	Error err;
@@ -523,7 +522,6 @@ Error ResourceImporterWAV::import(const String &p_source_file, const String &p_s
 		}
 	}
 
-	Ref<AudioStreamWAV> sample;
 	sample.instantiate();
 	sample->set_data(dst_data);
 	sample->set_format(dst_format);
@@ -533,9 +531,13 @@ Error ResourceImporterWAV::import(const String &p_source_file, const String &p_s
 	sample->set_loop_end(loop_end);
 	sample->set_stereo(format_channels == 2);
 
-	ResourceSaver::save(sample, p_save_path + ".sample");
-
 	return OK;
+}
+Error ResourceImporterWAV::import(const String &p_source_file, const String &p_save_path, const HashMap<StringName, Variant> &p_options, List<String> *r_platform_variants, List<String> *r_gen_files, Variant *r_metadata) {
+	Ref<AudioStreamWAV> sample;
+	auto err = import_asset(sample,p_source_file,p_options,r_platform_variants,r_gen_files,r_metadata);
+	ResourceSaver::save(sample, p_save_path + ".sample");
+	return err;
 }
 
 ResourceImporterWAV::ResourceImporterWAV() {
