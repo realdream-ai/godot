@@ -31,6 +31,7 @@
 #include "spx_res_mgr.h"
 #include "core/io/file_access.h"
 #include "core/io/image.h"
+#include "core/io/image_loader.h"
 #include "editor/import/resource_importer_wav.h"
 #include "modules/minimp3/audio_stream_mp3.h"
 #include "modules/minimp3/resource_importer_mp3.h"
@@ -91,15 +92,13 @@ Ref<Texture2D> SpxResMgr::_load_texture_direct(const String &path) {
 
 	Ref<Image> image;
 	image.instantiate();
-	Error err = image->load(path);
+	Error err =ImageLoader::load_image(path, image);
 	if (err != OK) {
-		print_line("Failed to load image: " + String::num_int64(err));
+		print_line("Failed to load image: " + String::num_int64(err),path);
 		return Ref<Texture2D>();
 	}
 
-	Ref<ImageTexture> texture;
-	texture.instantiate();
-	texture->create_from_image(image);
+	Ref<ImageTexture> texture = ImageTexture::create_from_image(image);
 	cached_texture.insert(path, texture);
 	return texture;
 }

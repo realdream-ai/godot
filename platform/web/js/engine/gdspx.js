@@ -361,40 +361,48 @@ function gdspx_platform_is_debug_mode() {
 	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
-function gdspx_res_get_bound_from_alpha(path) {
+function gdspx_res_set_load_mode(is_direct_mode) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_res_set_load_mode']; 
+	
+	_arg0 = ToGdBool(is_direct_mode);
+	_gdFuncPtr(_arg0);
+	FreeGdBool(_arg0); 
+
+}
+function gdspx_res_get_bound_from_alpha(p_path) {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_res_get_bound_from_alpha']; 
 	_retValue = AllocGdRect2();
-	_arg0 = ToGdString(path);
+	_arg0 = ToGdString(p_path);
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdString(_arg0); 
 	_finalRetValue = ToJsRect2(_retValue);
 	FreeGdRect2(_retValue); 
 	return _finalRetValue
 }
-function gdspx_res_get_image_size(path) {
+function gdspx_res_get_image_size(p_path) {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_res_get_image_size']; 
 	_retValue = AllocGdVec2();
-	_arg0 = ToGdString(path);
+	_arg0 = ToGdString(p_path);
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdString(_arg0); 
 	_finalRetValue = ToJsVec2(_retValue);
 	FreeGdVec2(_retValue); 
 	return _finalRetValue
 }
-function gdspx_res_read_all_text(path) {
+function gdspx_res_read_all_text(p_path) {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_res_read_all_text']; 
 	_retValue = AllocGdString();
-	_arg0 = ToGdString(path);
+	_arg0 = ToGdString(p_path);
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdString(_arg0); 
 	_finalRetValue = ToJsString(_retValue);
 	FreeGdString(_retValue); 
 	return _finalRetValue
 }
-function gdspx_res_has_file(path) {
+function gdspx_res_has_file(p_path) {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_res_has_file']; 
 	_retValue = AllocGdBool();
-	_arg0 = ToGdString(path);
+	_arg0 = ToGdString(p_path);
 	_gdFuncPtr(_arg0, _retValue);
 	FreeGdString(_arg0); 
 	_finalRetValue = ToJsBool(_retValue);
