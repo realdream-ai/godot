@@ -60,6 +60,7 @@ public:
 
 public:
 	void set_load_mode(GdBool is_direct_mode);
+	GdBool get_load_mode();
 	GdRect2 get_bound_from_alpha(GdString p_path);
 	GdVec2 get_image_size(GdString p_path);
 	GdString read_all_text(GdString p_path);

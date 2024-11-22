@@ -223,6 +223,10 @@ void gdspx_res_set_load_mode(GdBool* is_direct_mode) {
 	 resMgr->set_load_mode(*is_direct_mode);
 }
 EMSCRIPTEN_KEEPALIVE
+void gdspx_res_get_load_mode(GdBool* ret_val) {
+	*ret_val = resMgr->get_load_mode();
+}
+EMSCRIPTEN_KEEPALIVE
 void gdspx_res_get_bound_from_alpha(GdString* p_path,GdRect2* ret_val) {
 	*ret_val = resMgr->get_bound_from_alpha(*p_path);
 }

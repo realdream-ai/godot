@@ -242,6 +242,7 @@ typedef void (*GDExtensionSpxPlatformSetDebugMode)(GdBool enable);
 typedef void (*GDExtensionSpxPlatformIsDebugMode)(GdBool* ret_value);
 // SpxRes
 typedef void (*GDExtensionSpxResSetLoadMode)(GdBool is_direct_mode);
+typedef void (*GDExtensionSpxResGetLoadMode)(GdBool* ret_value);
 typedef void (*GDExtensionSpxResGetBoundFromAlpha)(GdString p_path, GdRect2* ret_value);
 typedef void (*GDExtensionSpxResGetImageSize)(GdString p_path, GdVec2* ret_value);
 typedef void (*GDExtensionSpxResReadAllText)(GdString p_path, GdString* ret_value);

@@ -132,11 +132,14 @@ Ref<AudioStream> SpxResMgr::load_audio(String path) {
 void SpxResMgr::set_load_mode(GdBool is_direct_mode) {
 	is_load_direct = is_direct_mode;
 }
+GdBool SpxResMgr::get_load_mode() {
+	return is_load_direct;
+}
 
 GdRect2 SpxResMgr::get_bound_from_alpha(GdString path) {
 	auto path_str = SpxStr(path);
 
-	Ref<Texture2D> image = ResourceLoader::load(path_str);
+	Ref<Texture2D> image = load_texture(path_str);
 
 	int width = image->get_width();
 	int height = image->get_height();
@@ -170,7 +173,7 @@ GdRect2 SpxResMgr::get_bound_from_alpha(GdString path) {
 
 GdVec2 SpxResMgr::get_image_size(GdString path) {
 	auto path_str = SpxStr(path);
-	Ref<Texture2D> value = ResourceLoader::load(path_str);
+	Ref<Texture2D> value = load_texture(path_str);
 	if (value.is_valid()) {
 		return value->get_size();
 	} else {
