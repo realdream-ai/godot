@@ -32,15 +32,38 @@
 #define SPX_RES_MGR_H
 
 #include "gdextension_spx_ext.h"
+#include "servers/audio/audio_stream.h"
 #include "spx_base_mgr.h"
+
+class AudioStreamMP3;
+class AudioStreamWAV;
+class Texture2D;
 
 class SpxResMgr : SpxBaseMgr {
 	SPXCLASS(SpxPlatformMgr, SpxBaseMgr)
+
+private:
+	HashMap<String, Ref<Texture2D>> cached_texture;
+	HashMap<String, Ref<AudioStream>> cached_audio;
+	bool is_load_direct;
+
+private:
+	static Ref<AudioStreamWAV> _load_wav(const String &path);
+	static Ref<AudioStreamMP3> _load_mp3(const String &path);
+	Ref<Texture2D> _load_texture_direct(const String &p_path);
+	Ref<AudioStream> _load_audio_direct(const String &p_path);
+
 public:
-	GdRect2 get_bound_from_alpha(GdString path);
-	GdVec2 get_image_size(GdString path);
-	GdString read_all_text(GdString path);
-	GdBool has_file(GdString path);
+	void on_awake() override;
+	Ref<Texture2D> load_texture(String path);
+	Ref<AudioStream> load_audio(String path);
+
+public:
+	void set_load_mode(GdBool is_direct_mode);
+	GdRect2 get_bound_from_alpha(GdString p_path);
+	GdVec2 get_image_size(GdString p_path);
+	GdString read_all_text(GdString p_path);
+	GdBool has_file(GdString p_path);
 };
 
 #endif // SPX_RES_MGR_H

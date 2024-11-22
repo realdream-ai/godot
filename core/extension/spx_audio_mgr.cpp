@@ -32,6 +32,8 @@
 
 #include "modules/minimp3/audio_stream_mp3.h"
 #include "scene/2d/audio_stream_player_2d.h"
+#include "spx_engine.h"
+#include "spx_res_mgr.h"
 
 const int BUS_MASTER = 0;
 const int BUS_SFX = 1;
@@ -90,11 +92,9 @@ void SpxAudioMgr::on_update(float delta) {
 }
 
 void SpxAudioMgr::play_sfx(GdString path) {
-	Ref<Resource> res = ResourceLoader::load(SpxStr(path));
-	ERR_FAIL_COND(res.is_null());
-	ERR_FAIL_COND(!res->is_class("AudioStream"));
+	auto path_str = SpxStr(path);
+	Ref<AudioStream> stream = resMgr->load_audio(path_str);
 
-	Ref<AudioStream> stream = res;
 	auto audio = memnew(AudioStreamPlayer2D);
 	audio->set_bus(STR_BUS_SFX);
 	owner->add_child(audio);
@@ -109,10 +109,8 @@ GdBool SpxAudioMgr::is_music_playing() {
 }
 
 void SpxAudioMgr::play_music(GdString path) {
-	Ref<Resource> res = ResourceLoader::load(SpxStr(path));
-	ERR_FAIL_COND(res.is_null());
-	ERR_FAIL_COND(!res->is_class("AudioStream"));
-	Ref<AudioStream> stream = res;
+	auto path_str = SpxStr(path);
+	Ref<AudioStream> stream = resMgr->load_audio(path_str);
 
 	// set loop
 	Ref<AudioStreamMP3> mp3_stream = stream;

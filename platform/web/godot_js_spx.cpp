@@ -219,20 +219,24 @@ void gdspx_platform_is_debug_mode(GdBool* ret_val) {
 	*ret_val = platformMgr->is_debug_mode();
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_res_get_bound_from_alpha(GdString* path,GdRect2* ret_val) {
-	*ret_val = resMgr->get_bound_from_alpha(*path);
+void gdspx_res_set_load_mode(GdBool* is_direct_mode) {
+	 resMgr->set_load_mode(*is_direct_mode);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_res_get_image_size(GdString* path,GdVec2* ret_val) {
-	*ret_val = resMgr->get_image_size(*path);
+void gdspx_res_get_bound_from_alpha(GdString* p_path,GdRect2* ret_val) {
+	*ret_val = resMgr->get_bound_from_alpha(*p_path);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_res_read_all_text(GdString* path,GdString* ret_val) {
-	*ret_val = resMgr->read_all_text(*path);
+void gdspx_res_get_image_size(GdString* p_path,GdVec2* ret_val) {
+	*ret_val = resMgr->get_image_size(*p_path);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_res_has_file(GdString* path,GdBool* ret_val) {
-	*ret_val = resMgr->has_file(*path);
+void gdspx_res_read_all_text(GdString* p_path,GdString* ret_val) {
+	*ret_val = resMgr->read_all_text(*p_path);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_res_has_file(GdString* p_path,GdBool* ret_val) {
+	*ret_val = resMgr->has_file(*p_path);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_scene_change_scene_to_file(GdString* path) {

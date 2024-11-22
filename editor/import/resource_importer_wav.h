@@ -33,6 +33,7 @@
 
 #include "core/io/resource_importer.h"
 
+class AudioStreamWAV;
 class ResourceImporterWAV : public ResourceImporter {
 	GDCLASS(ResourceImporterWAV, ResourceImporter);
 
@@ -141,6 +142,7 @@ public:
 	}
 
 	virtual Error import(const String &p_source_file, const String &p_save_path, const HashMap<StringName, Variant> &p_options, List<String> *r_platform_variants, List<String> *r_gen_files = nullptr, Variant *r_metadata = nullptr) override;
+	virtual Error import_asset(Ref<AudioStreamWAV>& ret_ref,const String &p_source_file,const HashMap<StringName, Variant> &p_options, List<String> *r_platform_variants, List<String> *r_gen_files = nullptr, Variant *r_metadata = nullptr);
 
 	ResourceImporterWAV();
 };
