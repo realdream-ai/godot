@@ -46,6 +46,7 @@ private:
 	HashMap<String, Ref<Texture2D>> cached_texture;
 	HashMap<String, Ref<AudioStream>> cached_audio;
 	bool is_load_direct;
+	String game_data_root = "@";
 
 private:
 	static Ref<AudioStreamWAV> _load_wav(const String &path);
@@ -57,6 +58,7 @@ public:
 	void on_awake() override;
 	Ref<Texture2D> load_texture(String path);
 	Ref<AudioStream> load_audio(String path);
+	void set_game_datas(String path, Vector<String> files);
 
 public:
 	void set_load_mode(GdBool is_direct_mode);

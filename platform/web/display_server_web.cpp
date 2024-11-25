@@ -39,6 +39,10 @@
 #include "scene/resources/atlas_texture.h"
 #include "servers/rendering/dummy/rasterizer_dummy.h"
 
+#include "core/extension/spx.h"
+#include "core/extension/spx_engine.h"
+#include "core/extension/spx_res_mgr.h"
+
 #ifdef GLES3_ENABLED
 #include "drivers/gles3/rasterizer_gles3.h"
 #endif
@@ -940,6 +944,28 @@ void DisplayServerWeb::_select_dir_callback(const String &p_text) {
 #endif	
 }
 
+void DisplayServerWeb::on_game_datas_set_callback(const char *p_path, const char **p_file_paths, int p_size) {
+	String path = p_path;
+	Vector<String> file_paths;
+	for (int i = 0; i < p_size; i++) {
+		file_paths.append(String::utf8(p_file_paths[i]));
+	}
+
+#ifdef PROXY_TO_PTHREAD_ENABLED
+	if (!Thread::is_main_thread()) {
+		callable_mp_static(DisplayServerWeb::_on_game_datas_set_callback).bind(file_paths).call_deferred();
+		return;
+	}
+#endif
+
+	_on_game_datas_set_callback(path, file_paths);
+}
+
+void DisplayServerWeb::_on_game_datas_set_callback(const String &p_path, const Vector<String> &p_file_paths) {
+	SpxEngine::get_singleton()->get_res()->set_game_datas(p_path, p_file_paths);
+}
+
+
 void DisplayServerWeb::clipboard_set(const String &p_text) {
 	clipboard = p_text;
 	int err = godot_js_display_clipboard_set(p_text.utf8().get_data());
@@ -1083,6 +1109,7 @@ DisplayServerWeb::DisplayServerWeb(const String &p_rendering_driver, WindowMode 
 	godot_js_update_files_cb(&DisplayServerWeb::update_files_js_callback);
 	godot_js_input_gamepad_cb(&DisplayServerWeb::gamepad_callback);
 	godot_js_select_dir_cb(&DisplayServerWeb::select_dir_callback);
+	godot_js_on_game_datas_set_callback(&DisplayServerWeb::on_game_datas_set_callback);
 
 
 	// JS Display interface (js/libs/library_godot_display.js)

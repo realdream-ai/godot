@@ -63,7 +63,15 @@ Ref<AudioStreamMP3> SpxResMgr::_load_mp3(const String &path) {
 	return ResourceImporterMP3::import_mp3(path);
 }
 
-Ref<AudioStream> SpxResMgr::_load_audio_direct(const String &path) {
+Ref<AudioStream> SpxResMgr::_load_audio_direct(const String &p_path) {
+	String path = p_path;
+	if(!path.begins_with(game_data_root)){
+		path = path.replace("res://", "");
+		if(path.begins_with("../")){
+			path = path.substr(3, -1);
+		}
+		path = game_data_root + "/" + path;
+	}
 	if (cached_audio.has(path)) {
 		return cached_audio[path];
 	}
@@ -85,7 +93,16 @@ Ref<AudioStream> SpxResMgr::_load_audio_direct(const String &path) {
 	return res;
 }
 
-Ref<Texture2D> SpxResMgr::_load_texture_direct(const String &path) {
+Ref<Texture2D> SpxResMgr::_load_texture_direct(const String &p_path) {
+	String path = p_path;
+	if(!path.begins_with(game_data_root)){
+		path = path.replace("res://", "");
+		if(path.begins_with("../")){
+			path = path.substr(3, -1);
+		}
+		path = game_data_root + "/" + path;
+	}
+
 	if (cached_texture.has(path)) {
 		return cached_texture[path];
 	}
@@ -114,6 +131,10 @@ Ref<Texture2D> SpxResMgr::load_texture(String path) {
 	} else {
 		return _load_texture_direct(path);
 	}
+}
+
+void SpxResMgr::set_game_datas(String path, Vector<String> files) {
+	game_data_root = path;
 }
 
 Ref<AudioStream> SpxResMgr::load_audio(String path) {
