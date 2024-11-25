@@ -77,6 +77,7 @@ extern void godot_js_input_drop_files_cb(void (*p_callback)(const char **p_filev
 extern void godot_js_delete_files_cb(void (*p_callback)(const char **p_filev, int p_filec));
 extern void godot_js_update_files_cb(void (*p_callback)(const char **p_filev, int p_filec));
 extern void godot_js_select_dir_cb(void (*p_callback)(const char *p_path));
+extern void godot_js_on_game_datas_set_callback(void (*p_callback)(const char *p_path, const char **p_filev, int p_filec));
 
 // TTS
 extern int godot_js_tts_is_speaking();

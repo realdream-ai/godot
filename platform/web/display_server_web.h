@@ -128,6 +128,8 @@ private:
 	static void _update_files_js_callback(const Vector<String> &p_files);
 	WASM_EXPORT static void select_dir_callback(const char *p_text);
 	static void _select_dir_callback(const String &p_text);
+	WASM_EXPORT static void on_game_datas_set_callback(const char *p_path, const char **p_filev, int p_filec);
+	static void _on_game_datas_set_callback(const String &p_path,const Vector<String> &p_files);
 
 	void process_joypads();
 

@@ -112,6 +112,9 @@ const GodotFS = {
 	$GodotFS__postset: [
 		'Module["initFS"] = GodotFS.init;',
 		'Module["copyToFS"] = GodotFS.copy_to_fs;',
+		'Module["deleteDirFS"] = GodotFS.rm_dir;',
+		'Module["updateGameDatas"] = GodotFS.update_game_datas;',
+		
 	].join(''),
 	$GodotFS: {
 		// ERRNO_CODES works every odd version of emscripten, but this will break too eventually.
@@ -119,7 +122,15 @@ const GodotFS = {
 		_idbfs: false,
 		_syncing: false,
 		_mount_points: [],
-
+		_game_datas: null,
+		_set_game_data_cb: null,
+		
+		update_game_datas: function (path, files) {
+			GodotFS._game_datas = { path: path, files: files }
+			if(GodotFS._set_game_data_cb){
+				GodotFS._set_game_data_cb(path, files)
+			}
+		},
 		is_persistent: function () {
 			return GodotFS._idbfs ? 1 : 0;
 		},
@@ -227,6 +238,10 @@ const GodotFS = {
 				FS.mkdirTree(dir);
 			}
 			FS.writeFile(path, new Uint8Array(buffer));
+		},
+
+		rm_dir: function (path) {
+			FS.rmdir(path);
 		},
 
 		refresh_fs: function () {

@@ -369,6 +369,14 @@ function gdspx_res_set_load_mode(is_direct_mode) {
 	FreeGdBool(_arg0); 
 
 }
+function gdspx_res_get_load_mode() {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_res_get_load_mode']; 
+	_retValue = AllocGdBool();
+	_gdFuncPtr(_retValue);
+	_finalRetValue = ToJsBool(_retValue);
+	FreeGdBool(_retValue); 
+	return _finalRetValue
+}
 function gdspx_res_get_bound_from_alpha(p_path) {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_res_get_bound_from_alpha']; 
 	_retValue = AllocGdRect2();

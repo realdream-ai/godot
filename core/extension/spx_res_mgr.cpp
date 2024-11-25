@@ -63,7 +63,15 @@ Ref<AudioStreamMP3> SpxResMgr::_load_mp3(const String &path) {
 	return ResourceImporterMP3::import_mp3(path);
 }
 
-Ref<AudioStream> SpxResMgr::_load_audio_direct(const String &path) {
+Ref<AudioStream> SpxResMgr::_load_audio_direct(const String &p_path) {
+	String path = p_path;
+	if(!path.begins_with(game_data_root)){
+		path = path.replace("res://", "");
+		if(path.begins_with("../")){
+			path = path.substr(3, -1);
+		}
+		path = game_data_root + "/" + path;
+	}
 	if (cached_audio.has(path)) {
 		return cached_audio[path];
 	}
@@ -85,7 +93,16 @@ Ref<AudioStream> SpxResMgr::_load_audio_direct(const String &path) {
 	return res;
 }
 
-Ref<Texture2D> SpxResMgr::_load_texture_direct(const String &path) {
+Ref<Texture2D> SpxResMgr::_load_texture_direct(const String &p_path) {
+	String path = p_path;
+	if(!path.begins_with(game_data_root)){
+		path = path.replace("res://", "");
+		if(path.begins_with("../")){
+			path = path.substr(3, -1);
+		}
+		path = game_data_root + "/" + path;
+	}
+
 	if (cached_texture.has(path)) {
 		return cached_texture[path];
 	}
@@ -116,6 +133,10 @@ Ref<Texture2D> SpxResMgr::load_texture(String path) {
 	}
 }
 
+void SpxResMgr::set_game_datas(String path, Vector<String> files) {
+	game_data_root = path;
+}
+
 Ref<AudioStream> SpxResMgr::load_audio(String path) {
 	if (!is_load_direct) {
 		Ref<Resource> res = ResourceLoader::load(path);
@@ -132,11 +153,14 @@ Ref<AudioStream> SpxResMgr::load_audio(String path) {
 void SpxResMgr::set_load_mode(GdBool is_direct_mode) {
 	is_load_direct = is_direct_mode;
 }
+GdBool SpxResMgr::get_load_mode() {
+	return is_load_direct;
+}
 
 GdRect2 SpxResMgr::get_bound_from_alpha(GdString path) {
 	auto path_str = SpxStr(path);
 
-	Ref<Texture2D> image = ResourceLoader::load(path_str);
+	Ref<Texture2D> image = load_texture(path_str);
 
 	int width = image->get_width();
 	int height = image->get_height();
@@ -170,7 +194,7 @@ GdRect2 SpxResMgr::get_bound_from_alpha(GdString path) {
 
 GdVec2 SpxResMgr::get_image_size(GdString path) {
 	auto path_str = SpxStr(path);
-	Ref<Texture2D> value = ResourceLoader::load(path_str);
+	Ref<Texture2D> value = load_texture(path_str);
 	if (value.is_valid()) {
 		return value->get_size();
 	} else {

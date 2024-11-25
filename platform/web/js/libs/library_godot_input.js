@@ -421,6 +421,28 @@ const GodotEditorEventHandler = {
 		const canvas = GodotConfig.canvas;
 		GodotEditorEventHandler.deleteFilesCB = delete_files;
 	},
+	godot_js_on_game_datas_set_callback__proxy: 'sync',
+	godot_js_on_game_datas_set_callback__sig: 'vi',
+	godot_js_on_game_datas_set_callback: function (callback) {
+		const func = GodotRuntime.get_func(callback);
+		const set_game_data = function (path, files) {
+			const args = files || [];
+			if (!args.length) {
+				return;
+			}
+			const ptr = GodotRuntime.allocString(path);
+			const argc = args.length;
+			const argv = GodotRuntime.allocStringArray(args);
+			func(ptr, argv, argc);
+			GodotRuntime.freeStringArray(argv, argc);
+			GodotRuntime.free(ptr);
+		};
+		if(GodotFS._game_datas){
+			set_game_data(GodotFS._game_datas.path, GodotFS._game_datas.files);
+		}
+		GodotFS._set_game_data_cb = set_game_data
+	},
+	
 
 	godot_js_select_dir_cb__proxy: 'sync',
 	godot_js_select_dir_cb__sig: 'vi',

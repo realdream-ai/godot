@@ -182,6 +182,9 @@ static void gdextension_spx_platform_is_debug_mode(GdBool* ret_val) {
 static void gdextension_spx_res_set_load_mode(GdBool is_direct_mode) {
 	 resMgr->set_load_mode(is_direct_mode);
 }
+static void gdextension_spx_res_get_load_mode(GdBool* ret_val) {
+	*ret_val = resMgr->get_load_mode();
+}
 static void gdextension_spx_res_get_bound_from_alpha(GdString p_path,GdRect2* ret_val) {
 	*ret_val = resMgr->get_bound_from_alpha(p_path);
 }
@@ -646,6 +649,7 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_set_debug_mode);
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_is_debug_mode);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_set_load_mode);
+	REGISTER_SPX_INTERFACE_FUNC(spx_res_get_load_mode);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_get_bound_from_alpha);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_get_image_size);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_read_all_text);

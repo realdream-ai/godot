@@ -133,6 +133,15 @@ const Engine = (function () {
 			preloadFile: function (file, path) {
 				return preloader.preload(file, path, this.config.fileSizes[file]);
 			},
+			unpackGameData: function (dir, datas) {
+				files = []
+				//this.rtenv['deleteDirFS'](path);
+				for (let info of datas) {
+					files.push(info.path)
+					this.rtenv['copyToFS'](dir + "/" + info.path, info.data);
+				}
+				this.rtenv['updateGameDatas'](dir, files);
+			},
 			/**
 			 * Start the engine instance using the given override configuration (if any).
 			 * :js:meth:`startGame <Engine.prototype.startGame>` can be used in typical cases instead.
