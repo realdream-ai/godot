@@ -135,7 +135,7 @@ const Engine = (function () {
 			},
 			unpackGameData: function (dir, datas) {
 				files = []
-				//this.rtenv['deleteDirFS'](path);
+				this.rtenv['deleteDirFS'](dir);
 				for (let info of datas) {
 					files.push(info.path)
 					this.rtenv['copyToFS'](dir + "/" + info.path, info.data);
