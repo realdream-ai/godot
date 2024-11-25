@@ -241,7 +241,13 @@ const GodotFS = {
 		},
 
 		rm_dir: function (path) {
-			FS.rmdir(path);
+			const analysis = FS.analyzePath(path);
+			if (analysis.exists && analysis.object && FS.isDir(analysis.object.mode)) {
+			  FS.rmdir(path);
+			  console.log(`Directory '${path}' was removed.`);
+			} else {
+			  console.log(`Directory '${path}' does not exist.`);
+			}
 		},
 
 		refresh_fs: function () {
