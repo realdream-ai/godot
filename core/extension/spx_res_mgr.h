@@ -46,7 +46,7 @@ private:
 	HashMap<String, Ref<Texture2D>> cached_texture;
 	HashMap<String, Ref<AudioStream>> cached_audio;
 	bool is_load_direct;
-	String game_data_root = "@";
+	String game_data_root = "res://";
 
 private:
 	static Ref<AudioStreamWAV> _load_wav(const String &path);
