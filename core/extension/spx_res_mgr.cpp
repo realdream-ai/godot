@@ -66,7 +66,6 @@ Ref<AudioStreamMP3> SpxResMgr::_load_mp3(const String &path) {
 Ref<AudioStream> SpxResMgr::_load_audio_direct(const String &p_path) {
 	String path = p_path;
 	if(!path.begins_with(game_data_root)){
-		path = path.replace("res://", "");
 		if(path.begins_with("../")){
 			path = path.substr(3, -1);
 		}
@@ -96,7 +95,6 @@ Ref<AudioStream> SpxResMgr::_load_audio_direct(const String &p_path) {
 Ref<Texture2D> SpxResMgr::_load_texture_direct(const String &p_path) {
 	String path = p_path;
 	if(!path.begins_with(game_data_root)){
-		path = path.replace("res://", "");
 		if(path.begins_with("../")){
 			path = path.substr(3, -1);
 		}
