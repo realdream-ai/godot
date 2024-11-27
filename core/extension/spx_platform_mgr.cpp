@@ -29,6 +29,7 @@
 /**************************************************************************/
 
 #include "spx_platform_mgr.h"
+#include "core/config/engine.h"
 #include "scene/main/window.h"
 #include "spx.h"
 
@@ -60,7 +61,7 @@ GdString SpxPlatformMgr::get_window_title() {
 
 void SpxPlatformMgr::set_window_fullscreen(GdBool enable) {
 	print_line("SpxPlatformMgr::set_window_fullscreen", enable);
-	auto mode = enable? DisplayServer::WINDOW_MODE_FULLSCREEN : DisplayServer::WINDOW_MODE_WINDOWED;
+	auto mode = enable ? DisplayServer::WINDOW_MODE_FULLSCREEN : DisplayServer::WINDOW_MODE_WINDOWED;
 	DisplayServer::get_singleton()->window_set_mode(mode);
 }
 
@@ -68,11 +69,18 @@ GdBool SpxPlatformMgr::is_window_fullscreen() {
 	return get_root()->get_mode() == Window::MODE_FULLSCREEN;
 }
 
-
 void SpxPlatformMgr::set_debug_mode(GdBool enable) {
 	Spx::debug_mode = enable;
 }
 
 GdBool SpxPlatformMgr::is_debug_mode() {
 	return Spx::debug_mode;
+}
+
+void SpxPlatformMgr::set_time_scale(GdFloat time_scale) {
+	Engine::get_singleton()->set_time_scale(time_scale);
+}
+
+GdFloat SpxPlatformMgr::get_time_scale() {
+	return Engine::get_singleton()->get_time_scale();
 }

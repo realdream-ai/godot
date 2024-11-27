@@ -47,6 +47,9 @@ public:
 	GdBool is_window_fullscreen();
 	void set_debug_mode(GdBool enable);
 	GdBool is_debug_mode();
+
+	GdFloat get_time_scale();
+	void set_time_scale(GdFloat time_scale);
 };
 
 #endif // SPX_OS_MGR_H

@@ -240,6 +240,8 @@ typedef void (*GDExtensionSpxPlatformSetWindowFullscreen)(GdBool enable);
 typedef void (*GDExtensionSpxPlatformIsWindowFullscreen)(GdBool* ret_value);
 typedef void (*GDExtensionSpxPlatformSetDebugMode)(GdBool enable);
 typedef void (*GDExtensionSpxPlatformIsDebugMode)(GdBool* ret_value);
+typedef void (*GDExtensionSpxPlatformGetTimeScale)(GdFloat* ret_value);
+typedef void (*GDExtensionSpxPlatformSetTimeScale)(GdFloat time_scale);
 // SpxRes
 typedef void (*GDExtensionSpxResSetLoadMode)(GdBool is_direct_mode);
 typedef void (*GDExtensionSpxResGetLoadMode)(GdBool* ret_value);
