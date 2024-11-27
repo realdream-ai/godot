@@ -361,6 +361,22 @@ function gdspx_platform_is_debug_mode() {
 	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
+function gdspx_platform_get_time_scale() {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_platform_get_time_scale']; 
+	_retValue = AllocGdFloat();
+	_gdFuncPtr(_retValue);
+	_finalRetValue = ToJsFloat(_retValue);
+	FreeGdFloat(_retValue); 
+	return _finalRetValue
+}
+function gdspx_platform_set_time_scale(time_scale) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_platform_set_time_scale']; 
+	
+	_arg0 = ToGdFloat(time_scale);
+	_gdFuncPtr(_arg0);
+	FreeGdFloat(_arg0); 
+
+}
 function gdspx_res_set_load_mode(is_direct_mode) {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_res_set_load_mode']; 
 	

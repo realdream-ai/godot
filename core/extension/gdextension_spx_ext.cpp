@@ -179,6 +179,12 @@ static void gdextension_spx_platform_set_debug_mode(GdBool enable) {
 static void gdextension_spx_platform_is_debug_mode(GdBool* ret_val) {
 	*ret_val = platformMgr->is_debug_mode();
 }
+static void gdextension_spx_platform_get_time_scale(GdFloat* ret_val) {
+	*ret_val = platformMgr->get_time_scale();
+}
+static void gdextension_spx_platform_set_time_scale(GdFloat time_scale) {
+	 platformMgr->set_time_scale(time_scale);
+}
 static void gdextension_spx_res_set_load_mode(GdBool is_direct_mode) {
 	 resMgr->set_load_mode(is_direct_mode);
 }
@@ -648,6 +654,8 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_is_window_fullscreen);
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_set_debug_mode);
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_is_debug_mode);
+	REGISTER_SPX_INTERFACE_FUNC(spx_platform_get_time_scale);
+	REGISTER_SPX_INTERFACE_FUNC(spx_platform_set_time_scale);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_set_load_mode);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_get_load_mode);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_get_bound_from_alpha);
