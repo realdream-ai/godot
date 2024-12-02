@@ -131,6 +131,8 @@ void SpxSprite::on_start() {
 	if (anim2d->get_sprite_frames() == nullptr) {
 		anim2d->set_sprite_frames(memnew(SpriteFrames));
 	}
+	default_sprite_frames = anim2d->get_sprite_frames();
+
 	visible_notifier = (get_component<VisibleOnScreenNotifier2D>());
 	if (visible_notifier == nullptr) {
 		visible_notifier = memnew(VisibleOnScreenNotifier2D);
@@ -165,6 +167,10 @@ void SpxSprite::set_gid(GdObj id) {
 
 GdObj SpxSprite::get_gid() {
 	return gid;
+}
+void SpxSprite::set_type_name(GdString type_name) {
+	auto name = SpxStr(type_name);
+	spx_type_name = name;
 }
 
 void SpxSprite::set_spx_type_name(String type_name) {
@@ -284,6 +290,7 @@ void SpxSprite::set_texture(GdString path) {
 	auto path_str = SpxStr(path);
 	Ref<Texture2D> texture = resMgr->load_texture(path_str);
 	if (texture.is_valid()) {
+		anim2d->set_sprite_frames(default_sprite_frames);
 		auto frames = anim2d->get_sprite_frames();
 		if (frames->get_frame_count(SpxSpriteMgr::default_texture_anim) == 0) {
 			frames->add_frame(SpxSpriteMgr::default_texture_anim, texture);
@@ -304,12 +311,16 @@ GdString SpxSprite::get_texture() {
 	return &SpxBaseMgr::temp_return_str;
 }
 
-void SpxSprite::play_anim(GdString p_name, GdFloat p_custom_scale, GdBool p_from_end) {
-	anim2d->play(SpxStrName(p_name), p_custom_scale, p_from_end);
+void SpxSprite::play_anim(GdString p_name, GdFloat p_speed, GdBool p_from_end) {
+	auto anim_name =resMgr->get_anim_key_name( get_spx_type_name(),SpxStrName(p_name));
+	anim2d->set_sprite_frames(resMgr->get_anim_frames(anim_name));
+	anim2d->play(anim_name, p_speed, p_from_end);
 }
 
 void SpxSprite::play_backwards_anim(GdString p_name) {
-	anim2d->play_backwards(SpxStrName(p_name));
+	auto anim_name =resMgr->get_anim_key_name( get_spx_type_name(),SpxStrName(p_name));
+	anim2d->set_sprite_frames(resMgr->get_anim_frames(anim_name));
+	anim2d->play_backwards(anim_name);
 }
 
 void SpxSprite::pause_anim() {

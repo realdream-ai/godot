@@ -377,6 +377,22 @@ function gdspx_platform_set_time_scale(time_scale) {
 	FreeGdFloat(_arg0); 
 
 }
+function gdspx_res_create_animation(sprite_type_name,anim_name,context,is_altas) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_res_create_animation']; 
+	_retValue = AllocGdInt();
+	_arg0 = ToGdString(sprite_type_name);
+	_arg1 = ToGdString(anim_name);
+	_arg2 = ToGdString(context);
+	_arg3 = ToGdBool(is_altas);
+	_gdFuncPtr(_arg0, _arg1, _arg2, _arg3, _retValue);
+	FreeGdString(_arg0); 
+	FreeGdString(_arg1); 
+	FreeGdString(_arg2); 
+	FreeGdBool(_arg3); 
+	_finalRetValue = ToJsInt(_retValue);
+	FreeGdInt(_retValue); 
+	return _finalRetValue
+}
 function gdspx_res_set_load_mode(is_direct_mode) {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_res_set_load_mode']; 
 	
@@ -481,6 +497,16 @@ function gdspx_sprite_set_physic_process(obj,is_on) {
 	_gdFuncPtr(_arg0, _arg1);
 	FreeGdObj(_arg0); 
 	FreeGdBool(_arg1); 
+
+}
+function gdspx_sprite_set_type_name(obj,type_name) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_sprite_set_type_name']; 
+	
+	_arg0 = ToGdObj(obj);
+	_arg1 = ToGdString(type_name);
+	_gdFuncPtr(_arg0, _arg1);
+	FreeGdObj(_arg0); 
+	FreeGdString(_arg1); 
 
 }
 function gdspx_sprite_set_child_position(obj,path,pos) {
