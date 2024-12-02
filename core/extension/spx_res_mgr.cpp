@@ -37,13 +37,16 @@
 #include "modules/minimp3/resource_importer_mp3.h"
 #include "scene/2d/audio_stream_player_2d.h"
 #include "scene/main/window.h"
+#include "scene/resources/atlas_texture.h"
 #include "scene/resources/audio_stream_wav.h"
 #include "scene/resources/image_texture.h"
+#include "scene/resources/sprite_frames.h"
 #include "spx.h"
 
 void SpxResMgr::on_awake() {
 	SpxBaseMgr::on_awake();
 	is_load_direct = true;
+	anim_frames.instantiate();
 }
 
 Ref<AudioStreamWAV> SpxResMgr::_load_wav(const String &path) {
@@ -65,8 +68,8 @@ Ref<AudioStreamMP3> SpxResMgr::_load_mp3(const String &path) {
 
 Ref<AudioStream> SpxResMgr::_load_audio_direct(const String &p_path) {
 	String path = p_path;
-	if(!path.begins_with(game_data_root) && game_data_root != "res://"){
-		if(path.begins_with("../")){
+	if (!path.begins_with(game_data_root) && game_data_root != "res://") {
+		if (path.begins_with("../")) {
 			path = path.substr(3, -1);
 		}
 		path = game_data_root + "/" + path;
@@ -94,8 +97,8 @@ Ref<AudioStream> SpxResMgr::_load_audio_direct(const String &p_path) {
 
 Ref<Texture2D> SpxResMgr::_load_texture_direct(const String &p_path) {
 	String path = p_path;
-	if(!path.begins_with(game_data_root) && game_data_root != "res://"){
-		if(path.begins_with("../")){
+	if (!path.begins_with(game_data_root) && game_data_root != "res://") {
+		if (path.begins_with("../")) {
 			path = path.substr(3, -1);
 		}
 		path = game_data_root + "/" + path;
@@ -107,9 +110,9 @@ Ref<Texture2D> SpxResMgr::_load_texture_direct(const String &p_path) {
 
 	Ref<Image> image;
 	image.instantiate();
-	Error err =ImageLoader::load_image(path, image);
+	Error err = ImageLoader::load_image(path, image);
 	if (err != OK) {
-		print_line("Failed to load image: " + String::num_int64(err),path);
+		print_line("Failed to load image: " + String::num_int64(err), path);
 		return Ref<Texture2D>();
 	}
 
@@ -147,7 +150,71 @@ Ref<AudioStream> SpxResMgr::load_audio(String path) {
 		return _load_audio_direct(path);
 	}
 }
+Ref<SpriteFrames> SpxResMgr::get_anim_frames(const String &anim_name) {
+	return anim_frames;
+}
+String SpxResMgr::get_anim_key_name(const String &sprite_type_name, const String &anim_name) {
+	return sprite_type_name + "::" + anim_name;
+}
 
+GdInt SpxResMgr::create_animation(GdString p_sprite_type_name, GdString p_anim_name, GdString p_context, GdBool is_altas) {
+	auto sprite_type_name = SpxStr(p_sprite_type_name);
+	auto anim_name = SpxStr(p_anim_name);
+	auto context = SpxStr(p_context);
+	auto key = get_anim_key_name(sprite_type_name, anim_name);
+	auto frames = anim_frames;
+	if (frames->get_frame_count(key) != 0) {
+		print_error("animation is already exist " + sprite_type_name + " " + anim_name);
+		return 1;
+	}
+
+	if (!is_altas) {
+		auto strs = context.split(";");
+		for (const String &path : strs) {
+			Ref<Texture2D> texture = load_texture(path);
+			if (!texture.is_valid()) {
+				print_error("animation parse error" + sprite_type_name + " " + anim_name + " can not find path " + path);
+				return 1;
+			}
+			frames->add_frame(anim_name, texture);
+		}
+	} else {
+		auto strs = context.split(";");
+		if (strs.size() < 2) {
+			print_error("create_animation context error missing \";\"? : " + context);
+			return 1;
+		}
+		auto path = strs[0];
+		Ref<Texture2D> texture = load_texture(path);
+		if (!texture.is_valid()) {
+			print_error("animation parse error" + sprite_type_name + " " + anim_name + " can not find path " + path);
+			return 1;
+		}
+
+		auto paramStrs = strs[1].split(",");
+
+		if (paramStrs.size() % 4 != 0) {
+			print_error("create_animation context error, params count % 4 != 0: " + context);
+			return 1;
+		}
+		Vector<double> params;
+		for (const String &str : paramStrs) {
+			params.push_back(str.to_float());
+		}
+		auto count = params.size() / 4;
+		for (int i = 0; i < count; i++) {
+			Rect2 rect2;
+			rect2.position = Vector2(params[i + 0], params[i + 1]);
+			rect2.size = Vector2(params[i + 2], params[i + 3]);
+			Ref<AtlasTexture> texture;
+			texture.instantiate();
+			texture->set_atlas(texture);
+			texture->set_region(rect2);
+			frames->add_frame(anim_name, texture);
+		}
+	}
+	return 0;
+}
 void SpxResMgr::set_load_mode(GdBool is_direct_mode) {
 	is_load_direct = is_direct_mode;
 }

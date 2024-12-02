@@ -243,6 +243,7 @@ typedef void (*GDExtensionSpxPlatformIsDebugMode)(GdBool* ret_value);
 typedef void (*GDExtensionSpxPlatformGetTimeScale)(GdFloat* ret_value);
 typedef void (*GDExtensionSpxPlatformSetTimeScale)(GdFloat time_scale);
 // SpxRes
+typedef void (*GDExtensionSpxResCreateAnimation)(GdString sprite_type_name,GdString anim_name, GdString context, GdBool is_altas, GdInt* ret_value);
 typedef void (*GDExtensionSpxResSetLoadMode)(GdBool is_direct_mode);
 typedef void (*GDExtensionSpxResGetLoadMode)(GdBool* ret_value);
 typedef void (*GDExtensionSpxResGetBoundFromAlpha)(GdString p_path, GdRect2* ret_value);
@@ -257,6 +258,7 @@ typedef void (*GDExtensionSpxSceneUnloadCurrentScene)();
 typedef void (*GDExtensionSpxSpriteSetDontDestroyOnLoad)(GdObj obj);
 typedef void (*GDExtensionSpxSpriteSetProcess)(GdObj obj, GdBool is_on);
 typedef void (*GDExtensionSpxSpriteSetPhysicProcess)(GdObj obj, GdBool is_on);
+typedef void (*GDExtensionSpxSpriteSetTypeName)(GdObj obj,GdString type_name);
 typedef void (*GDExtensionSpxSpriteSetChildPosition)(GdObj obj, GdString path, GdVec2 pos);
 typedef void (*GDExtensionSpxSpriteGetChildPosition)(GdObj obj, GdString path, GdVec2* ret_value);
 typedef void (*GDExtensionSpxSpriteSetChildRotation)(GdObj obj, GdString path, GdFloat rot);

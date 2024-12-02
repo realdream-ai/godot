@@ -58,6 +58,8 @@ public:
 	void set_process(GdObj obj, GdBool is_on);
 	void set_physic_process(GdObj obj, GdBool is_on);
 
+	void set_type_name(GdObj obj,GdString type_name);
+
 	// children
 	void set_child_position(GdObj obj, GdString path, GdVec2 pos);
 	GdVec2 get_child_position(GdObj obj, GdString path);

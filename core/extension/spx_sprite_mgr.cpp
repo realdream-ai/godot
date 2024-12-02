@@ -30,17 +30,18 @@
 
 #include "spx_sprite_mgr.h"
 
-#include "scene/main/node.h"
-#include "spx_engine.h"
-#include "spx_sprite.h"
 #include "core/templates/rb_map.h"
 #include "scene/2d/animated_sprite_2d.h"
 #include "scene/2d/area_2d.h"
 #include "scene/2d/collision_shape_2d.h"
 #include "scene/2d/physics_body_2d.h"
+#include "scene/main/node.h"
 #include "scene/main/window.h"
 #include "scene/resources/circle_shape_2d.h"
 #include "scene/resources/packed_scene.h"
+#include "spx_engine.h"
+#include "spx_res_mgr.h"
+#include "spx_sprite.h"
 
 StringName SpxSpriteMgr::default_texture_anim = "";
 #define check_and_get_sprite_r(VALUE) \
@@ -133,6 +134,10 @@ void SpxSpriteMgr::set_process(GdObj obj, GdBool is_on) {
 void SpxSpriteMgr::set_physic_process(GdObj obj, GdBool is_on) {
 	check_and_get_sprite_v()
 	sprite->set_physics_process(is_on);
+}
+void SpxSpriteMgr::set_type_name(GdObj obj, GdString type_name) {
+	check_and_get_sprite_v()
+	sprite->set_type_name(type_name);
 }
 
 void SpxSpriteMgr::set_child_position(GdObj obj, GdString path, GdVec2 pos) {

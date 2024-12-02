@@ -36,6 +36,8 @@
 #include "scene/2d/physics_body_2d.h"
 #include "scene/2d/sprite_2d.h"
 #include "spx.h"
+
+class SpriteFrames;
 class AnimatedSprite2D;
 class Area2D;
 class CollisionShape2D;
@@ -53,7 +55,7 @@ private:
 protected:
 	void _notification(int p_what);
 	void _draw();
-
+	Ref<SpriteFrames> default_sprite_frames;
 	AnimatedSprite2D *anim2d;
 	Area2D *area2d;
 	CollisionShape2D *trigger2d;
@@ -97,6 +99,7 @@ public:
 	void set_gid(GdObj id);
 	GdObj get_gid();
 
+	void set_type_name(GdString type_name);
 	// render
 	void set_color(GdColor color);
 	GdColor get_color();
@@ -106,7 +109,7 @@ public:
 	GdString get_texture();
 
 	// animation
-	void play_anim(GdString p_name, GdFloat p_custom_scale = 1.0, GdBool p_from_end = false);
+	void play_anim(GdString p_name, GdFloat p_speed = 1.0, GdBool p_from_end = false);
 	void play_backwards_anim(GdString p_name);
 	void pause_anim();
 	void stop_anim();

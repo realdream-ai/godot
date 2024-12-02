@@ -32,6 +32,7 @@
 #define SPX_RES_MGR_H
 
 #include "gdextension_spx_ext.h"
+#include "scene/resources/sprite_frames.h"
 #include "servers/audio/audio_stream.h"
 #include "spx_base_mgr.h"
 
@@ -47,6 +48,7 @@ private:
 	HashMap<String, Ref<AudioStream>> cached_audio;
 	bool is_load_direct;
 	String game_data_root = "res://";
+	Ref<SpriteFrames> anim_frames;
 
 private:
 	static Ref<AudioStreamWAV> _load_wav(const String &path);
@@ -59,8 +61,12 @@ public:
 	Ref<Texture2D> load_texture(String path);
 	Ref<AudioStream> load_audio(String path);
 	void set_game_datas(String path, Vector<String> files);
+	Ref<SpriteFrames> get_anim_frames(const String& anim_name);
+	String get_anim_key_name(const String& sprite_type_name,const String& anim_name);
 
 public:
+	GdInt create_animation(GdString sprite_type_name,GdString anim_name, GdString context, GdBool is_altas);
+
 	void set_load_mode(GdBool is_direct_mode);
 	GdBool get_load_mode();
 	GdRect2 get_bound_from_alpha(GdString p_path);

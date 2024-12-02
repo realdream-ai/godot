@@ -185,6 +185,9 @@ static void gdextension_spx_platform_get_time_scale(GdFloat* ret_val) {
 static void gdextension_spx_platform_set_time_scale(GdFloat time_scale) {
 	 platformMgr->set_time_scale(time_scale);
 }
+static void gdextension_spx_res_create_animation(GdString sprite_type_name,GdString anim_name,GdString context,GdBool is_altas,GdInt* ret_val) {
+	*ret_val = resMgr->create_animation(sprite_type_name, anim_name, context, is_altas);
+}
 static void gdextension_spx_res_set_load_mode(GdBool is_direct_mode) {
 	 resMgr->set_load_mode(is_direct_mode);
 }
@@ -220,6 +223,9 @@ static void gdextension_spx_sprite_set_process(GdObj obj,GdBool is_on) {
 }
 static void gdextension_spx_sprite_set_physic_process(GdObj obj,GdBool is_on) {
 	 spriteMgr->set_physic_process(obj, is_on);
+}
+static void gdextension_spx_sprite_set_type_name(GdObj obj,GdString type_name) {
+	 spriteMgr->set_type_name(obj, type_name);
 }
 static void gdextension_spx_sprite_set_child_position(GdObj obj,GdString path,GdVec2 pos) {
 	 spriteMgr->set_child_position(obj, path, pos);
@@ -656,6 +662,7 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_is_debug_mode);
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_get_time_scale);
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_set_time_scale);
+	REGISTER_SPX_INTERFACE_FUNC(spx_res_create_animation);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_set_load_mode);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_get_load_mode);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_get_bound_from_alpha);
@@ -668,6 +675,7 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_dont_destroy_on_load);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_process);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_physic_process);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_type_name);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_child_position);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_child_position);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_child_rotation);

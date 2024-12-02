@@ -227,6 +227,10 @@ void gdspx_platform_set_time_scale(GdFloat* time_scale) {
 	 platformMgr->set_time_scale(*time_scale);
 }
 EMSCRIPTEN_KEEPALIVE
+void gdspx_res_create_animation(GdString* sprite_type_name,GdString* anim_name,GdString* context,GdBool* is_altas,GdInt* ret_val) {
+	*ret_val = resMgr->create_animation(*sprite_type_name, *anim_name, *context, *is_altas);
+}
+EMSCRIPTEN_KEEPALIVE
 void gdspx_res_set_load_mode(GdBool* is_direct_mode) {
 	 resMgr->set_load_mode(*is_direct_mode);
 }
@@ -273,6 +277,10 @@ void gdspx_sprite_set_process(GdObj* obj,GdBool* is_on) {
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_set_physic_process(GdObj* obj,GdBool* is_on) {
 	 spriteMgr->set_physic_process(*obj, *is_on);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_sprite_set_type_name(GdObj* obj,GdString* type_name) {
+	 spriteMgr->set_type_name(*obj, *type_name);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_set_child_position(GdObj* obj,GdString* path,GdVec2* pos) {
