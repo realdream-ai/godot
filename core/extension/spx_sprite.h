@@ -109,7 +109,7 @@ public:
 	GdString get_texture();
 
 	// animation
-	void play_anim(GdString p_name, GdFloat p_speed = 1.0, GdBool p_from_end = false);
+	void play_anim(GdString p_name, GdFloat p_speed = 1.0,GdBool isLoop= false, GdBool p_from_end = false);
 	void play_backwards_anim(GdString p_name);
 	void pause_anim();
 	void stop_anim();

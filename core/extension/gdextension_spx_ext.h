@@ -288,7 +288,7 @@ typedef void (*GDExtensionSpxSpriteSetVisible)(GdObj obj, GdBool visible);
 typedef void (*GDExtensionSpxSpriteGetVisible)(GdObj obj, GdBool* ret_value);
 typedef void (*GDExtensionSpxSpriteGetZIndex)(GdObj obj, GdInt* ret_value);
 typedef void (*GDExtensionSpxSpriteSetZIndex)(GdObj obj, GdInt z);
-typedef void (*GDExtensionSpxSpritePlayAnim)(GdObj obj, GdString p_name , GdFloat p_custom_scale , GdBool p_from_end );
+typedef void (*GDExtensionSpxSpritePlayAnim)(GdObj obj, GdString p_name , GdFloat p_speed , GdBool p_revert );
 typedef void (*GDExtensionSpxSpritePlayBackwardsAnim)(GdObj obj,  GdString p_name );
 typedef void (*GDExtensionSpxSpritePauseAnim)(GdObj obj);
 typedef void (*GDExtensionSpxSpriteStopAnim)(GdObj obj);

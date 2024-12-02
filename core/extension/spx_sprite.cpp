@@ -311,9 +311,11 @@ GdString SpxSprite::get_texture() {
 	return &SpxBaseMgr::temp_return_str;
 }
 
-void SpxSprite::play_anim(GdString p_name, GdFloat p_speed, GdBool p_from_end) {
+void SpxSprite::play_anim(GdString p_name, GdFloat p_speed,GdBool isLoop,GdBool p_from_end) {
 	auto anim_name =resMgr->get_anim_key_name( get_spx_type_name(),SpxStrName(p_name));
-	anim2d->set_sprite_frames(resMgr->get_anim_frames(anim_name));
+	auto frames = resMgr->get_anim_frames(anim_name);
+	anim2d->set_sprite_frames(frames);
+	frames->set_animation_loop(anim_name,isLoop);
 	anim2d->play(anim_name, p_speed, p_from_end);
 }
 

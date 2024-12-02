@@ -159,24 +159,25 @@ String SpxResMgr::get_anim_key_name(const String &sprite_type_name, const String
 
 GdInt SpxResMgr::create_animation(GdString p_sprite_type_name, GdString p_anim_name, GdString p_context, GdBool is_altas) {
 	auto sprite_type_name = SpxStr(p_sprite_type_name);
-	auto anim_name = SpxStr(p_anim_name);
+	auto clip_name = SpxStr(p_anim_name);
 	auto context = SpxStr(p_context);
-	auto key = get_anim_key_name(sprite_type_name, anim_name);
+	auto anim_key = get_anim_key_name(sprite_type_name, clip_name);
 	auto frames = anim_frames;
-	if (frames->get_frame_count(key) != 0) {
-		print_error("animation is already exist " + sprite_type_name + " " + anim_name);
+	if (frames->has_animation(anim_key)) {
+		print_error("animation is already exist " + sprite_type_name + " " + clip_name);
 		return 1;
 	}
-
+	frames->add_animation(anim_key);
+	print_line(sprite_type_name, clip_name, anim_key, context);
 	if (!is_altas) {
 		auto strs = context.split(";");
 		for (const String &path : strs) {
 			Ref<Texture2D> texture = load_texture(path);
 			if (!texture.is_valid()) {
-				print_error("animation parse error" + sprite_type_name + " " + anim_name + " can not find path " + path);
+				print_error("animation parse error" + sprite_type_name + " " + anim_key + " can not find path " + path);
 				return 1;
 			}
-			frames->add_frame(anim_name, texture);
+			frames->add_frame(anim_key, texture);
 		}
 	} else {
 		auto strs = context.split(";");
@@ -187,7 +188,7 @@ GdInt SpxResMgr::create_animation(GdString p_sprite_type_name, GdString p_anim_n
 		auto path = strs[0];
 		Ref<Texture2D> texture = load_texture(path);
 		if (!texture.is_valid()) {
-			print_error("animation parse error" + sprite_type_name + " " + anim_name + " can not find path " + path);
+			print_error("animation parse error" + sprite_type_name + " " + anim_key + " can not find path " + path);
 			return 1;
 		}
 
@@ -210,7 +211,7 @@ GdInt SpxResMgr::create_animation(GdString p_sprite_type_name, GdString p_anim_n
 			texture.instantiate();
 			texture->set_atlas(texture);
 			texture->set_region(rect2);
-			frames->add_frame(anim_name, texture);
+			frames->add_frame(anim_key, texture);
 		}
 	}
 	return 0;

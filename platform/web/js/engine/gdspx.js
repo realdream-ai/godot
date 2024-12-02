@@ -823,13 +823,13 @@ function gdspx_sprite_set_z_index(obj,z) {
 	FreeGdInt(_arg1); 
 
 }
-function gdspx_sprite_play_anim(obj,p_name,p_custom_scale,p_from_end) {
+function gdspx_sprite_play_anim(obj,p_name,p_speed,p_revert) {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_sprite_play_anim']; 
 	
 	_arg0 = ToGdObj(obj);
 	_arg1 = ToGdString(p_name);
-	_arg2 = ToGdFloat(p_custom_scale);
-	_arg3 = ToGdBool(p_from_end);
+	_arg2 = ToGdFloat(p_speed);
+	_arg3 = ToGdBool(p_revert);
 	_gdFuncPtr(_arg0, _arg1, _arg2, _arg3);
 	FreeGdObj(_arg0); 
 	FreeGdString(_arg1); 
