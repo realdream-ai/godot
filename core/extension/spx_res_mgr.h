@@ -65,7 +65,7 @@ public:
 	String get_anim_key_name(const String& sprite_type_name,const String& anim_name);
 
 public:
-	GdInt create_animation(GdString sprite_type_name,GdString anim_name, GdString context, GdBool is_altas);
+	GdInt create_animation(GdString sprite_type_name,GdString anim_name, GdString context, GdInt fps, GdBool is_altas);
 
 	void set_load_mode(GdBool is_direct_mode);
 	GdBool get_load_mode();

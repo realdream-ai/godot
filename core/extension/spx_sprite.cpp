@@ -128,10 +128,8 @@ void SpxSprite::_draw() {
 void SpxSprite::on_start() {
 	collider2d = (get_component<CollisionShape2D>());
 	anim2d = (get_component<AnimatedSprite2D>());
-	if (anim2d->get_sprite_frames() == nullptr) {
-		anim2d->set_sprite_frames(memnew(SpriteFrames));
-	}
-	default_sprite_frames = anim2d->get_sprite_frames();
+	default_sprite_frames.instantiate();
+	anim2d->set_sprite_frames(default_sprite_frames);
 
 	visible_notifier = (get_component<VisibleOnScreenNotifier2D>());
 	if (visible_notifier == nullptr) {
@@ -274,6 +272,7 @@ void SpxSprite::set_texture_altas(GdString path, GdRect2 rect2) {
 	atlas_texture_frame->set_region(rect2);
 
 	if (texture.is_valid()) {
+		anim2d->set_sprite_frames(default_sprite_frames);
 		auto frames = anim2d->get_sprite_frames();
 		if (frames->get_frame_count(SpxSpriteMgr::default_texture_anim) == 0) {
 			frames->add_frame(SpxSpriteMgr::default_texture_anim, atlas_texture_frame);

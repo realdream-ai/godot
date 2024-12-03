@@ -227,8 +227,8 @@ void gdspx_platform_set_time_scale(GdFloat* time_scale) {
 	 platformMgr->set_time_scale(*time_scale);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_res_create_animation(GdString* sprite_type_name,GdString* anim_name,GdString* context,GdBool* is_altas,GdInt* ret_val) {
-	*ret_val = resMgr->create_animation(*sprite_type_name, *anim_name, *context, *is_altas);
+void gdspx_res_create_animation(GdString* sprite_type_name,GdString* anim_name,GdString* context,GdInt* fps,GdBool* is_altas,GdInt* ret_val) {
+	*ret_val = resMgr->create_animation(*sprite_type_name, *anim_name, *context, *fps, *is_altas);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_res_set_load_mode(GdBool* is_direct_mode) {

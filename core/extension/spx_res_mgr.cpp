@@ -157,7 +157,7 @@ String SpxResMgr::get_anim_key_name(const String &sprite_type_name, const String
 	return sprite_type_name + "::" + anim_name;
 }
 
-GdInt SpxResMgr::create_animation(GdString p_sprite_type_name, GdString p_anim_name, GdString p_context, GdBool is_altas) {
+GdInt SpxResMgr::create_animation(GdString p_sprite_type_name, GdString p_anim_name, GdString p_context,GdInt fps, GdBool is_altas) {
 	auto sprite_type_name = SpxStr(p_sprite_type_name);
 	auto clip_name = SpxStr(p_anim_name);
 	auto context = SpxStr(p_context);
@@ -168,7 +168,7 @@ GdInt SpxResMgr::create_animation(GdString p_sprite_type_name, GdString p_anim_n
 		return 1;
 	}
 	frames->add_animation(anim_key);
-	print_line(sprite_type_name, clip_name, anim_key, context);
+	frames->set_animation_speed(anim_key,fps);
 	if (!is_altas) {
 		auto strs = context.split(";");
 		for (const String &path : strs) {
@@ -186,8 +186,8 @@ GdInt SpxResMgr::create_animation(GdString p_sprite_type_name, GdString p_anim_n
 			return 1;
 		}
 		auto path = strs[0];
-		Ref<Texture2D> texture = load_texture(path);
-		if (!texture.is_valid()) {
+		Ref<Texture2D> altas_texture = load_texture(path);
+		if (!altas_texture.is_valid()) {
 			print_error("animation parse error" + sprite_type_name + " " + anim_key + " can not find path " + path);
 			return 1;
 		}
@@ -195,7 +195,7 @@ GdInt SpxResMgr::create_animation(GdString p_sprite_type_name, GdString p_anim_n
 		auto paramStrs = strs[1].split(",");
 
 		if (paramStrs.size() % 4 != 0) {
-			print_error("create_animation context error, params count % 4 != 0: " + context);
+			print_error("create_animation context error, params count % 4 != 0: " + context +" size = "+ paramStrs.size() );
 			return 1;
 		}
 		Vector<double> params;
@@ -204,12 +204,13 @@ GdInt SpxResMgr::create_animation(GdString p_sprite_type_name, GdString p_anim_n
 		}
 		auto count = params.size() / 4;
 		for (int i = 0; i < count; i++) {
-			Rect2 rect2;
-			rect2.position = Vector2(params[i + 0], params[i + 1]);
-			rect2.size = Vector2(params[i + 2], params[i + 3]);
 			Ref<AtlasTexture> texture;
 			texture.instantiate();
-			texture->set_atlas(texture);
+			texture->set_atlas(altas_texture);
+			auto offset= i * 4;
+			Rect2 rect2;
+			rect2.position = Vector2(params[offset + 0], params[offset + 1]);
+			rect2.size = Vector2(params[offset + 2], params[offset + 3]);
 			texture->set_region(rect2);
 			frames->add_frame(anim_key, texture);
 		}
