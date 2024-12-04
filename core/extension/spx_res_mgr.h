@@ -49,7 +49,7 @@ private:
 	bool is_load_direct;
 	String game_data_root = "res://";
 	Ref<SpriteFrames> anim_frames;
-
+	bool is_dynamic_anim = false;
 private:
 	static Ref<AudioStreamWAV> _load_wav(const String &path);
 	static Ref<AudioStreamMP3> _load_mp3(const String &path);
@@ -63,6 +63,7 @@ public:
 	void set_game_datas(String path, Vector<String> files);
 	Ref<SpriteFrames> get_anim_frames(const String& anim_name);
 	String get_anim_key_name(const String& sprite_type_name,const String& anim_name);
+	bool is_dynamic_anim_mode() const;
 
 public:
 	GdInt create_animation(GdString sprite_type_name,GdString anim_name, GdString context, GdInt fps, GdBool is_altas);

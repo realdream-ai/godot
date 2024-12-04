@@ -61,6 +61,9 @@ Ref<AudioStreamWAV> SpxResMgr::_load_wav(const String &path) {
 	importer->import_asset(sample, path, options_map, nullptr);
 	return sample;
 }
+bool SpxResMgr::is_dynamic_anim_mode() const {
+	return is_dynamic_anim;
+}
 
 Ref<AudioStreamMP3> SpxResMgr::_load_mp3(const String &path) {
 	return ResourceImporterMP3::import_mp3(path);
@@ -158,6 +161,7 @@ String SpxResMgr::get_anim_key_name(const String &sprite_type_name, const String
 }
 
 GdInt SpxResMgr::create_animation(GdString p_sprite_type_name, GdString p_anim_name, GdString p_context,GdInt fps, GdBool is_altas) {
+	is_dynamic_anim = true;
 	auto sprite_type_name = SpxStr(p_sprite_type_name);
 	auto clip_name = SpxStr(p_anim_name);
 	auto context = SpxStr(p_context);

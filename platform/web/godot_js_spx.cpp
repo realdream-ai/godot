@@ -399,8 +399,8 @@ void gdspx_sprite_set_z_index(GdObj* obj,GdInt* z) {
 	 spriteMgr->set_z_index(*obj, *z);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_play_anim(GdObj* obj,GdString* p_name,GdFloat* p_speed,GdBool* p_revert) {
-	 spriteMgr->play_anim(*obj, *p_name, *p_speed, *p_revert);
+void gdspx_sprite_play_anim(GdObj* obj,GdString* p_name,GdFloat* p_speed,GdBool* isLoop,GdBool* p_revert) {
+	 spriteMgr->play_anim(*obj, *p_name, *p_speed, *isLoop, *p_revert);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_play_backwards_anim(GdObj* obj,GdString* p_name) {
