@@ -227,8 +227,8 @@ void gdspx_platform_set_time_scale(GdFloat* time_scale) {
 	 platformMgr->set_time_scale(*time_scale);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_res_create_animation(GdString* sprite_type_name,GdString* anim_name,GdString* context,GdBool* is_altas,GdInt* ret_val) {
-	*ret_val = resMgr->create_animation(*sprite_type_name, *anim_name, *context, *is_altas);
+void gdspx_res_create_animation(GdString* sprite_type_name,GdString* anim_name,GdString* context,GdInt* fps,GdBool* is_altas,GdInt* ret_val) {
+	*ret_val = resMgr->create_animation(*sprite_type_name, *anim_name, *context, *fps, *is_altas);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_res_set_load_mode(GdBool* is_direct_mode) {
@@ -399,8 +399,8 @@ void gdspx_sprite_set_z_index(GdObj* obj,GdInt* z) {
 	 spriteMgr->set_z_index(*obj, *z);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_play_anim(GdObj* obj,GdString* p_name,GdFloat* p_custom_scale,GdBool* p_from_end) {
-	 spriteMgr->play_anim(*obj, *p_name, *p_custom_scale, *p_from_end);
+void gdspx_sprite_play_anim(GdObj* obj,GdString* p_name,GdFloat* p_speed,GdBool* isLoop,GdBool* p_revert) {
+	 spriteMgr->play_anim(*obj, *p_name, *p_speed, *isLoop, *p_revert);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_play_backwards_anim(GdObj* obj,GdString* p_name) {

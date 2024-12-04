@@ -185,8 +185,8 @@ static void gdextension_spx_platform_get_time_scale(GdFloat* ret_val) {
 static void gdextension_spx_platform_set_time_scale(GdFloat time_scale) {
 	 platformMgr->set_time_scale(time_scale);
 }
-static void gdextension_spx_res_create_animation(GdString sprite_type_name,GdString anim_name,GdString context,GdBool is_altas,GdInt* ret_val) {
-	*ret_val = resMgr->create_animation(sprite_type_name, anim_name, context, is_altas);
+static void gdextension_spx_res_create_animation(GdString sprite_type_name,GdString anim_name,GdString context,GdInt fps,GdBool is_altas,GdInt* ret_val) {
+	*ret_val = resMgr->create_animation(sprite_type_name, anim_name, context, fps, is_altas);
 }
 static void gdextension_spx_res_set_load_mode(GdBool is_direct_mode) {
 	 resMgr->set_load_mode(is_direct_mode);
@@ -314,8 +314,8 @@ static void gdextension_spx_sprite_get_z_index(GdObj obj,GdInt* ret_val) {
 static void gdextension_spx_sprite_set_z_index(GdObj obj,GdInt z) {
 	 spriteMgr->set_z_index(obj, z);
 }
-static void gdextension_spx_sprite_play_anim(GdObj obj,GdString p_name,GdFloat p_custom_scale,GdBool p_from_end) {
-	 spriteMgr->play_anim(obj, p_name, p_custom_scale, p_from_end);
+static void gdextension_spx_sprite_play_anim(GdObj obj,GdString p_name,GdFloat p_speed,GdBool isLoop,GdBool p_revert) {
+	 spriteMgr->play_anim(obj, p_name, p_speed, isLoop, p_revert);
 }
 static void gdextension_spx_sprite_play_backwards_anim(GdObj obj,GdString p_name) {
 	 spriteMgr->play_backwards_anim(obj, p_name);

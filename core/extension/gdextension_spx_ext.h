@@ -243,7 +243,7 @@ typedef void (*GDExtensionSpxPlatformIsDebugMode)(GdBool* ret_value);
 typedef void (*GDExtensionSpxPlatformGetTimeScale)(GdFloat* ret_value);
 typedef void (*GDExtensionSpxPlatformSetTimeScale)(GdFloat time_scale);
 // SpxRes
-typedef void (*GDExtensionSpxResCreateAnimation)(GdString sprite_type_name,GdString anim_name, GdString context, GdBool is_altas, GdInt* ret_value);
+typedef void (*GDExtensionSpxResCreateAnimation)(GdString sprite_type_name,GdString anim_name, GdString context, GdInt fps, GdBool is_altas, GdInt* ret_value);
 typedef void (*GDExtensionSpxResSetLoadMode)(GdBool is_direct_mode);
 typedef void (*GDExtensionSpxResGetLoadMode)(GdBool* ret_value);
 typedef void (*GDExtensionSpxResGetBoundFromAlpha)(GdString p_path, GdRect2* ret_value);
@@ -288,7 +288,7 @@ typedef void (*GDExtensionSpxSpriteSetVisible)(GdObj obj, GdBool visible);
 typedef void (*GDExtensionSpxSpriteGetVisible)(GdObj obj, GdBool* ret_value);
 typedef void (*GDExtensionSpxSpriteGetZIndex)(GdObj obj, GdInt* ret_value);
 typedef void (*GDExtensionSpxSpriteSetZIndex)(GdObj obj, GdInt z);
-typedef void (*GDExtensionSpxSpritePlayAnim)(GdObj obj, GdString p_name , GdFloat p_custom_scale , GdBool p_from_end );
+typedef void (*GDExtensionSpxSpritePlayAnim)(GdObj obj, GdString p_name , GdFloat p_speed, GdBool isLoop, GdBool p_revert );
 typedef void (*GDExtensionSpxSpritePlayBackwardsAnim)(GdObj obj,  GdString p_name );
 typedef void (*GDExtensionSpxSpritePauseAnim)(GdObj obj);
 typedef void (*GDExtensionSpxSpriteStopAnim)(GdObj obj);

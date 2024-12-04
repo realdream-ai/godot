@@ -95,7 +95,7 @@ public:
 	void set_z_index(GdObj obj, GdInt z);
 
 	// animation
-	void play_anim(GdObj obj, GdString p_name , GdFloat p_custom_scale , GdBool p_from_end );
+	void play_anim(GdObj obj, GdString p_name , GdFloat p_speed, GdBool isLoop, GdBool p_revert );
 	void play_backwards_anim(GdObj obj,  GdString p_name );
 	void pause_anim(GdObj obj);
 	void stop_anim(GdObj obj);

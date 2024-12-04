@@ -52,6 +52,10 @@ private:
 	T *get_component(Node *node, GdBool recursive = false);
 	Node *get_component(Node *node, StringName name, GdBool recursive);
 
+	bool use_default_frames;
+	void set_use_default_frames(bool is_on);
+	bool get_use_default_frames();
+
 protected:
 	void _notification(int p_what);
 	void _draw();
@@ -61,8 +65,10 @@ protected:
 	CollisionShape2D *trigger2d;
 	CollisionShape2D *collider2d;
 	VisibleOnScreenNotifier2D *visible_notifier;
+
 public:
-	CollisionShape2D * get_trigger(){ return trigger2d;}
+	CollisionShape2D *get_trigger() { return trigger2d; }
+
 public:
 	template <typename T>
 	T *get_component(GdBool recursive = false);
@@ -71,6 +77,7 @@ public:
 
 public:
 	String spx_type_name;
+
 public:
 	static void _bind_methods();
 	void on_destroy_call();
@@ -92,9 +99,9 @@ public:
 	void on_sprite_screen_exited();
 	void on_sprite_screen_entered();
 
-
 	void set_spx_type_name(String type_name);
 	String get_spx_type_name();
+
 public:
 	void set_gid(GdObj id);
 	GdObj get_gid();
@@ -109,7 +116,7 @@ public:
 	GdString get_texture();
 
 	// animation
-	void play_anim(GdString p_name, GdFloat p_speed = 1.0, GdBool p_from_end = false);
+	void play_anim(GdString p_name, GdFloat p_speed = 1.0, GdBool isLoop = false, GdBool p_from_end = false);
 	void play_backwards_anim(GdString p_name);
 	void pause_anim();
 	void stop_anim();
@@ -156,15 +163,16 @@ public:
 	GdBool is_trigger_enabled();
 
 	// collision
-	CollisionShape2D* get_collider(bool is_trigger = false);
-	GdBool check_collision(SpxSprite *other, GdBool is_src_trigger = true,GdBool is_dst_trigger = true);
+	CollisionShape2D *get_collider(bool is_trigger = false);
+	GdBool check_collision(SpxSprite *other, GdBool is_src_trigger = true, GdBool is_dst_trigger = true);
 	GdBool check_collision_with_point(GdVec2 point, GdBool is_trigger = true);
 
 	void set_render_scale(GdVec2 scale);
 	GdVec2 get_render_scale();
 };
 
-template <typename T> T *SpxSprite::get_component(Node *node, GdBool recursive) {
+template <typename T>
+T *SpxSprite::get_component(Node *node, GdBool recursive) {
 	for (int i = 0; i < node->get_child_count(); ++i) {
 		Node *child = node->get_child(i);
 		T *component = Object::cast_to<T>(child);
@@ -181,7 +189,8 @@ template <typename T> T *SpxSprite::get_component(Node *node, GdBool recursive) 
 	return nullptr;
 }
 
-template <typename T> T *SpxSprite::get_component(GdBool recursive) {
+template <typename T>
+T *SpxSprite::get_component(GdBool recursive) {
 	return get_component<T>(this, recursive);
 }
 

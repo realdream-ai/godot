@@ -61,11 +61,21 @@ Node *SpxSprite::get_component(Node *node, StringName name, GdBool recursive) {
 	}
 	return nullptr;
 }
+void SpxSprite::set_use_default_frames(bool is_on) {
+	use_default_frames = is_on;
+}
+bool SpxSprite::get_use_default_frames() {
+	return use_default_frames;
+}
 
 void SpxSprite::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_gid", "gid"), &SpxSprite::set_gid);
 	ClassDB::bind_method(D_METHOD("get_gid"), &SpxSprite::get_gid);
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "gid"), "set_gid", "get_gid");
+
+	ClassDB::bind_method(D_METHOD("set_use_default_frames", "use_default_frames"), &SpxSprite::set_use_default_frames);
+	ClassDB::bind_method(D_METHOD("get_use_default_frames"), &SpxSprite::get_use_default_frames);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "use_default_frames"), "set_use_default_frames", "get_use_default_frames");
 
 	ClassDB::bind_method(D_METHOD("set_spx_type_name", "spx_type_name"), &SpxSprite::set_spx_type_name);
 	ClassDB::bind_method(D_METHOD("get_spx_type_name"), &SpxSprite::get_spx_type_name);
@@ -117,10 +127,10 @@ void SpxSprite::_draw() {
 	if (!Spx::debug_mode) {
 		return;
 	}
-	if(trigger2d != nullptr) {
+	if (trigger2d != nullptr) {
 		trigger2d->set_spx_debug_color(Color(1, 0, 0, 0.2));
 	}
-	if(collider2d != nullptr) {
+	if (collider2d != nullptr) {
 		collider2d->set_spx_debug_color(Color(0, 0, 1, 0.2));
 	}
 }
@@ -128,10 +138,12 @@ void SpxSprite::_draw() {
 void SpxSprite::on_start() {
 	collider2d = (get_component<CollisionShape2D>());
 	anim2d = (get_component<AnimatedSprite2D>());
-	if (anim2d->get_sprite_frames() == nullptr) {
-		anim2d->set_sprite_frames(memnew(SpriteFrames));
+	if (resMgr->is_dynamic_anim_mode()) {
+		default_sprite_frames.instantiate();
+		anim2d->set_sprite_frames(default_sprite_frames);
+	}else {
+		default_sprite_frames = anim2d->get_sprite_frames();
 	}
-	default_sprite_frames = anim2d->get_sprite_frames();
 
 	visible_notifier = (get_component<VisibleOnScreenNotifier2D>());
 	if (visible_notifier == nullptr) {
@@ -274,6 +286,7 @@ void SpxSprite::set_texture_altas(GdString path, GdRect2 rect2) {
 	atlas_texture_frame->set_region(rect2);
 
 	if (texture.is_valid()) {
+		anim2d->set_sprite_frames(default_sprite_frames);
 		auto frames = anim2d->get_sprite_frames();
 		if (frames->get_frame_count(SpxSpriteMgr::default_texture_anim) == 0) {
 			frames->add_frame(SpxSpriteMgr::default_texture_anim, atlas_texture_frame);
@@ -311,15 +324,23 @@ GdString SpxSprite::get_texture() {
 	return &SpxBaseMgr::temp_return_str;
 }
 
-void SpxSprite::play_anim(GdString p_name, GdFloat p_speed, GdBool p_from_end) {
-	auto anim_name =resMgr->get_anim_key_name( get_spx_type_name(),SpxStrName(p_name));
-	anim2d->set_sprite_frames(resMgr->get_anim_frames(anim_name));
+void SpxSprite::play_anim(GdString p_name, GdFloat p_speed, GdBool isLoop, GdBool p_from_end) {
+	String anim_name = SpxStrName(p_name);
+	if (resMgr->is_dynamic_anim_mode()) {
+		anim_name = resMgr->get_anim_key_name(get_spx_type_name(), anim_name);
+		auto frames = resMgr->get_anim_frames(anim_name);
+		anim2d->set_sprite_frames(frames);
+		frames->set_animation_loop(anim_name, isLoop);
+	}
 	anim2d->play(anim_name, p_speed, p_from_end);
 }
 
 void SpxSprite::play_backwards_anim(GdString p_name) {
-	auto anim_name =resMgr->get_anim_key_name( get_spx_type_name(),SpxStrName(p_name));
-	anim2d->set_sprite_frames(resMgr->get_anim_frames(anim_name));
+	String anim_name = SpxStrName(p_name);
+	if (resMgr->is_dynamic_anim_mode()) {
+		anim_name = resMgr->get_anim_key_name(get_spx_type_name(), anim_name);
+		anim2d->set_sprite_frames(resMgr->get_anim_frames(anim_name));
+	}
 	anim2d->play_backwards(anim_name);
 }
 

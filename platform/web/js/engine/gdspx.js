@@ -377,18 +377,20 @@ function gdspx_platform_set_time_scale(time_scale) {
 	FreeGdFloat(_arg0); 
 
 }
-function gdspx_res_create_animation(sprite_type_name,anim_name,context,is_altas) {
+function gdspx_res_create_animation(sprite_type_name,anim_name,context,fps,is_altas) {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_res_create_animation']; 
 	_retValue = AllocGdInt();
 	_arg0 = ToGdString(sprite_type_name);
 	_arg1 = ToGdString(anim_name);
 	_arg2 = ToGdString(context);
-	_arg3 = ToGdBool(is_altas);
-	_gdFuncPtr(_arg0, _arg1, _arg2, _arg3, _retValue);
+	_arg3 = ToGdInt(fps);
+	_arg4 = ToGdBool(is_altas);
+	_gdFuncPtr(_arg0, _arg1, _arg2, _arg3, _arg4, _retValue);
 	FreeGdString(_arg0); 
 	FreeGdString(_arg1); 
 	FreeGdString(_arg2); 
-	FreeGdBool(_arg3); 
+	FreeGdInt(_arg3); 
+	FreeGdBool(_arg4); 
 	_finalRetValue = ToJsInt(_retValue);
 	FreeGdInt(_retValue); 
 	return _finalRetValue
@@ -823,18 +825,20 @@ function gdspx_sprite_set_z_index(obj,z) {
 	FreeGdInt(_arg1); 
 
 }
-function gdspx_sprite_play_anim(obj,p_name,p_custom_scale,p_from_end) {
+function gdspx_sprite_play_anim(obj,p_name,p_speed,isLoop,p_revert) {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_sprite_play_anim']; 
 	
 	_arg0 = ToGdObj(obj);
 	_arg1 = ToGdString(p_name);
-	_arg2 = ToGdFloat(p_custom_scale);
-	_arg3 = ToGdBool(p_from_end);
-	_gdFuncPtr(_arg0, _arg1, _arg2, _arg3);
+	_arg2 = ToGdFloat(p_speed);
+	_arg3 = ToGdBool(isLoop);
+	_arg4 = ToGdBool(p_revert);
+	_gdFuncPtr(_arg0, _arg1, _arg2, _arg3, _arg4);
 	FreeGdObj(_arg0); 
 	FreeGdString(_arg1); 
 	FreeGdFloat(_arg2); 
 	FreeGdBool(_arg3); 
+	FreeGdBool(_arg4); 
 
 }
 function gdspx_sprite_play_backwards_anim(obj,p_name) {
