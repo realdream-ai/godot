@@ -138,11 +138,10 @@ void SpxSprite::_draw() {
 void SpxSprite::on_start() {
 	collider2d = (get_component<CollisionShape2D>());
 	anim2d = (get_component<AnimatedSprite2D>());
-	if (resMgr->is_dynamic_anim_mode()) {
+	default_sprite_frames = anim2d->get_sprite_frames();
+	if(default_sprite_frames.is_null() || resMgr->is_dynamic_anim_mode()) {
 		default_sprite_frames.instantiate();
 		anim2d->set_sprite_frames(default_sprite_frames);
-	}else {
-		default_sprite_frames = anim2d->get_sprite_frames();
 	}
 
 	visible_notifier = (get_component<VisibleOnScreenNotifier2D>());
