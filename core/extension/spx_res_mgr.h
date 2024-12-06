@@ -66,7 +66,7 @@ public:
 	bool is_dynamic_anim_mode() const;
 
 public:
-	GdInt create_animation(GdString sprite_type_name,GdString anim_name, GdString context, GdInt fps, GdBool is_altas);
+	void create_animation(GdString sprite_type_name,GdString anim_name, GdString context, GdInt fps, GdBool is_altas);
 
 	void set_load_mode(GdBool is_direct_mode);
 	GdBool get_load_mode();

@@ -160,7 +160,7 @@ String SpxResMgr::get_anim_key_name(const String &sprite_type_name, const String
 	return sprite_type_name + "::" + anim_name;
 }
 
-GdInt SpxResMgr::create_animation(GdString p_sprite_type_name, GdString p_anim_name, GdString p_context,GdInt fps, GdBool is_altas) {
+void SpxResMgr::create_animation(GdString p_sprite_type_name, GdString p_anim_name, GdString p_context,GdInt fps, GdBool is_altas) {
 	is_dynamic_anim = true;
 	auto sprite_type_name = SpxStr(p_sprite_type_name);
 	auto clip_name = SpxStr(p_anim_name);
@@ -169,7 +169,7 @@ GdInt SpxResMgr::create_animation(GdString p_sprite_type_name, GdString p_anim_n
 	auto frames = anim_frames;
 	if (frames->has_animation(anim_key)) {
 		print_error("animation is already exist " + sprite_type_name + " " + clip_name);
-		return 1;
+		return ;
 	}
 	frames->add_animation(anim_key);
 	frames->set_animation_speed(anim_key,fps);
@@ -179,7 +179,7 @@ GdInt SpxResMgr::create_animation(GdString p_sprite_type_name, GdString p_anim_n
 			Ref<Texture2D> texture = load_texture(path);
 			if (!texture.is_valid()) {
 				print_error("animation parse error" + sprite_type_name + " " + anim_key + " can not find path " + path);
-				return 1;
+				return ;
 			}
 			frames->add_frame(anim_key, texture);
 		}
@@ -187,20 +187,20 @@ GdInt SpxResMgr::create_animation(GdString p_sprite_type_name, GdString p_anim_n
 		auto strs = context.split(";");
 		if (strs.size() < 2) {
 			print_error("create_animation context error missing \";\"? : " + context);
-			return 1;
+			return ;
 		}
 		auto path = strs[0];
 		Ref<Texture2D> altas_texture = load_texture(path);
 		if (!altas_texture.is_valid()) {
 			print_error("animation parse error" + sprite_type_name + " " + anim_key + " can not find path " + path);
-			return 1;
+			return ;
 		}
 
 		auto paramStrs = strs[1].split(",");
 
 		if (paramStrs.size() % 4 != 0) {
 			print_error("create_animation context error, params count % 4 != 0: " + context +" size = "+ paramStrs.size() );
-			return 1;
+			return ;
 		}
 		Vector<double> params;
 		for (const String &str : paramStrs) {
@@ -219,7 +219,6 @@ GdInt SpxResMgr::create_animation(GdString p_sprite_type_name, GdString p_anim_n
 			frames->add_frame(anim_key, texture);
 		}
 	}
-	return 0;
 }
 void SpxResMgr::set_load_mode(GdBool is_direct_mode) {
 	is_load_direct = is_direct_mode;
