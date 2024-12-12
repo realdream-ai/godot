@@ -379,21 +379,19 @@ function gdspx_platform_set_time_scale(time_scale) {
 }
 function gdspx_res_create_animation(sprite_type_name,anim_name,context,fps,is_altas) {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_res_create_animation']; 
-	_retValue = AllocGdInt();
+	
 	_arg0 = ToGdString(sprite_type_name);
 	_arg1 = ToGdString(anim_name);
 	_arg2 = ToGdString(context);
 	_arg3 = ToGdInt(fps);
 	_arg4 = ToGdBool(is_altas);
-	_gdFuncPtr(_arg0, _arg1, _arg2, _arg3, _arg4, _retValue);
+	_gdFuncPtr(_arg0, _arg1, _arg2, _arg3, _arg4);
 	FreeGdString(_arg0); 
 	FreeGdString(_arg1); 
 	FreeGdString(_arg2); 
 	FreeGdInt(_arg3); 
 	FreeGdBool(_arg4); 
-	_finalRetValue = ToJsInt(_retValue);
-	FreeGdInt(_retValue); 
-	return _finalRetValue
+
 }
 function gdspx_res_set_load_mode(is_direct_mode) {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_res_set_load_mode']; 
