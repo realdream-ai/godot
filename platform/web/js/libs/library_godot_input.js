@@ -387,7 +387,6 @@ const GodotEditorEventHandler = {
 			while (GodotOS._frame_num - start_frame < GodotOS._min_wait_frame_num) {
 				await GodotOS.get_sync_done_promise()
 			}
-			console.log("wait_fs_sync_done done start at ", start_frame, " => ", GodotOS._frame_num)
 			if (resolve) {
 				resolve()
 			}
