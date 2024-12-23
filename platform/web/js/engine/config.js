@@ -10,7 +10,13 @@
  * @typedef {Object} EngineConfig
  */
 const EngineConfig = {}; // eslint-disable-line no-unused-vars
+const LOG_LEVEL_VERBOSE = 0
+const LOG_LEVEL_LOG = 1
+const LOG_LEVEL_WARNING = 2
+const LOG_LEVEL_ERROR = 3
+const LOG_LEVEL_NONE = 4
 
+let engineLogLevel = LOG_LEVEL_VERBOSE
 /**
  * @struct
  * @constructor
@@ -197,6 +203,9 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
 		 * @type {?function(...*)}
 		 */
 		onPrint: function () {
+			if (engineLogLevel > LOG_LEVEL_LOG) {
+				return
+			}
 			console.log.apply(console, Array.from(arguments)); // eslint-disable-line no-console
 		},
 		/**
@@ -212,6 +221,9 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
 		 * @type {?function(...*)}
 		 */
 		onPrintError: function (var_args) {
+			if (engineLogLevel > LOG_LEVEL_ERROR) {
+				return
+			}
 			console.error.apply(console, Array.from(arguments)); // eslint-disable-line no-console
 		},
 	};
@@ -268,6 +280,7 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
 		// Wasm data
 		this.wasmGdspx = parse('wasmGdspx', this.wasmGdspx);
 		this.wasmEngine = parse('wasmEngine', this.wasmEngine);
+		engineLogLevel = parse('logLevel', engineLogLevel);
 	};
 
 	/**
@@ -284,7 +297,7 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
 			'noExitRuntime': false,
 			'dynamicLibraries': [`${loadPath}.side.wasm`],
 			'instantiateWasm': function (imports, onSuccess) {
-				WebAssembly.instantiate(curBuffer, imports).then((result)=> {
+				WebAssembly.instantiate(curBuffer, imports).then((result) => {
 					onSuccess(result['instance'], result['module']);
 				});
 				return {};
