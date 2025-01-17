@@ -32,8 +32,12 @@
 
 #include "core/os/memory.h"
 #include "core/variant/variant.h"
+#include "thirdparty/lunasvg/include/lunasvg.h"
 
-#include <thorvg.h>
+// #include <thorvg.h>
+#include <lunasvg.h>
+
+#include <iostream>
 
 HashMap<Color, Color> ImageLoaderSVG::forced_color_map = HashMap<Color, Color>();
 
@@ -80,75 +84,44 @@ Ref<Image> ImageLoaderSVG::load_mem_svg(const uint8_t *p_svg, int p_size, float 
 Error ImageLoaderSVG::create_image_from_utf8_buffer(Ref<Image> p_image, const uint8_t *p_buffer, int p_buffer_size, float p_scale, bool p_upsample) {
 	ERR_FAIL_COND_V_MSG(Math::is_zero_approx(p_scale), ERR_INVALID_PARAMETER, "ImageLoaderSVG: Can't load SVG with a scale of 0.");
 
-	std::unique_ptr<tvg::Picture> picture = tvg::Picture::gen();
+	// print_line("create_image_from_utf8_buffer \n");
+	// print_line((const char *)p_buffer);
 
-	tvg::Result result = picture->load((const char *)p_buffer, p_buffer_size, "svg", true);
-	if (result != tvg::Result::Success) {
-		return ERR_INVALID_DATA;
-	}
-	float fw, fh;
-	picture->size(&fw, &fh);
 
-	uint32_t width = MAX(1, round(fw * p_scale));
-	uint32_t height = MAX(1, round(fh * p_scale));
+	// test lunasvg
+	auto document = lunasvg::Document::loadFromData((const char *)p_buffer, p_buffer_size);
 
-	const uint32_t max_dimension = 16384;
-	if (width > max_dimension || height > max_dimension) {
-		WARN_PRINT(vformat(
-				String::utf8("ImageLoaderSVG: Target canvas dimensions %d×%d (with scale %.2f) exceed the max supported dimensions %d×%d. The target canvas will be scaled down."),
-				width, height, p_scale, max_dimension, max_dimension));
-		width = MIN(width, max_dimension);
-		height = MIN(height, max_dimension);
-	}
+	uint32_t width = document->width(), height = document->height();
 
-	picture->size(width, height);
+	width *= p_scale;
+	height *= p_scale;
 
-	std::unique_ptr<tvg::SwCanvas> sw_canvas = tvg::SwCanvas::gen();
-	// Note: memalloc here, be sure to memfree before any return.
-	uint32_t *buffer = (uint32_t *)memalloc(sizeof(uint32_t) * width * height);
+	auto bitmap = document->renderToBitmap(width, height, 0x00000000);
 
-	tvg::Result res = sw_canvas->target(buffer, width, width, height, tvg::SwCanvas::ARGB8888S);
-	if (res != tvg::Result::Success) {
-		memfree(buffer);
-		ERR_FAIL_V_MSG(FAILED, "ImageLoaderSVG: Couldn't set target on ThorVG canvas.");
-	}
+	Vector<uint8_t> result;
+	result.resize(width * height * 4);
 
-	res = sw_canvas->push(std::move(picture));
-	if (res != tvg::Result::Success) {
-		memfree(buffer);
-		ERR_FAIL_V_MSG(FAILED, "ImageLoaderSVG: Couldn't insert ThorVG picture on canvas.");
+	memcpy(result.ptrw(), bitmap.data(), width * height * sizeof(uint32_t));
+
+	// for (uint32_t y = 0; y < height; y++) {
+	// 	for (uint32_t x = 0; x < width; x++) {
+	// 		uint8_t n = bitmap.data()[y * width + x];
+	// 		const size_t offset = sizeof(uint32_t) * width * y + sizeof(uint32_t) * x;
+	// 		// result.write[offset + 0] = (n >> 16) & 0xff;
+	// 		// result.write[offset + 1] = (n >> 8) & 0xff;
+	// 		// result.write[offset + 2] = n & 0xff;
+	// 		// result.write[offset + 3] = (n >> 24) & 0xff;
+	// 		result.write[offset] = n;
+	// 	}
+	// }
+
+	p_image->set_data(width, height, false, Image::FORMAT_RGBA8, result);
+
+	if (width == 150) {
+		bitmap.writeToPng("3.svg.png");
 	}
 
-	res = sw_canvas->draw();
-	if (res != tvg::Result::Success) {
-		memfree(buffer);
-		ERR_FAIL_V_MSG(FAILED, "ImageLoaderSVG: Couldn't draw ThorVG pictures on canvas.");
-	}
 
-	res = sw_canvas->sync();
-	if (res != tvg::Result::Success) {
-		memfree(buffer);
-		ERR_FAIL_V_MSG(FAILED, "ImageLoaderSVG: Couldn't sync ThorVG canvas.");
-	}
-
-	Vector<uint8_t> image;
-	image.resize(width * height * sizeof(uint32_t));
-
-	for (uint32_t y = 0; y < height; y++) {
-		for (uint32_t x = 0; x < width; x++) {
-			uint32_t n = buffer[y * width + x];
-			const size_t offset = sizeof(uint32_t) * width * y + sizeof(uint32_t) * x;
-			image.write[offset + 0] = (n >> 16) & 0xff;
-			image.write[offset + 1] = (n >> 8) & 0xff;
-			image.write[offset + 2] = n & 0xff;
-			image.write[offset + 3] = (n >> 24) & 0xff;
-		}
-	}
-
-	res = sw_canvas->clear(true);
-	memfree(buffer);
-
-	p_image->set_data(width, height, false, Image::FORMAT_RGBA8, image);
 	return OK;
 }
 
@@ -174,6 +147,9 @@ void ImageLoaderSVG::get_recognized_extensions(List<String> *p_extensions) const
 
 Error ImageLoaderSVG::load_image(Ref<Image> p_image, Ref<FileAccess> p_fileaccess, BitField<ImageFormatLoader::LoaderFlags> p_flags, float p_scale) {
 	String svg = p_fileaccess->get_as_utf8_string();
+
+	print_line("image_loader_svg.cpp load_image");
+	// print_line(svg);
 
 	Error err;
 	if (p_flags & FLAG_CONVERT_COLORS) {
