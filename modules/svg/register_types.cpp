@@ -32,17 +32,10 @@
 
 #include "image_loader_svg.h"
 
-#include <thorvg.h>
-
 static Ref<ImageLoaderSVG> image_loader_svg;
 
 void initialize_svg_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
-		return;
-	}
-
-	tvg::CanvasEngine tvgEngine = tvg::CanvasEngine::Sw;
-	if (tvg::Initializer::init(tvgEngine, 1) != tvg::Result::Success) {
 		return;
 	}
 
@@ -62,5 +55,4 @@ void uninitialize_svg_module(ModuleInitializationLevel p_level) {
 
 	ImageLoader::remove_image_format_loader(image_loader_svg);
 	image_loader_svg.unref();
-	tvg::Initializer::term(tvg::CanvasEngine::Sw);
 }
