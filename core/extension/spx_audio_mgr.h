@@ -38,6 +38,9 @@ class AudioStreamPlayer2D;
 
 class SpxAudioMgr : SpxBaseMgr {
 	SPXCLASS(SpxAudio, SpxBaseMgr)
+public:
+	virtual ~SpxAudioMgr() = default; // Added virtual destructor to fix -Werror=non-virtual-dtor
+
 private:
 	List<AudioStreamPlayer2D*> audios;
 	AudioStreamPlayer2D *music;

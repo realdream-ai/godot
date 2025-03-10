@@ -38,6 +38,9 @@ class Node;
 class SpxUiMgr : SpxBaseMgr {
 	SPXCLASS(SpxUIMgr, SpxBaseMgr)
 
+public:
+	virtual ~SpxUiMgr() = default; // Added virtual destructor to fix -Werror=non-virtual-dtor
+
 private:
 	RBMap<GdObj, SpxUi *> id_objects;
 

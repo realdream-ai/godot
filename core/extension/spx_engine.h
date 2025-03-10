@@ -55,6 +55,7 @@ public:
 	static SpxEngine *get_singleton() { return singleton; }
 	static bool has_initialed() { return singleton != nullptr; }
 	static void register_callbacks(GDExtensionSpxCallbackInfoPtr callback_ptr);
+	virtual ~SpxEngine() = default; // Added virtual destructor to fix -Werror=non-virtual-dtor
 
 private:
 	Vector<SpxBaseMgr *> mgrs;

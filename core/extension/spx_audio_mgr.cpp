@@ -30,7 +30,6 @@
 
 #include "spx_audio_mgr.h"
 
-#include "modules/minimp3/audio_stream_mp3.h"
 #include "scene/2d/audio_stream_player_2d.h"
 #include "spx_engine.h"
 #include "spx_res_mgr.h"
@@ -79,6 +78,11 @@ void SpxAudioMgr::on_destroy() {
 void SpxAudioMgr::on_update(float delta) {
 	SpxBaseMgr::on_update(delta);
 
+	// Check for music looping - if music exists and has a valid stream but isn't playing, restart it
+	if (music && music->get_stream().is_valid() && !music->is_playing() && !music->get_stream_paused()) {
+		music->play();
+	}
+
 	// check the audio is done
 	for (auto item = audios.front(); item;) {
 		const auto audio = item->get();
@@ -112,13 +116,14 @@ void SpxAudioMgr::play_music(GdString path) {
 	auto path_str = SpxStr(path);
 	Ref<AudioStream> stream = resMgr->load_audio(path_str);
 
-	// set loop
-	Ref<AudioStreamMP3> mp3_stream = stream;
-	if (mp3_stream.is_valid()) {
-		mp3_stream->set_loop(true);
-	}
-
+	// Instead of using signals (which require get_instance_id), we'll check in the update method
+	// if the music has finished playing and restart it if needed
+	
 	music->set_stream(stream);
+	music->set_autoplay(false);
+	music->set_max_polyphony(1);
+	music->set_max_distance(2000);
+
 	music->play();
 }
 
@@ -169,3 +174,5 @@ void SpxAudioMgr::set_master_volume(GdFloat volume) {
 GdFloat SpxAudioMgr::get_master_volume() {
 	return get_volume(BUS_MASTER);
 }
+
+

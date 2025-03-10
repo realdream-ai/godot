@@ -1,4 +1,4 @@
-﻿/**************************************************************************/
+/**************************************************************************/
 /*  spx_platform_mgr.h                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
@@ -42,6 +42,9 @@ class Texture2D;
 
 class SpxResMgr : SpxBaseMgr {
 	SPXCLASS(SpxPlatformMgr, SpxBaseMgr)
+
+public:
+	virtual ~SpxResMgr() = default; // Added virtual destructor to fix -Werror=non-virtual-dtor
 
 private:
 	HashMap<String, Ref<Texture2D>> cached_texture;

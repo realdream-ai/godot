@@ -1,4 +1,4 @@
-﻿/**************************************************************************/
+/**************************************************************************/
 /*  spx_ui.h                                                              */
 /**************************************************************************/
 /*                         This file is part of:                          */
@@ -57,6 +57,8 @@ typedef Control SpxControl;
 
 class SpxUi :ISpxUi{
 public:
+	virtual ~SpxUi() = default; // Added virtual destructor to fix -Werror=non-virtual-dtor
+
 	GdObj gid;
 	GdInt type;
 public:

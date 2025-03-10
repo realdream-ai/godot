@@ -1,4 +1,4 @@
-﻿/**************************************************************************/
+/**************************************************************************/
 /*  spx_scene_mgr.h                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
@@ -37,6 +37,8 @@
 class SpxSceneMgr : SpxBaseMgr {
 	SPXCLASS(SpxSceneMgr, SpxBaseMgr)
 public:
+	virtual ~SpxSceneMgr() = default; // Added virtual destructor to fix -Werror=non-virtual-dtor
+
 	void change_scene_to_file(GdString path);
 	GdInt reload_current_scene();
 	void unload_current_scene();

@@ -70,6 +70,7 @@ public:
 	virtual void on_update(float delta);
 	virtual void on_fixed_update(float delta);
 	virtual void on_destroy();
+	virtual ~SpxBaseMgr() = default; // Added virtual destructor to fix -Werror=non-virtual-dtor
 };
 
 #endif // SPX_BASE_MGR_H

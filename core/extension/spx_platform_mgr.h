@@ -1,4 +1,4 @@
-﻿/**************************************************************************/
+/**************************************************************************/
 /*  spx_platform_mgr.h                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
@@ -38,6 +38,8 @@ class SpxPlatformMgr : SpxBaseMgr {
 	SPXCLASS(SpxPlatformMgr, SpxBaseMgr)
 	String persistant_data_dir = "res://";
 public:
+	virtual ~SpxPlatformMgr() = default; // Added virtual destructor to fix -Werror=non-virtual-dtor
+
 	void on_awake() override;
 	void _set_persistant_data_dir(String path);
 	String _get_persistant_data_dir();

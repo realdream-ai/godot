@@ -38,6 +38,9 @@ class SpxSprite;
 
 class SpxSpriteMgr : SpxBaseMgr {
 	SPXCLASS(SpxSpriteMgr, SpxBaseMgr)
+public:
+	virtual ~SpxSpriteMgr() = default; // Added virtual destructor to fix -Werror=non-virtual-dtor
+
 private:
 	RBMap<GdObj, SpxSprite *> id_objects;
 	Node* dont_destroy_root;

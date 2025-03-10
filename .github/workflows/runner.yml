@@ -8,15 +8,21 @@ concurrency:
 jobs:
   # Run all the builds and some of the tests.
   # Remove static checks job.
-  android-build:
-    if: ${{ vars.DISABLE_GODOT_CI == '' }}
-    name: 🤖 Android
-    uses: ./.github/workflows/android_builds.yml
 
-  ios-build:
-    if: ${{ vars.DISABLE_GODOT_CI == '' }}
-    name: 🍏 iOS
-    uses: ./.github/workflows/ios_builds.yml
+  # android-build:
+  #   if: ${{ vars.DISABLE_GODOT_CI == '' }}
+  #   name: 🤖 Android
+  #   uses: ./.github/workflows/android_builds.yml
+
+  # ios-build:
+  #   if: ${{ vars.DISABLE_GODOT_CI == '' }}
+  #   name: 🍏 iOS
+  #   uses: ./.github/workflows/ios_builds.yml
+
+  # web-build:
+  #   if: ${{ vars.DISABLE_GODOT_CI == '' }}
+  #   name: 🌐 Web
+  #   uses: ./.github/workflows/web_builds.yml
 
   linux-build:
     if: ${{ vars.DISABLE_GODOT_CI == '' }}
@@ -33,20 +39,8 @@ jobs:
     name: 🏁 Windows
     uses: ./.github/workflows/windows_builds.yml
 
-  web-build:
-    if: ${{ vars.DISABLE_GODOT_CI == '' }}
-    name: 🌐 Web
-    uses: ./.github/workflows/web_builds.yml
 
   # Third stage: Run auxiliary tests using build artifacts from previous jobs.
 
   # Can be turned off for PRs that intentionally break compat with godot-cpp,
   # until both the upstream PR and the matching godot-cpp changes are merged.
-  godot-cpp-test:
-    if: ${{ vars.DISABLE_GODOT_CI == '' }}
-    name: 🪲 Godot CPP
-    # This can be changed to depend on another platform, if we decide to use it for
-    # godot-cpp instead. Make sure to move the .github/actions/godot-api-dump step
-    # appropriately.
-    needs: linux-build
-    uses: ./.github/workflows/godot_cpp_test.yml

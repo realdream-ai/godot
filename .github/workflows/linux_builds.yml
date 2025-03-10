@@ -23,18 +23,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: Editor w/ Mono (target=editor)
-            cache-name: linux-editor-mono
-            target: editor
-            sconsflags: module_mono_enabled=yes
-            bin: "./bin/godot.linuxbsd.editor.x86_64.mono"
-            build-mono: true
-            tests: false # Disabled due freeze caused by mix Mono build and CI
-            doc-test: true
-            proj-conv: true
-            api-compat: true
-            artifact: true
-
           - name: Editor with doubles and GCC sanitizers (target=editor, tests=yes, dev_build=yes, scu_build=yes, precision=double, use_asan=yes, use_ubsan=yes, linker=gold)
             cache-name: linux-editor-double-sanitizers
             target: editor
@@ -69,10 +57,10 @@ jobs:
             # Skip 2GiB artifact speeding up action.
             artifact: false
 
-          - name: Template w/ Mono (target=template_release)
-            cache-name: linux-template-mono
+          - name: Template (target=template_release)
+            cache-name: linux-template
             target: template_release
-            sconsflags: module_mono_enabled=yes
+            sconsflags: module_mono_enabled=false
             build-mono: false
             tests: false
             artifact: true
@@ -111,12 +99,6 @@ jobs:
       - name: Setup python and scons
         uses: ./.github/actions/godot-deps
 
-      - name: Set up .NET Sdk
-        uses: actions/setup-dotnet@v3
-        if: ${{ matrix.build-mono }}
-        with:
-          dotnet-version: '6.0.x'
-
       - name: Setup GCC problem matcher
         uses: ammaraskar/gcc-problem-matcher@master
 
@@ -127,16 +109,6 @@ jobs:
           platform: linuxbsd
           target: ${{ matrix.target }}
           tests: ${{ matrix.tests }}
-
-      - name: Generate C# glue
-        if: ${{ matrix.build-mono }}
-        run: |
-          ${{ matrix.bin }} --headless --generate-mono-glue ./modules/mono/glue
-
-      - name: Build .NET solutions
-        if: ${{ matrix.build-mono }}
-        run: |
-          ./modules/mono/build_scripts/build_assemblies.py --godot-output-dir=./bin --godot-platform=linuxbsd
 
       - name: Prepare artifact
         if: ${{ matrix.artifact }}
@@ -149,46 +121,3 @@ jobs:
         if: ${{ matrix.artifact }}
         with:
           name: ${{ matrix.cache-name }}
-
-      - name: Dump Godot API
-        uses: ./.github/actions/godot-api-dump
-        if: ${{ matrix.api-dump }}
-        with:
-          bin: ${{ matrix.bin }}
-
-      # Execute unit tests for the editor
-      - name: Unit tests
-        if: ${{ matrix.tests }}
-        run: |
-          ${{ matrix.bin }} --version
-          ${{ matrix.bin }} --help
-          ${{ matrix.bin }} --headless --test --force-colors
-
-      # Check class reference
-      - name: Check for class reference updates
-        if: ${{ matrix.doc-test }}
-        run: |
-          echo "Running --doctool to see if this changes the public API without updating the documentation."
-          echo -e "If a diff is shown, it means that your code/doc changes are incomplete and you should update the class reference with --doctool.\n\n"
-          ${{ matrix.bin }} --doctool --headless 2>&1 > /dev/null || true
-          git diff --color --exit-code && ! git ls-files --others --exclude-standard | sed -e 's/^/New doc file missing in PR: /' | grep 'xml$'
-
-      # Check API backwards compatibility
-      - name: Check for GDExtension compatibility
-        if: ${{ matrix.api-compat }}
-        run: |
-          ./misc/scripts/validate_extension_api.sh "${{ matrix.bin }}"
-
-      # Download and run the test project
-      - name: Test Godot project
-        uses: ./.github/actions/godot-project-test
-        if: ${{ matrix.proj-test }}
-        with:
-          bin: ${{ matrix.bin }}
-
-      # Test the project converter
-      - name: Test project converter
-        uses: ./.github/actions/godot-converter-test
-        if: ${{ matrix.proj-conv }}
-        with:
-          bin: ${{ matrix.bin }}

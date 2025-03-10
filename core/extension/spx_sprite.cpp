@@ -539,7 +539,6 @@ GdBool SpxSprite::check_collision(SpxSprite *other, GdBool is_src_trigger, GdBoo
 }
 
 GdBool SpxSprite::check_collision_with_point(GdVec2 point, GdBool is_trigger) {
-	auto pos = this->get_position();
 	auto this_shape = is_trigger ? this->trigger2d : this->collider2d;
 	if (!this_shape->get_shape().is_valid()) {
 		return false;
@@ -554,8 +553,8 @@ GdBool SpxSprite::check_collision_with_point(GdVec2 point, GdBool is_trigger) {
 	bool is_colliding = this_shape->get_shape()->collide(sprite_transform, point_shape, point_transform);
 	return is_colliding;
 }
-void SpxSprite::set_render_scale(GdVec2 scale) {
-	anim2d->set_scale(scale);
+void SpxSprite::set_render_scale(GdVec2 new_scale) {
+	anim2d->set_scale(new_scale);
 }
 GdVec2 SpxSprite::get_render_scale() {
 	return anim2d->get_scale();

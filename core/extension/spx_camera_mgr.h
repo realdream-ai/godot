@@ -1,4 +1,4 @@
-﻿/**************************************************************************/
+/**************************************************************************/
 /*  spx_camera_mgr.h                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
@@ -38,6 +38,9 @@ class Camera2D;
 
 class SpxCameraMgr : SpxBaseMgr {
 	SPXCLASS(SpxCameraMgr, SpxBaseMgr)
+
+public:
+	virtual ~SpxCameraMgr() = default; // Added virtual destructor to fix -Werror=non-virtual-dtor
 
 private:
 	Camera2D *camera = nullptr;
