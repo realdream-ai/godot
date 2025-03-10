@@ -46,7 +46,7 @@ jobs:
 
       - name: Setup Vulkan SDK
         run: |
-          sh misc/scripts/install_vulkan_sdk_macos.sh
+          bash misc/scripts/install_vulkan_sdk_macos.sh
 
       - name: Compilation
         uses: ./.github/actions/godot-build
