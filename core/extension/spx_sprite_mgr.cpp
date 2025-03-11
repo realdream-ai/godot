@@ -319,6 +319,11 @@ GdColor SpxSpriteMgr::get_color(GdObj obj) {
 	check_and_get_sprite_r(GdColor()) return sprite->get_color();
 }
 
+void SpxSpriteMgr::change_color(GdObj obj, GdColor color) {
+	check_and_get_sprite_v()
+	sprite->set_color(color);
+}
+
 void SpxSpriteMgr::set_texture_altas(GdObj obj, GdString path, GdRect2 rect2) {
 	check_and_get_sprite_v()
 	sprite->set_texture_altas(path, rect2);

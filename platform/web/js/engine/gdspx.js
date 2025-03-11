@@ -785,6 +785,16 @@ function gdspx_sprite_get_color(obj) {
 	FreeGdColor(_retValue); 
 	return _finalRetValue
 }
+function gdspx_sprite_change_color(obj,color) {
+	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_sprite_change_color']; 
+	
+	_arg0 = ToGdObj(obj);
+	_arg1 = ToGdColor(color);
+	_gdFuncPtr(_arg0, _arg1);
+	FreeGdObj(_arg0); 
+	FreeGdColor(_arg1); 
+
+}
 function gdspx_sprite_set_texture_altas(obj,path,rect2) {
 	_gdFuncPtr =  GodotEngine.rtenv['_gdspx_sprite_set_texture_altas']; 
 	
