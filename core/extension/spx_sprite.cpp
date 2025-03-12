@@ -144,6 +144,13 @@ void SpxSprite::on_start() {
 		anim2d->set_sprite_frames(default_sprite_frames);
 	}
 
+	default_material = anim2d->get_material();
+	if(default_material.is_null()) {
+		default_material.instantiate();
+		anim2d->set_material(default_material);
+	}
+	// default_material.ptr()->set_shader();
+
 	visible_notifier = (get_component<VisibleOnScreenNotifier2D>());
 	if (visible_notifier == nullptr) {
 		visible_notifier = memnew(VisibleOnScreenNotifier2D);

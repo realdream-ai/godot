@@ -60,6 +60,7 @@ protected:
 	void _notification(int p_what);
 	void _draw();
 	Ref<SpriteFrames> default_sprite_frames;
+	Ref<ShaderMaterial> default_material;
 	AnimatedSprite2D *anim2d;
 	Area2D *area2d;
 	CollisionShape2D *trigger2d;
