@@ -135,7 +135,8 @@ function ToGdString(str) {
     GodotModule.HEAPU8.set(stringBytes, ptr);
     GodotModule.HEAPU8[ptr + stringBytes.length] = 0;
     const func = GodotEngine.rtenv['_gdspx_new_string']; 
-    gdstrPtr= func(ptr);
+    gdstrPtr= func(ptr, stringBytes.length);
+    GodotModule._cfree(ptr);
     return gdstrPtr;
 }
 
