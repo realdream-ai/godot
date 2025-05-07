@@ -49,7 +49,7 @@ INSTALLER_APP=$(find /tmp/vulkan-sdk-extracted -maxdepth 1 -name "*.app" | head 
 echo "Found installer: $INSTALLER_APP"
 
 # Find the installer executable
-INSTALLER_BIN=$(find "$INSTALLER_APP/Contents/MacOS" -type f -name "*InstallVulkan*" | head -1)
+INSTALLER_BIN=$(find "$INSTALLER_APP/Contents/MacOS" -type f -name "*ulkan*" | head -1)
 echo "Found installer executable: $INSTALLER_BIN"
 
 # Run the installer
