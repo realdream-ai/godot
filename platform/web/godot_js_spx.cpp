@@ -253,6 +253,10 @@ void gdspx_physic_check_collision(GdVec2* from,GdVec2* to,GdInt* collision_mask,
 	*ret_val = physicMgr->check_collision(*from, *to, *collision_mask, *collide_with_areas, *collide_with_bodies);
 }
 EMSCRIPTEN_KEEPALIVE
+void gdspx_physic_check_touched_camera_boundaries(GdObj* obj,GdInt* ret_val) {
+	*ret_val = physicMgr->check_touched_camera_boundaries(*obj);
+}
+EMSCRIPTEN_KEEPALIVE
 void gdspx_physic_check_touched_camera_boundary(GdObj* obj,GdInt* board_type,GdBool* ret_val) {
 	*ret_val = physicMgr->check_touched_camera_boundary(*obj, *board_type);
 }

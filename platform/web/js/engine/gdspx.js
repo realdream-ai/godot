@@ -467,6 +467,16 @@ function gdspx_physic_check_collision(from,to,collision_mask,collide_with_areas,
 	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
+function gdspx_physic_check_touched_camera_boundaries(obj) {
+	var _gdFuncPtr =  GodotEngine.rtenv['_gdspx_physic_check_touched_camera_boundaries']; 
+	var _retValue = AllocGdInt();
+	var _arg0 = ToGdObj(obj);
+	_gdFuncPtr(_arg0, _retValue);
+	FreeGdObj(_arg0); 
+	var _finalRetValue = ToJsInt(_retValue);
+	FreeGdInt(_retValue); 
+	return _finalRetValue
+}
 function gdspx_physic_check_touched_camera_boundary(obj,board_type) {
 	var _gdFuncPtr =  GodotEngine.rtenv['_gdspx_physic_check_touched_camera_boundary']; 
 	var _retValue = AllocGdBool();

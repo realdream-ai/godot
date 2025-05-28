@@ -205,6 +205,9 @@ static void gdextension_spx_physic_raycast(GdVec2 from,GdVec2 to,GdInt collision
 static void gdextension_spx_physic_check_collision(GdVec2 from,GdVec2 to,GdInt collision_mask,GdBool collide_with_areas,GdBool collide_with_bodies,GdBool* ret_val) {
 	*ret_val = physicMgr->check_collision(from, to, collision_mask, collide_with_areas, collide_with_bodies);
 }
+static void gdextension_spx_physic_check_touched_camera_boundaries(GdObj obj,GdInt* ret_val) {
+	*ret_val = physicMgr->check_touched_camera_boundaries(obj);
+}
 static void gdextension_spx_physic_check_touched_camera_boundary(GdObj obj,GdInt board_type,GdBool* ret_val) {
 	*ret_val = physicMgr->check_touched_camera_boundary(obj, board_type);
 }
@@ -793,6 +796,7 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_input_is_action_just_released);
 	REGISTER_SPX_INTERFACE_FUNC(spx_physic_raycast);
 	REGISTER_SPX_INTERFACE_FUNC(spx_physic_check_collision);
+	REGISTER_SPX_INTERFACE_FUNC(spx_physic_check_touched_camera_boundaries);
 	REGISTER_SPX_INTERFACE_FUNC(spx_physic_check_touched_camera_boundary);
 	REGISTER_SPX_INTERFACE_FUNC(spx_physic_set_collision_system_type);
 	REGISTER_SPX_INTERFACE_FUNC(spx_platform_set_window_position);

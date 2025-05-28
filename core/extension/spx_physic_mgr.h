@@ -45,7 +45,7 @@ public:
 	virtual ~SpxPhysicMgr() = default; // Added virtual destructor to fix -Werror=non-virtual-dtor
 	GdObj raycast(GdVec2 from, GdVec2 to, GdInt collision_mask);
 	GdBool check_collision(GdVec2 from, GdVec2 to, GdInt collision_mask, GdBool collide_with_areas, GdBool collide_with_bodies);
-	GdInt check_touched_camera_boundaries(GdObj obj) ;
+	GdInt check_touched_camera_boundaries(GdObj obj);
 	GdBool check_touched_camera_boundary(GdObj obj,GdInt board_type);
 	void set_collision_system_type(GdBool is_collision_by_alpha);
 };
