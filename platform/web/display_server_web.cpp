@@ -1058,7 +1058,7 @@ void DisplayServerWeb::on_game_datas_set_callback(const char *p_path, const char
 
 #ifdef PROXY_TO_PTHREAD_ENABLED
 	if (!Thread::is_main_thread()) {
-		callable_mp_static(DisplayServerWeb::_on_game_datas_set_callback).bind(file_paths).call_deferred();
+		callable_mp_static(DisplayServerWeb::_on_game_datas_set_callback).bind(path,file_paths).call_deferred();
 		return;
 	}
 #endif

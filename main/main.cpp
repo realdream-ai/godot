@@ -416,6 +416,7 @@ void Main::print_help(const char *p_binary) {
 	OS::get_singleton()->print("  --path <directory>                Path to a project (<directory> must contain a 'project.godot' file).\n");
 	OS::get_singleton()->print("  -u, --upwards                     Scan folders upwards for project.godot file.\n");
 	OS::get_singleton()->print("  --main-pack <file>                Path to a pack (.pck) file to load.\n");
+	OS::get_singleton()->print("  --main-project-data <file>        Path to a project data (.zip) file to load.\n");
 	OS::get_singleton()->print("  --render-thread <mode>            Render thread mode ['unsafe', 'safe', 'separate'].\n");
 	OS::get_singleton()->print("  --remote-fs <address>             Remote filesystem (<host/IP>[:<port>] address).\n");
 	OS::get_singleton()->print("  --remote-fs-password <password>   Password for remote filesystem.\n");
@@ -833,6 +834,7 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 	String debug_uri = "";
 	bool skip_breakpoints = false;
 	String main_pack;
+	String main_project_data;
 	bool quiet_stdout = false;
 	int rtm = -1;
 
@@ -1453,6 +1455,16 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 				goto error;
 			}
 
+		} else if (I->get() == "--main-project-data") {
+			if (I->next()) {
+				main_project_data = I->next()->get();
+				Spx::project_data_path = main_project_data;
+				print_line("setup main project_data ", main_project_data);
+				N = I->next()->next();
+			} else {
+				OS::get_singleton()->print("Missing path to main pack file, aborting.\n");
+				goto error;
+			};
 		} else if (I->get() == "--main-pack") {
 			if (I->next()) {
 				main_pack = I->next()->get();

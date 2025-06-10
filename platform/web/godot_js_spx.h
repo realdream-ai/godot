@@ -10,6 +10,7 @@ typedef const void* GdString ;
 typedef int64_t GdInt ;
 typedef uint8_t GdBool ;
 
+
 // GDExtention
 extern void godot_js_on_load_gdextension(GdString p_text, void* p_get_proc_address, void* p_library, void* r_initialization);
 

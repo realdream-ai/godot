@@ -8,8 +8,6 @@
  * @module Engine
  * @header Web export JavaScript reference
  */
-var GodotModule = null;
-var GodotEngine = null;
 const Engine = (function () {
 	const preloader = new Preloader();
 
@@ -81,7 +79,6 @@ const Engine = (function () {
 					return Promise.resolve();
 				}
 				loadPath = this.config.executable;
-				GodotEngine = this;
 				const me = this;
 				createWrapper = function (module, name) {
 					return function() {
@@ -96,9 +93,8 @@ const Engine = (function () {
 						// Now proceed with Godot and other logic
 						gdmodule = me.config.getModuleConfig(loadPath, me.config.wasmEngine);
 						Godot(gdmodule).then(function (module) {
-							GodotModule = gdmodule
-							GodotModule._cmalloc = createWrapper(gdmodule,"malloc");
-							GodotModule._cfree = createWrapper(gdmodule,"free");
+							gdmodule._cmalloc = createWrapper(gdmodule,"malloc");
+							gdmodule._cfree = createWrapper(gdmodule,"free");
 							const paths = me.config.persistentPaths;
 							module['initFS'](paths).then(function (err) {
 								me.rtenv = module;
@@ -134,7 +130,17 @@ const Engine = (function () {
 			preloadFile: function (file, path) {
 				return preloader.preload(file, path, this.config.fileSizes[file]);
 			},
-			unpackGameData: function (dir, datas) {
+			getPThread:function () {
+				return this.rtenv['PThread']
+			},
+
+			unpackGameData:async function (dir,projectName, projectData, pckName, pckData) {
+				let datas = []
+				datas.push({ "path": projectName, "data": projectData})	
+				if ( pckName != "" ){
+					datas.push({ "path": pckName, "data": pckData })
+				} 
+				// write project data to file	
 				files = []
 				this.rtenv['deleteDirFS'](dir);
 				for (let info of datas) {
@@ -204,14 +210,6 @@ const Engine = (function () {
 						});
 					}
 					return Promise.all(libs).then(function () {
-						if (libs.length === 0) {
-							return new Promise(function (resolve, reject) {
-								window.goWasmInit();
-								resolve();
-							}).then(function () {
-								return executeMainLogic();
-							}); 
-						}
 						return executeMainLogic();
 					});
 					
@@ -232,7 +230,6 @@ const Engine = (function () {
 			 * @return {Promise} Promise that resolves once the game started.
 			 */
 			startGame: function (override) {
-				GodotEngine = this;
 				this.config.update(override);
 				// Add main-pack argument.
 				const exe = this.config.executable;

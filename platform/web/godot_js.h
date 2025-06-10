@@ -40,6 +40,7 @@ extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 
+
 // Config
 extern void godot_js_config_locale_get(char *p_ptr, int p_ptr_max);
 extern void godot_js_config_canvas_id_get(char *p_ptr, int p_ptr_max);

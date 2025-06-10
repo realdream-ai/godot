@@ -43,6 +43,7 @@
 #include "scene/theme/default_theme.h"
 #include "scene/theme/theme_db.h"
 #include "spx_engine.h"
+#include "spx.h"
 #include "spx_importer_wav.h"
 #include "spx_platform_mgr.h"
 #ifdef TOOLS_ENABLED
@@ -201,7 +202,6 @@ Ref<Texture2D> SpxResMgr::load_texture(String path, GdBool direct) {
 }
 
 void SpxResMgr::set_game_datas(String path, Vector<String> files) {
-	print_line("SpxResMgr::set_game_datas", path);
 	game_data_root = path;
 	platformMgr->_set_persistant_data_dir(path);
 }
