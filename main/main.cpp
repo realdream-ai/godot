@@ -1643,11 +1643,15 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 		bool low_priority_use_system_threads = GLOBAL_GET("threading/worker_pool/use_system_threads_for_low_priority_tasks");
 		float low_property_ratio = GLOBAL_GET("threading/worker_pool/low_priority_thread_ratio");
 
+#ifdef TOOLS_ENABLED
 		if (editor || project_manager) {
 			WorkerThreadPool::get_singleton()->init();
 		} else {
 			WorkerThreadPool::get_singleton()->init(worker_threads, low_priority_use_system_threads, low_property_ratio);
 		}
+#else
+		WorkerThreadPool::get_singleton()->init(0, low_priority_use_system_threads, 0);
+#endif
 	}
 
 #ifdef TOOLS_ENABLED
