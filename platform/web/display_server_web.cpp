@@ -1175,7 +1175,6 @@ DisplayServerWeb::DisplayServerWeb(const String &p_rendering_driver, WindowMode 
 	// Expose method for requesting quit.
 	godot_js_os_request_quit_cb(request_quit_callback);
 
-	print_line("DisplayServerWeb::DisplayServerWeb1",ii++);
 #ifdef GLES3_ENABLED
 	bool webgl2_inited = false;
 	if (godot_js_display_has_webgl(2)) {
@@ -1185,12 +1184,10 @@ DisplayServerWeb::DisplayServerWeb(const String &p_rendering_driver, WindowMode 
 		attributes.antialias = false;
 		attributes.majorVersion = 2;
 		attributes.explicitSwapControl = true;
-	print_line("DisplayServerWeb::DisplayServerWeb1",ii++);
 
 		webgl_ctx = emscripten_webgl_create_context(canvas_id, &attributes);
 		webgl2_inited = webgl_ctx && emscripten_webgl_make_context_current(webgl_ctx) == EMSCRIPTEN_RESULT_SUCCESS;
 	}
-	print_line("DisplayServerWeb::DisplayServerWeb1",ii++);
 	if (webgl2_inited) {
 		if (!emscripten_webgl_enable_extension(webgl_ctx, "OVR_multiview2")) {
 			print_verbose("Failed to enable WebXR extension.");
@@ -1204,48 +1201,37 @@ DisplayServerWeb::DisplayServerWeb(const String &p_rendering_driver, WindowMode 
 				"Unable to initialize WebGL 2 video driver");
 		RasterizerDummy::make_current();
 	}
-	print_line("DisplayServerWeb::DisplayServerWeb1",ii++);
 #else
 	RasterizerDummy::make_current();
 #endif
-	print_line("DisplayServerWeb::DisplayServerWeb1",ii++,5);
 
 	// JS Input interface (js/libs/library_godot_input.js)
-	print_line("DisplayServerWeb::DisplayServerWeb1",ii++);
 	godot_js_input_mouse_button_cb(&DisplayServerWeb::mouse_button_callback);
 	godot_js_input_mouse_move_cb(&DisplayServerWeb::mouse_move_callback);
 	godot_js_input_mouse_wheel_cb(&DisplayServerWeb::mouse_wheel_callback);
 	godot_js_input_touch_cb(&DisplayServerWeb::touch_callback, touch_event.identifier, touch_event.coords);
 	godot_js_input_key_cb(&DisplayServerWeb::key_callback, key_event.code, key_event.key);
 	godot_js_input_paste_cb(&DisplayServerWeb::update_clipboard_callback);
-	print_line("DisplayServerWeb::DisplayServerWeb1",ii++,8);
 	godot_js_input_drop_files_cb(&DisplayServerWeb::drop_files_js_callback);
 	godot_js_delete_files_cb(&DisplayServerWeb::delete_files_js_callback);
 	godot_js_update_files_cb(&DisplayServerWeb::update_files_js_callback);
 	godot_js_input_gamepad_cb(&DisplayServerWeb::gamepad_callback);
 	godot_js_select_dir_cb(&DisplayServerWeb::select_dir_callback);
 	godot_js_on_game_datas_set_callback(&DisplayServerWeb::on_game_datas_set_callback);
-	print_line("DisplayServerWeb::DisplayServerWeb1",ii++);
 
 	godot_js_set_ime_cb(&DisplayServerWeb::ime_callback, &DisplayServerWeb::key_callback, key_event.code, key_event.key);
 
-	print_line("DisplayServerWeb::DisplayServerWeb1",ii++,8.5);
 	// JS Display interface (js/libs/library_godot_display.js)
 	godot_js_display_fullscreen_cb(&DisplayServerWeb::fullscreen_change_callback);
-	print_line("DisplayServerWeb::DisplayServerWeb1",ii++,9);
 	godot_js_display_window_blur_cb(&DisplayServerWeb::window_blur_callback);
-	print_line("DisplayServerWeb::DisplayServerWeb1",ii++,9.5);
 	godot_js_display_notification_cb(&DisplayServerWeb::send_window_event_callback,
 			WINDOW_EVENT_MOUSE_ENTER,
 			WINDOW_EVENT_MOUSE_EXIT,
 			WINDOW_EVENT_FOCUS_IN,
 			WINDOW_EVENT_FOCUS_OUT);
-	print_line("DisplayServerWeb::DisplayServerWeb1",ii++,10);
 	godot_js_display_vk_cb(&DisplayServerWeb::vk_input_text_callback);
-	print_line("DisplayServerWeb::DisplayServerWeb1",ii++,11);
 
 	Input::get_singleton()->set_event_dispatch_function(_dispatch_input_event);
-	print_line("DisplayServerWeb::DisplayServerWeb end",ii++);
 }
 
 DisplayServerWeb::~DisplayServerWeb() {
