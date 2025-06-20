@@ -313,6 +313,9 @@ OS_Web::OS_Web() {
 
 	if (AudioDriverWeb::is_available()) {
 		audio_drivers.push_back(memnew(AudioDriverWorklet));
+#ifndef THREADS_ENABLED
+		audio_drivers.push_back(memnew(AudioDriverScriptProcessor));
+#endif
 	}
 	for (int i = 0; i < audio_drivers.size(); i++) {
 		AudioDriverManager::add_driver(audio_drivers[i]);
