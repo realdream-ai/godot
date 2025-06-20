@@ -196,7 +196,7 @@ void print_error(String p_string) {
 }
 
 bool is_print_verbose_enabled() {
-	return OS::get_singleton()->is_stdout_verbose();
+	return true;
 }
 
 String stringify_variants(Variant p_var) {
