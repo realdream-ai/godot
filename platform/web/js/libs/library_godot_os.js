@@ -112,6 +112,7 @@ const GodotFS = {
 	$GodotFS__postset: [
 		'Module["initFS"] = GodotFS.init;',
 		'Module["copyToFS"] = GodotFS.copy_to_fs;',
+		'Module["copyToAdapter"] = GodotFS.copy_to_adapter;',
 		'Module["deleteDirFS"] = GodotFS.rm_dir;',
 		'Module["updateGameDatas"] = GodotFS.update_game_datas;',
 		

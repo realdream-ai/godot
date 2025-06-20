@@ -135,7 +135,7 @@ function ToGdString(str) {
     GodotModule.HEAPU8.set(stringBytes, ptr);
     GodotModule.HEAPU8[ptr + stringBytes.length] = 0;
     const func = GodotEngine.rtenv['_gdspx_new_string']; 
-    gdstrPtr= func(ptr, stringBytes.length);
+    var gdstrPtr= func(ptr, stringBytes.length);
     GodotModule._cfree(ptr);
     return gdstrPtr;
 }
@@ -148,12 +148,12 @@ function _toJsString(gdstrPtr, isFree) {
     var func = GodotEngine.rtenv['_gdspx_get_string_len']; 
     length = func(gdstrPtr)
     func = GodotEngine.rtenv['_gdspx_get_string']; 
-    ptr = func(gdstrPtr)
+    var ptr = func(gdstrPtr)
     const HEAPU8 = GodotModule.HEAPU8;
     const stringBytes = HEAPU8.subarray(ptr, ptr + length);
     const nonSharedBytes = stringBytes.slice();
     const decoder = new TextDecoder("utf-8")
-    result = decoder.decode(nonSharedBytes)
+    var result = decoder.decode(nonSharedBytes)
     if(isFree) {
         GodotEngine.rtenv['_gdspx_free_cstr'](ptr);
     }
