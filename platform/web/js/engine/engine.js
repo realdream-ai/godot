@@ -83,7 +83,7 @@ const Engine = (function () {
 				loadPath = this.config.executable;
 				GodotEngine = this;
 				const me = this;
-				createWrapper = function (module, name) {
+				let createWrapper = function (module, name) {
 					return function() {
 						return module["asm"][name].apply(null, arguments);
 					};
@@ -94,19 +94,24 @@ const Engine = (function () {
 					// Make sure to test that when refactoring.
 					return new Promise(function (resolve, reject) {
 						// Now proceed with Godot and other logic
-						gdmodule = me.config.getModuleConfig(loadPath, me.config.wasmEngine);
+						let gdmodule = me.config.getModuleConfig(loadPath, me.config.wasmEngine);
 						Godot(gdmodule).then(function (module) {
 							GodotModule = gdmodule
 							GodotModule._cmalloc = createWrapper(gdmodule,"malloc");
 							GodotModule._cfree = createWrapper(gdmodule,"free");
 							const paths = me.config.persistentPaths;
-							module['initFS'](paths).then(function (err) {
+							if (!IsWxMiniGame){
+								module['initFS'](paths).then(function (err) {
+									me.rtenv = module;
+									if (me.config.unloadAfterInit) {
+										Engine.unload();
+									}
+									resolve();
+								});
+							}else{
 								me.rtenv = module;
-								if (me.config.unloadAfterInit) {
-									Engine.unload();
-								}
 								resolve();
-							});
+							}
 						});
 					});
 				}
@@ -135,7 +140,7 @@ const Engine = (function () {
 				return preloader.preload(file, path, this.config.fileSizes[file]);
 			},
 			unpackGameData: function (dir, datas) {
-				files = []
+				let files = []
 				this.rtenv['deleteDirFS'](dir);
 				for (let info of datas) {
 					files.push(info.path)
@@ -260,6 +265,18 @@ const Engine = (function () {
 				}
 				this.rtenv['copyToFS'](path, buffer);
 			},
+
+            copyFSToAdapter: function (adapter) {
+                if (this.rtenv == null) {
+                    throw new Error('Engine must be inited before copying files');
+                }
+                const me = this;
+                var promises = [];
+                this.config.persistentPaths.forEach(function (path) {
+                    promises.push(me.rtenv['copyToAdapter'](path, adapter));
+                });
+                return Promise.all(promises);
+            },
 
 			/**
 			 * Request that the current instance quit.

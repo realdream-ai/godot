@@ -178,7 +178,24 @@ const GodotFS = {
 				});
 			});
 		},
-
+		copy_to_adapter: function (path, adapter) {
+			const promises = [];
+			const dirs = FS.readdir(path).filter(function (value) {
+				return value != '.' && value != '..';
+			});
+			dirs.forEach(function (dir) {
+				const _path = `${path}/${dir}`;
+				const stat = FS.stat(_path);
+				if (FS.isFile(stat.mode)) {
+					const array = FS.readFile(_path);
+					promises.push(adapter.writeFile(_path, array));
+				}
+				if (FS.isDir(stat.mode)) {
+					promises.push(GodotFS.copy_to_adapter(_path, adapter));
+				}
+			});
+			return promises;
+		},
 		// Deinit godot file system, making sure to unmount file systems, and close IDBFS(s).
 		deinit: function () {
 			GodotFS._mount_points.forEach(function (path) {

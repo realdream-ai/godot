@@ -325,14 +325,16 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
 	 */
 	Config.prototype.getGodotConfig = function (cleanup) {
 		// Try to find a canvas
-		if (!(this.canvas instanceof HTMLCanvasElement)) {
-			const nodes = document.getElementsByTagName('canvas');
-			if (nodes.length && nodes[0] instanceof HTMLCanvasElement) {
-				const first = nodes[0];
-				this.canvas = /** @type {!HTMLCanvasElement} */ (first);
-			}
-			if (!this.canvas) {
-				throw new Error('No canvas found in page');
+		if (!IsWxMiniGame){
+			if (!(this.canvas instanceof HTMLCanvasElement)) {
+				const nodes = document.getElementsByTagName('canvas');
+				if (nodes.length && nodes[0] instanceof HTMLCanvasElement) {
+					const first = nodes[0];
+					this.canvas = /** @type {!HTMLCanvasElement} */ (first);
+				}
+				if (!this.canvas) {
+					throw new Error('No canvas found in page');
+				}
 			}
 		}
 		// Canvas can grab focus on click, or key events won't work.

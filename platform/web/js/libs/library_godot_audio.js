@@ -44,7 +44,12 @@ const GodotAudio = {
 			}
 			// Do not specify, leave 'interactive' for good performance.
 			// opts['latencyHint'] = latency / 1000;
-			const ctx = new (window.AudioContext || window.webkitAudioContext)(opts);
+			let ctx = null;
+			if (IsWxMiniGame){
+				ctx = wx.createWebAudioContext();
+			}else{
+				ctx = new (window.AudioContext || window.webkitAudioContext)(opts);
+			}
 			GodotAudio.ctx = ctx;
 			GodotAudio.audio_mix_rate = mix_rate
 			ctx.onstatechange = function () {
