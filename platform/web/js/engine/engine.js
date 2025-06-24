@@ -139,7 +139,13 @@ const Engine = (function () {
 			preloadFile: function (file, path) {
 				return preloader.preload(file, path, this.config.fileSizes[file]);
 			},
-			unpackGameData: function (dir, datas) {
+			unpackGameData:async function (dir,projectName, projectData, pckName, pckData) {
+				let datas = []
+				datas.push({ "path": projectName, "data": projectData})	
+				if ( pckName != "" ){
+					datas.push({ "path": pckName, "data": pckData })
+				} 
+				// write project data to file	
 				let files = []
 				this.rtenv['deleteDirFS'](dir);
 				for (let info of datas) {
@@ -209,14 +215,6 @@ const Engine = (function () {
 						});
 					}
 					return Promise.all(libs).then(function () {
-						if (libs.length === 0) {
-							return new Promise(function (resolve, reject) {
-								window.goWasmInit();
-								resolve();
-							}).then(function () {
-								return executeMainLogic();
-							}); 
-						}
 						return executeMainLogic();
 					});
 					
