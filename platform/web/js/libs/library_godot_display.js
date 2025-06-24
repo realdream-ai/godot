@@ -619,7 +619,7 @@ const GodotDisplay = {
 	godot_js_display_window_title_set__proxy: 'sync',
 	godot_js_display_window_title_set__sig: 'vi',
 	godot_js_display_window_title_set: function (p_data) {
-		if (IsWxMiniGame){
+		if (miniEngine){
 			return;
 		}
 		document.title = GodotRuntime.parseString(p_data);
@@ -628,7 +628,7 @@ const GodotDisplay = {
 	godot_js_display_window_icon_set__proxy: 'sync',
 	godot_js_display_window_icon_set__sig: 'vii',
 	godot_js_display_window_icon_set: function (p_ptr, p_len) {
-		if (IsWxMiniGame){
+		if (miniEngine){
 			return;
 		}
 		let link = document.getElementById('-gd-engine-icon');

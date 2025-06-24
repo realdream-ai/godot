@@ -100,7 +100,7 @@ const Engine = (function () {
 							GodotModule._cmalloc = createWrapper(gdmodule,"malloc");
 							GodotModule._cfree = createWrapper(gdmodule,"free");
 							const paths = me.config.persistentPaths;
-							if (!IsWxMiniGame){
+							if (!miniEngine){
 								module['initFS'](paths).then(function (err) {
 									me.rtenv = module;
 									if (me.config.unloadAfterInit) {

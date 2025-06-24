@@ -36,9 +36,9 @@ const Preloader = /** @constructor */ function () { // eslint-disable-line no-un
 			if (!response.ok) {
 				return Promise.reject(new Error(`Failed loading file '${file}'`));
 			}
-			if (IsWxMiniGame){
+			if (miniEngine){
 				return new Promise((resolve, reject) => {
-					const fs = wx.getFileSystemManager();
+					const fs = miniEngine.getFileSystemManager();
 					fs.readFile({
 						filePath: file,
 						success: res => resolve(res.data),

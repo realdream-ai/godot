@@ -325,7 +325,7 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
 	 */
 	Config.prototype.getGodotConfig = function (cleanup) {
 		// Try to find a canvas
-		if (!IsWxMiniGame){
+		if (!miniEngine){
 			if (!(this.canvas instanceof HTMLCanvasElement)) {
 				const nodes = document.getElementsByTagName('canvas');
 				if (nodes.length && nodes[0] instanceof HTMLCanvasElement) {

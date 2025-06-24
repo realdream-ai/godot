@@ -151,7 +151,7 @@ const GodotIME = {
 				GodotIME.active = false;
 			};
 
-			if (!IsWxMiniGame){
+			if (!miniEngine){
 				// wx mini game not support modify document && canvas
 				GodotConfig.canvas.parentElement.appendChild(ime);
 			}
