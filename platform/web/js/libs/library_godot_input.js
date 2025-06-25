@@ -38,26 +38,41 @@ const GodotIME = {
 	$GodotIME: {
 		ime: null,
 		active: false,
+		focusTimerIntervalId: -1,
 
 		getModifiers: function (evt) {
 			return (evt.shiftKey + 0) + ((evt.altKey + 0) << 1) + ((evt.ctrlKey + 0) << 2) + ((evt.metaKey + 0) << 3);
 		},
 
 		ime_active: function (active) {
-			function focus_timer() {
-				GodotIME.active = true;
+			function clearFocusTimerInterval() {
+				clearInterval(GodotIME.focusTimerIntervalId);
+				GodotIME.focusTimerIntervalId = -1;
+			}
+
+			function focusTimer() {
+				if (GodotIME.ime == null) {
+					clearFocusTimerInterval();
+					return;
+				}
 				GodotIME.ime.focus();
 			}
 
-			if (GodotIME.ime) {
-				if (active) {
-					GodotIME.ime.style.display = 'block';
-					setInterval(focus_timer, 100);
-				} else {
-					GodotIME.ime.style.display = 'none';
-					GodotConfig.canvas.focus();
-					GodotIME.active = false;
-				}
+			if (GodotIME.focusTimerIntervalId > -1) {
+				clearFocusTimerInterval();
+			}
+
+			if (GodotIME.ime == null) {
+				return;
+			}
+
+			GodotIME.active = active;
+			if (active) {
+				GodotIME.ime.style.display = 'block';
+				GodotIME.focusTimerIntervalId = setInterval(focusTimer, 100);
+			} else {
+				GodotIME.ime.style.display = 'none';
+				GodotConfig.canvas.focus();
 			}
 		},
 
@@ -84,20 +99,27 @@ const GodotIME = {
 				evt.preventDefault();
 			}
 			function ime_event_cb(event) {
-				if (GodotIME.ime) {
-					if (event.type === 'compositionstart') {
-						ime_cb(0, null);
-						GodotIME.ime.innerHTML = '';
-					} else if (event.type === 'compositionupdate') {
-						const ptr = GodotRuntime.allocString(event.data);
-						ime_cb(1, ptr);
-						GodotRuntime.free(ptr);
-					} else if (event.type === 'compositionend') {
-						const ptr = GodotRuntime.allocString(event.data);
-						ime_cb(2, ptr);
-						GodotRuntime.free(ptr);
-						GodotIME.ime.innerHTML = '';
-					}
+				if (GodotIME.ime == null) {
+					return;
+				}
+				switch (event.type) {
+				case 'compositionstart':
+					ime_cb(0, null);
+					GodotIME.ime.innerHTML = '';
+					break;
+				case 'compositionupdate': {
+					const ptr = GodotRuntime.allocString(event.data);
+					ime_cb(1, ptr);
+					GodotRuntime.free(ptr);
+				} break;
+				case 'compositionend': {
+					const ptr = GodotRuntime.allocString(event.data);
+					ime_cb(2, ptr);
+					GodotRuntime.free(ptr);
+					GodotIME.ime.innerHTML = '';
+				} break;
+				default:
+					// Do nothing.
 				}
 			}
 
@@ -133,10 +155,15 @@ const GodotIME = {
 		},
 
 		clear: function () {
-			if (GodotIME.ime) {
-				GodotIME.ime.remove();
-				GodotIME.ime = null;
+			if (GodotIME.ime == null) {
+				return;
 			}
+			if (GodotIME.focusTimerIntervalId > -1) {
+				clearInterval(GodotIME.focusTimerIntervalId);
+				GodotIME.focusTimerIntervalId = -1;
+			}
+			GodotIME.ime.remove();
+			GodotIME.ime = null;
 		},
 	},
 };
@@ -177,6 +204,7 @@ const GodotInputGamepads = {
 		sample: function () {
 			const pads = GodotInputGamepads.get_pads();
 			const samples = [];
+			let active = 0;
 			for (let i = 0; i < pads.length; i++) {
 				const pad = pads[i];
 				if (!pad) {
@@ -196,8 +224,10 @@ const GodotInputGamepads = {
 					s.axes.push(pad.axes[a]);
 				}
 				samples.push(s);
+				active++;
 			}
 			GodotInputGamepads.samples = samples;
+			return active;
 		},
 
 		init: function (onchange) {
@@ -452,7 +482,7 @@ mergeInto(LibraryManager.library, GodotInputDragDrop);
  * Godot exposed input functions.
  */
 const GodotInput = {
-	$GodotInput__deps: ['$GodotRuntime', '$GodotConfig', '$GodotEventListeners', '$GodotInputGamepads', '$GodotInputDragDrop', '$GodotIME'],
+	$GodotInput__deps: ['$GodotRuntime', '$GodotConfig', '$GodotEventListeners', '$GodotInputGamepads', '$GodotInputDragDrop','$GodotIME'],
 	$GodotInput: {
 		getModifiers: function (evt) {
 			return (evt.shiftKey + 0) + ((evt.altKey + 0) << 1) + ((evt.ctrlKey + 0) << 2) + ((evt.metaKey + 0) << 3);
@@ -623,8 +653,7 @@ const GodotInput = {
 	godot_js_input_gamepad_sample__proxy: 'sync',
 	godot_js_input_gamepad_sample__sig: 'i',
 	godot_js_input_gamepad_sample: function () {
-		GodotInputGamepads.sample();
-		return 0;
+		return GodotInputGamepads.sample();
 	},
 
 	godot_js_input_gamepad_sample_get__proxy: 'sync',
@@ -650,7 +679,6 @@ const GodotInput = {
 		GodotRuntime.setHeapValue(r_standard, is_standard, 'i32');
 		return 0;
 	},
-
 	/*
 	 * Drag/Drop API
 	 */
@@ -674,6 +702,28 @@ const GodotInput = {
 			ev.preventDefault();
 		}, false);
 		GodotEventListeners.add(canvas, 'drop', GodotInputDragDrop.handler(dropFiles));
+	},
+
+	godot_js_on_game_datas_set_callback__proxy: 'sync',
+	godot_js_on_game_datas_set_callback__sig: 'vi',
+	godot_js_on_game_datas_set_callback: function (callback) {
+		const func = GodotRuntime.get_func(callback);
+		const set_game_data = function (path, files) {
+			const args = files || [];
+			if (!args.length) {
+				return;
+			}
+			const ptr = GodotRuntime.allocString(path);
+			const argc = args.length;
+			const argv = GodotRuntime.allocStringArray(args);
+			func(ptr, argv, argc);
+			GodotRuntime.freeStringArray(argv, argc);
+			GodotRuntime.free(ptr);
+		};
+		if(GodotFS._game_datas){
+			set_game_data(GodotFS._game_datas.path, GodotFS._game_datas.files);
+		}
+		GodotFS._set_game_data_cb = set_game_data
 	},
 
 	/* Paste API */
