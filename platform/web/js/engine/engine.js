@@ -81,6 +81,9 @@ const Engine = (function () {
 					return Promise.resolve();
 				}
 				loadPath = this.config.executable;
+				if(miniEngine){
+					loadPath = "js/"+loadPath;
+				}
 				GodotEngine = this;
 				const me = this;
 				let createWrapper = function (module, name) {
