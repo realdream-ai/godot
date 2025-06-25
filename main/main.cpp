@@ -37,6 +37,7 @@
 #include "core/extension/extension_api_dump.h"
 #include "core/extension/gdextension_interface_dump.gen.h"
 #include "core/extension/gdextension_manager.h"
+#include "core/extension/spx.h"
 #include "core/input/input.h"
 #include "core/input/input_map.h"
 #include "core/io/dir_access.h"
@@ -186,6 +187,7 @@ static int audio_driver_idx = -1;
 static bool single_window = false;
 static bool editor = false;
 static bool project_manager = false;
+static String install_project_name = "";
 static bool cmdline_tool = false;
 static String locale;
 static String log_file;
@@ -1379,6 +1381,11 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 			editor = true;
 		} else if (arg == "-p" || arg == "--project-manager") { // starts project manager
 			project_manager = true;
+		}  else if (arg == "--install_project_name") { // install project zip name
+			if (N) {
+				install_project_name = N->get();
+				N = N->next();
+			}
 		} else if (arg == "--debug-server") {
 			if (N) {
 				debug_server_uri = N->get();
@@ -1743,6 +1750,14 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 #endif // TOOLS_ENABLED
 		} else if (arg == "--" || arg == "++") {
 			adding_user_args = true;
+		} else if (arg == "--gdextpath") { // set path of project to start or edit
+			if (N) {
+				GDExtension::ext_path = N->get();
+				N = N->next();
+			} else {
+				OS::get_singleton()->print("Missing relative or absolute gdextension path, aborting.\n");
+				goto error;
+			}
 		} else {
 			main_args.push_back(arg);
 		}
@@ -1856,6 +1871,10 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 
 	if (project_manager) {
 		Engine::get_singleton()->set_project_manager_hint(true);
+	}
+	if (install_project_name != "") {
+		print_line("install_project_name = ", install_project_name);
+		Engine::get_singleton()->set_install_project_name(install_project_name);
 	}
 #endif
 
@@ -3594,7 +3613,7 @@ int Main::start() {
 	}
 
 	OS::get_singleton()->set_main_loop(main_loop);
-
+	Spx::register_types();
 	SceneTree *sml = Object::cast_to<SceneTree>(main_loop);
 	if (sml) {
 #ifdef DEBUG_ENABLED
@@ -3925,6 +3944,7 @@ int Main::start() {
 			}
 
 			OS::get_singleton()->benchmark_end_measure("Startup", "Load Game");
+			Spx::on_start(sml);
 		}
 
 #ifdef TOOLS_ENABLED
@@ -4066,7 +4086,7 @@ bool Main::iteration() {
 
 		PhysicsServer2D::get_singleton()->sync();
 		PhysicsServer2D::get_singleton()->flush_queries();
-
+		Spx::on_fixed_update(physics_step * time_scale);
 		if (OS::get_singleton()->get_main_loop()->physics_process(physics_step * time_scale)) {
 #ifndef _3D_DISABLED
 			PhysicsServer3D::get_singleton()->end_sync();
@@ -4133,6 +4153,7 @@ bool Main::iteration() {
 	process_max = MAX(process_ticks, process_max);
 	uint64_t frame_time = OS::get_singleton()->get_ticks_usec() - ticks;
 
+	Spx::on_update(process_step * time_scale);
 	for (int i = 0; i < ScriptServer::get_language_count(); i++) {
 		ScriptServer::get_language(i)->frame();
 	}
@@ -4264,6 +4285,8 @@ void Main::cleanup(bool p_force) {
 
 	// Flush before uninitializing the scene, but delete the MessageQueue as late as possible.
 	message_queue->flush();
+
+	Spx::on_destroy();
 
 	OS::get_singleton()->delete_main_loop();
 

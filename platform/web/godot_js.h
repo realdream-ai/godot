@@ -76,6 +76,7 @@ extern int godot_js_input_gamepad_sample_count();
 extern int godot_js_input_gamepad_sample_get(int p_idx, float r_btns[16], int32_t *r_btns_num, float r_axes[10], int32_t *r_axes_num, int32_t *r_standard);
 extern void godot_js_input_paste_cb(void (*p_callback)(const char *p_text));
 extern void godot_js_input_drop_files_cb(void (*p_callback)(const char **p_filev, int p_filec));
+extern void godot_js_on_game_datas_set_callback(void (*p_callback)(const char *p_path, const char **p_filev, int p_filec));
 
 // TTS
 extern int godot_js_tts_is_speaking();
@@ -101,6 +102,7 @@ extern int godot_js_display_canvas_is_focused();
 // Display window
 extern void godot_js_display_desired_size_set(int p_width, int p_height);
 extern int godot_js_display_size_update();
+extern void godot_js_display_window_size_get_ext(int32_t *p_x, int32_t *p_y);
 extern void godot_js_display_window_size_get(int32_t *p_x, int32_t *p_y);
 extern void godot_js_display_screen_size_get(int32_t *p_x, int32_t *p_y);
 extern int godot_js_display_fullscreen_request();
@@ -132,6 +134,8 @@ extern int godot_js_display_tts_available();
 extern void godot_js_display_vk_cb(void (*p_input)(const char *p_text, int p_cursor));
 extern void godot_js_display_vk_show(const char *p_text, int p_type, int p_start, int p_end);
 extern void godot_js_display_vk_hide();
+
+#include "godot_js_spx.h"
 
 #ifdef __cplusplus
 }

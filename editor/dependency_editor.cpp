@@ -678,6 +678,10 @@ DependencyRemoveDialog::DependencyRemoveDialog() {
 	vb->add_child(owners);
 	owners->set_v_size_flags(Control::SIZE_EXPAND_FILL);
 }
+void DependencyRemoveDialog::presse_ok_immediately() {
+	ok_pressed();
+	hide();
+}
 
 //////////////
 

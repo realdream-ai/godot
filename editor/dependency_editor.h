@@ -132,6 +132,7 @@ class DependencyRemoveDialog : public ConfirmationDialog {
 	static void _bind_methods();
 
 public:
+	void presse_ok_immediately();
 	void show(const Vector<String> &p_folders, const Vector<String> &p_files);
 	DependencyRemoveDialog();
 };

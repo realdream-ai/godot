@@ -9,9 +9,6 @@
 #include "display_server_web.h"
 
 
-static void _godot_js_on_load_gdextension(GdString p_text, void* p_get_proc_address, void* p_library, void* r_initialization){
-	godot_js_on_load_gdextension(p_text, p_get_proc_address, p_library, r_initialization);
-}
 static void _godot_js_spx_on_runtime_panic(GdString msg){
 	godot_js_spx_on_runtime_panic(msg);
 }

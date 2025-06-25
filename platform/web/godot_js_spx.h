@@ -11,8 +11,6 @@ typedef int64_t GdInt ;
 typedef uint8_t GdBool ;
 
 // GDExtention
-extern void godot_js_on_load_gdextension(GdString p_text, void* p_get_proc_address, void* p_library, void* r_initialization);
-
 extern void godot_js_spx_on_runtime_panic(GdString msg);
 // Gdspx 
 extern void godot_js_spx_on_engine_start();
