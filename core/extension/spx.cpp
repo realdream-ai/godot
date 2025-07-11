@@ -65,7 +65,6 @@ void Spx::on_start(void *p_tree) {
 				String zfile = zfiles[i];
 				PackedByteArray pdata = zip->read_file(zfile, false);
 				String out_path = target_dir + String("/") + zfile;
-				print_line("Extracting file: " + out_path);
 				DirAccess::make_dir_recursive_absolute(out_path.get_base_dir());
 				Ref<FileAccess> fout = FileAccess::open(out_path, FileAccess::WRITE);
 				if (fout.is_valid()) {
