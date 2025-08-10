@@ -316,14 +316,17 @@ void MetalDeviceProperties::init_limits(id<MTLDevice> p_device) {
 
 	limits.maxDrawIndexedIndexValue = std::numeric_limits<uint32_t>::max() - 1;
 
+	// Use default values to avoid compilation issues with missing methods in older SDKs
+	limits.temporalScalerInputContentMinScale = 1.0;
+	limits.temporalScalerInputContentMaxScale = 3.0;
+	
+#if (__MAC_OS_X_VERSION_MAX_ALLOWED >= 140000) ||  (__IPHONE_OS_VERSION_MAX_ALLOWED >= 170000) || (__TV_OS_VERSION_MAX_ALLOWED >= 170000) 
 	if (@available(macOS 14.0, iOS 17.0, tvOS 17.0, *)) {
 		limits.temporalScalerInputContentMinScale = (double)[MTLFXTemporalScalerDescriptor supportedInputContentMinScaleForDevice:p_device];
 		limits.temporalScalerInputContentMaxScale = (double)[MTLFXTemporalScalerDescriptor supportedInputContentMaxScaleForDevice:p_device];
-	} else {
-		// Defaults taken from macOS 14+
-		limits.temporalScalerInputContentMinScale = 1.0;
-		limits.temporalScalerInputContentMaxScale = 3.0;
-	}
+	} 
+#endif
+
 }
 
 MetalDeviceProperties::MetalDeviceProperties(id<MTLDevice> p_device) {

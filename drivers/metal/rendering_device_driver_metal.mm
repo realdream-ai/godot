@@ -314,7 +314,9 @@ RDD::TextureID RenderingDeviceDriverMetal::texture_create(const TextureFormat &p
 
 	if (@available(macOS 14.0, iOS 17.0, tvOS 17.0, *)) {
 		if (format_caps & kMTLFmtCapsAtomic) {
+#if (__MAC_OS_X_VERSION_MAX_ALLOWED >= 140000) ||  (__IPHONE_OS_VERSION_MAX_ALLOWED >= 170000) || (__TV_OS_VERSION_MAX_ALLOWED >= 170000) 
 			desc.usage |= MTLTextureUsageShaderAtomic;
+#endif
 		}
 	}
 

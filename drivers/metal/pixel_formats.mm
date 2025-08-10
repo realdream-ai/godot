@@ -97,6 +97,17 @@
 #define MTLVertexFormatFloatRGB9E5 MTLVertexFormatInvalid
 #endif
 
+// define 
+#define MTLGPUFamilyApple1 (MTLGPUFamily)1001
+#define MTLGPUFamilyApple2 (MTLGPUFamily)1002
+#define MTLGPUFamilyApple3 (MTLGPUFamily)1003
+#define MTLGPUFamilyApple4 (MTLGPUFamily)1004
+#define MTLGPUFamilyApple5 (MTLGPUFamily)1005
+#define MTLGPUFamilyApple6 (MTLGPUFamily)1006
+#define MTLGPUFamilyApple7 (MTLGPUFamily)1007
+#define MTLGPUFamilyApple8 (MTLGPUFamily)1008
+#define MTLGPUFamilyApple9 (MTLGPUFamily)1009
+
 template <typename T>
 void clear(T *p_val, size_t p_count = 1) {
 	memset(p_val, 0, sizeof(T) * p_count);
