@@ -38,6 +38,12 @@ const GodotGdspx = {
 		window.gdspx_on_engine_destroy();
 	},
 
+	godot_js_spx_on_engine_pause__proxy: 'sync',
+	godot_js_spx_on_engine_pause__sig: 'vi',
+	godot_js_spx_on_engine_pause : function (is_on) {
+		window.gdspx_on_engine_pause(is_on);
+	},
+
 
 	godot_js_spx_on_engine_update__proxy: 'sync',
 	godot_js_spx_on_engine_update__sig: 'vf', 
@@ -49,12 +55,6 @@ const GodotGdspx = {
 	godot_js_spx_on_engine_fixed_update__sig: 'vf', 
 	godot_js_spx_on_engine_fixed_update : function (delta) {
 		window.gdspx_on_engine_fixed_update(delta);
-	},
-
-	godot_js_spx_on_engine_destroy__proxy: 'sync',
-	godot_js_spx_on_engine_destroy__sig: 'v',
-	godot_js_spx_on_engine_destroy : function () {
-		window.gdspx_on_engine_destroy();
 	},
 
 	godot_js_spx_on_scene_sprite_instantiated__proxy: 'sync',

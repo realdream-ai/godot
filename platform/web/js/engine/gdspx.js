@@ -233,6 +233,26 @@ function gdspx_ext_on_runtime_panic(msg) {
 	FreeGdString(_arg0); 
 
 }
+function gdspx_ext_pause() {
+	var _gdFuncPtr =  GodotEngine.rtenv['_gdspx_ext_pause']; 
+	
+	_gdFuncPtr();
+
+}
+function gdspx_ext_resume() {
+	var _gdFuncPtr =  GodotEngine.rtenv['_gdspx_ext_resume']; 
+	
+	_gdFuncPtr();
+
+}
+function gdspx_ext_is_paused() {
+	var _gdFuncPtr =  GodotEngine.rtenv['_gdspx_ext_is_paused']; 
+	var _retValue = AllocGdBool();
+	_gdFuncPtr(_retValue);
+	var _finalRetValue = ToJsBool(_retValue);
+	FreeGdBool(_retValue); 
+	return _finalRetValue
+}
 function gdspx_ext_destroy_all_pens() {
 	var _gdFuncPtr =  GodotEngine.rtenv['_gdspx_ext_destroy_all_pens']; 
 	
