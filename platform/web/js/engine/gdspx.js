@@ -373,6 +373,34 @@ gdspx_ext_set_pen_stamp_texture(obj,texture_path) {
 	FreeGdString(_arg1); 
 
 }
+gdspx_ext_create_spring() {
+	var _gdFuncPtr = Module._gdspx_ext_create_spring; 
+	
+	_gdFuncPtr();
+
+}
+gdspx_ext_destroy_spring() {
+	var _gdFuncPtr = Module._gdspx_ext_destroy_spring; 
+	
+	_gdFuncPtr();
+
+}
+gdspx_ext_clear_spring() {
+	var _gdFuncPtr = Module._gdspx_ext_clear_spring; 
+	
+	_gdFuncPtr();
+
+}
+gdspx_ext_new_spring_particle(position,fixed) {
+	var _gdFuncPtr = Module._gdspx_ext_new_spring_particle; 
+	
+	var _arg0 = ToGdVec2(position);
+	var _arg1 = ToGdBool(fixed);
+	_gdFuncPtr(_arg0, _arg1);
+	FreeGdVec2(_arg0); 
+	FreeGdBool(_arg1); 
+
+}
 gdspx_input_get_mouse_pos() {
 	var _gdFuncPtr = Module._gdspx_input_get_mouse_pos; 
 	var _retValue = AllocGdVec2();

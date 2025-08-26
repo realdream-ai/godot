@@ -1,5 +1,9 @@
 #include "spx_mass_spring.h"
 #include "core/os/keyboard.h"
+#include "spx_engine.h"
+#include "spx_camera_mgr.h"
+#include "scene/2d/camera_2d.h"
+#include "scene/main/viewport.h"
 
 void MassSpring2D::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_spring_Y", "v"), &MassSpring2D::set_spring_Y);
@@ -138,10 +142,10 @@ void MassSpring2D::_integrate_one_substep() {
             v *= Math::exp(-dt * drag_damping);
             Vector2 x = positions[i] + v * dt;
 
-            if (x.x < 0) { x.x = 0; v.x = 0; }
-            if (x.x > 1) { x.x = 1; v.x = 0; }
-            if (x.y < 0) { x.y = 0; v.y = 0; }
-            if (x.y > 1) { x.y = 1; v.y = 0; }
+            if (x.x < -0.5) { x.x = -0.5; v.x = 0; }
+            if (x.x > 0.5) { x.x = 0.5; v.x = 0; }
+            if (x.y < -0.5) { x.y = -0.5; v.y = 0; }
+            if (x.y > 0.5) { x.y = 0.5; v.y = 0; }
 
             velocities.set(i, v);
             positions.set(i, x);
@@ -210,8 +214,24 @@ void MassSpring2D::_ready() {
 void MassSpring2D::input(const Ref<InputEvent> &p_event) {
     if (const InputEventMouseButton *mb = Object::cast_to<InputEventMouseButton>(p_event.ptr())) {
         if (mb->is_pressed()) {
-            Vector2 pos_norm = mb->get_position() / pixel_scale;
-            print_line("MassSpring2D::input", mb->get_button_index(), mb->get_position() , pos_norm);
+
+            Vector2 screen_pos = mb->get_position();
+            Vector2 world_pos = screen_pos;
+            auto spx = SpxEngine::get_singleton();
+            Camera2D *camera = nullptr;
+
+            if (spx != nullptr && spx->get_camera() != nullptr) {
+                camera = spx->get_camera()->get_camera2d();
+            }
+
+            if (camera != nullptr) {
+                print_line("MassSpring2D::input: using SPX camera's affine_inverse");
+                world_pos = camera->get_screen_transform().affine_inverse().xform(screen_pos);
+            }
+
+            Vector2 pos_norm = world_pos / pixel_scale;
+            print_line("MassSpring2D::input: mouse button", mb->get_button_index(), screen_pos, world_pos, pos_norm);
+
             if (mb->get_button_index() == MouseButton::LEFT) {
                 const bool shift = Input::get_singleton()->is_key_pressed(Key::SHIFT);
                 new_particle(pos_norm, shift);

@@ -54,6 +54,7 @@ public:
 	GdVec2 get_camera_zoom();
 	void set_camera_zoom(GdVec2 size);
 	GdRect2 get_viewport_rect();
+	Camera2D *get_camera2d() { return camera; }
 };
 
 #endif // SPX_CAMERA_MGR_H

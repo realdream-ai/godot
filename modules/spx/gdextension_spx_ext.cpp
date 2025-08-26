@@ -184,6 +184,18 @@ static void gdextension_spx_ext_set_pen_size_to(GdObj obj,GdFloat size) {
 static void gdextension_spx_ext_set_pen_stamp_texture(GdObj obj,GdString texture_path) {
 	 extMgr->set_pen_stamp_texture(obj, texture_path);
 }
+static void gdextension_spx_ext_create_spring() {
+	 extMgr->create_spring();
+}
+static void gdextension_spx_ext_destroy_spring() {
+	 extMgr->destroy_spring();
+}
+static void gdextension_spx_ext_clear_spring() {
+	 extMgr->clear_spring();
+}
+static void gdextension_spx_ext_new_spring_particle(GdVec2 position,GdBool fixed) {
+	 extMgr->new_spring_particle(position, fixed);
+}
 static void gdextension_spx_input_get_mouse_pos(GdVec2* ret_val) {
 	*ret_val = inputMgr->get_mouse_pos();
 }
@@ -801,6 +813,10 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_ext_change_pen_size_by);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ext_set_pen_size_to);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ext_set_pen_stamp_texture);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ext_create_spring);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ext_destroy_spring);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ext_clear_spring);
+	REGISTER_SPX_INTERFACE_FUNC(spx_ext_new_spring_particle);
 	REGISTER_SPX_INTERFACE_FUNC(spx_input_get_mouse_pos);
 	REGISTER_SPX_INTERFACE_FUNC(spx_input_get_key);
 	REGISTER_SPX_INTERFACE_FUNC(spx_input_get_mouse_state);

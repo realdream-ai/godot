@@ -38,6 +38,7 @@
 #include "spx_pen.h"
 #include "spx_res_mgr.h"
 #include "spx_sprite.h"
+#include "spx_mass_spring.h"
 
 #define resMgr SpxEngine::get_singleton()->get_res()
 
@@ -79,6 +80,9 @@ void SpxExtMgr::on_destroy() {
 	if (pen_root) {
 		pen_root->queue_free();
 		pen_root = nullptr;
+	}
+	if(spring_mass != nullptr) {
+		destroy_spring();
 	}
 	lock.unlock();
 	SpxBaseMgr::on_destroy();
@@ -178,6 +182,35 @@ void SpxExtMgr::set_pen_size_to(GdObj obj, GdFloat size) {
 void SpxExtMgr::set_pen_stamp_texture(GdObj obj, GdString texture_path) {
 	check_and_get_pen_v()
 	pen->set_stamp_texture(texture_path);
+}
+
+// mass-spring APIs
+void SpxExtMgr::create_spring() {
+    if (spring_mass != nullptr) {
+        print_error("spring_mass already created");
+        return;
+    }
+    spring_mass = memnew(MassSpring2D);
+    get_spx_root()->add_child(spring_mass);
+}
+
+void SpxExtMgr::destroy_spring() {
+    with_spring([this]() {
+        spring_mass->queue_free();
+        spring_mass = nullptr;
+    });
+}
+
+void SpxExtMgr::clear_spring() {
+    with_spring([this]() {
+        spring_mass->clear();
+    });
+}
+
+void SpxExtMgr::new_spring_particle(GdVec2 position, GdBool fixed) {
+    with_spring([this, position, fixed]() {
+        spring_mass->new_particle(position, fixed);
+    });
 }
 
 // Pause API implementations - delegate to Spx layer

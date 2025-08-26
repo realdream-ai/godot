@@ -36,6 +36,8 @@
 #include "spx_base_mgr.h"
 
 class SpxPen;
+class MassSpring2D;
+
 class SpxExtMgr : SpxBaseMgr {
 	SPXCLASS(SpxExtMgr, SpxBaseMgr)
 public:
@@ -45,6 +47,7 @@ private:
 	RBMap<GdObj, SpxPen *> id_pens;
 	Node *pen_root;
 
+	MassSpring2D *spring_mass = nullptr;
 	static Mutex lock;
 private:
 	SpxPen *_get_pen(GdObj id);
@@ -79,6 +82,21 @@ public:
 	void change_pen_size_by(GdObj obj, GdFloat amount);
 	void set_pen_size_to(GdObj obj, GdFloat size);
 	void set_pen_stamp_texture(GdObj obj, GdString texture_path);
+
+	// mass-spring APIs
+	void create_spring();
+	void destroy_spring();
+	void clear_spring();
+	void new_spring_particle(GdVec2 position, GdBool fixed);
+
+	template<typename Func>
+    void with_spring(Func f, const char *error_msg = "spring_mass is null") {
+        if (spring_mass == nullptr) {
+            print_error(error_msg);
+            return;
+        }
+        f();
+    }
 };
 
 #endif // SPX_EXT_MGR_H

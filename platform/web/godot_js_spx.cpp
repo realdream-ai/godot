@@ -235,6 +235,22 @@ void gdspx_ext_set_pen_stamp_texture(GdObj* obj,GdString* texture_path) {
 	 extMgr->set_pen_stamp_texture(*obj, *texture_path);
 }
 EMSCRIPTEN_KEEPALIVE
+void gdspx_ext_create_spring() {
+	 extMgr->create_spring();
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_ext_destroy_spring() {
+	 extMgr->destroy_spring();
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_ext_clear_spring() {
+	 extMgr->clear_spring();
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_ext_new_spring_particle(GdVec2* position,GdBool* fixed) {
+	 extMgr->new_spring_particle(*position, *fixed);
+}
+EMSCRIPTEN_KEEPALIVE
 void gdspx_input_get_mouse_pos(GdVec2* ret_val) {
 	*ret_val = inputMgr->get_mouse_pos();
 }
