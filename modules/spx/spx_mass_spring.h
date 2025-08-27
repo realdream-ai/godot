@@ -62,6 +62,8 @@ protected:
     void _ready();
     void input(const Ref<InputEvent> &p_event) override;
 
+	void generate_fractal();
+
 public:
     MassSpring2D() = default;
     ~MassSpring2D() = default;
