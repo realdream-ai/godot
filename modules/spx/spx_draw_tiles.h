@@ -5,72 +5,61 @@
 #include "scene/2d/node_2d.h"
 #include "scene/2d/sprite_2d.h"
 #include "scene/2d/camera_2d.h"
+#include "scene/2d/tile_map.h"
+#include "scene/resources/2d/tile_set.h"
+#include <map>
+#include <vector>
 
+struct TileAction {
+    int layer_index;
+    Vector2i coords;
+    bool placed;
+    int source_id;
+    Vector2i atlas_coord;
+    int alternative_tile;
+};
 
 class SpxDrawTiles : public Node2D {
-    GDCLASS(SpxDrawTiles, Node2D)
+    GDCLASS(SpxDrawTiles, Node2D);
 
 private:
-    struct Operation {
-        String type;         // "add" / "remove"
-        Node2D *node;
-        String sprite_path;
-        Vector2 position;
-    };
+    Ref<TileSet> tileset;
+    Ref<Texture2D> current_texture;
 
-    bool drawing = false;
-    bool deleting = false;
-    int current_tile = 0;
+    std::vector<TileAction> undo_stack;
+    std::vector<TileAction> redo_stack;
 
-    // tile
-    Array tile_textures; // Dictionary { "texture": Ref<Texture2D>, "path": String }
-    Vector2 tile_size = Vector2(64,64);
+    std::map<Ref<Texture2D>, int> texture_source_ids;
+    int next_source_id = 1;
 
-    // HUD
-    Sprite2D *preview_sprite = nullptr;
-
-    Array undo_stack;
-    Array redo_stack;
-
-    // Palette UI
-    Array palette_sprites;        // Sprite2D
-    Array palette_highlight_rects; // ColorRect
-    int palette_margin = 10;
-    int palette_size = 48;
-
-private:
-    Node2D *_get_tile_at_position(Vector2 pos);
-    Camera2D *camera = nullptr;
+    Vector2i cell_size = Vector2i(64, 64);
+    int current_layer_index = 0;
 
 protected:
     static void _bind_methods();
-
-    void _process(double delta);
-    void _draw();
     void _notification(int p_what);
     void _ready();
-    void input(const Ref<InputEvent> &p_event) override;
+    void _draw();
 
 public:
     SpxDrawTiles() = default;
     ~SpxDrawTiles() = default;
 
-    // API
-    void add_sprite_path(const String &path);
-    void switch_tile(int index);
+    void set_texture(Ref<Texture2D> texture);
+    void set_layer_index(int index);
 
-    // Tile 
-    bool has_tile_at(Vector2 pos);
-    Node2D *place_tile(Vector2 aligned_pos, const String &sprite_path = "");
-    void remove_tile(Vector2 aligned_pos, bool record = true);
+    void place_tile(Vector2i coords);
+    void erase_tile(Vector2i coords);
 
     void undo();
     void redo();
 
-    // Palette UI
-    void rebuild_palette();
-    void on_palette_click(int index);
-    void update_palette_highlight();
+    void handle_mouse_click(Vector2 pos, bool erase);
+
+private:
+    TileMapLayer* get_or_create_layer(int layer_index);
+    int get_or_create_source_id(Ref<Texture2D> texture);
+    void add_tile_collision(int source_id);
 };
 
 #endif // SPX_DRAW_TILES_H
