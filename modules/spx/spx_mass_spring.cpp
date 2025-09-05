@@ -4,7 +4,6 @@
 #include "spx_camera_mgr.h"
 #include "scene/2d/camera_2d.h"
 #include "scene/main/viewport.h"
-#include <complex>
 
 void MassSpring2D::_bind_methods() {
     // Spring stiffness (Young’s modulus)
@@ -53,8 +52,6 @@ void MassSpring2D::_bind_methods() {
     ClassDB::bind_method(D_METHOD("new_particle", "p", "fixed"), &MassSpring2D::new_particle);
     ClassDB::bind_method(D_METHOD("attract_to", "p", "strength"), &MassSpring2D::attract_to);
     ClassDB::bind_method(D_METHOD("step_simulation", "steps"), &MassSpring2D::step_simulation);
-
-    ClassDB::bind_method(D_METHOD("generate_fractal"), &MassSpring2D::generate_fractal);
 }
 
 /**
@@ -293,22 +290,9 @@ void MassSpring2D::_ready() {
 void MassSpring2D::input(const Ref<InputEvent> &p_event) {
     if (const InputEventMouseButton *mb = Object::cast_to<InputEventMouseButton>(p_event.ptr())) {
         if (mb->is_pressed()) {
-            Vector2 screen_pos = mb->get_position();
-            Vector2 world_pos = screen_pos;
-            auto spx = SpxEngine::get_singleton();
-            Camera2D *camera = nullptr;
 
-            if (spx != nullptr && spx->get_camera() != nullptr) {
-                camera = spx->get_camera()->get_camera2d();
-            }
-
-            if (camera != nullptr) {
-                print_line("MassSpring2D::input: using SPX camera's affine_inverse");
-                world_pos = camera->get_screen_transform().affine_inverse().xform(screen_pos);
-            }
-
+            Vector2 world_pos = get_global_mouse_position();
             Vector2 pos_norm = world_pos / pixel_scale;
-            print_line("MassSpring2D::input: mouse button", mb->get_button_index(), screen_pos, world_pos, pos_norm);
 
             if (mb->get_button_index() == MouseButton::LEFT) {
                 const bool shift = Input::get_singleton()->is_key_pressed(Key::SHIFT);
@@ -326,42 +310,15 @@ void MassSpring2D::input(const Ref<InputEvent> &p_event) {
             } else if (k->get_keycode() == Key::C) {
                 clear();
             } else if (k->get_keycode() == Key::F) {
-                generate_fractal();
+                fractal_drive();
             }
         }
     }
 }
 
-/**
- * Generate a fractal pattern of particles (Julia set).
- */
-void MassSpring2D::generate_fractal() {
-    const int width = 50; 
-    const int height = 50; 
-    const int max_iter = 20;
-    const float zoom = 1.5f;
-    const Vector2 offset(0.0f, 0.0f);
-    const std::complex<float> c(-0.7f, 0.27015f); 
-
-    clear(); 
-
-    for (int ix = 0; ix < width; ix += 2) { 
-        for (int iy = 0; iy < height; iy += 2) {
-            float x0 = ((float)ix / width) * 2.0f * zoom - zoom + offset.x;
-            float y0 = ((float)iy / height) * 2.0f * zoom - zoom + offset.y;
-            std::complex<float> z(x0, y0);
-
-            int iter = 0;
-            while (abs(z) < 2.0f && iter < max_iter) {
-                z = z * z + c;
-                iter++;
-            }
-
-            if (iter == max_iter) { 
-                Vector2 pos_norm(x0, y0);
-                bool is_fixed = (Math::randf() < 0.2);
-                new_particle(pos_norm, is_fixed);
-            }
-        }
+void MassSpring2D::fractal_drive() {
+    auto results = special_input.generate();
+    for(auto data : results){
+        new_particle(data.pos, data.is_fixed);
     }
 }
