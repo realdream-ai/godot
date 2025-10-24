@@ -104,7 +104,6 @@ void SpxDebugMgr::debug_draw_circle(GdVec2 pos, GdFloat radius, GdColor color) {
 		return;
 	}
 
-	pos.y = -pos.y;
 	Line2D* circle = memnew(Line2D);
 	circle->set_default_color(color);
 	circle->set_width(2.0f);
@@ -137,8 +136,7 @@ void SpxDebugMgr::debug_draw_rect(GdVec2 pos, GdVec2 size, GdColor color) {
 	Line2D* rect = memnew(Line2D);
 	rect->set_default_color(color);
 	rect->set_width(2.0f);
-	
-	pos.y = -pos.y;
+
 	size = size * 0.5;
 	PackedVector2Array points;
 	points.append(Vector2(-size.x, -size.y));
@@ -164,10 +162,6 @@ void SpxDebugMgr::debug_draw_line(GdVec2 from, GdVec2 to, GdColor color) {
 	if (!debug_root) {
 		return;
 	}
-
-	// 翻转Y轴坐标
-	from.y = -from.y;
-	to.y = -to.y;
 
 	Line2D* line = memnew(Line2D);
 	line->set_default_color(color);

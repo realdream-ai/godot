@@ -196,7 +196,7 @@ void SpxSpriteMgr::set_child_position(GdObj obj, GdString path, GdVec2 pos) {
 	check_and_get_sprite_v()
 	auto child = (Node2D *)sprite->get_node(SpxStr(path));
 	if (child != nullptr) {
-		child->set_position(GdVec2{ pos.x, -pos.y });
+		child->set_position(pos);
 	}
 }
 
@@ -204,8 +204,7 @@ GdVec2 SpxSpriteMgr::get_child_position(GdObj obj, GdString path) {
 	check_and_get_sprite_r(GdVec2())
 	auto child = (Node2D *)sprite->get_node(SpxStr(path));
 	if (child != nullptr) {
-		auto pos = child->get_position();
-		return GdVec2{ pos.x, -pos.y };
+		return child->get_position();
 	}
 	return GdVec2();
 }
@@ -252,7 +251,6 @@ GdBool SpxSpriteMgr::check_collision(GdObj obj, GdObj target, GdBool is_src_trig
 
 GdBool SpxSpriteMgr::check_collision_with_point(GdObj obj, GdVec2 point, GdBool is_trigger) {
 	check_and_get_sprite_r(false)
-	point.y = - point.y;
 	return sprite->check_collision_with_point(point, is_trigger);
 }
 
@@ -270,7 +268,7 @@ GdInt SpxSpriteMgr::_create_sprite(GdString path, GdVec2 pos, GdBool is_backdrop
 	SpxSprite *sprite = nullptr;
 	if (path_str == "") {
 		sprite = memnew(SpxSprite);
-		sprite->set_position(GdVec2(pos.x, -pos.y));
+		sprite->set_position(pos);
 		AnimatedSprite2D *animated_sprite = memnew(AnimatedSprite2D);
 		sprite->add_child(animated_sprite);
 		Area2D *area = memnew(Area2D);
@@ -345,8 +343,7 @@ GdBool SpxSpriteMgr::is_sprite_alive(GdObj obj) {
 
 void SpxSpriteMgr::set_position(GdObj obj, GdVec2 pos) {
 	check_and_get_sprite_v()
-	// flip y axis
-	sprite->set_position(GdVec2(pos.x, -pos.y));
+	sprite->set_position(pos);
 }
 
 void SpxSpriteMgr::set_rotation(GdObj obj, GdFloat rot) {
@@ -361,9 +358,7 @@ void SpxSpriteMgr::set_scale(GdObj obj, GdVec2 scale) {
 
 GdVec2 SpxSpriteMgr::get_position(GdObj obj) {
 	check_and_get_sprite_r(GdVec2())
-	auto pos = sprite->get_position();
-	// flip y axis
-	return GdVec2{ pos.x, -pos.y };
+	return sprite->get_position();
 }
 
 GdFloat SpxSpriteMgr::get_rotation(GdObj obj) {
@@ -596,15 +591,12 @@ GdString SpxSpriteMgr::get_current_anim_name(GdObj obj) {
 
 void SpxSpriteMgr::set_velocity(GdObj obj, GdVec2 velocity) {
 	check_and_get_sprite_v()
-	// flip y axis
-	sprite->set_velocity(GdVec2(velocity.x, -velocity.y));
+	sprite->set_velocity(velocity);
 }
 
 GdVec2 SpxSpriteMgr::get_velocity(GdObj obj) {
 	check_and_get_sprite_r(GdVec2())
-	auto val = sprite->get_velocity();
-	// flip y axis
-	return GdVec2{ val.x, -val.y };
+	return sprite->get_velocity();
 }
 
 GdBool SpxSpriteMgr::is_on_floor(GdObj obj) {
@@ -1092,11 +1084,9 @@ void SpxSpriteMgr::_check_pixel_collision_events() {
 
 void SpxSpriteMgr::set_pivot(GdObj obj, GdVec2 pivot){
 	check_and_get_sprite_v()
-	pivot.y = - pivot.y;
 	sprite->set_pivot(pivot);
 }
 GdVec2 SpxSpriteMgr::get_pivot(GdObj obj){
 	check_and_get_sprite_r(GdVec2())
-	auto pivot= sprite->get_pivot();
-	return GdVec2(pivot.x,-pivot.y);
+	return sprite->get_pivot();
 }

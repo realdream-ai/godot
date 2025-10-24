@@ -275,12 +275,10 @@ void SpxDrawTiles::place_tile_spx(GdVec2 pos, GdString texture_path, GdInt index
 }
 
 void SpxDrawTiles::erase_tile_spx(GdVec2 pos, GdInt layer_index) {
-    auto flipped_pos = flip_y(pos);
-
     auto erase_at_layer = [&](TileMapLayer* layer) {
         if (!layer) return;
 
-        Vector2 local_pos = layer->to_local(flipped_pos);
+        Vector2 local_pos = layer->to_local(pos);
         Vector2i coords = layer->local_to_map(local_pos);
         layer->erase_cell(coords);
     };
@@ -304,7 +302,7 @@ GdString SpxDrawTiles::get_tile_spx(GdVec2 pos, GdInt layer_index) {
 
     if(index_layer_map.has(layer_index)){
         auto layer = index_layer_map[layer_index];
-        Vector2 local_pos = layer->to_local(flip_y(pos));
+        Vector2 local_pos = layer->to_local(pos);
         Vector2i coords = layer->local_to_map(local_pos);
         return SpxReturnStr(_get_tile_texture_path(layer, coords));
     }
@@ -332,7 +330,7 @@ void SpxDrawTiles::set_tile_texture_spx(GdString texture_path, const Vector<Vect
 }
 
 void SpxDrawTiles::erase_tile_spx(GdVec2 pos) {
-    place_or_erase_tile(flip_y(pos), true);
+    place_or_erase_tile(pos, true);
 }
 
 void SpxDrawTiles::_place_tiles_bulk_spx(GdArray positions) {
@@ -353,7 +351,7 @@ void SpxDrawTiles::_place_tiles_bulk_spx(GdArray positions) {
         auto y = *(SpxBaseMgr::get_array<float>(positions, i + 1));
 
         Vector2 pos = {x, y};
-        Vector2 local_pos = layer->to_local(flip_y(pos));
+        Vector2 local_pos = layer->to_local(pos);
         Vector2i coords = layer->local_to_map(local_pos);
 
         layer->set_cell(coords, source_id, default_atlas_coord, 0);
@@ -361,7 +359,7 @@ void SpxDrawTiles::_place_tiles_bulk_spx(GdArray positions) {
 }
 
 void SpxDrawTiles::_place_tile_spx(GdVec2 pos) {
-    place_or_erase_tile(flip_y(pos), false);
+    place_or_erase_tile(pos, false);
 }
 
 void SpxDrawTiles::set_layer_index(int index) {
@@ -376,7 +374,7 @@ void SpxDrawTiles::set_layer_offset_spx(int layer_index, Vector2 offset) {
         return;
     }
 
-    layer->set_position(flip_y(offset));
+    layer->set_position(offset);
 }
 
 Vector2 SpxDrawTiles::get_layer_offset_spx(int layer_index) {
@@ -385,8 +383,7 @@ Vector2 SpxDrawTiles::get_layer_offset_spx(int layer_index) {
         return Vector2();
     }
 
-    auto pos = layer->get_position();
-    return flip_y(pos);
+    return layer->get_position();
 }
 
 void SpxDrawTiles::set_texture(Ref<Texture2D> texture, bool with_collision) {

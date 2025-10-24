@@ -238,7 +238,6 @@ private:
 
     void _place_tiles_bulk_spx(GdArray positions);
     void _place_tile_spx(GdVec2 pos);
-    _FORCE_INLINE_ Vector2 flip_y(const Vector2 &pos) { return pos * Vector2(1, -1); }
 
     void _destroy_layers();
     void _clear_cache();

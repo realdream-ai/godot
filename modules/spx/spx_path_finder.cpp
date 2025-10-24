@@ -131,14 +131,14 @@ void SpxPathFinder::set_sprite_obstacle(GdObj obj, bool enabled) {
 }
 
 GdArray SpxPathFinder::find_path_spx(GdVec2 p_from, GdVec2 p_to) {
-    auto path_points = find_path(p_from * Vector2(1, -1), p_to * Vector2(1, -1));
+    auto path_points = find_path(p_from, p_to);
     auto count = path_points.size();
 	GdArray result = SpxBaseMgr::create_array(GD_ARRAY_TYPE_FLOAT, count * 2);
 
 	for(auto i = 0; i < count; i ++){
         auto idx = i * 2;
 		SpxBaseMgr::set_array(result, idx, path_points[i].x);
-		SpxBaseMgr::set_array(result, idx + 1, -path_points[i].y);
+		SpxBaseMgr::set_array(result, idx + 1, path_points[i].y);
 	}
 
 	return result;

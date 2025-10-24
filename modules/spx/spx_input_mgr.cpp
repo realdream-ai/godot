@@ -50,8 +50,7 @@ void SpxInputMgr::on_reset(int reset_code) {
 
 // input
 GdVec2 SpxInputMgr::get_global_mouse_pos() {
-	auto mouse_pos = cameraMgr->get_global_mouse_position();
-	return GdVec2(mouse_pos.x, -mouse_pos.y);
+	return cameraMgr->get_global_mouse_position();
 }
 
 GdBool SpxInputMgr::get_mouse_state(GdInt mouse_id) {

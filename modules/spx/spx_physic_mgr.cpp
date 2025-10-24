@@ -108,10 +108,6 @@ SpxRaycastInfo SpxPhysicMgr::_raycast(GdVec2 from, GdVec2 to,GdArray ignore_spri
 	info.normal = GdVec2{0, 0};
 	info.sprite_gid = 0;
 
-	// invert y
-	GdVec2 current_from = GdVec2{from.x, -from.y};
-	GdVec2 target_to = GdVec2{to.x, -to.y};
-
 	HashSet<RID> ignore_set;
 	if(ignore_sprites && ignore_sprites->size > 0){
 		GdObj* sprite_data = (SpxBaseMgr::get_array<GdObj>(ignore_sprites, 0));
@@ -129,8 +125,8 @@ SpxRaycastInfo SpxPhysicMgr::_raycast(GdVec2 from, GdVec2 to,GdArray ignore_spri
 	}
 	PhysicsDirectSpaceState2D::RayResult result;
 	PhysicsDirectSpaceState2D::RayParameters params;
-	params.from = current_from;
-	params.to = target_to;
+	params.from = from;
+	params.to = to;
 	params.collision_mask = (uint32_t)collision_mask;
 	params.collide_with_areas = collide_with_areas;
 	params.collide_with_bodies = collide_with_bodies;
@@ -149,8 +145,8 @@ SpxRaycastInfo SpxPhysicMgr::_raycast(GdVec2 from, GdVec2 to,GdArray ignore_spri
 	SpxSprite *collider = dynamic_cast<SpxSprite *>(result.collider);
 	GdObj current_gid = collider ? collider->get_gid() : 0;
 	info.collide = true;
-	info.position = GdVec2{result.position.x, -result.position.y};
-	info.normal = GdVec2{result.normal.x, -result.normal.y};
+	info.position = result.position;
+	info.normal = result.normal;
 	info.sprite_gid = current_gid;
 	return info;
 }
@@ -168,9 +164,6 @@ GdObj SpxPhysicMgr::raycast(GdVec2 from, GdVec2 to, GdInt collision_mask) {
 
 	PhysicsDirectSpaceState2D::RayResult result;
 	PhysicsDirectSpaceState2D::RayParameters params;
-	// flip y axis
-	from = GdVec2{ from.x, -from.y };
-	to = GdVec2{ to.x, -to.y };
 	params.from = from;
 	params.to = to;
 	params.collision_mask = (uint32_t)collision_mask;
@@ -189,10 +182,6 @@ GdBool SpxPhysicMgr::check_collision(GdVec2 from, GdVec2 to, GdInt collision_mas
 	PhysicsDirectSpaceState2D *space_state = node->get_world_2d()->get_direct_space_state();
 	PhysicsDirectSpaceState2D::RayResult result;
 	PhysicsDirectSpaceState2D::RayParameters params;
-
-	// flip y axis
-	from = GdVec2{ from.x, -from.y };
-	to = GdVec2{ to.x, -to.y };
 	params.from = from;
 	params.to = to;
 	params.collision_mask = (uint32_t)collision_mask;
@@ -300,8 +289,7 @@ GdArray SpxPhysicMgr::_check_collision(RID shape, GdVec2 pos, GdInt collision_ma
 		return create_array(GD_ARRAY_TYPE_GDOBJ, 0);
 	}
 
-	GdVec2 flipped_pos = GdVec2{ pos.x, -pos.y };
-	Transform2D query_transform(0, flipped_pos);
+	Transform2D query_transform(0, pos);
 
 	PhysicsDirectSpaceState2D::ShapeParameters params;
 	params.shape_rid = shape;

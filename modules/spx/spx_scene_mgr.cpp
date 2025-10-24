@@ -231,11 +231,11 @@ GdObj SpxSceneMgr::create_render_sprite(GdString texture_path, GdVec2 pos, GdFlo
 	}
 
 	SpxRenderSprite* sprite = memnew(SpxRenderSprite);
-	sprite->set_pivot(GdVec2(pivot.x, -pivot.y));
+	sprite->set_pivot(pivot);
 	auto path_str = SpxStr(texture_path);
 	Ref<Texture2D> texture = resMgr->load_texture(path_str, true);
 	sprite->set_texture(texture);
-	sprite->set_position(Vector2(pos.x, -pos.y));
+	sprite->set_position(pos);
 	sprite->set_rotation_degrees(degree);
 	sprite->set_scale(Vector2(scale.x, scale.y));
 	sprite->set_name(path_str.get_file());
@@ -262,7 +262,7 @@ GdObj SpxSceneMgr::create_static_sprite(GdString texture_path, GdVec2 pos,GdFloa
 	auto path_str = SpxStr(texture_path);
 	// Create StaticBody2D
 	SpxStaticSprite* static_body = memnew(SpxStaticSprite);
-	static_body->set_position(Vector2(pos.x, -pos.y));
+	static_body->set_position(pos);
 	static_body->set_rotation_degrees(degree);
 	static_body->set_name(path_str.get_file());
 
@@ -271,15 +271,15 @@ GdObj SpxSceneMgr::create_static_sprite(GdString texture_path, GdVec2 pos,GdFloa
 	Ref<Texture2D> texture = resMgr->load_texture(path_str, true);
 	sprite->set_texture(texture);
 	sprite->set_z_index(zindex);
-	static_body->add_child(sprite);   
-	sprite->set_position(Vector2(pivot.x, -pivot.y));
+	static_body->add_child(sprite);
+	sprite->set_position(pivot);
 
 	// Create collision shape (default: rectangle matching texture size)
 	CollisionShape2D* collision_shape = memnew(CollisionShape2D);
 
 	static_body->collider2d = collision_shape;
 	static_body->add_child(collision_shape);
-	collision_shape->set_position(Vector2(collider_pivot.x, -collider_pivot.y));
+	collision_shape->set_position(collider_pivot);
 	auto data_len =  collider_params == nullptr ? 0 : collider_params->size;
 	switch (type)
 	{
