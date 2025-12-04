@@ -360,6 +360,12 @@ Rect2 SpxPathFinder::_get_scene_bounds(Node *node) {
     return sceneMgr->get_scene_bounds(node);
 }
 
+void SpxPathFinder::_destroy_drawer() {
+    if(drawer){
+        drawer->queue_free();
+        drawer = nullptr;
+    }
+}
 
 void PathDebugDrawer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_path_finder", "path_finder"), &PathDebugDrawer::set_path_finder);

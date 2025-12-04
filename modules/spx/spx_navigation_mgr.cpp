@@ -24,6 +24,7 @@
 void SpxNavigationMgr::on_reset() {
 	if(path_finder.is_valid()){
 		path_finder->reset();
+		path_finder = nullptr;
 	}
 }
 void SpxNavigationMgr::setup_path_finder_with_size(GdVec2 grid_size, GdVec2 cell_size, GdBool with_jump, GdBool with_debug) {

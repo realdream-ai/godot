@@ -70,6 +70,7 @@ public:
 
     _FORCE_INLINE_ void reset(){
         astar->clear();
+        _destroy_drawer();
     }
 
     _FORCE_INLINE_ Rect2i get_region() const {
@@ -110,6 +111,7 @@ private:
 	void _process_sprite_obstacle(GdObj obj, bool add);
 
     Rect2 _get_scene_bounds(Node *root);
+    void _destroy_drawer();
 };
 
 class PathDebugDrawer : public Node2D {
