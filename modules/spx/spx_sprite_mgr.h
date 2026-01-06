@@ -125,6 +125,7 @@ public:
 	GdObj _create_sprite(GdString path, GdVec2 pos, GdBool is_backdrop);
 	void destroy_all_sprites();
 	void collect_sortable_sprites(Vector<ISortableSprite*>& out);
+	
 public:
 	void set_dont_destroy_on_load(GdObj obj);
 	// process
@@ -271,6 +272,8 @@ public:
 	GdBool check_collision_by_alpha(GdObj obj, GdFloat alpha_threshold);
 	GdBool check_collision_with_sprite_by_alpha(GdObj obj, GdObj obj_b, GdFloat alpha_threshold);
 
+	// batch sync
+	void batch_update_transforms(GdArray buffer);
 };
 
 #endif // SPX_SPRITE_MGR_H

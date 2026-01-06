@@ -1015,6 +1015,10 @@ void gdspx_sprite_check_collision_with_sprite_by_alpha(GdObj* obj, GdObj* obj_b,
 	*ret_val = spriteMgr->check_collision_with_sprite_by_alpha(*obj, *obj_b, *alpha_threshold);
 }
 EMSCRIPTEN_KEEPALIVE
+void gdspx_sprite_batch_update_transforms(GdArray* buffer) {
+	 spriteMgr->batch_update_transforms(*buffer);
+}
+EMSCRIPTEN_KEEPALIVE
 void gdspx_tilemap_open_draw_tiles_with_size(GdInt* tile_size) {
 	 tilemapMgr->open_draw_tiles_with_size(*tile_size);
 }

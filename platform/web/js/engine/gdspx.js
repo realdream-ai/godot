@@ -2373,6 +2373,14 @@ gdspx_sprite_check_collision_with_sprite_by_alpha(obj,obj_b,alpha_threshold) {
 	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
+gdspx_sprite_batch_update_transforms(buffer) {
+	var _gdFuncPtr = Module._gdspx_sprite_batch_update_transforms; 
+	
+	var _arg0 = ToGdArray(buffer);
+	_gdFuncPtr(_arg0);
+	FreeGdArray(_arg0); 
+
+}
 gdspx_tilemap_open_draw_tiles_with_size(tile_size) {
 	var _gdFuncPtr = Module._gdspx_tilemap_open_draw_tiles_with_size; 
 	

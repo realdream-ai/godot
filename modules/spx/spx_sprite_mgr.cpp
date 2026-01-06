@@ -1094,3 +1094,56 @@ GdVec2 SpxSpriteMgr::get_pivot(GdObj obj){
 	auto pivot= sprite->get_pivot();
 	return GdVec2(pivot.x,-pivot.y);
 }
+
+void SpxSpriteMgr::batch_update_transforms(GdArray buffer) {
+	// Buffer format: [id, x, y, rotation, scaleX, scaleY, offsetX, offsetY, visible, ...]
+	// 9 fields per sprite (FIELDS_PER_SPRITE constant from design doc)
+	const int FIELDS_PER_SPRITE = 9;
+	
+	if (buffer == nullptr || buffer->size == 0) {
+		return;
+	}
+	
+	if (buffer->type != GD_ARRAY_TYPE_FLOAT) {
+		print_error("batch_update_transforms: buffer type must be GD_ARRAY_TYPE_FLOAT");
+		return;
+	}
+	
+	if (buffer->size % FIELDS_PER_SPRITE != 0) {
+		print_error("batch_update_transforms: buffer size " + itos(buffer->size) + 
+		            " is not a multiple of " + itos(FIELDS_PER_SPRITE));
+		return;
+	}
+	
+	double* data = static_cast<double*>(buffer->data);
+	int sprite_count = buffer->size / FIELDS_PER_SPRITE;
+	
+	for (int i = 0; i < sprite_count; i++) {
+		int base = i * FIELDS_PER_SPRITE;
+		
+		// Extract sprite ID and data
+		GdObj sprite_id = static_cast<GdObj>(data[base]);
+		float x = data[base + 1];
+		float y = data[base + 2];
+		float rotation = data[base + 3];
+		float scale_x = data[base + 4];
+		float scale_y = data[base + 5];
+		// Note: offsetX and offsetY (base+6, base+7) are not used in current implementation
+		// They're reserved for future pivot/offset support
+		bool visible = data[base + 8] != 0.0;
+		
+		// Get sprite from id_objects map
+		SpxSprite* sprite = get_sprite(sprite_id);
+		if (sprite == nullptr) {
+			continue;
+		}
+		
+		// Apply transforms
+		// Note: Y-axis is flipped in Godot coordinate system
+		sprite->set_position(GdVec2(x, -y));
+		sprite->set_rotation(rotation);
+		sprite->set_scale(GdVec2(scale_x, scale_y));
+		sprite->set_visible(visible);
+		sprite->on_set_visible(visible);
+	}
+}
