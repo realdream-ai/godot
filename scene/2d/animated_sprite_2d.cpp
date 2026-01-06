@@ -106,11 +106,11 @@ Rect2 AnimatedSprite2D::get_uv_rect() const {
 		return default_uv;
 	}
 	auto region = tex_ref->get_region();
-	auto altas_tex = tex_ref->get_atlas();
-	if (!altas_tex.is_valid()) {
+	auto atlas_tex = tex_ref->get_atlas();
+	if (!atlas_tex.is_valid()) {
 		return default_uv;
 	}
-	auto size = altas_tex->get_size();
+	auto size = atlas_tex->get_size();
 	auto uv = Rect2();
 	uv.position.x = region.position.x / size.width;
 	uv.position.y = region.position.y / size.height;

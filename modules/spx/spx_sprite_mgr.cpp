@@ -1096,41 +1096,50 @@ GdVec2 SpxSpriteMgr::get_pivot(GdObj obj){
 }
 
 void SpxSpriteMgr::batch_update_transforms(GdArray buffer) {
-	// Buffer format: [id, x, y, rotation, scaleX, scaleY, offsetX, offsetY, visible, ...]
-	// 9 fields per sprite (FIELDS_PER_SPRITE constant from design doc)
+	// Buffer format with header: [updateCount, deleteCount, update_data..., delete_ids...]
+	// - Header: [updateCount, deleteCount]
+	// - Update section: [id, x, y, rotation, scaleX, scaleY, offsetX, offsetY, visible, ...] (9 fields per sprite)
+	// - Delete section: [id1, id2, id3, ...] (1 field per sprite)
 	const int FIELDS_PER_SPRITE = 9;
+	const int HEADER_SIZE = 2;
 	
-	if (buffer == nullptr || buffer->size == 0) {
+	if (!buffer) {
 		return;
 	}
 	
-	if (buffer->type != GD_ARRAY_TYPE_FLOAT) {
-		print_error("batch_update_transforms: buffer type must be GD_ARRAY_TYPE_FLOAT");
+	auto len = buffer->size;
+	if (len < HEADER_SIZE) {
 		return;
 	}
 	
-	if (buffer->size % FIELDS_PER_SPRITE != 0) {
-		print_error("batch_update_transforms: buffer size " + itos(buffer->size) + 
-		            " is not a multiple of " + itos(FIELDS_PER_SPRITE));
+	// Read header
+	int update_count = static_cast<int>(*(SpxBaseMgr::get_array<float>(buffer, 0)));
+	int delete_count = static_cast<int>(*(SpxBaseMgr::get_array<float>(buffer, 1)));
+	
+	// Validate buffer size
+	int expected_size = HEADER_SIZE + update_count * FIELDS_PER_SPRITE + delete_count;
+	if (len != expected_size) {
+		print_error("batch_update_transforms: buffer size " + itos(len) + 
+		            " does not match expected size " + itos(expected_size) +
+		            " (updateCount=" + itos(update_count) + ", deleteCount=" + itos(delete_count) + ")");
 		return;
 	}
 	
-	double* data = static_cast<double*>(buffer->data);
-	int sprite_count = buffer->size / FIELDS_PER_SPRITE;
+	int idx = HEADER_SIZE;
 	
-	for (int i = 0; i < sprite_count; i++) {
-		int base = i * FIELDS_PER_SPRITE;
-		
+	// Process updates
+	for (int i = 0; i < update_count; i++) {
 		// Extract sprite ID and data
-		GdObj sprite_id = static_cast<GdObj>(data[base]);
-		float x = data[base + 1];
-		float y = data[base + 2];
-		float rotation = data[base + 3];
-		float scale_x = data[base + 4];
-		float scale_y = data[base + 5];
-		// Note: offsetX and offsetY (base+6, base+7) are not used in current implementation
-		// They're reserved for future pivot/offset support
-		bool visible = data[base + 8] != 0.0;
+		auto sprite_id = static_cast<GdObj>(*(SpxBaseMgr::get_array<float>(buffer, idx)));
+		auto x = *(SpxBaseMgr::get_array<float>(buffer, idx + 1));
+		auto y = *(SpxBaseMgr::get_array<float>(buffer, idx + 2));
+		auto rotation = *(SpxBaseMgr::get_array<float>(buffer, idx + 3));
+		auto scale_x = *(SpxBaseMgr::get_array<float>(buffer, idx + 4));
+		auto scale_y = *(SpxBaseMgr::get_array<float>(buffer, idx + 5));
+		// Note: offsetX and offsetY (idx+6, idx+7) are reserved for future use
+		auto visible = *(SpxBaseMgr::get_array<float>(buffer, idx + 8)) != 0.0;
+		
+		idx += FIELDS_PER_SPRITE;
 		
 		// Get sprite from id_objects map
 		SpxSprite* sprite = get_sprite(sprite_id);
@@ -1145,5 +1154,18 @@ void SpxSpriteMgr::batch_update_transforms(GdArray buffer) {
 		sprite->set_scale(GdVec2(scale_x, scale_y));
 		sprite->set_visible(visible);
 		sprite->on_set_visible(visible);
+	}
+	
+	// Process deletes
+	for (int i = 0; i < delete_count; i++) {
+		auto sprite_id = static_cast<GdObj>(*(SpxBaseMgr::get_array<float>(buffer, idx)));
+		idx++;
+		
+		// Get sprite and destroy it
+		SpxSprite* sprite = get_sprite(sprite_id);
+		if (sprite != nullptr) {
+			sprite->set_block_signals(true);
+			sprite->queue_free();
+		}
 	}
 }
