@@ -48,6 +48,23 @@
 #include "spx_sprite.h"
 #include "core/typedefs.h"
 
+// SIMD support for pixel collision optimization
+#if defined(__wasm__) && defined(__wasm_simd128__)
+	// WebAssembly SIMD support (requires -msimd128 compiler flag)
+	#include <wasm_simd128.h>
+	#define SPX_USE_WASM_SIMD
+#elif defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86)
+	#include <emmintrin.h> // SSE2
+	#ifdef __SSSE3__
+		#include <tmmintrin.h> // SSSE3
+		#define SPX_USE_SSSE3
+	#endif
+	#define SPX_USE_SSE2
+#elif defined(__ARM_NEON) || defined(__ARM_NEON__)
+	#include <arm_neon.h>
+	#define SPX_USE_NEON
+#endif
+
 
 #define DEFAULT_COLLISION_ALPHA_THRESHOLD 0.05
 
@@ -886,6 +903,138 @@ Vector2 SpxSpriteMgr::_to_image_coord(const Transform2D &trans, Vector2 image_si
 	return Vector2(xpos.x + half_size.x,  xpos.y + half_size.y);
 }
 
+// SIMD-optimized alpha collision check for a row of pixels
+// Returns true if any pixel pair has both alphas > threshold
+// Note: This function is currently not used but prepared for future optimization
+static inline bool _check_row_alpha_simd(const uint8_t* row1_data, const uint8_t* row2_data, 
+                                         int width, float alpha_threshold) {
+	const uint8_t threshold_u8 = (uint8_t)(alpha_threshold * 255.0f);
+	int x = 0;
+
+#ifdef SPX_USE_WASM_SIMD
+	// Process 16 pixels at a time with WebAssembly SIMD
+	const int simd_width = 16;
+	v128_t threshold_vec = wasm_i8x16_splat(threshold_u8);
+	
+	for (; x <= width - simd_width; x += simd_width) {
+		// Load 16 RGBA pixels from each image (64 bytes each)
+		// Extract alpha channels (every 4th byte starting from byte 3)
+		v128_t data1_0 = wasm_v128_load(row1_data + x * 4);
+		v128_t data1_1 = wasm_v128_load(row1_data + x * 4 + 16);
+		v128_t data1_2 = wasm_v128_load(row1_data + x * 4 + 32);
+		v128_t data1_3 = wasm_v128_load(row1_data + x * 4 + 48);
+		
+		v128_t data2_0 = wasm_v128_load(row2_data + x * 4);
+		v128_t data2_1 = wasm_v128_load(row2_data + x * 4 + 16);
+		v128_t data2_2 = wasm_v128_load(row2_data + x * 4 + 32);
+		v128_t data2_3 = wasm_v128_load(row2_data + x * 4 + 48);
+		
+		// Extract alpha channels (byte 3,7,11,15 from each 16-byte chunk)
+		// Use shuffle to extract alphas
+		v128_t shuffle_mask = wasm_i8x16_const(3, 7, 11, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1);
+		v128_t a1_0 = wasm_i8x16_swizzle(data1_0, shuffle_mask);
+		v128_t a1_1 = wasm_i8x16_swizzle(data1_1, shuffle_mask);
+		v128_t a1_2 = wasm_i8x16_swizzle(data1_2, shuffle_mask);
+		v128_t a1_3 = wasm_i8x16_swizzle(data1_3, shuffle_mask);
+		
+		v128_t a2_0 = wasm_i8x16_swizzle(data2_0, shuffle_mask);
+		v128_t a2_1 = wasm_i8x16_swizzle(data2_1, shuffle_mask);
+		v128_t a2_2 = wasm_i8x16_swizzle(data2_2, shuffle_mask);
+		v128_t a2_3 = wasm_i8x16_swizzle(data2_3, shuffle_mask);
+		
+		// Pack 16 alpha values: combine 4 bytes from each chunk
+		// Create one vector with all 16 alpha values
+		v128_t alpha1 = wasm_i32x4_shuffle(a1_0, a1_1, 0, 4, 1, 5);
+		alpha1 = wasm_i32x4_shuffle(alpha1, wasm_i32x4_shuffle(a1_2, a1_3, 0, 4, 1, 5), 0, 1, 4, 5);
+		
+		v128_t alpha2 = wasm_i32x4_shuffle(a2_0, a2_1, 0, 4, 1, 5);
+		alpha2 = wasm_i32x4_shuffle(alpha2, wasm_i32x4_shuffle(a2_2, a2_3, 0, 4, 1, 5), 0, 1, 4, 5);
+		
+		// Compare with threshold (unsigned)
+		v128_t cmp1 = wasm_u8x16_gt(alpha1, threshold_vec);
+		v128_t cmp2 = wasm_u8x16_gt(alpha2, threshold_vec);
+		
+		// AND the comparisons
+		v128_t both = wasm_v128_and(cmp1, cmp2);
+		
+		// Check if any byte is set
+		if (wasm_v128_any_true(both)) {
+			return true;
+		}
+	}
+#elif defined(SPX_USE_NEON)
+	// Process 16 pixels at a time with NEON (best SIMD for alpha extraction)
+	const int simd_width = 16;
+	uint8x16_t threshold_vec = vdupq_n_u8(threshold_u8);
+	
+	for (; x <= width - simd_width; x += simd_width) {
+		// Load and extract alpha channels (every 4th byte)
+		uint8x16x4_t data1 = vld4q_u8(row1_data + x * 4);
+		uint8x16x4_t data2 = vld4q_u8(row2_data + x * 4);
+		
+		// data1.val[3] and data2.val[3] contain the alpha channels
+		uint8x16_t alpha1 = data1.val[3];
+		uint8x16_t alpha2 = data2.val[3];
+		
+		// Compare with threshold
+		uint8x16_t cmp1 = vcgtq_u8(alpha1, threshold_vec);
+		uint8x16_t cmp2 = vcgtq_u8(alpha2, threshold_vec);
+		
+		// AND the comparisons
+		uint8x16_t both = vandq_u8(cmp1, cmp2);
+		
+		// Check if any byte is set
+		uint64x2_t both64 = vreinterpretq_u64_u8(both);
+		if (vgetq_lane_u64(both64, 0) != 0 || vgetq_lane_u64(both64, 1) != 0) {
+			return true;
+		}
+	}
+#elif defined(SPX_USE_SSE2)
+	// Process 4 pixels at a time with SSE2 (simpler approach, no SSSE3 shuffle needed)
+	const int simd_width = 4;
+	__m128i threshold_vec = _mm_set1_epi8(threshold_u8);
+	
+	for (; x <= width - simd_width; x += simd_width) {
+		// Load 4 RGBA pixels (16 bytes each sprite)
+		__m128i data1 = _mm_loadu_si128((__m128i*)(row1_data + x * 4));
+		__m128i data2 = _mm_loadu_si128((__m128i*)(row2_data + x * 4));
+		
+		// Shift right by 24 bits to get alpha channel in lower byte (R>>24)
+		// Then AND with 0xFF to isolate alpha
+		// This extracts bytes 3,7,11,15 (alpha channels)
+		__m128i alpha1_shifted = _mm_srli_epi32(data1, 24);
+		__m128i alpha2_shifted = _mm_srli_epi32(data2, 24);
+		
+		// Pack to compare (only need lower 8 bits of each 32-bit value)
+		__m128i alpha1 = _mm_packus_epi16(_mm_packs_epi32(alpha1_shifted, alpha1_shifted), _mm_setzero_si128());
+		__m128i alpha2 = _mm_packus_epi16(_mm_packs_epi32(alpha2_shifted, alpha2_shifted), _mm_setzero_si128());
+		
+		// Compare with threshold
+		__m128i cmp1 = _mm_cmpgt_epi8(alpha1, threshold_vec);
+		__m128i cmp2 = _mm_cmpgt_epi8(alpha2, threshold_vec);
+		
+		// AND the comparisons
+		__m128i both = _mm_and_si128(cmp1, cmp2);
+		
+		// Check if any byte is set
+		if (_mm_movemask_epi8(both) != 0) {
+			return true;
+		}
+	}
+#endif
+
+	// Scalar fallback for remaining pixels
+	for (; x < width; x++) {
+		uint8_t a1 = row1_data[x * 4 + 3]; // Alpha is the 4th channel
+		uint8_t a2 = row2_data[x * 4 + 3];
+		if (a1 > threshold_u8 && a2 > threshold_u8) {
+			return true;
+		}
+	}
+	
+	return false;
+}
+
 GdBool SpxSpriteMgr::check_collision_with_sprite_by_alpha(GdObj obj, GdObj obj_b, GdFloat alpha_threshold){
 	check_and_get_sprite_r(false) // Ensure sprite exists
 
@@ -928,19 +1077,66 @@ GdBool SpxSpriteMgr::check_collision_with_sprite_by_alpha(GdObj obj, GdObj obj_b
 	Vector2i size2 = image2->get_size();
 	auto trans2 = transform2.affine_inverse();
 
-	// Iterate through the overlapping area for pixel-perfect collision detection
-	for (int x = overlap.position.x; x < overlap.position.x + overlap.size.x; x++) {
-		for (int y = overlap.position.y; y < overlap.position.y + overlap.size.y; y++) {
+	// Optimization 1: Coarse sampling first - check every N pixels
+	// This provides early detection at ~1/N² cost
+	const int COARSE_STEP = 4;
+	int overlap_x_end = (int)(overlap.position.x + overlap.size.x);
+	int overlap_y_end = (int)(overlap.position.y + overlap.size.y);
+	int overlap_x_start = (int)overlap.position.x;
+	int overlap_y_start = (int)overlap.position.y;
+	
+	// Pre-calculate bounds to avoid repeated checks
+	int size1_x_max = size1.x - 1;
+	int size1_y_max = size1.y - 1;
+	int size2_x_max = size2.x - 1;
+	int size2_y_max = size2.y - 1;
+
+	// Coarse pass: sample with larger steps
+	for (int x = overlap_x_start; x < overlap_x_end; x += COARSE_STEP) {
+		for (int y = overlap_y_start; y < overlap_y_end; y += COARSE_STEP) {
 			Vector2 local_pos1 = _to_image_coord(trans1, size1, Vector2(x, y));
 			Vector2 local_pos2 = _to_image_coord(trans2, size2, Vector2(x, y));
 
-			if (local_pos1.x >= 0 && local_pos1.x <= size1.x-1 && local_pos1.y >= 0 && local_pos1.y <= size1.y-1 &&
-					local_pos2.x >= 0 && local_pos2.x <= size2.x-1 && local_pos2.y >= 0 && local_pos2.y <= size2.y-1) {
-				Color color1 = image1->get_pixel((int)local_pos1.x,  (int)local_pos1.y);
-				Color color2 = image2->get_pixel((int)local_pos2.x,  (int)local_pos2.y);
+			// Use integer comparison for speed
+			int lp1_x = (int)local_pos1.x;
+			int lp1_y = (int)local_pos1.y;
+			int lp2_x = (int)local_pos2.x;
+			int lp2_y = (int)local_pos2.y;
+
+			if (lp1_x >= 0 && lp1_x <= size1_x_max && lp1_y >= 0 && lp1_y <= size1_y_max &&
+					lp2_x >= 0 && lp2_x <= size2_x_max && lp2_y >= 0 && lp2_y <= size2_y_max) {
+				Color color1 = image1->get_pixel(lp1_x, lp1_y);
+				Color color2 = image2->get_pixel(lp2_x, lp2_y);
 
 				if (color1.a > alpha_threshold && color2.a > alpha_threshold) {
-					return true;
+					// Found potential collision in coarse pass
+					// Do fine-grained check in small area around this point
+					int fine_x_start = MAX(overlap_x_start, x - COARSE_STEP);
+					int fine_x_end = MIN(overlap_x_end, x + COARSE_STEP);
+					int fine_y_start = MAX(overlap_y_start, y - COARSE_STEP);
+					int fine_y_end = MIN(overlap_y_end, y + COARSE_STEP);
+
+					for (int fx = fine_x_start; fx < fine_x_end; fx++) {
+						for (int fy = fine_y_start; fy < fine_y_end; fy++) {
+							Vector2 fine_pos1 = _to_image_coord(trans1, size1, Vector2(fx, fy));
+							Vector2 fine_pos2 = _to_image_coord(trans2, size2, Vector2(fx, fy));
+
+							int fp1_x = (int)fine_pos1.x;
+							int fp1_y = (int)fine_pos1.y;
+							int fp2_x = (int)fine_pos2.x;
+							int fp2_y = (int)fine_pos2.y;
+
+							if (fp1_x >= 0 && fp1_x <= size1_x_max && fp1_y >= 0 && fp1_y <= size1_y_max &&
+									fp2_x >= 0 && fp2_x <= size2_x_max && fp2_y >= 0 && fp2_y <= size2_y_max) {
+								Color fc1 = image1->get_pixel(fp1_x, fp1_y);
+								Color fc2 = image2->get_pixel(fp2_x, fp2_y);
+
+								if (fc1.a > alpha_threshold && fc2.a > alpha_threshold) {
+									return true;
+								}
+							}
+						}
+					}
 				}
 			}
 		}
