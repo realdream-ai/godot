@@ -1128,17 +1128,21 @@ void SpxSpriteMgr::batch_update_transforms(GdArray buffer) {
 	
 	int idx = HEADER_SIZE;
 	
+	// Get pointer to buffer data for faster access
+	const float* buffer_data = SpxBaseMgr::get_array<float>(buffer, 0);
+	
 	// Process updates
 	for (int i = 0; i < update_count; i++) {
-		// Extract sprite ID and data
-		auto sprite_id = static_cast<GdObj>(*(SpxBaseMgr::get_array<float>(buffer, idx)));
-		auto x = *(SpxBaseMgr::get_array<float>(buffer, idx + 1));
-		auto y = *(SpxBaseMgr::get_array<float>(buffer, idx + 2));
-		auto rotation = *(SpxBaseMgr::get_array<float>(buffer, idx + 3));
-		auto scale_x = *(SpxBaseMgr::get_array<float>(buffer, idx + 4));
-		auto scale_y = *(SpxBaseMgr::get_array<float>(buffer, idx + 5));
-		// Note: offsetX and offsetY (idx+6, idx+7) are reserved for future use
-		auto visible = *(SpxBaseMgr::get_array<float>(buffer, idx + 8)) != 0.0;
+		// Extract sprite ID and data using direct array access
+		auto sprite_id = static_cast<GdObj>(buffer_data[idx]);
+		auto x = buffer_data[idx + 1];
+		auto y = buffer_data[idx + 2];
+		auto rotation = buffer_data[idx + 3];
+		auto scale_x = buffer_data[idx + 4];
+		auto scale_y = buffer_data[idx + 5];
+		auto offset_x = buffer_data[idx + 6];
+		auto offset_y = buffer_data[idx + 7];
+		auto visible = buffer_data[idx + 8] != 0.0;
 		
 		idx += FIELDS_PER_SPRITE;
 		
@@ -1155,11 +1159,12 @@ void SpxSpriteMgr::batch_update_transforms(GdArray buffer) {
 		sprite->set_scale(GdVec2(scale_x, scale_y));
 		sprite->set_visible(visible);
 		sprite->on_set_visible(visible);
+		sprite->set_pivot(GdVec2(offset_x, -offset_y));
 	}
 	
-	// Process deletes
+	// Process deletes using direct array access
 	for (int i = 0; i < delete_count; i++) {
-		auto sprite_id = static_cast<GdObj>(*(SpxBaseMgr::get_array<float>(buffer, idx)));
+		auto sprite_id = static_cast<GdObj>(buffer_data[idx]);
 		idx++;
 		
 		// Get sprite and destroy it
