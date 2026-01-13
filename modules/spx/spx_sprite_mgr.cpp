@@ -1113,9 +1113,12 @@ void SpxSpriteMgr::batch_update_transforms(GdArray buffer) {
 		return;
 	}
 	
-	// Read header
-	int update_count = static_cast<int>(*(SpxBaseMgr::get_array<float>(buffer, 0)));
-	int delete_count = static_cast<int>(*(SpxBaseMgr::get_array<float>(buffer, 1)));
+	// Get pointer to buffer data for faster access
+	const float* buffer_data = SpxBaseMgr::get_array<float>(buffer, 0);
+	
+	// Read header using direct array access
+	int update_count = static_cast<int>(buffer_data[0]);
+	int delete_count = static_cast<int>(buffer_data[1]);
 	
 	// Validate buffer size
 	int expected_size = HEADER_SIZE + update_count * FIELDS_PER_SPRITE + delete_count;
@@ -1127,9 +1130,6 @@ void SpxSpriteMgr::batch_update_transforms(GdArray buffer) {
 	}
 	
 	int idx = HEADER_SIZE;
-	
-	// Get pointer to buffer data for faster access
-	const float* buffer_data = SpxBaseMgr::get_array<float>(buffer, 0);
 	
 	// Process updates
 	for (int i = 0; i < update_count; i++) {
