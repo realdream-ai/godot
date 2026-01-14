@@ -1198,6 +1198,13 @@ GdArray SpxSpriteMgr::batch_update_positions(GdArray objs) {
 	const GdObj* obj_data = SpxBaseMgr::get_array<GdObj>(objs, 0);
 	float* result_data = SpxBaseMgr::get_array<float>(result, 0);
 	
+	// Check for null pointers to prevent crashes with malformed arrays
+	if (count > 0 && (!obj_data || !result_data)) {
+		print_error("batch_update_positions: Failed to access array data.");
+		SpxBaseMgr::free_array(result);
+		return nullptr;
+	}
+	
 	// Process each sprite ID
 	int result_idx = 0;
 	for (int i = 0; i < count; i++) {
