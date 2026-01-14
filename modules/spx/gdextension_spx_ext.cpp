@@ -765,6 +765,9 @@ static void gdextension_spx_sprite_check_collision_with_sprite(GdObj obj, GdObj 
 static void gdextension_spx_sprite_batch_update_transforms(GdArray buffer) {
 	 spriteMgr->batch_update_transforms(buffer);
 }
+static void gdextension_spx_sprite_batch_update_positions(GdArray objs, GdArray *ret_val) {
+	*ret_val = spriteMgr->batch_update_positions(objs);
+}
 static void gdextension_spx_tilemap_open_draw_tiles_with_size(GdInt tile_size) {
 	 tilemapMgr->open_draw_tiles_with_size(tile_size);
 }
@@ -1199,6 +1202,7 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_check_collision_by_alpha);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_check_collision_with_sprite);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_batch_update_transforms);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_batch_update_positions);
 	REGISTER_SPX_INTERFACE_FUNC(spx_tilemap_open_draw_tiles_with_size);
 	REGISTER_SPX_INTERFACE_FUNC(spx_tilemap_open_draw_tiles);
 	REGISTER_SPX_INTERFACE_FUNC(spx_tilemap_set_layer_index);

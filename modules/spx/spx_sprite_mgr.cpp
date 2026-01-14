@@ -1175,3 +1175,45 @@ void SpxSpriteMgr::batch_update_transforms(GdArray buffer) {
 		}
 	}
 }
+
+GdArray SpxSpriteMgr::batch_update_positions(GdArray objs) {
+	// Input: array of sprite IDs [id1, id2, id3, ...]
+	// Output: array of positions [x1, y1, x2, y2, x3, y3, ...]
+	if (!objs) {
+		return nullptr;
+	}
+	
+	int count = objs->size;
+	if (count == 0) {
+		return nullptr;
+	}
+	
+	// Create result array: 2 floats (x, y) per sprite
+	GdArray result = SpxBaseMgr::create_array(GD_ARRAY_TYPE_FLOAT, count * 2);
+	if (!result) {
+		return nullptr;
+	}
+	
+	// Get pointer to input array (GdObj IDs) for faster access
+	const GdObj* obj_data = SpxBaseMgr::get_array<GdObj>(objs, 0);
+	float* result_data = SpxBaseMgr::get_array<float>(result, 0);
+	
+	// Process each sprite ID
+	int result_idx = 0;
+	for (int i = 0; i < count; i++) {
+		GdObj sprite_id = obj_data[i];
+		
+		// Get sprite from id_objects map
+		SpxSprite* sprite = get_sprite(sprite_id);
+		if (sprite != nullptr) {
+			auto pos = sprite->get_position();
+			result_data[result_idx++] = pos.x;
+			result_data[result_idx++] = -pos.y;
+		} else {
+			result_data[result_idx++] = 0.0f;
+			result_data[result_idx++] = 0.0f;
+		}
+	}
+	
+	return result;
+}

@@ -2393,6 +2393,16 @@ gdspx_sprite_batch_update_transforms(buffer) {
 	FreeGdArray(_arg0); 
 
 }
+gdspx_sprite_batch_update_positions(objs) {
+	var _gdFuncPtr = Module._gdspx_sprite_batch_update_positions; 
+	var _retValue = AllocGdArray();
+	var _arg0 = ToGdArray(objs);
+	_gdFuncPtr(_arg0, _retValue);
+	FreeGdArray(_arg0); 
+	var _finalRetValue = ToJsArray(_retValue);
+	FreeGdArray(_retValue); 
+	return _finalRetValue
+}
 gdspx_tilemap_open_draw_tiles_with_size(tile_size) {
 	var _gdFuncPtr = Module._gdspx_tilemap_open_draw_tiles_with_size; 
 	
