@@ -38,7 +38,7 @@ void SpineSlot::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_data"), &SpineSlot::get_data);
 	ClassDB::bind_method(D_METHOD("get_bone"), &SpineSlot::get_bone);
 	ClassDB::bind_method(D_METHOD("get_color"), &SpineSlot::get_color);
-	ClassDB::bind_method(D_METHOD("set_color"), &SpineSlot::set_color);
+	ClassDB::bind_method(D_METHOD("set_color", "color"), &SpineSlot::set_color);
 	ClassDB::bind_method(D_METHOD("get_dark_color"), &SpineSlot::get_dark_color);
 	ClassDB::bind_method(D_METHOD("set_dark_color", "v"), &SpineSlot::set_dark_color);
 	ClassDB::bind_method(D_METHOD("has_dark_color"), &SpineSlot::has_dark_color);

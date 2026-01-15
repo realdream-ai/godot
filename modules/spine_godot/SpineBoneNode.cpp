@@ -41,13 +41,13 @@
 #endif
 
 void SpineBoneNode::_bind_methods() {
-	ClassDB::bind_method(D_METHOD("set_bone_mode"), &SpineBoneNode::set_bone_mode);
+	ClassDB::bind_method(D_METHOD("set_bone_mode", "bone_mode"), &SpineBoneNode::set_bone_mode);
 	ClassDB::bind_method(D_METHOD("get_bone_mode"), &SpineBoneNode::get_bone_mode);
-	ClassDB::bind_method(D_METHOD("set_enabled"), &SpineBoneNode::set_enabled);
+	ClassDB::bind_method(D_METHOD("set_enabled", "enabled"), &SpineBoneNode::set_enabled);
 	ClassDB::bind_method(D_METHOD("get_enabled"), &SpineBoneNode::get_enabled);
-	ClassDB::bind_method(D_METHOD("set_debug_thickness"), &SpineBoneNode::set_debug_thickness);
+	ClassDB::bind_method(D_METHOD("set_debug_thickness", "thickness"), &SpineBoneNode::set_debug_thickness);
 	ClassDB::bind_method(D_METHOD("get_debug_thickness"), &SpineBoneNode::get_debug_thickness);
-	ClassDB::bind_method(D_METHOD("set_debug_color"), &SpineBoneNode::set_debug_color);
+	ClassDB::bind_method(D_METHOD("set_debug_color", "color"), &SpineBoneNode::set_debug_color);
 	ClassDB::bind_method(D_METHOD("get_debug_color"), &SpineBoneNode::get_debug_color);
 	ClassDB::bind_method(D_METHOD("_on_world_transforms_changed", "spine_sprite"), &SpineBoneNode::on_world_transforms_changed);
 	ClassDB::bind_method(D_METHOD("find_bone"), &SpineBoneNode::find_bone);

@@ -1123,6 +1123,12 @@ gdspx_scene_create_static_sprite(texture_path,pos,degree,scale,zindex,pivot,coll
 	FreeGdObj(_retValue); 
 	return _finalRetValue
 }
+gdspx_spine_clear_all_caches() {
+	var _gdFuncPtr = Module._gdspx_spine_clear_all_caches; 
+	
+	_gdFuncPtr();
+
+}
 gdspx_sprite_set_dont_destroy_on_load(obj) {
 	var _gdFuncPtr = Module._gdspx_sprite_set_dont_destroy_on_load; 
 	
@@ -1850,6 +1856,28 @@ gdspx_sprite_get_current_anim_name(obj) {
 	var _finalRetValue = ToJsString(_retValue);
 	FreeGdString(_retValue); 
 	return _finalRetValue
+}
+gdspx_sprite_set_spine_skeleton(obj,atlas_path,skeleton_path,default_mix) {
+	var _gdFuncPtr = Module._gdspx_sprite_set_spine_skeleton; 
+	
+	var _arg0 = ToGdObj(obj);
+	var _arg1 = ToGdString(atlas_path);
+	var _arg2 = ToGdString(skeleton_path);
+	var _arg3 = ToGdFloat(default_mix);
+	_gdFuncPtr(_arg0, _arg1, _arg2, _arg3);
+	FreeGdObj(_arg0); 
+	FreeGdString(_arg1); 
+	FreeGdString(_arg2); 
+	FreeGdFloat(_arg3); 
+
+}
+gdspx_sprite_clear_spine_skeleton(obj) {
+	var _gdFuncPtr = Module._gdspx_sprite_clear_spine_skeleton; 
+	
+	var _arg0 = ToGdObj(obj);
+	_gdFuncPtr(_arg0);
+	FreeGdObj(_arg0); 
+
 }
 gdspx_sprite_set_velocity(obj,velocity) {
 	var _gdFuncPtr = Module._gdspx_sprite_set_velocity; 

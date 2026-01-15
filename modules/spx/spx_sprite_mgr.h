@@ -210,6 +210,10 @@ public:
 	void set_anim_flip_v(GdObj obj, GdBool p_flip);
 	GdBool is_anim_flipped_v(GdObj obj);
 	GdString get_current_anim_name(GdObj obj);
+
+	// spine
+	void set_spine_skeleton(GdObj obj, GdString atlas_path, GdString skeleton_path, GdFloat default_mix);
+	void clear_spine_skeleton(GdObj obj);
 	
 	// physics
 	void set_velocity(GdObj obj, GdVec2 velocity);

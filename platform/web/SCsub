@@ -38,6 +38,9 @@ web_files = [
 if env["target"] == "editor":
     env.add_source_files(web_files, "editor/*.cpp")
 
+# Add spine-cpp include path for spine_godot integration (needed by godot_js_spx.cpp)
+env.Append(CPPPATH=["#modules/spine_godot/spine-cpp/include"])
+
 sys_env = env.Clone()
 sys_env.AddJSLibraries(
     [

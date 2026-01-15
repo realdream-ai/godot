@@ -247,8 +247,8 @@ SpineEditorPropertyAnimationMixes::SpineEditorPropertyAnimationMixes() : skeleto
 
 void SpineEditorPropertyAnimationMixes::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("add_mix"), &SpineEditorPropertyAnimationMixes::add_mix);
-	ClassDB::bind_method(D_METHOD("delete_mix"), &SpineEditorPropertyAnimationMixes::delete_mix);
-	ClassDB::bind_method(D_METHOD("update_mix_property"), &SpineEditorPropertyAnimationMixes::update_mix_property);
+	ClassDB::bind_method(D_METHOD("delete_mix", "idx"), &SpineEditorPropertyAnimationMixes::delete_mix);
+	ClassDB::bind_method(D_METHOD("update_mix_property", "index"), &SpineEditorPropertyAnimationMixes::update_mix_property);
 }
 
 void SpineEditorPropertyAnimationMixes::add_mix() {
@@ -358,7 +358,7 @@ void SpineEditorPropertyAnimationMix::setup(SpineEditorPropertyAnimationMixes *_
 }
 
 void SpineEditorPropertyAnimationMix::_bind_methods() {
-	ClassDB::bind_method(D_METHOD("data_changed"), &SpineEditorPropertyAnimationMix::data_changed);
+	ClassDB::bind_method(D_METHOD("data_changed", "property", "value", "name", "changing"), &SpineEditorPropertyAnimationMix::data_changed);
 }
 
 void SpineEditorPropertyAnimationMix::data_changed(const String &property, const Variant &value, const String &name, bool changing) {
@@ -461,7 +461,7 @@ void SpineEditorPropertyAnimationMix::update_property() {
 #endif
 
 void SpineSpriteInspectorPlugin::_bind_methods() {
-	ClassDB::bind_method(D_METHOD("button_clicked"), &SpineSpriteInspectorPlugin::button_clicked);
+	ClassDB::bind_method(D_METHOD("button_clicked", "button_name"), &SpineSpriteInspectorPlugin::button_clicked);
 }
 
 void SpineSpriteInspectorPlugin::button_clicked(const String &button_name) {

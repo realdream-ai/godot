@@ -34,7 +34,7 @@ void SpineAnimationState::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("update", "delta"), &SpineAnimationState::update, DEFVAL(0));
 	ClassDB::bind_method(D_METHOD("apply", "skeleton"), &SpineAnimationState::apply);
 	ClassDB::bind_method(D_METHOD("clear_tracks"), &SpineAnimationState::clear_tracks);
-	ClassDB::bind_method(D_METHOD("clear_track"), &SpineAnimationState::clear_track);
+	ClassDB::bind_method(D_METHOD("clear_track", "track_id"), &SpineAnimationState::clear_track);
 	ClassDB::bind_method(D_METHOD("get_num_tracks"), &SpineAnimationState::get_num_tracks);
 	ClassDB::bind_method(D_METHOD("set_animation", "animation_name", "loop", "track_id"), &SpineAnimationState::set_animation, DEFVAL(true), DEFVAL(0));
 	ClassDB::bind_method(D_METHOD("add_animation", "animation_name", "delay", "loop", "track_id"), &SpineAnimationState::add_animation, DEFVAL(0), DEFVAL(true), DEFVAL(0));

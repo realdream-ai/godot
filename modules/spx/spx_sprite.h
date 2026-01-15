@@ -45,6 +45,14 @@ class Area2D;
 class CollisionShape2D;
 class VisibleOnScreenNotifier2D;
 
+// Spine forward declarations
+class SpineSprite;
+class SpineSkeletonDataResource;
+class SpineAnimationState;
+class SpineSkeleton;
+class SpineTrackEntry;
+class SpineEvent;
+
 // Interface for sortable sprites
 class ISortableSprite {
 public:
@@ -126,6 +134,12 @@ public:
 		STATIC = 3,       // Static immovable, but has collision, affects other objects
 	};
 
+	// Animation mode enumeration
+	enum AnimationMode {
+		ANIM_MODE_FRAME = 0,  // Frame animation mode (default)
+		ANIM_MODE_SPINE = 1,  // Spine skeletal animation mode
+	};
+
 private:
 	GdObj gid;
 
@@ -166,6 +180,25 @@ private:
 	String current_svg_path; // Name of the current SVG animation (image)
 	String current_svg_anim_key; // Name of the current SVG animation
 	String current_anim_name = ""; // Name of the current animation
+
+	// Spine mode related
+	AnimationMode animation_mode = ANIM_MODE_FRAME;
+	SpineSprite *spine_child = nullptr;
+	Ref<SpineSkeletonDataResource> spine_data;
+	bool spine_initialized = false;
+
+	// Spine internal methods
+	void _init_spine_child();
+	void _destroy_spine_child();
+	void _setup_spine_event_bindings();
+	void _calculate_spine_collision_shape();
+	void _calculate_spine_collision_shape_fallback();
+	void _update_spine_collision_with_scale();
+
+	// Spine event callbacks
+	void _on_spine_animation_started(Ref<SpineTrackEntry> entry);
+	void _on_spine_animation_completed(Ref<SpineTrackEntry> entry);
+	void _on_spine_animation_event(Ref<SpineTrackEntry> entry, Ref<SpineEvent> event);
 	
 
 	void update_anim_scale();
@@ -338,6 +371,17 @@ public:
 
 	void set_pivot(GdVec2 pivot){pivot_offset = pivot;}
 	GdVec2 get_pivot(){return pivot_offset;}
+
+	// Spine mode control
+	void set_spine_skeleton(GdString atlas_path, GdString skeleton_path, GdFloat default_mix = 0.1f);
+	void clear_spine_skeleton();
+	bool is_spine_mode() const { return animation_mode == ANIM_MODE_SPINE; }
+	AnimationMode get_animation_mode() const { return animation_mode; }
+
+	// Get Spine internal objects (advanced usage)
+	SpineSprite *get_spine_sprite() { return spine_child; }
+	Ref<SpineSkeleton> get_spine_skeleton();
+	Ref<SpineAnimationState> get_spine_animation_state();
 
 	// ISortableSprite interface implementation
 	GdObj get_sort_id() const override { return gid; }

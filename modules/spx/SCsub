@@ -6,5 +6,8 @@ Import("env_modules")
 
 env_spx = env_modules.Clone()
 
+# Add spine-cpp include path for spine_godot integration
+env_spx.Append(CPPPATH=["#modules/spine_godot/spine-cpp/include"])
+
 # Godot source files
 env_spx.add_source_files(env.modules_sources, "*.cpp")

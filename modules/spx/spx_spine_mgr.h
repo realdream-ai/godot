@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  spx_mgr_access.h                                                      */
+/*  spx_spine_mgr.h                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,45 +28,53 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef SPX_MGR_ACCESS_H
-#define SPX_MGR_ACCESS_H
+#ifndef SPX_SPINE_MGR_H
+#define SPX_SPINE_MGR_H
 
-// Forward declaration to avoid circular dependency
-class SpxEngine;
-class SvgManager;
-class SpxAudioBusPool;
+#include "spx_base_mgr.h"
+#include "modules/spine_godot/SpineAtlasResource.h"
+#include "modules/spine_godot/SpineSkeletonFileResource.h"
+#include "modules/spine_godot/SpineSkeletonDataResource.h"
 
-/**
- * @file spx_mgr_access.h
- * @brief Unified accessor macros for all SPX manager instances
- * 
- * This header provides convenient macros to access manager singletons throughout
- * the SPX module. All manager access macros are centralized here to avoid duplication.
- */
+class SpxSpineMgr : public SpxBaseMgr {
+	SPXCLASS(SpxSpineMgr, SpxBaseMgr)
 
-// SPX Manager access macros
-#define inputMgr SpxEngine::get_singleton()->get_input()
-#define audioMgr SpxEngine::get_singleton()->get_audio()
-#define physicMgr SpxEngine::get_singleton()->get_physic()
-#define spriteMgr SpxEngine::get_singleton()->get_sprite()
-#define uiMgr SpxEngine::get_singleton()->get_ui()
-#define sceneMgr SpxEngine::get_singleton()->get_scene()
-#define cameraMgr SpxEngine::get_singleton()->get_camera()
-#define platformMgr SpxEngine::get_singleton()->get_platform()
-#define resMgr SpxEngine::get_singleton()->get_res()
-#define extMgr SpxEngine::get_singleton()->get_ext()
-#define debugMgr SpxEngine::get_singleton()->get_debug()
-#define navigationMgr SpxEngine::get_singleton()->get_navigation()
-#define penMgr SpxEngine::get_singleton()->get_pen()
-#define tilemapMgr SpxEngine::get_singleton()->get_tilemap()
-#define tilemapparserMgr SpxEngine::get_singleton()->get_tilemapparser()
+public:
+	virtual ~SpxSpineMgr() = default;
 
-// Special Manager access macro
-#define svgMgr SvgManager::get_singleton()
-#define audioPool SpxAudioBusPool::get_singleton()
-#define SPX_CALLBACK SpxEngine::get_singleton()->get_callbacks()
+private:
+	// First layer cache: Atlas resources (Key: absolute path)
+	HashMap<String, Ref<SpineAtlasResource>> cached_atlas;
 
-// Spine Manager access macro
-#define spineMgr SpxEngine::get_singleton()->get_spine()
+	// Second layer cache: Skeleton file resources (Key: absolute path)
+	HashMap<String, Ref<SpineSkeletonFileResource>> cached_skeleton_file;
 
-#endif // SPX_MGR_ACCESS_H
+	// Third layer cache: Combined SkeletonData (Key: atlas_path|skeleton_path)
+	HashMap<String, Ref<SpineSkeletonDataResource>> cached_skeleton_data;
+
+	String _make_cache_key(const String &atlas_path, const String &skeleton_path);
+	String _to_abs_path(const String &path);
+
+public:
+	void on_awake() override;
+	void on_reset(int reset_code) override;
+
+	// Main load method - external entry point
+	Ref<SpineSkeletonDataResource> load_spine_data(
+			const String &atlas_path,
+			const String &skeleton_path,
+			float default_mix = 0.1f);
+
+	// Individual load methods - with caching
+	Ref<SpineAtlasResource> load_atlas(const String &path);
+	Ref<SpineSkeletonFileResource> load_skeleton_file(const String &path);
+
+	// Cache management
+	void update_caches(const Vector<String> &files);
+	
+public:
+	void clear_all_caches();
+};
+
+#endif // SPX_SPINE_MGR_H
+
