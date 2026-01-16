@@ -47,6 +47,7 @@
 #include "spx_platform_mgr.h"
 #include "spx_res_mgr.h"
 #include "spx_scene_mgr.h"
+#include "spx_spine_mgr.h"
 #include "spx_sprite_mgr.h"
 #include "spx_tilemap_mgr.h"
 #include "spx_tilemapparser_mgr.h"
@@ -405,6 +406,9 @@ static void gdextension_spx_scene_create_render_sprite(GdString texture_path, Gd
 static void gdextension_spx_scene_create_static_sprite(GdString texture_path, GdVec2 pos, GdFloat degree, GdVec2 scale, GdInt zindex, GdVec2 pivot, GdInt collider_type, GdVec2 collider_pivot, GdArray collider_params, GdObj *ret_val) {
 	*ret_val = sceneMgr->create_static_sprite(texture_path, pos, degree, scale, zindex, pivot, collider_type, collider_pivot, collider_params);
 }
+static void gdextension_spx_spine_clear_all_caches() {
+	 spineMgr->clear_all_caches();
+}
 static void gdextension_spx_sprite_set_dont_destroy_on_load(GdObj obj) {
 	 spriteMgr->set_dont_destroy_on_load(obj);
 }
@@ -608,6 +612,12 @@ static void gdextension_spx_sprite_is_anim_flipped_v(GdObj obj, GdBool *ret_val)
 }
 static void gdextension_spx_sprite_get_current_anim_name(GdObj obj, GdString *ret_val) {
 	*ret_val = spriteMgr->get_current_anim_name(obj);
+}
+static void gdextension_spx_sprite_set_spine_skeleton(GdObj obj, GdString atlas_path, GdString skeleton_path, GdFloat default_mix) {
+	 spriteMgr->set_spine_skeleton(obj, atlas_path, skeleton_path, default_mix);
+}
+static void gdextension_spx_sprite_clear_spine_skeleton(GdObj obj) {
+	 spriteMgr->clear_spine_skeleton(obj);
 }
 static void gdextension_spx_sprite_set_velocity(GdObj obj, GdVec2 velocity) {
 	 spriteMgr->set_velocity(obj, velocity);
@@ -1082,6 +1092,7 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_destroy_pure_sprite);
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_create_render_sprite);
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_create_static_sprite);
+	REGISTER_SPX_INTERFACE_FUNC(spx_spine_clear_all_caches);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_dont_destroy_on_load);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_process);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_physic_process);
@@ -1150,6 +1161,8 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_anim_flip_v);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_is_anim_flipped_v);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_current_anim_name);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_spine_skeleton);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_clear_spine_skeleton);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_velocity);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_velocity);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_is_on_floor);

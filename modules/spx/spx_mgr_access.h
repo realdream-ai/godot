@@ -66,4 +66,7 @@ class SpxAudioBusPool;
 #define audioPool SpxAudioBusPool::get_singleton()
 #define SPX_CALLBACK SpxEngine::get_singleton()->get_callbacks()
 
+// Spine Manager access macro
+#define spineMgr SpxEngine::get_singleton()->get_spine()
+
 #endif // SPX_MGR_ACCESS_H
