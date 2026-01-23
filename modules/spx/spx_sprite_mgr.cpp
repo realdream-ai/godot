@@ -594,6 +594,16 @@ GdString SpxSpriteMgr::get_current_anim_name(GdObj obj) {
 	return sprite->get_current_anim_name();
 }
 
+void SpxSpriteMgr::set_spine_skeleton(GdObj obj, GdString atlas_path, GdString skeleton_path, GdFloat default_mix) {
+	check_and_get_sprite_v()
+	sprite->set_spine_skeleton(atlas_path, skeleton_path, default_mix);
+}
+
+void SpxSpriteMgr::clear_spine_skeleton(GdObj obj) {
+	check_and_get_sprite_v()
+	sprite->clear_spine_skeleton();
+}
+
 void SpxSpriteMgr::set_velocity(GdObj obj, GdVec2 velocity) {
 	check_and_get_sprite_v()
 	// flip y axis

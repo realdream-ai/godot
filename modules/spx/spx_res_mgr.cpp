@@ -48,6 +48,7 @@
 #include "spx_platform_mgr.h"
 #include "svg_mgr.h"
 #include "spx_engine.h"
+#include "spx_spine_mgr.h"
 #ifdef TOOLS_ENABLED
 #include "editor/import/resource_importer_wav.h"
 #include "modules/minimp3/resource_importer_mp3.h"
@@ -330,19 +331,21 @@ void SpxResMgr::set_game_datas(String path, Vector<String> files) {
 	game_data_root = path;
 	platformMgr->_set_persistant_data_dir(path);
 	update_caches(files);
-	svgMgr->update_caches(files);
 }
 
 void SpxResMgr::update_caches(const Vector<String>& files) {
-	if (cached_texture.is_empty() && cached_audio.is_empty()) {
-        return;
-    }
 	for(auto& file : files){
 		auto path = _to_engine_path(file);
 
 		cached_texture.erase(path);
 		cached_audio.erase(path);
 	}
+
+	// Sync SVG caches
+	svgMgr->update_caches(files);
+
+	// Sync Spine caches
+	spineMgr->update_caches(files);
 }
 
 Ref<AudioStream> SpxResMgr::load_audio(String path, GdBool direct) {

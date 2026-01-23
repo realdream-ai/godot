@@ -46,7 +46,17 @@
 #include "spx_res_mgr.h"
 #include "spx_sprite_mgr.h"
 #include "spx_camera_mgr.h"
+#include "spx_spine_mgr.h"
 #include "svg_mgr.h"
+
+// Spine includes
+#include "modules/spine_godot/SpineSprite.h"
+#include "modules/spine_godot/SpineAnimationState.h"
+#include "modules/spine_godot/SpineSkeleton.h"
+#include "modules/spine_godot/SpineTrackEntry.h"
+#include "modules/spine_godot/SpineEvent.h"
+#include "modules/spine_godot/SpineEventData.h"
+#include "modules/spine_godot/SpineAnimation.h"
 
 
 void SpxStaticSprite::_notification(int p_what) {
@@ -182,6 +192,10 @@ void SpxSprite::_draw() {
 	if (!Spx::debug_mode) {
 		return;
 	}
+	
+	// Draw position marker (green circle)
+	draw_circle(Vector2(0, 0), 5.0f, Color(0, 1, 0, 0.8));
+	
 	if (trigger2d != nullptr) {
 		trigger2d->set_spx_debug_color(Color(1, 0, 0, 0.2));
 	}
@@ -359,6 +373,10 @@ void SpxSprite::on_sprite_screen_entered() {
 }
 
 void SpxSprite::set_color(GdColor color) {
+	if (animation_mode == ANIM_MODE_SPINE && spine_child) {
+		spine_child->set_modulate(color);
+		return;
+	}
 	default_material->set_shader_parameter("color", color);
 }
 
@@ -536,6 +554,23 @@ GdString SpxSprite::get_current_anim_name() {
 }
 
 void SpxSprite::play_anim(GdString p_name, GdFloat p_speed, GdBool isLoop, GdBool p_from_end) {
+	// Spine mode branch
+	if (animation_mode == ANIM_MODE_SPINE && spine_child) {
+		auto anim_state = spine_child->get_animation_state();
+		if (anim_state.is_valid()) {
+			String anim_name = SpxStr(p_name);
+			auto entry = anim_state->set_animation(anim_name, isLoop, 0);
+			if (entry.is_valid()) {
+				entry->set_time_scale(p_speed);
+				if (p_from_end) {
+					entry->set_reverse(true);
+				}
+			}
+		}
+		return;
+	}
+
+	// Frame animation mode (original logic)
 	String anim_name = SpxStr(p_name);
 	// Enhanced: Check if we need to use a scaled version of the animation
 	String final_anim_key;
@@ -580,14 +615,33 @@ void SpxSprite::play_backwards_anim(GdString p_name) {
 }
 
 void SpxSprite::pause_anim() {
+	if (animation_mode == ANIM_MODE_SPINE && spine_child) {
+		spine_child->set_time_scale(0);
+		return;
+	}
 	anim2d->pause();
 }
 
 void SpxSprite::stop_anim() {
+	if (animation_mode == ANIM_MODE_SPINE && spine_child) {
+		auto anim_state = spine_child->get_animation_state();
+		if (anim_state.is_valid()) {
+			anim_state->set_empty_animation(0, 0);
+		}
+		return;
+	}
 	anim2d->stop();
 }
 
 GdBool SpxSprite::is_playing_anim() const {
+	if (animation_mode == ANIM_MODE_SPINE && spine_child) {
+		auto anim_state = spine_child->get_animation_state();
+		if (anim_state.is_valid()) {
+			auto entry = anim_state->get_current(0);
+			return entry.is_valid() && !entry->is_complete();
+		}
+		return false;
+	}
 	return anim2d->is_playing();
 }
 
@@ -602,10 +656,18 @@ GdString SpxSprite::get_anim() const {
 }
 
 void SpxSprite::set_anim_frame(GdInt p_frame) {
+	if (animation_mode == ANIM_MODE_SPINE) {
+		print_line("[SPX Warning] set_anim_frame() is not supported in Spine mode. Spine uses time-based animation.");
+		return;
+	}
 	anim2d->set_frame(p_frame);
 }
 
 GdInt SpxSprite::get_anim_frame() const {
+	if (animation_mode == ANIM_MODE_SPINE) {
+		print_line("[SPX Warning] get_anim_frame() is not supported in Spine mode. Spine uses time-based animation.");
+		return 0;
+	}
 	return anim2d->get_frame();
 }
 
@@ -639,18 +701,46 @@ GdVec2 SpxSprite::get_anim_offset() const {
 }
 
 void SpxSprite::set_anim_flip_h(GdBool p_flip) {
+	if (animation_mode == ANIM_MODE_SPINE && spine_child) {
+		auto skeleton = spine_child->get_skeleton();
+		if (skeleton.is_valid()) {
+			skeleton->set_scale_x(p_flip ? -1.0f : 1.0f);
+		}
+		return;
+	}
 	anim2d->set_flip_h(p_flip);
 }
 
 GdBool SpxSprite::is_anim_flipped_h() const {
+	if (animation_mode == ANIM_MODE_SPINE && spine_child) {
+		auto skeleton = spine_child->get_skeleton();
+		if (skeleton.is_valid()) {
+			return skeleton->get_scale_x() < 0;
+		}
+		return false;
+	}
 	return anim2d->is_flipped_h();
 }
 
 void SpxSprite::set_anim_flip_v(GdBool p_flip) {
+	if (animation_mode == ANIM_MODE_SPINE && spine_child) {
+		auto skeleton = spine_child->get_skeleton();
+		if (skeleton.is_valid()) {
+			skeleton->set_scale_y(p_flip ? -1.0f : 1.0f);
+		}
+		return;
+	}
 	anim2d->set_flip_v(p_flip);
 }
 
 GdBool SpxSprite::is_anim_flipped_v() const {
+	if (animation_mode == ANIM_MODE_SPINE && spine_child) {
+		auto skeleton = spine_child->get_skeleton();
+		if (skeleton.is_valid()) {
+			return skeleton->get_scale_y() < 0;
+		}
+		return false;
+	}
 	return anim2d->is_flipped_v();
 }
 
@@ -811,6 +901,12 @@ GdBool SpxSprite::check_collision_with_point(GdVec2 point, GdBool is_trigger) {
 
 void SpxSprite::set_render_scale(GdVec2 new_scale) {
 	_render_scale = new_scale;
+	if (animation_mode == ANIM_MODE_SPINE && spine_child) {
+		spine_child->set_scale(new_scale);
+		// Update Spine collision box: recalculate and apply scale
+		_update_spine_collision_with_scale();
+		return;
+	}
 	update_anim_scale();
 }
 
@@ -1080,6 +1176,257 @@ void SpxSprite::_disable_collision() {
 	set_velocity(Vector2());  // Clear velocity to avoid move_and_slide effects
 	if (collider2d != nullptr) {
 		collider2d->set_disabled(true);
+	}
+}
+
+// ============================================================================
+// Spine mode implementation
+// ============================================================================
+
+void SpxSprite::set_spine_skeleton(GdString atlas_path, GdString skeleton_path, GdFloat default_mix) {
+	String atlas_str = SpxStr(atlas_path);
+	String skeleton_str = SpxStr(skeleton_path);
+
+	// 1. If there's an existing Spine child, destroy it first
+	if (spine_child != nullptr) {
+		_destroy_spine_child();
+	}
+
+	// 2. Load Spine data
+	spine_data = spineMgr->load_spine_data(atlas_str, skeleton_str, default_mix);
+	if (!spine_data.is_valid() || !spine_data->is_skeleton_data_loaded()) {
+		print_error(vformat("[SpxSprite] Failed to load Spine data: atlas=%s, skeleton=%s", atlas_str, skeleton_str));
+		return;
+	}
+
+	// 3. Initialize Spine child node
+	_init_spine_child();
+
+	// 4. Switch mode
+	animation_mode = ANIM_MODE_SPINE;
+
+	// 5. Hide frame animation component
+	if (anim2d) {
+		anim2d->hide();
+	}
+
+	// 6. Calculate initial collision shape
+	_calculate_spine_collision_shape();
+
+	print_line(vformat("[SpxSprite] Spine mode enabled: gid=%d", gid));
+}
+
+void SpxSprite::_init_spine_child() {
+	spine_child = memnew(SpineSprite);
+	spine_child->set_skeleton_data_res(spine_data);
+	spine_child->set_name("SpineChild");
+	add_child(spine_child);
+
+	// Setup event bindings
+	_setup_spine_event_bindings();
+
+	spine_initialized = true;
+}
+
+void SpxSprite::_destroy_spine_child() {
+	if (spine_child != nullptr) {
+		spine_child->queue_free();
+		spine_child = nullptr;
+	}
+	spine_initialized = false;
+}
+
+void SpxSprite::clear_spine_skeleton() {
+	_destroy_spine_child();
+	spine_data.unref();
+	animation_mode = ANIM_MODE_FRAME;
+
+	// Show frame animation component
+	if (anim2d) {
+		anim2d->show();
+	}
+}
+
+void SpxSprite::_calculate_spine_collision_shape() {
+	if (!spine_child) {
+		print_error("[SpxSprite] Cannot calculate spine collision: spine_child is null");
+		return;
+	}
+
+	auto skeleton = spine_child->get_skeleton();
+	if (!skeleton.is_valid()) {
+		print_error("[SpxSprite] Cannot calculate spine collision: skeleton is invalid");
+		return;
+	}
+
+	// Calculate bounds using setup pose
+	skeleton->set_to_setup_pose();
+	skeleton->update_world_transform(SpineConstant::Physics_Update);
+
+	Rect2 bounds = skeleton->get_bounds();
+	
+	print_line(vformat("[SpxSprite] Spine raw bounds: pos=(%f, %f), size=(%f, %f)", 
+		bounds.position.x, bounds.position.y, bounds.size.x, bounds.size.y));
+
+	if (bounds.size.x > 0 && bounds.size.y > 0) {
+		// spine-godot has already set Bone::setYDown(true)
+		// So get_bounds() returns coordinates in Godot coordinate system (Y-axis down), no need to flip
+		Vector2 center(
+			bounds.position.x + bounds.size.x / 2.0f,
+			bounds.position.y + bounds.size.y / 2.0f
+		);
+		Vector2 size(bounds.size.x, bounds.size.y);
+		
+		set_collider_rect(center, size);
+		set_trigger_rect(center, size);
+		
+		print_line(vformat("[SpxSprite] Spine collision shape set: center=(%f, %f), size=(%f, %f)", 
+			center.x, center.y, size.x, size.y));
+	} else {
+		_calculate_spine_collision_shape_fallback();
+	}
+}
+
+void SpxSprite::_update_spine_collision_with_scale() {
+	if (!spine_child) {
+		return;
+	}
+
+	auto skeleton = spine_child->get_skeleton();
+	if (!skeleton.is_valid()) {
+		return;
+	}
+
+	// Calculate bounds using setup pose
+	skeleton->set_to_setup_pose();
+	skeleton->update_world_transform(SpineConstant::Physics_Update);
+
+	Rect2 bounds = skeleton->get_bounds();
+	
+	if (bounds.size.x > 0 && bounds.size.y > 0) {
+		// spine-godot has already set Bone::setYDown(true)
+		// So get_bounds() returns coordinates in Godot coordinate system (Y-axis down), no need to flip
+		// Apply render_scale scaling
+		Vector2 center(
+			(bounds.position.x + bounds.size.x / 2.0f) * _render_scale.x,
+			(bounds.position.y + bounds.size.y / 2.0f) * _render_scale.y
+		);
+		Vector2 size(
+			bounds.size.x * _render_scale.x,
+			bounds.size.y * _render_scale.y
+		);
+		
+		set_collider_rect(center, size);
+		set_trigger_rect(center, size);
+		
+	}
+}
+
+// ============================================================================
+// Spine event handling
+// ============================================================================
+
+void SpxSprite::_setup_spine_event_bindings() {
+	if (!spine_child) return;
+
+	spine_child->connect("animation_started", callable_mp(this, &SpxSprite::_on_spine_animation_started));
+	spine_child->connect("animation_completed", callable_mp(this, &SpxSprite::_on_spine_animation_completed));
+	spine_child->connect("animation_event", callable_mp(this, &SpxSprite::_on_spine_animation_event));
+}
+
+void SpxSprite::_on_spine_animation_started(SpineSprite* sprite, Ref<SpineAnimationState> state, Ref<SpineTrackEntry> entry) {
+	if (!Spx::initialed) return;
+	if (!entry.is_valid()) return;
+
+	// Get animation name for debug logging
+	auto anim = entry->get_animation();
+	String anim_name = anim.is_valid() ? anim->get_name() : "";
+	print_line(vformat("[SpxSprite] Spine animation_started: gid=%d, animation=%s", gid, anim_name));
+
+	// Trigger SPX callback: animation changed
+	SPX_CALLBACK->func_on_sprite_animation_changed(this->gid);
+}
+
+void SpxSprite::_on_spine_animation_completed(SpineSprite* sprite, Ref<SpineAnimationState> state, Ref<SpineTrackEntry> entry) {
+	if (!Spx::initialed) return;
+	if (!entry.is_valid()) return;
+
+	// Get animation info for debug logging
+	auto anim = entry->get_animation();
+	String anim_name = anim.is_valid() ? anim->get_name() : "";
+	bool is_loop = entry->get_loop();
+
+	// Dispatch different callbacks based on loop state
+	if (is_loop) {
+		// Looping animation completed one cycle
+		print_line(vformat("[SpxSprite] Spine animation_looped: gid=%d, animation=%s", gid, anim_name));
+		SPX_CALLBACK->func_on_sprite_animation_looped(this->gid);
+	} else {
+		// Non-looping animation finished
+		print_line(vformat("[SpxSprite] Spine animation_finished: gid=%d, animation=%s", gid, anim_name));
+		SPX_CALLBACK->func_on_sprite_animation_finished(this->gid);
+	}
+}
+
+void SpxSprite::_on_spine_animation_event(SpineSprite* sprite, Ref<SpineAnimationState> state, Ref<SpineTrackEntry> entry, Ref<SpineEvent> event) {
+	if (!Spx::initialed) return;
+	if (!event.is_valid()) return;
+
+	// Extract event data for logging
+	auto event_data = event->get_data();
+	String event_name = event_data.is_valid() ? event_data->get_event_name() : "";
+	int int_value = event->get_int_value();
+	float float_value = event->get_float_value();
+	String string_value = event->get_string_value();
+
+	// Debug log for Spine custom event
+	print_line(vformat("[SpxSprite] Spine animation_event: gid=%d, event=%s, int=%d, float=%f, string=%s",
+		gid, event_name, int_value, float_value, string_value));
+
+	// Optional: Call new Spine event callback (requires adding new interface)
+	// SPX_CALLBACK->func_on_spine_event(this->gid, SpxReturnStr(event_name), int_value, float_value);
+}
+
+// ============================================================================
+// Spine object access
+// ============================================================================
+
+Ref<SpineSkeleton> SpxSprite::get_spine_skeleton() {
+	if (spine_child) {
+		return spine_child->get_skeleton();
+	}
+	return Ref<SpineSkeleton>();
+}
+
+Ref<SpineAnimationState> SpxSprite::get_spine_animation_state() {
+	if (spine_child) {
+		return spine_child->get_animation_state();
+	}
+	return Ref<SpineAnimationState>();
+}
+
+void SpxSprite::_calculate_spine_collision_shape_fallback() {
+	if (!spine_data.is_valid()) {
+		print_line("[SpxSprite] Warning: No spine data for fallback, using default collision box");
+		set_collider_rect(Vector2(0, 0), Vector2(100, 100));
+		set_trigger_rect(Vector2(0, 0), Vector2(100, 100));
+		return;
+	}
+
+	float width = spine_data->get_width();
+	float height = spine_data->get_height();
+	
+	if (width > 0 && height > 0) {
+		Vector2 center(spine_data->get_x(), spine_data->get_y());
+		Vector2 size(width, height);
+		set_collider_rect(center, size);
+		set_trigger_rect(center, size);
+		print_line(vformat("[SpxSprite] Spine collision (fallback): center=(%f, %f), size=(%f, %f)", 
+			center.x, center.y, size.x, size.y));
+	} else {
+		print_line("[SpxSprite] Warning: Spine skeleton_data has no valid bounds, using default");
+		set_collider_rect(Vector2(0, 0), Vector2(100, 100));
+		set_trigger_rect(Vector2(0, 0), Vector2(100, 100));
 	}
 }
 

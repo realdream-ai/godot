@@ -343,6 +343,8 @@ typedef void (*GDExtensionSpxSceneCreatePureSprite)(GdString texture_path, GdVec
 typedef void (*GDExtensionSpxSceneDestroyPureSprite)(GdObj id);
 typedef void (*GDExtensionSpxSceneCreateRenderSprite)(GdString texture_path, GdVec2 pos, GdFloat degree, GdVec2 scale, GdInt zindex, GdVec2 pivot, GdObj *ret_value);
 typedef void (*GDExtensionSpxSceneCreateStaticSprite)(GdString texture_path, GdVec2 pos, GdFloat degree, GdVec2 scale, GdInt zindex, GdVec2 pivot, GdInt collider_type, GdVec2 collider_pivot, GdArray collider_params, GdObj *ret_value);
+// SpxSpine
+typedef void (*GDExtensionSpxSpineClearAllCaches)();
 // SpxSprite
 typedef void (*GDExtensionSpxSpriteSetDontDestroyOnLoad)(GdObj obj);
 typedef void (*GDExtensionSpxSpriteSetProcess)(GdObj obj, GdBool is_on);
@@ -412,6 +414,8 @@ typedef void (*GDExtensionSpxSpriteIsAnimFlippedH)(GdObj obj, GdBool *ret_value)
 typedef void (*GDExtensionSpxSpriteSetAnimFlipV)(GdObj obj, GdBool p_flip);
 typedef void (*GDExtensionSpxSpriteIsAnimFlippedV)(GdObj obj, GdBool *ret_value);
 typedef void (*GDExtensionSpxSpriteGetCurrentAnimName)(GdObj obj, GdString *ret_value);
+typedef void (*GDExtensionSpxSpriteSetSpineSkeleton)(GdObj obj, GdString atlas_path, GdString skeleton_path, GdFloat default_mix);
+typedef void (*GDExtensionSpxSpriteClearSpineSkeleton)(GdObj obj);
 typedef void (*GDExtensionSpxSpriteSetVelocity)(GdObj obj, GdVec2 velocity);
 typedef void (*GDExtensionSpxSpriteGetVelocity)(GdObj obj, GdVec2 *ret_value);
 typedef void (*GDExtensionSpxSpriteIsOnFloor)(GdObj obj, GdBool *ret_value);

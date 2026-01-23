@@ -46,6 +46,7 @@
 #include "modules/spx/spx_platform_mgr.h"
 #include "modules/spx/spx_res_mgr.h"
 #include "modules/spx/spx_scene_mgr.h"
+#include "modules/spx/spx_spine_mgr.h"
 #include "modules/spx/spx_sprite_mgr.h"
 #include "modules/spx/spx_tilemap_mgr.h"
 #include "modules/spx/spx_tilemapparser_mgr.h"
@@ -63,6 +64,7 @@
 #define platformMgr SpxEngine::get_singleton()->get_platform()
 #define resMgr SpxEngine::get_singleton()->get_res()
 #define sceneMgr SpxEngine::get_singleton()->get_scene()
+#define spineMgr SpxEngine::get_singleton()->get_spine()
 #define spriteMgr SpxEngine::get_singleton()->get_sprite()
 #define tilemapMgr SpxEngine::get_singleton()->get_tilemap()
 #define tilemapparserMgr SpxEngine::get_singleton()->get_tilemapparser()
@@ -545,6 +547,10 @@ void gdspx_scene_create_static_sprite(GdString* texture_path, GdVec2* pos, GdFlo
 	*ret_val = sceneMgr->create_static_sprite(*texture_path, *pos, *degree, *scale, *zindex, *pivot, *collider_type, *collider_pivot, *collider_params);
 }
 EMSCRIPTEN_KEEPALIVE
+void gdspx_spine_clear_all_caches() {
+	 spineMgr->clear_all_caches();
+}
+EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_set_dont_destroy_on_load(GdObj* obj) {
 	 spriteMgr->set_dont_destroy_on_load(*obj);
 }
@@ -815,6 +821,14 @@ void gdspx_sprite_is_anim_flipped_v(GdObj* obj, GdBool *ret_val) {
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_get_current_anim_name(GdObj* obj, GdString *ret_val) {
 	*ret_val = spriteMgr->get_current_anim_name(*obj);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_sprite_set_spine_skeleton(GdObj* obj, GdString* atlas_path, GdString* skeleton_path, GdFloat* default_mix) {
+	 spriteMgr->set_spine_skeleton(*obj, *atlas_path, *skeleton_path, *default_mix);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_sprite_clear_spine_skeleton(GdObj* obj) {
+	 spriteMgr->clear_spine_skeleton(*obj);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_set_velocity(GdObj* obj, GdVec2* velocity) {
