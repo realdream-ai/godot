@@ -131,7 +131,7 @@ def import_project(script_dir: Path) -> bool:
         return False
 
 
-def run_export(script_dir: Path, scene_path: str | None = None) -> bool:
+def run_export(script_dir: Path, scene_path: str | None = None, enable_preview: bool = True) -> bool:
     """Use Godot to run the export script
     
     Args:
@@ -139,6 +139,8 @@ def run_export(script_dir: Path, scene_path: str | None = None) -> bool:
         scene_path: Optional scene path to export (e.g., "main.tscn" or "res://main.tscn")
                    If None, uses export_cli.gd's default (res://main.tscn)
                    The "res://" prefix is automatically added if not present.
+        enable_preview: If True, run without --headless to enable preview PNG rendering.
+                       Note: This will briefly show a Godot window.
     """
     godot_path = get_godot_path()
     if not godot_path:
@@ -149,15 +151,19 @@ def run_export(script_dir: Path, scene_path: str | None = None) -> bool:
         scene_path = "res://" + scene_path
     
     # Build command
-    # godot --headless --path <project_path> -s addons/spx_tilemap_exporter/export_cli.gd [-- --scene <path>]
+    # godot [--headless] --path <project_path> -s addons/spx_tilemap_exporter/export_cli.gd [-- --scene <path>]
     export_script = "addons/spx_tilemap_exporter/export_cli.gd"
     
-    cmd = [
-        str(godot_path),
-        "--headless",
+    cmd = [str(godot_path)]
+    
+    # Only use headless mode when preview is disabled
+    if not enable_preview:
+        cmd.append("--headless")
+    
+    cmd.extend([
         "--path", str(script_dir),
         "-s", export_script
-    ]
+    ])
     
     # Add scene path argument if specified
     if scene_path:
@@ -170,6 +176,10 @@ def run_export(script_dir: Path, scene_path: str | None = None) -> bool:
         print(f"  Scene: {scene_path}")
     else:
         print("  Scene: (using default: res://main.tscn)")
+    if enable_preview:
+        print("  Preview: enabled (default, non-headless mode)")
+    else:
+        print("  Preview: disabled (--no-preview, headless mode)")
     print("")
     
     # Execute command
@@ -215,8 +225,12 @@ Usage Examples:
   python export.py --scene levels/level1.tscn
   python export.py --scene res://levels/level1.tscn
 
-  # Combine multiple options
-  python export.py --godot /path/to/godot --copy --scene my_scene.tscn
+  # Export without preview PNG (headless mode, no window)
+  python export.py --no-preview
+  python export.py --scene my_scene.tscn --no-preview
+
+  # Combine multiple options (with preview disabled)
+  python export.py --godot /path/to/godot --copy --scene my_scene.tscn --no-preview
 
 Workflow:
   1. [Optional] Copy spx_tilemap_exporter addon to project (with --copy)
@@ -247,6 +261,12 @@ Note:
         default=None,
         metavar="PATH",
         help="Path to the scene file to export, res:// prefix is optional (default: res://main.tscn)"
+    )
+    parser.add_argument(
+        "--no-preview",
+        action="store_true",
+        dest="no_preview",
+        help="Disable preview PNG export (runs Godot in headless mode, no window)"
     )
     args = parser.parse_args()
     
@@ -290,7 +310,7 @@ Note:
     current_step += 1
     print(f"[Step {current_step}/{total_steps}] Running Godot export script")
     print("-" * 50)
-    if not run_export(script_dir, args.scene):
+    if not run_export(script_dir, args.scene, not args.no_preview):
         return 1
     
     print("")

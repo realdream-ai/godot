@@ -21,6 +21,7 @@ python addons/spx_tilemap_exporter/export.py --godot /path/to/godot --scene main
 
 - **TileMap 导出**：导出 TileMapLayer、TileSet 及物理碰撞数据
 - **装饰器导出**：导出场景中的 Sprite2D 节点和预制体实例
+- **预览图导出**：将 TileMapLayer 内容导出为 PNG 预览图（Ctrl+Shift+E 快捷键）
 - **纹理自动复制**：自动将相关纹理复制到导出目录
 - **坐标系转换**：自动将 Godot 坐标系转换为 SPX 坐标系（Y 轴翻转）
 - **碰撞形状支持**：支持导出矩形、圆形、胶囊体和多边形碰撞器
@@ -69,6 +70,7 @@ python export.py --scene levels/level1.tscn
 |------|------|
 | `--godot PATH` | 指定 Godot 可执行文件路径（优先级高于环境变量） |
 | `--scene PATH` | 指定要导出的场景文件路径，`res://` 前缀可选（默认：`res://main.tscn`） |
+| `--no-preview` | 禁用预览图 PNG 导出（以 headless 模式运行 Godot，不显示窗口）。默认情况下预览是启用的。 |
 
 
 ### 编辑器菜单导出
@@ -82,6 +84,15 @@ python export.py --scene levels/level1.tscn
 | **SPX Export TileMap...** | 仅导出当前场景的 TileMap 数据 |
 | **SPX Export Decorators...** | 仅导出当前场景的装饰器数据 |
 | **SPX Export All...** | 同时导出 TileMap 和装饰器数据 |
+| **SPX Export Preview PNG (Ctrl+Shift+E)** | 将场景导出为 PNG 预览图 |
+
+### 快捷键
+
+| 快捷键 | 功能 |
+|--------|------|
+| **Ctrl+Shift+E** | 快速将当前场景导出为 PNG 预览图 |
+
+在画布编辑器中编辑 2D 节点时可使用此快捷键。导出的预览图仅包含 TileMapLayer 内容（不包含 Sprite2D 和其他节点）。
 
 
 ### 直接使用 Godot CLI
@@ -111,8 +122,9 @@ _export/
     ├── tilemap/            # TileMap 纹理目录
     │   └── *.png
     ├── decorator.json      # 装饰器数据
-    └── decorator/          # 装饰器纹理目录
-        └── *.png
+    ├── decorator/          # 装饰器纹理目录
+    │   └── *.png
+    └── preview.png         # 场景预览图
 ```
 
 ## 配置
@@ -125,7 +137,11 @@ _export/
 const DEFAULT_SCENE_PATH = "res://main.tscn"  # 默认导出的场景路径
 const EXPORT_TILEMAP = true                   # 是否导出 TileMap
 const EXPORT_DECORATORS = true                # 是否导出装饰器
+const EXPORT_PREVIEW = true                   # 是否导出预览图 PNG
+const PREVIEW_RENDER_DELAY = 0.5              # 视口渲染等待时间（秒）
 ```
+
+> **注意**：预览图导出需要渲染支持，在没有 GPU 的系统上使用 `--headless` 模式可能无法正常工作。如果 headless 模式下预览导出失败，可以设置 `EXPORT_PREVIEW = false` 禁用此功能。
 
 ### 排除节点
 
@@ -143,6 +159,7 @@ const EXPORT_DECORATORS = true                # 是否导出装饰器
 | `spx_tilemap_exporter.gd` | 主插件脚本，提供编辑器菜单功能 |
 | `tilemap_extractor.gd` | TileMap 数据提取和导出逻辑 |
 | `decorator_extractor.gd` | 装饰器数据提取和导出逻辑 |
+| `preview_exporter.gd` | 场景预览图 PNG 导出逻辑（仅 TileMapLayer，提供静态工具函数） |
 | `export_cli.gd` | 命令行导出脚本（Godot --headless 模式） |
 | `export.py` | Python 自动化导出脚本 |
 

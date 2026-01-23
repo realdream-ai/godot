@@ -21,6 +21,7 @@ python addons/spx_tilemap_exporter/export.py --godot /path/to/godot --scene main
 
 - **TileMap Export**: Export TileMapLayer, TileSet, and physics collision data
 - **Decorator Export**: Export Sprite2D nodes and prefab instances from scenes
+- **Preview PNG Export**: Export TileMapLayer content as a PNG preview image (Ctrl+Shift+E shortcut)
 - **Automatic Texture Copy**: Automatically copy related textures to the export directory
 - **Coordinate System Conversion**: Automatically convert Godot coordinates to SPX coordinates (Y-axis flip)
 - **Collision Shape Support**: Support for exporting rectangle, circle, capsule, and polygon colliders
@@ -69,6 +70,7 @@ python export.py --scene levels/level1.tscn
 |-----------|-------------|
 | `--godot PATH` | Specify the Godot executable path (takes priority over environment variable) |
 | `--scene PATH` | Specify the scene file path to export, `res://` prefix is optional (default: `res://main.tscn`) |
+| `--no-preview` | Disable preview PNG export (runs Godot in headless mode, no window). By default, preview is enabled. |
 
 
 ### Editor Menu Export
@@ -82,6 +84,15 @@ After enabling the plugin, you can access export features through the **Project 
 | **SPX Export TileMap...** | Export only the TileMap data from the current scene |
 | **SPX Export Decorators...** | Export only the decorator data from the current scene |
 | **SPX Export All...** | Export both TileMap and decorator data |
+| **SPX Export Preview PNG (Ctrl+Shift+E)** | Export the scene as a PNG preview image |
+
+### Keyboard Shortcut
+
+| Shortcut | Function |
+|----------|----------|
+| **Ctrl+Shift+E** | Quickly export the current scene as a PNG preview image |
+
+The shortcut works when editing 2D nodes in the canvas editor. The exported preview image includes only TileMapLayer content (Sprite2D and other nodes are excluded).
 
 
 ### Direct Godot CLI Usage
@@ -111,8 +122,9 @@ _export/
     ├── tilemap/            # TileMap texture directory
     │   └── *.png
     ├── decorator.json      # Decorator data
-    └── decorator/          # Decorator texture directory
-        └── *.png
+    ├── decorator/          # Decorator texture directory
+    │   └── *.png
+    └── preview.png         # Scene preview image
 ```
 
 ## Configuration
@@ -125,7 +137,11 @@ Edit the constants in `export_cli.gd` to modify the default configuration:
 const DEFAULT_SCENE_PATH = "res://main.tscn"  # Default scene path to export
 const EXPORT_TILEMAP = true                   # Whether to export TileMap
 const EXPORT_DECORATORS = true                # Whether to export decorators
+const EXPORT_PREVIEW = true                   # Whether to export preview PNG
+const PREVIEW_RENDER_DELAY = 0.5              # Delay for viewport rendering (seconds)
 ```
+
+> **Note**: Preview PNG export requires rendering, which may not work properly in `--headless` mode on systems without a GPU. If preview export fails in headless mode, you can disable it by setting `EXPORT_PREVIEW = false`.
 
 ### Excluding Nodes
 
@@ -143,6 +159,7 @@ The following nodes are automatically excluded during decorator export:
 | `spx_tilemap_exporter.gd` | Main plugin script, provides editor menu functionality |
 | `tilemap_extractor.gd` | TileMap data extraction and export logic |
 | `decorator_extractor.gd` | Decorator data extraction and export logic |
+| `preview_exporter.gd` | Scene preview PNG export logic (TileMapLayer only, provides static utility functions) |
 | `export_cli.gd` | Command-line export script (Godot --headless mode) |
 | `export.py` | Python automation export script |
 

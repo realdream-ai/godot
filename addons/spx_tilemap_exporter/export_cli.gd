@@ -13,6 +13,7 @@ extends SceneTree
 
 const TileMapExtractor = preload("res://addons/spx_tilemap_exporter/tilemap_extractor.gd")
 const DecoratorExtractor = preload("res://addons/spx_tilemap_exporter/decorator_extractor.gd")
+const PreviewExporter = preload("res://addons/spx_tilemap_exporter/preview_exporter.gd")
 
 # ============================================================================
 # Configuration - default values (can be overridden via command line)
@@ -20,7 +21,19 @@ const DecoratorExtractor = preload("res://addons/spx_tilemap_exporter/decorator_
 const DEFAULT_SCENE_PATH = "res://main.tscn"
 const EXPORT_TILEMAP = true
 const EXPORT_DECORATORS = true
+const EXPORT_PREVIEW = true  # Export scene preview PNG
+const PREVIEW_RENDER_DELAY = 0.5  # Delay in seconds for viewport rendering
 # ============================================================================
+
+# State for async export
+var _scene_root: Node = null
+var _export_base: String = ""
+var _has_error: bool = false
+var _node_offset: Vector2 = Vector2.ZERO
+var _export_phase: int = 0  # 0=init, 1=waiting_preview, 2=done
+var _preview_viewport: SubViewport = null
+var _preview_elapsed: float = 0.0
+
 
 func _init() -> void:
 	# Parse command line arguments
@@ -30,14 +43,15 @@ func _init() -> void:
 	# e.g., "res://main.tscn" -> "res://_export/main"
 	# e.g., "res://levels/level1.tscn" -> "res://_export/levels/level1"
 	var export_path = scene_path.get_file().get_basename()
-	var export_base = "res://_export/" + export_path
+	_export_base = "res://_export/" + export_path
 	
 	print("SPX Export CLI")
 	print("==============")
 	print("Scene:  ", scene_path)
-	print("Output: ", export_base)
+	print("Output: ", _export_base)
 	print("Export TileMap: ", EXPORT_TILEMAP)
 	print("Export Decorators: ", EXPORT_DECORATORS)
+	print("Export Preview: ", EXPORT_PREVIEW)
 	print("")
 	
 	# Load the scene
@@ -52,46 +66,138 @@ func _init() -> void:
 		quit(1)
 		return
 	
-	var scene_root = packed_scene.instantiate()
-	if not scene_root:
+	_scene_root = packed_scene.instantiate()
+	if not _scene_root:
 		printerr("ERROR: Failed to instantiate scene")
 		quit(1)
 		return
 	
 	# Ensure export directory exists
-	var global_export_dir = ProjectSettings.globalize_path(export_base)
+	var global_export_dir = ProjectSettings.globalize_path(_export_base)
 	if not DirAccess.dir_exists_absolute(global_export_dir):
 		var err = DirAccess.make_dir_recursive_absolute(global_export_dir)
 		if err != OK:
 			printerr("ERROR: Failed to create export directory: ", global_export_dir)
-			scene_root.queue_free()
+			_scene_root.queue_free()
 			quit(1)
 			return
 	
-	var has_error = false
-	var node_offset = Vector2.ZERO
-	
-	# Export TileMap
+	# Export TileMap (synchronous)
 	if EXPORT_TILEMAP:
-		var tilemap_path = export_base + "/tilemap.json"
+		var tilemap_path = _export_base + "/tilemap.json"
 		var global_tilemap_path = ProjectSettings.globalize_path(tilemap_path)
-		var tilemap_result = _export_tilemap(scene_root, global_tilemap_path)
+		var tilemap_result = _export_tilemap(_scene_root, global_tilemap_path)
 		if tilemap_result.success:
-			node_offset = tilemap_result.node_offset
+			_node_offset = tilemap_result.node_offset
 		elif tilemap_result.error != "skipped":
-			has_error = true
+			_has_error = true
 	
-	# Export Decorators
+	# Export Decorators (synchronous)
 	if EXPORT_DECORATORS:
-		var decorator_path = export_base + "/decorator.json"
+		var decorator_path = _export_base + "/decorator.json"
 		var global_decorator_path = ProjectSettings.globalize_path(decorator_path)
-		var decorator_result = _export_decorators(scene_root, global_decorator_path, node_offset)
+		var decorator_result = _export_decorators(_scene_root, global_decorator_path, _node_offset)
 		if not decorator_result.success and decorator_result.error != "skipped":
-			has_error = true
+			_has_error = true
 	
-	scene_root.queue_free()
+	# Export Preview PNG (requires async rendering)
+	if EXPORT_PREVIEW:
+		_start_preview_export()
+	else:
+		_finish_export()
+
+
+func _process(delta: float) -> bool:
+	if _export_phase == 1:  # Waiting for preview render
+		_preview_elapsed += delta
+		if _preview_elapsed >= PREVIEW_RENDER_DELAY:
+			_complete_preview_export()
+			_finish_export()
+	return false  # Continue processing
+
+
+func _start_preview_export() -> void:
+	# Use PreviewExporter static functions for TileMap-only rendering
+	var layers = PreviewExporter.find_tilemap_layers(_scene_root)
+	var bounds = PreviewExporter.calc_tilemap_bounds(layers)
 	
-	if has_error:
+	if not bounds.has_area():
+		print("Preview: No TileMapLayer content found (skipped)")
+		_finish_export()
+		return
+	
+	# Create SubViewport for rendering
+	_preview_viewport = SubViewport.new()
+	_preview_viewport.size = Vector2i(bounds.size)
+	_preview_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	_preview_viewport.render_target_clear_mode = SubViewport.CLEAR_MODE_ALWAYS
+	_preview_viewport.transparent_bg = true
+	
+	# Create a copy with only TileMapLayer nodes (uses PreviewExporter static function)
+	var copy = PreviewExporter.create_tilemap_only_copy(_scene_root)
+	if not copy:
+		print("Preview: Failed to create scene copy (skipped)")
+		_preview_viewport.queue_free()
+		_preview_viewport = null
+		_finish_export()
+		return
+	
+	# Adjust position so content starts at (0, 0)
+	if copy is Node2D:
+		copy.position = copy.global_position - bounds.position
+	
+	_preview_viewport.add_child(copy)
+	root.add_child(_preview_viewport)
+	
+	_export_phase = 1
+	_preview_elapsed = 0.0
+	print("Preview: Rendering...")
+
+
+func _complete_preview_export() -> void:
+	if not _preview_viewport:
+		return
+	
+	var preview_path = _export_base + "/preview.png"
+	var global_preview_path = ProjectSettings.globalize_path(preview_path)
+	
+	# Get viewport texture (may be null in headless mode)
+	var texture = _preview_viewport.get_texture()
+	if not texture:
+		print("Preview: Viewport texture unavailable (headless mode?), skipped")
+		_preview_viewport.queue_free()
+		_preview_viewport = null
+		_export_phase = 2
+		return
+	
+	var image = texture.get_image()
+	if not image:
+		print("Preview: Failed to capture image (headless mode?), skipped")
+		_preview_viewport.queue_free()
+		_preview_viewport = null
+		_export_phase = 2
+		return
+	
+	var err = image.save_png(global_preview_path)
+	if err != OK:
+		printerr("ERROR: Failed to save preview PNG: ", err)
+		_has_error = true
+	else:
+		print("Preview Export successful!")
+		print("  Output: ", preview_path)
+		print("  Size: ", _preview_viewport.size.x, "x", _preview_viewport.size.y)
+	
+	_preview_viewport.queue_free()
+	_preview_viewport = null
+	_export_phase = 2
+
+
+func _finish_export() -> void:
+	if _scene_root:
+		_scene_root.queue_free()
+		_scene_root = null
+	
+	if _has_error:
 		print("")
 		print("Export completed with errors")
 		quit(1)
@@ -269,3 +375,78 @@ func _calculate_tilemap_offset(layers: Array[TileMapLayer]) -> Vector2:
 	var center_y: int = (min_y + max_y) / 2
 	
 	return Vector2(-center_x * tile_size.x, -center_y * tile_size.y)
+
+
+# ============================================================================
+# Preview Export Helper Functions
+# ============================================================================
+
+## Calculate the bounding rectangle of all renderable content in the scene
+func _get_scene_bounds(node: Node, layers: Array[TileMapLayer]) -> Rect2:
+	var total_rect = Rect2()
+	
+	# Calculate TileMapLayer bounds
+	for layer in layers:
+		var layer_rect = _get_tilemap_bounds(layer)
+		if layer_rect.has_area():
+			var global_rect = layer.get_global_transform() * layer_rect
+			total_rect = _merge_rects(total_rect, global_rect)
+	
+	# Collect Sprite2D bounds recursively
+	total_rect = _collect_sprite_bounds_recursive(node, total_rect)
+	
+	return total_rect
+
+
+## Calculate bounds of a single TileMapLayer
+func _get_tilemap_bounds(layer: TileMapLayer) -> Rect2:
+	if not layer or not layer.tile_set:
+		return Rect2()
+	
+	var used_rect = layer.get_used_rect()
+	if used_rect.size == Vector2i.ZERO:
+		return Rect2()
+	
+	var tile_size = layer.tile_set.tile_size
+	
+	# Convert tile coordinates to local pixel coordinates
+	var top_left = layer.map_to_local(used_rect.position)
+	var bottom_right = layer.map_to_local(used_rect.position + used_rect.size)
+	
+	# Adjust for half-tile offset (tiles are centered)
+	var half_tile = Vector2(tile_size) / 2.0
+	var rect = Rect2(top_left - half_tile, bottom_right - top_left)
+	
+	return rect
+
+
+func _collect_sprite_bounds_recursive(node: Node, total_rect: Rect2) -> Rect2:
+	# Skip TileMapLayer nodes (already handled)
+	if node is TileMapLayer:
+		return total_rect
+	
+	if node is Sprite2D:
+		var sprite = node as Sprite2D
+		var texture = sprite.texture
+		if texture:
+			var size = texture.get_size()
+			var offset = -size / 2.0 if sprite.centered else Vector2.ZERO
+			offset += sprite.offset
+			var local_rect = Rect2(offset, size)
+			var global_rect = sprite.get_global_transform() * local_rect
+			total_rect = _merge_rects(total_rect, global_rect)
+	
+	for child in node.get_children():
+		total_rect = _collect_sprite_bounds_recursive(child, total_rect)
+	
+	return total_rect
+
+
+func _merge_rects(a: Rect2, b: Rect2) -> Rect2:
+	if not a.has_area():
+		return b
+	if not b.has_area():
+		return a
+	return a.merge(b)
+
+
