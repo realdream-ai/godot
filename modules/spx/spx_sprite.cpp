@@ -1334,28 +1334,57 @@ void SpxSprite::_setup_spine_event_bindings() {
 	spine_child->connect("animation_event", callable_mp(this, &SpxSprite::_on_spine_animation_event));
 }
 
-void SpxSprite::_on_spine_animation_started(Ref<SpineTrackEntry> entry) {
+void SpxSprite::_on_spine_animation_started(SpineSprite* sprite, Ref<SpineAnimationState> state, Ref<SpineTrackEntry> entry) {
+	if (!Spx::initialed) return;
 	if (!entry.is_valid()) return;
+
+	// Get animation name for debug logging
 	auto anim = entry->get_animation();
 	String anim_name = anim.is_valid() ? anim->get_name() : "";
-	print_line(vformat("[Spine Event] animation_started: gid=%d, animation=%s", gid, anim_name));
-	// TODO: Implement SPX_CALLBACK->func_on_sprite_animation_changed(gid);
+	print_line(vformat("[SpxSprite] Spine animation_started: gid=%d, animation=%s", gid, anim_name));
+
+	// Trigger SPX callback: animation changed
+	SPX_CALLBACK->func_on_sprite_animation_changed(this->gid);
 }
 
-void SpxSprite::_on_spine_animation_completed(Ref<SpineTrackEntry> entry) {
+void SpxSprite::_on_spine_animation_completed(SpineSprite* sprite, Ref<SpineAnimationState> state, Ref<SpineTrackEntry> entry) {
+	if (!Spx::initialed) return;
 	if (!entry.is_valid()) return;
+
+	// Get animation info for debug logging
 	auto anim = entry->get_animation();
 	String anim_name = anim.is_valid() ? anim->get_name() : "";
-	print_line(vformat("[Spine Event] animation_completed: gid=%d, animation=%s", gid, anim_name));
-	// TODO: Implement SPX_CALLBACK->func_on_sprite_animation_finished(gid);
+	bool is_loop = entry->get_loop();
+
+	// Dispatch different callbacks based on loop state
+	if (is_loop) {
+		// Looping animation completed one cycle
+		print_line(vformat("[SpxSprite] Spine animation_looped: gid=%d, animation=%s", gid, anim_name));
+		SPX_CALLBACK->func_on_sprite_animation_looped(this->gid);
+	} else {
+		// Non-looping animation finished
+		print_line(vformat("[SpxSprite] Spine animation_finished: gid=%d, animation=%s", gid, anim_name));
+		SPX_CALLBACK->func_on_sprite_animation_finished(this->gid);
+	}
 }
 
-void SpxSprite::_on_spine_animation_event(Ref<SpineTrackEntry> entry, Ref<SpineEvent> event) {
+void SpxSprite::_on_spine_animation_event(SpineSprite* sprite, Ref<SpineAnimationState> state, Ref<SpineTrackEntry> entry, Ref<SpineEvent> event) {
+	if (!Spx::initialed) return;
 	if (!event.is_valid()) return;
+
+	// Extract event data for logging
 	auto event_data = event->get_data();
 	String event_name = event_data.is_valid() ? event_data->get_event_name() : "";
-	print_line(vformat("[Spine Event] animation_event: gid=%d, event=%s", gid, event_name));
-	// TODO: Implement custom event callback
+	int int_value = event->get_int_value();
+	float float_value = event->get_float_value();
+	String string_value = event->get_string_value();
+
+	// Debug log for Spine custom event
+	print_line(vformat("[SpxSprite] Spine animation_event: gid=%d, event=%s, int=%d, float=%f, string=%s",
+		gid, event_name, int_value, float_value, string_value));
+
+	// Optional: Call new Spine event callback (requires adding new interface)
+	// SPX_CALLBACK->func_on_spine_event(this->gid, SpxReturnStr(event_name), int_value, float_value);
 }
 
 // ============================================================================

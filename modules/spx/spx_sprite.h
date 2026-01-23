@@ -195,10 +195,10 @@ private:
 	void _calculate_spine_collision_shape_fallback();
 	void _update_spine_collision_with_scale();
 
-	// Spine event callbacks
-	void _on_spine_animation_started(Ref<SpineTrackEntry> entry);
-	void _on_spine_animation_completed(Ref<SpineTrackEntry> entry);
-	void _on_spine_animation_event(Ref<SpineTrackEntry> entry, Ref<SpineEvent> event);
+	// Spine event callbacks (signature matches SpineSprite signal: sprite, state, entry, [event])
+	void _on_spine_animation_started(SpineSprite* sprite, Ref<SpineAnimationState> state, Ref<SpineTrackEntry> entry);
+	void _on_spine_animation_completed(SpineSprite* sprite, Ref<SpineAnimationState> state, Ref<SpineTrackEntry> entry);
+	void _on_spine_animation_event(SpineSprite* sprite, Ref<SpineAnimationState> state, Ref<SpineTrackEntry> entry, Ref<SpineEvent> event);
 	
 
 	void update_anim_scale();
