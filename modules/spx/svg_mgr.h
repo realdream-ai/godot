@@ -20,7 +20,7 @@ private:
 	HashMap<String, Vector2> svg_image_raw_size_cache;
 	
 	HashMap<String, bool> is_svg_animation_registry;
-	static SvgManager *singleton;
+	static inline SvgManager *singleton = nullptr;
 
 public:
 	bool is_svg_file(const String& path) const;
@@ -46,4 +46,4 @@ private:
 	Ref<SpriteFrames> _load_animation(const String& base_anim_key, int scale);
 };
 
-#endif // SVG_MANAGER_H 
+#endif // SVG_MANAGER_H

@@ -63,7 +63,7 @@ typedef void (*GDExtensionSpxGlobalRuntimeExitCallback)(GdInt code);
 typedef void (*GDExtensionSpxGlobalRuntimeResetCallback)(GdInt code);
 
 class SpxEngine : SpxBaseMgr {
-	static SpxEngine *singleton;
+	static inline SpxEngine *singleton = nullptr;
 
 public:
 	static SpxEngine *get_singleton() { return singleton; }

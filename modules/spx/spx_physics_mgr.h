@@ -37,9 +37,9 @@
 
 class SpxPhysicsDefine{
 private:
-	static GdFloat global_gravity;
-	static GdFloat global_friction;
-	static GdFloat global_air_drag;
+	static inline GdFloat global_gravity = 1.0;
+	static inline GdFloat global_friction = 1.0;
+	static inline GdFloat global_air_drag = 1.0;
 public:
 	static void set_global_gravity(GdFloat gravity);
 	static GdFloat get_global_gravity();

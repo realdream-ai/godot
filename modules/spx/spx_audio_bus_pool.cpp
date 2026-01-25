@@ -34,13 +34,9 @@
 #include "spx_res_mgr.h"
 #include "spx_audio_bus_pool.h"
 
-
-// Initialize static members
-SpxAudioBusPool *SpxAudioBusPool::singleton = nullptr;
 StringName SpxAudioBusPool::STR_BUS_MASTER;
 StringName SpxAudioBusPool::STR_BUS_SFX;
 StringName SpxAudioBusPool::STR_BUS_MUSIC;
-
 
 SpxAudioBusPool *SpxAudioBusPool::get_singleton() {
 	return singleton;

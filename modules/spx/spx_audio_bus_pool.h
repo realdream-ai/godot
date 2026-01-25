@@ -36,7 +36,7 @@
 #include "scene/main/node.h"
 
 class SpxAudioBusPool {
-	static SpxAudioBusPool *singleton;
+	static inline SpxAudioBusPool *singleton = nullptr;
 
 public:
 	static const int BUS_MASTER = 0;

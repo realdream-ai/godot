@@ -50,11 +50,6 @@
 #include "spx_camera_mgr.h"
 #include "spx_sprite_mgr.h"
 
-
-GdFloat SpxPhysicsDefine::global_gravity = 1.0;
-GdFloat SpxPhysicsDefine::global_friction = 1.0;
-GdFloat SpxPhysicsDefine::global_air_drag = 1.0;
-
 GdArray SpxRaycastInfo::ToArray(){
 	GdArray result_array = SpxBaseMgr::create_array(GD_ARRAY_TYPE_INT64, 6);
 	SpxBaseMgr::set_array(result_array,0,(GdInt)collide);

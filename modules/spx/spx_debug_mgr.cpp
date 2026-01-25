@@ -53,8 +53,8 @@
 #include "spx_physics_mgr.h"
 
 #include <cmath>
-Mutex SpxDebugMgr::lock;
 
+Mutex SpxDebugMgr::lock;
 
 void SpxDebugMgr::on_awake() {
 	SpxBaseMgr::on_awake();

@@ -5,8 +5,6 @@
 #include "spx_engine.h"
 #include "spx.h"
 
-SvgManager *SvgManager::singleton = nullptr;
-
 SvgManager *SvgManager::get_singleton() {
 	if (!singleton) {
 		singleton = memnew(SvgManager);

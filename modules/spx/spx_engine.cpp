@@ -56,8 +56,6 @@
 #include "spx_tilemapparser_mgr.h"
 #include "spx_callback_proxy.h"
 
-SpxEngine *SpxEngine::singleton = nullptr;
-
 void SpxEngine::register_runtime_panic_callbacks(GDExtensionSpxGlobalRuntimePanicCallback callback) {
 	singleton->on_runtime_panic = callback;
 }
