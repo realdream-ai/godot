@@ -69,12 +69,25 @@ enum class ColliderType {
 	CAPSULE = 4,
 	POLYGON = 5
 };
+
+enum BoundaryType {
+	BOUND_LEFT = 1 << 0,
+	BOUND_TOP = 1 << 1,
+	BOUND_RIGHT = 1 << 2,
+	BOUND_BOTTOM = 1 << 3
+};
+
 class SpxPhysicsMgr : public SpxBaseMgr {
 	SPXCLASS(SpxPhysicsMgr, SpxBaseMgr)
 
 private:
 	GdArray _check_collision(RID shape, GdVec2 pos, GdInt collision_mask);
 	SpxRaycastInfo _raycast(GdVec2 from, GdVec2 to, GdArray ignore_sprites, GdInt collision_mask, GdBool collide_with_areas, GdBool collide_with_bodies);
+	
+	// Internal boundary check helpers
+	GdInt _check_touched_boundaries(GdObj obj, GdBool use_stage_limits);
+	GdBool _check_touched_boundary(GdObj obj, GdInt board_type, GdBool use_stage_limits);
+	GdInt _check_nearest_touched_boundary(GdObj obj, GdBool use_stage_limits);
 
 public:
 	bool is_collision_by_pixel;
@@ -89,6 +102,11 @@ public:
 	GdInt check_touched_camera_boundaries(GdObj obj);
 	GdBool check_touched_camera_boundary(GdObj obj, GdInt board_type);
 	GdInt check_nearest_touched_camera_boundary(GdObj obj);
+	
+	// Stage boundary check functions
+	GdInt check_touched_stage_boundaries(GdObj obj);
+	GdBool check_touched_stage_boundary(GdObj obj, GdInt board_type);
+	GdInt check_nearest_touched_stage_boundary(GdObj obj);
 	void set_collision_system_type(GdBool is_collision_by_alpha);
 
 	// configs

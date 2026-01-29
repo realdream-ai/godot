@@ -57,6 +57,7 @@ public:
 	void set_camera_zoom(GdVec2 size);
 	GdRect2 get_viewport_rect();
 	GdRect2 get_global_camera_rect();
+	GdRect2 get_stage_limits_rect();
 	void set_camera_limit(GdInt side, GdInt limit);
 	void set_camera_smoothing(GdBool enabled);
 };

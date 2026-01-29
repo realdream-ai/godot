@@ -241,6 +241,14 @@ gdspx_camera_get_global_camera_rect() {
 	FreeGdRect2(_retValue); 
 	return _finalRetValue
 }
+gdspx_camera_get_stage_limits_rect() {
+	var _gdFuncPtr = Module._gdspx_camera_get_stage_limits_rect; 
+	var _retValue = AllocGdRect2();
+	_gdFuncPtr(_retValue);
+	var _finalRetValue = ToJsRect2(_retValue);
+	FreeGdRect2(_retValue); 
+	return _finalRetValue
+}
 gdspx_camera_set_camera_limit(side,limit) {
 	var _gdFuncPtr = Module._gdspx_camera_set_camera_limit; 
 	
@@ -663,6 +671,38 @@ gdspx_physics_check_touched_camera_boundary(obj,board_type) {
 }
 gdspx_physics_check_nearest_touched_camera_boundary(obj) {
 	var _gdFuncPtr = Module._gdspx_physics_check_nearest_touched_camera_boundary; 
+	var _retValue = AllocGdInt();
+	var _arg0 = ToGdObj(obj);
+	_gdFuncPtr(_arg0, _retValue);
+	FreeGdObj(_arg0); 
+	var _finalRetValue = ToJsInt(_retValue);
+	FreeGdInt(_retValue); 
+	return _finalRetValue
+}
+gdspx_physics_check_touched_stage_boundaries(obj) {
+	var _gdFuncPtr = Module._gdspx_physics_check_touched_stage_boundaries; 
+	var _retValue = AllocGdInt();
+	var _arg0 = ToGdObj(obj);
+	_gdFuncPtr(_arg0, _retValue);
+	FreeGdObj(_arg0); 
+	var _finalRetValue = ToJsInt(_retValue);
+	FreeGdInt(_retValue); 
+	return _finalRetValue
+}
+gdspx_physics_check_touched_stage_boundary(obj,board_type) {
+	var _gdFuncPtr = Module._gdspx_physics_check_touched_stage_boundary; 
+	var _retValue = AllocGdBool();
+	var _arg0 = ToGdObj(obj);
+	var _arg1 = ToGdInt(board_type);
+	_gdFuncPtr(_arg0, _arg1, _retValue);
+	FreeGdObj(_arg0); 
+	FreeGdInt(_arg1); 
+	var _finalRetValue = ToJsBool(_retValue);
+	FreeGdBool(_retValue); 
+	return _finalRetValue
+}
+gdspx_physics_check_nearest_touched_stage_boundary(obj) {
+	var _gdFuncPtr = Module._gdspx_physics_check_nearest_touched_stage_boundary; 
 	var _retValue = AllocGdInt();
 	var _arg0 = ToGdObj(obj);
 	_gdFuncPtr(_arg0, _retValue);

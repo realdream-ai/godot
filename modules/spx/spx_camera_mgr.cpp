@@ -96,6 +96,19 @@ GdRect2 SpxCameraMgr::get_global_camera_rect() {
 	return Rect2(tl, br - tl);
 }
 
+GdRect2 SpxCameraMgr::get_stage_limits_rect() {
+	if (!camera) {
+		return Rect2();
+	}
+	
+	real_t left = camera->get_limit(SIDE_LEFT);
+	real_t top = camera->get_limit(SIDE_TOP);
+	real_t right = camera->get_limit(SIDE_RIGHT);
+	real_t bottom = camera->get_limit(SIDE_BOTTOM);
+	
+	return Rect2(left, top, right - left, bottom - top);
+}
+
 void SpxCameraMgr::set_camera_limit(GdInt side, GdInt limit) {
 	camera->set_limit((Side)side, limit);
 }

@@ -86,8 +86,6 @@ GdFloat SpxPhysicsDefine::get_global_air_drag() {
 }
 
 
-
-
 void SpxPhysicsMgr::on_awake() {
 	SpxBaseMgr::on_awake();
 	is_collision_by_pixel = true;
@@ -197,12 +195,8 @@ GdBool SpxPhysicsMgr::check_collision(GdVec2 from, GdVec2 to, GdInt collision_ma
 	return hit;
 }
 
-const GdInt BOUND_CAM_LEFT = 1 << 0;
-const GdInt BOUND_CAM_TOP = 1 << 1;
-const GdInt BOUND_CAM_RIGHT = 1 << 2;
-const GdInt BOUND_CAM_BOTTOM = 1 << 3;
-
-GdInt SpxPhysicsMgr::check_touched_camera_boundaries(GdObj obj) {
+// Internal helper function for boundary checking
+GdInt SpxPhysicsMgr::_check_touched_boundaries(GdObj obj, GdBool use_stage_limits) {
 	auto sprite = spriteMgr->get_sprite(obj);
 	if (sprite == nullptr) {
 		print_error("try to get property of a null sprite gid=" + itos(obj));
@@ -219,48 +213,58 @@ GdInt SpxPhysicsMgr::check_touched_camera_boundaries(GdObj obj) {
 		return false;
 	}
 
-	Camera2D *camera = get_tree()->get_root()->get_camera_2d();
-	if (!camera) {
-		return false;
-	}
-	Transform2D camera_transform = camera->get_global_transform();
-
-	Vector2 viewport_size = camera->get_viewport_rect().size;
-	Vector2 zoom = camera->get_zoom();
-	Vector2 half_size = (viewport_size / zoom) * 0.5;
-	Vector2 camera_position = camera_transform.get_origin();
+	// Get boundary rect from camera manager
+	Rect2 boundary_rect = use_stage_limits ? cameraMgr->get_stage_limits_rect() : cameraMgr->get_global_camera_rect();
+	
+	real_t bound_left = boundary_rect.position.x;
+	real_t bound_top = boundary_rect.position.y;
+	real_t bound_right = boundary_rect.position.x + boundary_rect.size.x;
+	real_t bound_bottom = boundary_rect.position.y + boundary_rect.size.y;
+	real_t width = boundary_rect.size.x;
+	real_t height = boundary_rect.size.y;
+	Vector2 center_pos = boundary_rect.get_center();
 
 	Ref<RectangleShape2D> vertical_edge_shape;
 	vertical_edge_shape.instantiate();
-	vertical_edge_shape->set_size(Vector2(2, half_size.y*50));// mutil by 50 is to check the case of some collider is out of boundary
+	// Use full boundary size * 2 to handle rotation and scaling
+	vertical_edge_shape->set_size(Vector2(2, height * 2));
 
 	Ref<RectangleShape2D> horizontal_edge_shape;
 	horizontal_edge_shape.instantiate();
-	horizontal_edge_shape->set_size(Vector2(half_size.x*50, 2));
+	horizontal_edge_shape->set_size(Vector2(width * 2, 2));
 
-	Transform2D left_edge_transform(0, camera_position + Vector2(-half_size.x, 0));
-	Transform2D right_edge_transform(0, camera_position + Vector2(half_size.x, 0));
-	Transform2D top_edge_transform(0, camera_position + Vector2(0, -half_size.y));
-	Transform2D bottom_edge_transform(0, camera_position + Vector2(0, half_size.y));
+	Transform2D left_edge_transform(0, Vector2(bound_left, center_pos.y));
+	Transform2D right_edge_transform(0, Vector2(bound_right, center_pos.y));
+	Transform2D top_edge_transform(0, Vector2(center_pos.x, bound_top));
+	Transform2D bottom_edge_transform(0, Vector2(center_pos.x, bound_bottom));
 
 	bool is_colliding_left = sprite_shape->collide(sprite_transform, vertical_edge_shape, left_edge_transform);
 	bool is_colliding_right = sprite_shape->collide(sprite_transform, vertical_edge_shape, right_edge_transform);
 	bool is_colliding_top = sprite_shape->collide(sprite_transform, horizontal_edge_shape, top_edge_transform);
 	bool is_colliding_bottom = sprite_shape->collide(sprite_transform, horizontal_edge_shape, bottom_edge_transform);
+	
 	GdInt result = 0;
-	result += is_colliding_top ? BOUND_CAM_TOP : 0;
-	result += is_colliding_right ?  BOUND_CAM_RIGHT : 0;
-	result += is_colliding_bottom ? BOUND_CAM_BOTTOM : 0;
-	result += is_colliding_left ? BOUND_CAM_LEFT : 0;
+	result += is_colliding_top ? BOUND_TOP : 0;
+	result += is_colliding_right ? BOUND_RIGHT : 0;
+	result += is_colliding_bottom ? BOUND_BOTTOM : 0;
+	result += is_colliding_left ? BOUND_LEFT : 0;
 	return result;
 }
 
-GdBool SpxPhysicsMgr::check_touched_camera_boundary(GdObj obj, GdInt board_type) {
-	auto result = check_touched_camera_boundaries(obj);
+GdBool SpxPhysicsMgr::_check_touched_boundary(GdObj obj, GdInt board_type, GdBool use_stage_limits) {
+	auto result = _check_touched_boundaries(obj, use_stage_limits);
 	return (result & board_type) != 0;
 }
 
-GdInt SpxPhysicsMgr::check_nearest_touched_camera_boundary(GdObj obj) {
+GdInt SpxPhysicsMgr::check_touched_camera_boundaries(GdObj obj) {
+	return _check_touched_boundaries(obj, false);
+}
+
+GdBool SpxPhysicsMgr::check_touched_camera_boundary(GdObj obj, GdInt board_type) {
+	return _check_touched_boundary(obj, board_type, false);
+}
+
+GdInt SpxPhysicsMgr::_check_nearest_touched_boundary(GdObj obj, GdBool use_stage_limits) {
 	auto sprite = spriteMgr->get_sprite(obj);
 	if (sprite == nullptr) {
 		print_error("try to get property of a null sprite gid=" + itos(obj));
@@ -291,18 +295,18 @@ GdInt SpxPhysicsMgr::check_nearest_touched_camera_boundary(GdObj obj) {
 	real_t top = sprite_pos.y + sprite_rect.position.y * sprite_scale.y;
 	real_t bottom = sprite_pos.y + (sprite_rect.position.y + sprite_rect.size.y) * sprite_scale.y;
 
-	// Get camera boundaries
-	Rect2 camera_rect = cameraMgr->get_global_camera_rect();
-	real_t stage_left = camera_rect.position.x;
-	real_t stage_top = camera_rect.position.y;
-	real_t stage_right = camera_rect.position.x + camera_rect.size.x;
-	real_t stage_bottom = camera_rect.position.y + camera_rect.size.y;
+	// Get boundary rect from camera manager
+	Rect2 boundary_rect = use_stage_limits ? cameraMgr->get_stage_limits_rect() : cameraMgr->get_global_camera_rect();
+	real_t bound_left = boundary_rect.position.x;
+	real_t bound_top = boundary_rect.position.y;
+	real_t bound_right = boundary_rect.position.x + boundary_rect.size.x;
+	real_t bound_bottom = boundary_rect.position.y + boundary_rect.size.y;
 
 	// Calculate distances to edges (positive when far away, clamped to 0 when beyond)
-	real_t dist_left = MAX(0.0, left - stage_left);
-	real_t dist_top = MAX(0.0, top - stage_top);
-	real_t dist_right = MAX(0.0, stage_right - right);
-	real_t dist_bottom = MAX(0.0, stage_bottom - bottom);
+	real_t dist_left = MAX(0.0, left - bound_left);
+	real_t dist_top = MAX(0.0, top - bound_top);
+	real_t dist_right = MAX(0.0, bound_right - right);
+	real_t dist_bottom = MAX(0.0, bound_bottom - bottom);
 
 	// Find nearest edge
 	real_t min_dist = INFINITY;
@@ -310,19 +314,19 @@ GdInt SpxPhysicsMgr::check_nearest_touched_camera_boundary(GdObj obj) {
 
 	if (dist_left < min_dist) {
 		min_dist = dist_left;
-		nearest_edge = BOUND_CAM_LEFT;
+		nearest_edge = BOUND_LEFT;
 	}
 	if (dist_top < min_dist) {
 		min_dist = dist_top;
-		nearest_edge = BOUND_CAM_TOP;
+		nearest_edge = BOUND_TOP;
 	}
 	if (dist_right < min_dist) {
 		min_dist = dist_right;
-		nearest_edge = BOUND_CAM_RIGHT;
+		nearest_edge = BOUND_RIGHT;
 	}
 	if (dist_bottom < min_dist) {
 		min_dist = dist_bottom;
-		nearest_edge = BOUND_CAM_BOTTOM;
+		nearest_edge = BOUND_BOTTOM;
 	}
 
 	if(min_dist > 0){
@@ -330,6 +334,22 @@ GdInt SpxPhysicsMgr::check_nearest_touched_camera_boundary(GdObj obj) {
 	}
 
 	return nearest_edge;
+}
+
+GdInt SpxPhysicsMgr::check_nearest_touched_camera_boundary(GdObj obj) {
+	return _check_nearest_touched_boundary(obj, false);
+}
+
+GdInt SpxPhysicsMgr::check_touched_stage_boundaries(GdObj obj) {
+	return _check_touched_boundaries(obj, true);
+}
+
+GdBool SpxPhysicsMgr::check_touched_stage_boundary(GdObj obj, GdInt board_type) {
+	return _check_touched_boundary(obj, board_type, true);
+}
+
+GdInt SpxPhysicsMgr::check_nearest_touched_stage_boundary(GdObj obj) {
+	return _check_nearest_touched_boundary(obj, true);
 }
 
 //

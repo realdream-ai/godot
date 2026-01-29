@@ -181,6 +181,10 @@ void gdspx_camera_get_global_camera_rect(GdRect2 *ret_val) {
 	*ret_val = cameraMgr->get_global_camera_rect();
 }
 EMSCRIPTEN_KEEPALIVE
+void gdspx_camera_get_stage_limits_rect(GdRect2 *ret_val) {
+	*ret_val = cameraMgr->get_stage_limits_rect();
+}
+EMSCRIPTEN_KEEPALIVE
 void gdspx_camera_set_camera_limit(GdInt* side, GdInt* limit) {
 	 cameraMgr->set_camera_limit(*side, *limit);
 }
@@ -355,6 +359,18 @@ void gdspx_physics_check_touched_camera_boundary(GdObj* obj, GdInt* board_type, 
 EMSCRIPTEN_KEEPALIVE
 void gdspx_physics_check_nearest_touched_camera_boundary(GdObj* obj, GdInt *ret_val) {
 	*ret_val = physicsMgr->check_nearest_touched_camera_boundary(*obj);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_physics_check_touched_stage_boundaries(GdObj* obj, GdInt *ret_val) {
+	*ret_val = physicsMgr->check_touched_stage_boundaries(*obj);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_physics_check_touched_stage_boundary(GdObj* obj, GdInt* board_type, GdBool *ret_val) {
+	*ret_val = physicsMgr->check_touched_stage_boundary(*obj, *board_type);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_physics_check_nearest_touched_stage_boundary(GdObj* obj, GdInt *ret_val) {
+	*ret_val = physicsMgr->check_nearest_touched_stage_boundary(*obj);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_physics_set_collision_system_type(GdBool* is_collision_by_alpha) {
