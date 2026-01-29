@@ -61,17 +61,17 @@ void SpxAudioMgr::on_update(float delta) {
 }
 
 void SpxAudioMgr::on_reset(int reset_code) {
-	lock.lock();
+	rw_lock.write_lock();
 	aid_audios.clear();
 	SpxAudioBusPool::reset();
-	lock.unlock();
+	rw_lock.write_unlock();
 	_reset_all(reset_code);
 }
 
 void SpxAudioMgr::on_destroy() {
-	lock.lock();
+	rw_lock.write_lock();
 	aid_audios.clear();
-	lock.unlock();
+	rw_lock.write_unlock();
 	_destroy_all();
 	SpxBaseMgr::on_destroy();
 }
@@ -82,17 +82,17 @@ GdObj SpxAudioMgr::create_audio() {
 }
 
 void SpxAudioMgr::stop_all() {
-	lock.lock();
+	rw_lock.write_lock();
 	for (const auto &[id, audio] : id_objects) {
 		audio->stop_all();
 	}
 	aid_audios.clear();
-	lock.unlock();
+	rw_lock.write_unlock();
 }
 
 void SpxAudioMgr::destroy_audio(GdObj obj) {
-	lock.lock();
-	SpxAudio *audio = _get_object(obj);
+	rw_lock.write_lock();
+	SpxAudio *audio = _get_object_unsafe(obj);
 	if (audio != nullptr) {
 		// Remove audio from aid_audios mapping
 		Vector<GdInt> keys;
@@ -105,7 +105,7 @@ void SpxAudioMgr::destroy_audio(GdObj obj) {
 			aid_audios.erase(key);
 		}
 	}
-	lock.unlock();
+	rw_lock.write_unlock();
 	
 	// Now destroy the object using parent class method
 	destroy_object(obj);

@@ -33,6 +33,7 @@
 
 #include "spx_base_mgr.h"
 #include "core/os/mutex.h"
+#include "core/os/rw_lock.h"
 #include "core/templates/hash_map.h"
 #include "gdextension_spx_ext.h"
 
@@ -40,9 +41,14 @@
  * @brief Generic object manager template for SPX objects
  * 
  * This template provides common functionality for managing SPX objects:
- * - Thread-safe object storage and retrieval
+ * - Thread-safe object storage and retrieval using RWLock
  * - Automatic lifecycle management (create, destroy, update)
  * - Common helper macros for null checks
+ * 
+ * Thread Safety:
+ * - Read operations (get_object) use shared locks for better concurrency
+ * - Write operations (create, destroy) use exclusive locks
+ * - All public methods are thread-safe
  * 
  * @tparam T The type of object being managed (e.g., SpxAudio, SpxPen)
  */
@@ -50,27 +56,29 @@ template <typename T>
 class SpxObjectMgr : public SpxBaseMgr {
 protected:
 	HashMap<GdObj, T *> id_objects;
-	Mutex lock;
+	mutable RWLock rw_lock;  // Read-Write lock for better concurrent performance
 	Node2D *root = nullptr;
 	
 	/**
 	 * @brief Create and register a new object
 	 * Can be called directly from derived classes
+	 * Thread-safe: Uses write lock
 	 */
 	GdObj _create_object() {
 		auto id = get_unique_id();
 		T *node = memnew(T);
-		lock.lock();
+		rw_lock.write_lock();
 		node->on_create(id, root);
 		id_objects[id] = node;
-		lock.unlock();
+		rw_lock.write_unlock();
 		return id;
 	}
 
 	/**
-	 * @brief Get object by ID (not thread-safe, caller should lock)
+	 * @brief Get object by ID (internal, assumes lock is held)
+	 * @warning NOT thread-safe - caller must hold appropriate lock
 	 */
-	T *_get_object(GdObj obj) const {
+	T *_get_object_unsafe(GdObj obj) const {
 		if (id_objects.has(obj)) {
 			return id_objects[obj];
 		}
@@ -103,23 +111,42 @@ protected:
 
 public:
 	/**
-	 * @brief Get object by ID (thread-safe)
+	 * @brief Get object by ID for reading (thread-safe with shared lock)
+	 * Use this for read-only operations - allows multiple concurrent reads
+	 * @param obj Object ID
+	 * @return Pointer to object, or nullptr if not found
 	 */
 	T *get_object(GdObj obj) {
-		MutexLock mutex_lock(lock);
-		return _get_object(obj);
+		rw_lock.read_lock();
+		T *result = _get_object_unsafe(obj);
+		rw_lock.read_unlock();
+		return result;
 	}
 
 	/**
-	 * @brief Destroy a managed object by ID
+	 * @brief Get object by ID (const version for read-only access)
+	 * Thread-safe with shared lock
+	 */
+	const T *get_object(GdObj obj) const {
+		rw_lock.read_lock();
+		const T *result = _get_object_unsafe(obj);
+		rw_lock.read_unlock();
+		return result;
+	}
+
+	/**
+	 * @brief Destroy a managed object by ID (thread-safe with exclusive lock)
 	 */
 	void destroy_object(GdObj obj);
 
 	/**
-	 * @brief Get the number of managed objects
+	 * @brief Get the number of managed objects (thread-safe)
 	 */
 	int get_object_count() const {
-		return id_objects.size();
+		rw_lock.read_lock();
+		int count = id_objects.size();
+		rw_lock.read_unlock();
+		return count;
 	}
 
 	virtual ~SpxObjectMgr() = default;
@@ -127,11 +154,12 @@ public:
 
 template <typename T>
 void SpxObjectMgr<T>::_destroy_all() {
-	MutexLock mutex_lock(lock);
+	rw_lock.write_lock();
 	for (const KeyValue<GdObj, T *> &E : id_objects) {
 		E.value->on_destroy();
 	}
 	id_objects.clear();
+	rw_lock.write_unlock();
 	
 	if (root) {
 		root->queue_free();
@@ -141,28 +169,41 @@ void SpxObjectMgr<T>::_destroy_all() {
 
 template <typename T>
 void SpxObjectMgr<T>::_update_all(float delta) {
-	MutexLock mutex_lock(lock);
+	rw_lock.read_lock();
+	// Create a copy to avoid holding lock during callbacks
+	Vector<T *> objects_copy;
 	for (const KeyValue<GdObj, T *> &E : id_objects) {
-		E.value->on_update(delta);
+		objects_copy.push_back(E.value);
+	}
+	rw_lock.read_unlock();
+	
+	// Call callbacks without holding lock to avoid deadlocks
+	for (T *obj : objects_copy) {
+		obj->on_update(delta);
 	}
 }
 
 template <typename T>
 void SpxObjectMgr<T>::_reset_all(int reset_code) {
-	MutexLock mutex_lock(lock);
+	rw_lock.write_lock();
 	for (const KeyValue<GdObj, T *> &E : id_objects) {
 		E.value->on_reset(reset_code);
 	}
 	id_objects.clear();
+	rw_lock.write_unlock();
 }
 
 template <typename T>
 void SpxObjectMgr<T>::destroy_object(GdObj obj) {
-	MutexLock mutex_lock(lock);
-	T *object = _get_object(obj);
+	rw_lock.write_lock();
+	T *object = _get_object_unsafe(obj);
 	if (object != nullptr) {
 		id_objects.erase(obj);
+		rw_lock.write_unlock();
+		// Destroy outside of lock to avoid potential deadlocks
 		object->on_destroy();
+	} else {
+		rw_lock.write_unlock();
 	}
 }
 
