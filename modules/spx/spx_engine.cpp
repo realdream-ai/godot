@@ -123,36 +123,9 @@ void SpxEngine::register_callbacks(GDExtensionSpxCallbackInfoPtr callback_ptr) {
 	}
 	singleton = new SpxEngine();
 	singleton->mgrs.clear();
-	singleton->input = memnew(SpxInputMgr);
-	singleton->mgrs.append((SpxBaseMgr *)singleton->input);
-	singleton->audio = memnew(SpxAudioMgr);
-	singleton->mgrs.append((SpxBaseMgr *)singleton->audio);
-	singleton->physics = memnew(SpxPhysicsMgr);
-	singleton->mgrs.append((SpxBaseMgr *)singleton->physics);
-	singleton->sprite = memnew(SpxSpriteMgr);
-	singleton->mgrs.append((SpxBaseMgr *)singleton->sprite);
-	singleton->ui = memnew(SpxUiMgr);
-	singleton->mgrs.append((SpxBaseMgr *)singleton->ui);
-	singleton->scene = memnew(SpxSceneMgr);
-	singleton->mgrs.append((SpxBaseMgr *)singleton->scene);
-	singleton->camera = memnew(SpxCameraMgr);
-	singleton->mgrs.append((SpxBaseMgr *)singleton->camera);
-	singleton->platform = memnew(SpxPlatformMgr);
-	singleton->mgrs.append((SpxBaseMgr *)singleton->platform);
-	singleton->res = memnew(SpxResMgr);
-	singleton->mgrs.append((SpxBaseMgr *)singleton->res);
-	singleton->ext = memnew(SpxExtMgr);
-	singleton->mgrs.append((SpxBaseMgr *)singleton->ext);
-	singleton->debug = memnew(SpxDebugMgr);
-	singleton->mgrs.append((SpxBaseMgr *)singleton->debug);
-	singleton->navigation = memnew(SpxNavigationMgr);
-	singleton->mgrs.append((SpxBaseMgr *)singleton->navigation);
-	singleton->pen = memnew(SpxPenMgr);
-	singleton->mgrs.append((SpxBaseMgr *)singleton->pen);
-	singleton->tilemap = memnew(SpxTilemapMgr);
-	singleton->mgrs.append((SpxBaseMgr *)singleton->tilemap);
-	singleton->tilemapparser = memnew(SpxTilemapparserMgr);
-	singleton->mgrs.append((SpxBaseMgr *)singleton->tilemapparser);
+	
+	// Initialize all managers using factory pattern
+	singleton->_initialize_managers();
 	
 	singleton->callbacks = *(SpxCallbackInfo *)callback_ptr;
 	singleton->global_id = 1;
@@ -277,6 +250,7 @@ void SpxEngine::on_exit(int exit_code) {
 }
 
 void SpxEngine::on_destroy() {
+	// Call on_destroy for all managers
 	for (auto mgr : mgrs) {
 		mgr->on_destroy();
 	}
@@ -297,23 +271,8 @@ void SpxEngine::on_destroy() {
 	// Destroy svg global manager
 	svgMgr->destroy();
 
-	memdelete(input);
-	memdelete(audio);
-	memdelete(physics);
-	memdelete(sprite);
-	memdelete(ui);
-	memdelete(scene);
-	memdelete(camera);
-	memdelete(platform);
-	memdelete(res);
-	memdelete(ext);
-	memdelete(debug);
-	memdelete(navigation);
-	memdelete(pen);
-	memdelete(tilemap);
-	memdelete(tilemapparser);
-
-	mgrs.clear();
+	// Use the centralized destroy method for proper cleanup
+	destroy_all_managers();
 	singleton = nullptr;
 }
 
@@ -533,4 +492,46 @@ void SpxEngine::_disconnect_reset_timer() {
 	if (!reset_timer.is_null() && reset_timer.is_valid() && reset_timer->has_connections("timeout")) {
 		reset_timer->disconnect("timeout", on_timeout_callable);
 	}
+}
+
+void SpxEngine::_initialize_managers() {
+	// Initialize managers using the factory pattern
+	// This ensures consistent creation and registration
+	input = create_manager<SpxInputMgr>();
+	audio = create_manager<SpxAudioMgr>();
+	physics = create_manager<SpxPhysicsMgr>();
+	sprite = create_manager<SpxSpriteMgr>();
+	ui = create_manager<SpxUiMgr>();
+	scene = create_manager<SpxSceneMgr>();
+	camera = create_manager<SpxCameraMgr>();
+	platform = create_manager<SpxPlatformMgr>();
+	res = create_manager<SpxResMgr>();
+	ext = create_manager<SpxExtMgr>();
+	debug = create_manager<SpxDebugMgr>();
+	navigation = create_manager<SpxNavigationMgr>();
+	pen = create_manager<SpxPenMgr>();
+	tilemap = create_manager<SpxTilemapMgr>();
+	tilemapparser = create_manager<SpxTilemapparserMgr>();
+}
+
+void SpxEngine::destroy_all_managers() {
+	// Destroy managers in reverse order to ensure proper cleanup
+	// This matches the RAII pattern and handles dependencies correctly
+	if (tilemapparser) { memdelete(tilemapparser); tilemapparser = nullptr; }
+	if (tilemap) { memdelete(tilemap); tilemap = nullptr; }
+	if (pen) { memdelete(pen); pen = nullptr; }
+	if (navigation) { memdelete(navigation); navigation = nullptr; }
+	if (debug) { memdelete(debug); debug = nullptr; }
+	if (ext) { memdelete(ext); ext = nullptr; }
+	if (res) { memdelete(res); res = nullptr; }
+	if (platform) { memdelete(platform); platform = nullptr; }
+	if (camera) { memdelete(camera); camera = nullptr; }
+	if (scene) { memdelete(scene); scene = nullptr; }
+	if (ui) { memdelete(ui); ui = nullptr; }
+	if (sprite) { memdelete(sprite); sprite = nullptr; }
+	if (physics) { memdelete(physics); physics = nullptr; }
+	if (audio) { memdelete(audio); audio = nullptr; }
+	if (input) { memdelete(input); input = nullptr; }
+	
+	mgrs.clear();
 }

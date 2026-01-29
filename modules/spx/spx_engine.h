@@ -75,24 +75,44 @@ public:
 	virtual ~SpxEngine() = default;
 
 private:
+	// Manager lifecycle improvements: unified storage with RAII
 	Vector<SpxBaseMgr *> mgrs;
-	SpxInputMgr *input;
-	SpxAudioMgr *audio;
-	SpxPhysicsMgr *physics;
-	SpxSpriteMgr *sprite;
-	SpxUiMgr *ui;
-	SpxSceneMgr *scene;
-	SpxCameraMgr *camera;
-	SpxPlatformMgr *platform;
-	SpxResMgr *res;
-	SpxExtMgr *ext;
-	SpxDebugMgr *debug;
-	SpxNavigationMgr *navigation;
-	SpxPenMgr *pen;
-	SpxTilemapMgr *tilemap;
-	SpxTilemapparserMgr *tilemapparser;
+	SpxInputMgr *input = nullptr;
+	SpxAudioMgr *audio = nullptr;
+	SpxPhysicsMgr *physics = nullptr;
+	SpxSpriteMgr *sprite = nullptr;
+	SpxUiMgr *ui = nullptr;
+	SpxSceneMgr *scene = nullptr;
+	SpxCameraMgr *camera = nullptr;
+	SpxPlatformMgr *platform = nullptr;
+	SpxResMgr *res = nullptr;
+	SpxExtMgr *ext = nullptr;
+	SpxDebugMgr *debug = nullptr;
+	SpxNavigationMgr *navigation = nullptr;
+	SpxPenMgr *pen = nullptr;
+	SpxTilemapMgr *tilemap = nullptr;
+	SpxTilemapparserMgr *tilemapparser = nullptr;
 
 	SpxCallbackProxy *delay_proxy = nullptr;
+	
+	/**
+	 * @brief Manager factory method with RAII pattern
+	 * Creates and registers a manager instance
+	 * @tparam T Manager type (must inherit from SpxBaseMgr)
+	 * @return Pointer to created manager
+	 */
+	template<typename T>
+	T* create_manager() {
+		T* mgr = memnew(T);
+		mgrs.append(static_cast<SpxBaseMgr*>(mgr));
+		return mgr;
+	}
+	
+	/**
+	 * @brief Destroy all managers safely
+	 * Ensures proper cleanup in reverse order
+	 */
+	void destroy_all_managers();
 
 public:
 	SpxInputMgr *get_input() { return input; }
@@ -178,6 +198,12 @@ private:
 	void _pause_pure();
 	void _resume_pure();
 	void _disconnect_reset_timer();
+	
+	/**
+	 * @brief Initialize all managers
+	 * Called during engine setup
+	 */
+	void _initialize_managers();
 };
 
 #endif // SPX_ENGINE_H

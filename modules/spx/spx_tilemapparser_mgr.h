@@ -48,7 +48,7 @@ class TileData;
 //   JSON -> SpxTileMapData (via from_json) -> Godot Objects (via this manager)
 //   Godot Objects -> SpxTileMapData (via to_json) -> JSON (for export plugin)
 //
-class SpxTilemapparserMgr : SpxBaseMgr {
+class SpxTilemapparserMgr : public SpxBaseMgr {
 	SPXCLASS(SpxTilemapparserMgr, SpxBaseMgr)
 
 public:
