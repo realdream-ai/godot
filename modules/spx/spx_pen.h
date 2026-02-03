@@ -86,5 +86,4 @@ public:
 	void set_stamp_texture(GdString texture_path);
 };
 
-
 #endif // SPX_PEN_H

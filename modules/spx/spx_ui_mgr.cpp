@@ -32,21 +32,17 @@
 
 #include "scene/main/canvas_layer.h"
 #include "scene/resources/packed_scene.h"
+#include "spx_object_guard.h"
 
 #define SPX_CALLBACK SpxEngine::get_singleton()->get_callbacks()
-#define check_and_get_node_r(VALUE) \
-	auto node = get_node(obj);\
-	if (node == nullptr) {\
-		print_error("try to get property of a null node gid=" + itos(obj)); \
-	return VALUE; \
-}
 
-#define check_and_get_node_v() \
-	auto node = get_node(obj);\
-	if (node == nullptr) {\
-		print_error("try to get property of a null node gid=" + itos(obj)); \
-	return ; \
-}
+// Refactored UI node validation using unified SpxObjectGuard (RAII pattern)
+// See spx_object_guard.h for details
+#define SPX_REQUIRE_UI_VOID() \
+	SPX_UI_GUARD_VOID(obj, __func__)
+
+#define SPX_REQUIRE_UI_RETURN(VALUE) \
+	SPX_UI_GUARD_RETURN(obj, __func__, VALUE)
 
 
 SpxUi *SpxUiMgr::get_node(GdObj obj) {
@@ -192,7 +188,7 @@ GdObj SpxUiMgr::create_input(GdString path, GdString text) {
 }
 
 GdBool SpxUiMgr::destroy_node(GdObj obj) {
-	check_and_get_node_r(false)
+	SPX_REQUIRE_UI_RETURN(false)
 	node->queue_free();
 	return true;
 }
@@ -218,156 +214,156 @@ GdObj SpxUiMgr::bind_node(GdObj obj, GdString rel_path) {
 }
 
 GdInt SpxUiMgr::get_type(GdObj obj) {
-	check_and_get_node_r(0)
+	SPX_REQUIRE_UI_RETURN(0)
 	return node->get_type();
 }
 
 void SpxUiMgr::set_interactable(GdObj obj, GdBool interactable) {
-	check_and_get_node_v()
+	SPX_REQUIRE_UI_VOID()
 	node->set_interactable(interactable);
 }
 
 GdBool SpxUiMgr::get_interactable(GdObj obj) {
-	check_and_get_node_r(false)
+	SPX_REQUIRE_UI_RETURN(false)
 	return node->is_interactable();
 }
 
 void SpxUiMgr::set_text(GdObj obj, GdString text) {
-	check_and_get_node_v()
+	SPX_REQUIRE_UI_VOID()
 	node->set_text(text);
 }
 
 GdString SpxUiMgr::get_text(GdObj obj) {
-	check_and_get_node_r(GdString())
+	SPX_REQUIRE_UI_RETURN(GdString())
 	return node->get_text();
 }
 
 void SpxUiMgr::set_rect(GdObj obj, GdRect2 rect) {
-	check_and_get_node_v()
+	SPX_REQUIRE_UI_VOID()
 	node->set_rect(rect);
 }
 
 GdRect2 SpxUiMgr::get_rect(GdObj obj) {
-	check_and_get_node_r(GdRect2())
+	SPX_REQUIRE_UI_RETURN(GdRect2())
 	return node->get_rect();
 }
 
 void SpxUiMgr::set_color(GdObj obj, GdColor color) {
-	check_and_get_node_v()
+	SPX_REQUIRE_UI_VOID()
 	node->set_color(color);
 }
 
 GdColor SpxUiMgr::get_color(GdObj obj) {
-	check_and_get_node_r(GdColor())
+	SPX_REQUIRE_UI_RETURN(GdColor())
 	return node->get_color();
 }
 
 void SpxUiMgr::set_font_size(GdObj obj, GdInt size) {
-	check_and_get_node_v()
+	SPX_REQUIRE_UI_VOID()
 	node->set_font_size(size);
 }
 
 GdInt SpxUiMgr::get_font_size(GdObj obj) {
-	check_and_get_node_r(0)
+	SPX_REQUIRE_UI_RETURN(0)
 	return node->get_font_size();
 }
 
 void SpxUiMgr::set_visible(GdObj obj, GdBool visible) {
-	check_and_get_node_v()
+	SPX_REQUIRE_UI_VOID()
 	node->set_visible(visible);
 }
 
 GdBool SpxUiMgr::get_visible(GdObj obj) {
-	check_and_get_node_r(false)
+	SPX_REQUIRE_UI_RETURN(false)
 	return node->get_visible();
 }
 
 void SpxUiMgr::set_texture(GdObj obj, GdString path) {
-	check_and_get_node_v()
+	SPX_REQUIRE_UI_VOID()
 	node->set_texture(path);
 }
 
 GdString SpxUiMgr::get_texture(GdObj obj) {
-	check_and_get_node_r(nullptr)
+	SPX_REQUIRE_UI_RETURN(nullptr)
 	return node->get_texture();
 }
 
 
 GdInt SpxUiMgr::get_layout_direction(GdObj obj) {
-	check_and_get_node_r(0)
+	SPX_REQUIRE_UI_RETURN(0)
 	return node->get_layout_direction();
 }
 void SpxUiMgr::set_layout_direction(GdObj obj, GdInt value) {
-	check_and_get_node_v()
+	SPX_REQUIRE_UI_VOID()
 	node->set_layout_direction(value);
 }
 GdInt SpxUiMgr::get_layout_mode(GdObj obj) {
-	check_and_get_node_r(0)
+	SPX_REQUIRE_UI_RETURN(0)
 	return node->get_layout_mode();
 }
 void SpxUiMgr::set_layout_mode(GdObj obj, GdInt value) {
-	check_and_get_node_v()
+	SPX_REQUIRE_UI_VOID()
 	node->set_layout_mode(value);
 }
 GdInt SpxUiMgr::get_anchors_preset(GdObj obj) {
-	check_and_get_node_r(0)
+	SPX_REQUIRE_UI_RETURN(0)
 	return node->get_anchors_preset();
 }
 void SpxUiMgr::set_anchors_preset(GdObj obj, GdInt value) {
-	check_and_get_node_v()
+	SPX_REQUIRE_UI_VOID()
 	node->set_anchors_preset(value);
 }
 
 GdVec2 SpxUiMgr::get_scale(GdObj obj) {
-	check_and_get_node_r(GdVec2())
+	SPX_REQUIRE_UI_RETURN(GdVec2())
 	return node->get_scale();
 
 }
 void SpxUiMgr::set_scale(GdObj obj, GdVec2 value) {
-	check_and_get_node_v()
+	SPX_REQUIRE_UI_VOID()
 	node->set_scale(value);
 }
 GdVec2 SpxUiMgr::get_position(GdObj obj) {
-	check_and_get_node_r(GdVec2())
+	SPX_REQUIRE_UI_RETURN(GdVec2())
 	return node->get_position();
 
 }
 void SpxUiMgr::set_position(GdObj obj, GdVec2 value) {
-	check_and_get_node_v()
+	SPX_REQUIRE_UI_VOID()
 	node->set_position(value);
 }
 GdVec2 SpxUiMgr::get_size(GdObj obj) {
-	check_and_get_node_r(GdVec2())
+	SPX_REQUIRE_UI_RETURN(GdVec2())
 	return node->get_size();
 
 }
 void SpxUiMgr::set_size(GdObj obj, GdVec2 value) {
-	check_and_get_node_v()
+	SPX_REQUIRE_UI_VOID()
 	node->set_size(value);
 }
 
 GdVec2 SpxUiMgr::get_global_position(GdObj obj) {
-	check_and_get_node_r(GdVec2())
+	SPX_REQUIRE_UI_RETURN(GdVec2())
 	return node->get_global_position();
 }
 void SpxUiMgr::set_global_position(GdObj obj, GdVec2 value) {
-	check_and_get_node_v()
+	SPX_REQUIRE_UI_VOID()
 	node->set_global_position(value);
 }
 GdFloat SpxUiMgr::get_rotation(GdObj obj) {
-	check_and_get_node_r(GdFloat())
+	SPX_REQUIRE_UI_RETURN(GdFloat())
 	return node->get_rotation();
 
 }
 void SpxUiMgr::set_rotation(GdObj obj, GdFloat value) {
-	check_and_get_node_v()
+	SPX_REQUIRE_UI_VOID()
 	node->set_rotation(value);
 }
 GdBool SpxUiMgr::get_flip(GdObj obj, GdBool horizontal) {
-	check_and_get_node_r(GdBool())
+	SPX_REQUIRE_UI_RETURN(GdBool())
 	return node->get_flip(horizontal);
 }
 void SpxUiMgr::set_flip(GdObj obj, GdBool horizontal, GdBool is_flip) {
-	check_and_get_node_v()
+	SPX_REQUIRE_UI_VOID()
 	node->set_flip(horizontal,is_flip);
 }

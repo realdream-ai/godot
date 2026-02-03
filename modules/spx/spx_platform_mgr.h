@@ -68,7 +68,6 @@ public:
 	GdString get_persistant_data_dir();
 	void set_persistant_data_dir(GdString path);
 	GdBool is_in_persistant_data_dir(GdString path);
-
 };
 
 #endif // SPX_OS_MGR_H

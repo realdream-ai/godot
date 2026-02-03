@@ -46,38 +46,27 @@
 #include "spx_physics_mgr.h"
 #include "spx_layer_sorter.h"
 #include "spx_sprite.h"
+#include "spx_object_guard.h"
 #include "core/typedefs.h"
 
 
 #define DEFAULT_COLLISION_ALPHA_THRESHOLD 0.05
 
 StringName SpxSpriteMgr::default_texture_anim;
-#define check_and_get_sprite_r(VALUE) \
-	auto sprite = get_sprite(obj);\
-	if (sprite == nullptr) {\
-		print_error("try to get property of a null sprite gid=" + itos(obj)); \
-		return VALUE; \
-	}
 
-#define check_and_get_sprite_v() \
-	auto sprite = get_sprite(obj);\
-	if (sprite == nullptr) {\
-		print_error("try to get property of a null sprite gid=" + itos(obj)); \
-		return ; \
-	}
+// Refactored sprite validation using unified SpxObjectGuard (RAII pattern)
+// See spx_object_guard.h for details
+#define SPX_REQUIRE_SPRITE_VOID() \
+	SPX_SPRITE_GUARD_VOID(obj, __func__)
 
-#define check_and_get_target_sprite_v(TARGET) \
-	auto sprite_##TARGET = get_sprite(TARGET);\
-	if (sprite_##TARGET == nullptr) {\
-		print_error("try to get property of a null sprite gid=" + itos(TARGET)); \
-	return ; \
-}
-#define check_and_get_target_sprite_r(TARGET,VALUE) \
-	auto sprite_##TARGET = get_sprite(TARGET);\
-	if (sprite_##TARGET == nullptr) {\
-		print_error("try to get property of a null sprite gid=" + itos(TARGET)); \
-	return VALUE; \
-}
+#define SPX_REQUIRE_SPRITE_RETURN(VALUE) \
+	SPX_SPRITE_GUARD_RETURN(obj, __func__, VALUE)
+
+#define SPX_REQUIRE_TARGET_SPRITE_VOID(TARGET) \
+	SPX_TARGET_SPRITE_GUARD_VOID(TARGET, __func__)
+
+#define SPX_REQUIRE_TARGET_SPRITE_RETURN(TARGET, VALUE) \
+	SPX_TARGET_SPRITE_GUARD_RETURN(TARGET, __func__, VALUE)
 
 void SpxSpriteMgr::on_awake() {
 	SpxBaseMgr::on_awake();
@@ -102,8 +91,6 @@ void SpxSpriteMgr::on_start() {
 		auto sprite = Object::cast_to<SpxSprite>(nodes[i]);
 		if(sprite != nullptr) {
 			sprite->set_gid(get_unique_id());
-			//sprite->get_parent()->remove_child(sprite);
-			//get_spx_root()->add_child(sprite);
 			sprite->on_start();
 			spriteMgr->id_objects[sprite->get_gid()] = sprite;
 			auto value = sprite->get_spx_type_name();
@@ -121,21 +108,15 @@ void SpxSpriteMgr::on_update(float delta) {
 	SpxBaseMgr::on_update(delta);
 	_check_pixel_collision_events();
 
-	// Collect all sortable sprites from both SpxSpriteMgr and SpxExtMgr
 	Vector<ISortableSprite*> all_sortables;
 
-	// Add SpxSprites
 	for (auto& pair : id_objects) {
 		if (pair.value) {
 			all_sortables.push_back(pair.value);
 		}
 	}
 
-	// Add pure sprites from SpxExtMgr
-
 	sceneMgr->collect_sortable_sprites(all_sortables);
-
-	// Unified sorting
 	SpxLayerSorter::instance().update(all_sortables);
 }
 
@@ -171,27 +152,27 @@ void SpxSpriteMgr::on_sprite_destroy(SpxSprite *sprite) {
 }
 
 void SpxSpriteMgr::set_dont_destroy_on_load(GdObj obj) {
-	check_and_get_sprite_v()
-	sprite->get_parent()->remove_child(sprite);
-	dont_destroy_root->add_child(sprite);
+	SPX_REQUIRE_SPRITE_VOID()
+	sprite.get()->get_parent()->remove_child(sprite.get());
+	dont_destroy_root->add_child(sprite.get());
 }
 
 void SpxSpriteMgr::set_process(GdObj obj, GdBool is_on) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_process(is_on);
 }
 
 void SpxSpriteMgr::set_physic_process(GdObj obj, GdBool is_on) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_physics_process(is_on);
 }
 void SpxSpriteMgr::set_type_name(GdObj obj, GdString type_name) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_type_name(type_name);
 }
 
 void SpxSpriteMgr::set_child_position(GdObj obj, GdString path, GdVec2 pos) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	auto child = (Node2D *)sprite->get_node(SpxStr(path));
 	if (child != nullptr) {
 		child->set_position(GdVec2{ pos.x, -pos.y });
@@ -199,7 +180,7 @@ void SpxSpriteMgr::set_child_position(GdObj obj, GdString path, GdVec2 pos) {
 }
 
 GdVec2 SpxSpriteMgr::get_child_position(GdObj obj, GdString path) {
-	check_and_get_sprite_r(GdVec2())
+	SPX_REQUIRE_SPRITE_RETURN(GdVec2())
 	auto child = (Node2D *)sprite->get_node(SpxStr(path));
 	if (child != nullptr) {
 		auto pos = child->get_position();
@@ -209,7 +190,7 @@ GdVec2 SpxSpriteMgr::get_child_position(GdObj obj, GdString path) {
 }
 
 void SpxSpriteMgr::set_child_rotation(GdObj obj, GdString path, GdFloat rot) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	auto child = (Node2D *)sprite->get_node(SpxStr(path));
 	if (child != nullptr) {
 		child->set_rotation(rot);
@@ -217,7 +198,7 @@ void SpxSpriteMgr::set_child_rotation(GdObj obj, GdString path, GdFloat rot) {
 }
 
 GdFloat SpxSpriteMgr::get_child_rotation(GdObj obj, GdString path) {
-	check_and_get_sprite_r(0)
+	SPX_REQUIRE_SPRITE_RETURN(0)
 	auto child = (Node2D *)sprite->get_node(SpxStr(path));
 	if (child != nullptr) {
 		return child->get_rotation();
@@ -226,7 +207,7 @@ GdFloat SpxSpriteMgr::get_child_rotation(GdObj obj, GdString path) {
 }
 
 void SpxSpriteMgr::set_child_scale(GdObj obj, GdString path, GdVec2 scale) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	auto child = (Node2D *)sprite->get_node(SpxStr(path));
 	if (child != nullptr) {
 		child->set_scale(scale);
@@ -234,7 +215,7 @@ void SpxSpriteMgr::set_child_scale(GdObj obj, GdString path, GdVec2 scale) {
 }
 
 GdVec2 SpxSpriteMgr::get_child_scale(GdObj obj, GdString path) {
-	check_and_get_sprite_r(GdVec2())
+	SPX_REQUIRE_SPRITE_RETURN(GdVec2())
 	auto child = (Node2D *)sprite->get_node(SpxStr(path));
 	if (child != nullptr) {
 		return child->get_scale();
@@ -243,13 +224,13 @@ GdVec2 SpxSpriteMgr::get_child_scale(GdObj obj, GdString path) {
 }
 
 GdBool SpxSpriteMgr::check_collision(GdObj obj, GdObj target, GdBool is_src_trigger, GdBool is_dst_trigger) {
-	check_and_get_sprite_r(false)
-	check_and_get_target_sprite_r(target,false)
-	return sprite->check_collision(sprite_target,is_src_trigger,is_dst_trigger);
+	SPX_REQUIRE_SPRITE_RETURN(false)
+	SPX_REQUIRE_TARGET_SPRITE_RETURN(target,false)
+	return sprite->check_collision(sprite_target.get(),is_src_trigger,is_dst_trigger);
 }
 
 GdBool SpxSpriteMgr::check_collision_with_point(GdObj obj, GdVec2 point, GdBool is_trigger) {
-	check_and_get_sprite_r(false)
+	SPX_REQUIRE_SPRITE_RETURN(false)
 	point.y = - point.y;
 	return sprite->check_collision_with_point(point, is_trigger);
 }
@@ -321,17 +302,18 @@ void SpxSpriteMgr::destroy_all_sprites() {
 }
 
 GdInt SpxSpriteMgr::clone_sprite(GdObj obj) {
-	check_and_get_sprite_r(NULL_OBJECT_ID)
-	sprite = dynamic_cast<SpxSprite *>(sprite->duplicate());
-	sprite->set_gid(get_unique_id());
-	sprite_root->add_child(sprite);
-	sprite->on_start();
-	SPX_CALLBACK->func_on_sprite_ready(sprite->get_gid());
-	return sprite->get_gid();
+	SPX_REQUIRE_SPRITE_RETURN(NULL_OBJECT_ID)
+	SpxSprite *cloned = dynamic_cast<SpxSprite *>(sprite->duplicate());
+	cloned->set_gid(get_unique_id());
+	sprite_root->add_child(cloned);
+	id_objects[cloned->get_gid()] = cloned;
+	cloned->on_start();
+	SPX_CALLBACK->func_on_sprite_ready(cloned->get_gid());
+	return cloned->get_gid();
 }
 
 GdBool SpxSpriteMgr::destroy_sprite(GdObj obj) {
-	check_and_get_sprite_r(false)
+	SPX_REQUIRE_SPRITE_RETURN(false)
 	sprite->set_block_signals(true);
 	sprite->queue_free();
 	return true;
@@ -342,230 +324,230 @@ GdBool SpxSpriteMgr::is_sprite_alive(GdObj obj) {
 }
 
 void SpxSpriteMgr::set_position(GdObj obj, GdVec2 pos) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	// flip y axis
 	sprite->set_position(GdVec2(pos.x, -pos.y));
 }
 
 void SpxSpriteMgr::set_rotation(GdObj obj, GdFloat rot) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_rotation(rot);
 }
 
 void SpxSpriteMgr::set_scale(GdObj obj, GdVec2 scale) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_scale(scale);
 }
 
 GdVec2 SpxSpriteMgr::get_position(GdObj obj) {
-	check_and_get_sprite_r(GdVec2())
+	SPX_REQUIRE_SPRITE_RETURN(GdVec2())
 	auto pos = sprite->get_position();
 	// flip y axis
 	return GdVec2{ pos.x, -pos.y };
 }
 
 GdFloat SpxSpriteMgr::get_rotation(GdObj obj) {
-	check_and_get_sprite_r(0)
+	SPX_REQUIRE_SPRITE_RETURN(0)
 	return sprite->get_rotation();
 }
 
 GdVec2 SpxSpriteMgr::get_scale(GdObj obj) {
-	check_and_get_sprite_r(GdVec2())
+	SPX_REQUIRE_SPRITE_RETURN(GdVec2())
 	return sprite->get_scale();
 }
 
 void SpxSpriteMgr::set_render_scale(GdObj obj, GdVec2 scale) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_render_scale(scale);
 }
 GdVec2 SpxSpriteMgr::get_render_scale(GdObj obj) {
-	check_and_get_sprite_r(GdVec2())
+	SPX_REQUIRE_SPRITE_RETURN(GdVec2())
 	return sprite->get_render_scale();
 }
 
 void SpxSpriteMgr::set_color(GdObj obj, GdColor color) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_color(color);
 }
 
 GdColor SpxSpriteMgr::get_color(GdObj obj) {
-	check_and_get_sprite_r(GdColor()) return sprite->get_color();
+	SPX_REQUIRE_SPRITE_RETURN(GdColor()) return sprite->get_color();
 }
 
 void SpxSpriteMgr::set_material_shader(GdObj obj, GdString path) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_material_shader(path);
 }
 
 GdString SpxSpriteMgr::get_material_shader(GdObj obj) {
-	check_and_get_sprite_r(GdString())
+	SPX_REQUIRE_SPRITE_RETURN(GdString())
 	return sprite->get_material_shader();
 }
 
 void SpxSpriteMgr::set_material_params(GdObj obj, GdString effect, GdFloat amount) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_material_params(effect, amount);
 }
 
 GdFloat SpxSpriteMgr::get_material_params(GdObj obj, GdString effect) {
-	check_and_get_sprite_r(GdFloat())
+	SPX_REQUIRE_SPRITE_RETURN(GdFloat())
 	return sprite->get_material_params(effect);
 }
 
 void SpxSpriteMgr::set_material_params_vec4(GdObj obj, GdString effect, GdVec4 vec4) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_material_params_vec4(effect, vec4);
 }
 
 void SpxSpriteMgr::set_material_params_vec(GdObj obj, GdString effect,  GdFloat x, GdFloat y, GdFloat z, GdFloat w){
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_material_params_vec4(effect, GdVec4(x,y,z,w));
 }
 
 
 GdVec4 SpxSpriteMgr::get_material_params_vec4(GdObj obj, GdString effect) {
-	check_and_get_sprite_r(GdVec4())
+	SPX_REQUIRE_SPRITE_RETURN(GdVec4())
 	return sprite->get_material_params_vec4(effect);
 }
 
 void SpxSpriteMgr::set_material_params_color(GdObj obj, GdString effect, GdColor color) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_material_params_color(effect, color);
 }
 
 GdColor SpxSpriteMgr::get_material_params_color(GdObj obj, GdString effect) {
-	check_and_get_sprite_r(GdColor())
+	SPX_REQUIRE_SPRITE_RETURN(GdColor())
 	return sprite->get_material_params_color(effect);
 }
 
 void SpxSpriteMgr::set_texture_atlas(GdObj obj, GdString path, GdRect2 rect2) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_texture_atlas(path, rect2);
 }
 
 void SpxSpriteMgr::set_texture(GdObj obj, GdString path) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_texture(path);
 }
 
 void SpxSpriteMgr::set_texture_atlas_direct(GdObj obj, GdString path, GdRect2 rect2) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_texture_atlas_direct(path, rect2, true);
 }
 
 void SpxSpriteMgr::set_texture_direct(GdObj obj, GdString path) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_texture_direct(path, true);
 }
 
 GdString SpxSpriteMgr::get_texture(GdObj obj) {
-	check_and_get_sprite_r(GdString())
+	SPX_REQUIRE_SPRITE_RETURN(GdString())
 	return sprite->get_texture();
 }
 
 void SpxSpriteMgr::set_visible(GdObj obj, GdBool visible) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_visible(visible);
 	sprite->on_set_visible(visible);
 }
 
 GdBool SpxSpriteMgr::get_visible(GdObj obj) {
-	check_and_get_sprite_r(false)
+	SPX_REQUIRE_SPRITE_RETURN(false)
 	return sprite->is_visible();
 }
 
 GdInt SpxSpriteMgr::get_z_index(GdObj obj) {
-	check_and_get_sprite_r(0)
+	SPX_REQUIRE_SPRITE_RETURN(0)
 	return sprite->get_z_index();
 }
 
 void SpxSpriteMgr::set_z_index(GdObj obj, GdInt z) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_z_index(z);
 }
 
 void SpxSpriteMgr::play_anim(GdObj obj, GdString p_name, GdFloat p_speed, GdBool isLoop, GdBool p_revert) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->play_anim(p_name, p_speed, isLoop, p_revert);
 }
 
 void SpxSpriteMgr::play_backwards_anim(GdObj obj, GdString p_name) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->play_backwards_anim(p_name);
 }
 
 void SpxSpriteMgr::pause_anim(GdObj obj) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->pause_anim();
 }
 
 void SpxSpriteMgr::stop_anim(GdObj obj) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->stop_anim();
 }
 
 GdBool SpxSpriteMgr::is_playing_anim(GdObj obj) {
-	check_and_get_sprite_r(false)
+	SPX_REQUIRE_SPRITE_RETURN(false)
 	return sprite->is_playing_anim();
 }
 
 void SpxSpriteMgr::set_anim(GdObj obj, GdString p_name) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_anim(p_name);
 }
 
 GdString SpxSpriteMgr::get_anim(GdObj obj) {
-	check_and_get_sprite_r(GdString())
+	SPX_REQUIRE_SPRITE_RETURN(GdString())
 	return sprite->get_anim();
 }
 
 void SpxSpriteMgr::set_anim_frame(GdObj obj, GdInt p_frame) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_anim_frame(p_frame);
 }
 
 GdInt SpxSpriteMgr::get_anim_frame(GdObj obj) {
-	check_and_get_sprite_r(0)
+	SPX_REQUIRE_SPRITE_RETURN(0)
 	return sprite->get_anim_frame();
 }
 
 void SpxSpriteMgr::set_anim_speed_scale(GdObj obj, GdFloat p_speed_scale) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_anim_speed_scale(p_speed_scale);
 }
 
 GdFloat SpxSpriteMgr::get_anim_speed_scale(GdObj obj) {
-	check_and_get_sprite_r(1.0)
+	SPX_REQUIRE_SPRITE_RETURN(1.0)
 	return sprite->get_anim_speed_scale();
 }
 
 GdFloat SpxSpriteMgr::get_anim_playing_speed(GdObj obj) {
-	check_and_get_sprite_r(1.0)
+	SPX_REQUIRE_SPRITE_RETURN(1.0)
 	return sprite->get_anim_playing_speed();
 }
 
 void SpxSpriteMgr::set_anim_centered(GdObj obj, GdBool p_center) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_anim_centered(p_center);
 }
 
 GdBool SpxSpriteMgr::is_anim_centered(GdObj obj) {
-	check_and_get_sprite_r(false)
+	SPX_REQUIRE_SPRITE_RETURN(false)
 	return sprite->is_anim_centered();
 }
 
 void SpxSpriteMgr::set_anim_offset(GdObj obj, GdVec2 p_offset) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_anim_offset(p_offset);
 }
 
 GdVec2 SpxSpriteMgr::get_anim_offset(GdObj obj) {
-	check_and_get_sprite_r(GdVec2())
+	SPX_REQUIRE_SPRITE_RETURN(GdVec2())
 	return sprite->get_anim_offset();
 }
 
 void SpxSpriteMgr::set_anim_flip_h(GdObj obj, GdBool p_flip) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_anim_flip_h(p_flip);
 }
 
@@ -579,260 +561,260 @@ GdBool SpxSpriteMgr::is_anim_flipped_h(GdObj obj) {
 }
 
 void SpxSpriteMgr::set_anim_flip_v(GdObj obj, GdBool p_flip) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_anim_flip_v(p_flip);
 }
 
 GdBool SpxSpriteMgr::is_anim_flipped_v(GdObj obj) {
-	check_and_get_sprite_r(false)
+	SPX_REQUIRE_SPRITE_RETURN(false)
 	return sprite->is_anim_flipped_v();
 }
 GdString SpxSpriteMgr::get_current_anim_name(GdObj obj) {
-	check_and_get_sprite_r(GdString())
+	SPX_REQUIRE_SPRITE_RETURN(GdString())
 	return sprite->get_current_anim_name();
 }
 
 void SpxSpriteMgr::set_velocity(GdObj obj, GdVec2 velocity) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	// flip y axis
 	sprite->set_velocity(GdVec2(velocity.x, -velocity.y));
 }
 
 GdVec2 SpxSpriteMgr::get_velocity(GdObj obj) {
-	check_and_get_sprite_r(GdVec2())
+	SPX_REQUIRE_SPRITE_RETURN(GdVec2())
 	auto val = sprite->get_velocity();
 	// flip y axis
 	return GdVec2{ val.x, -val.y };
 }
 
 GdBool SpxSpriteMgr::is_on_floor(GdObj obj) {
-	check_and_get_sprite_r(false)
+	SPX_REQUIRE_SPRITE_RETURN(false)
 	return sprite->is_on_floor();
 }
 
 GdBool SpxSpriteMgr::is_on_floor_only(GdObj obj) {
-	check_and_get_sprite_r(false)
+	SPX_REQUIRE_SPRITE_RETURN(false)
 	return sprite->is_on_floor_only();
 }
 
 GdBool SpxSpriteMgr::is_on_wall(GdObj obj) {
-	check_and_get_sprite_r(false)
+	SPX_REQUIRE_SPRITE_RETURN(false)
 	return sprite->is_on_wall();
 }
 
 GdBool SpxSpriteMgr::is_on_wall_only(GdObj obj) {
-	check_and_get_sprite_r(false)
+	SPX_REQUIRE_SPRITE_RETURN(false)
 	return sprite->is_on_wall_only();
 }
 
 GdBool SpxSpriteMgr::is_on_ceiling(GdObj obj) {
-	check_and_get_sprite_r(false)
+	SPX_REQUIRE_SPRITE_RETURN(false)
 	return sprite->is_on_ceiling();
 }
 
 GdBool SpxSpriteMgr::is_on_ceiling_only(GdObj obj) {
-	check_and_get_sprite_r(false)
+	SPX_REQUIRE_SPRITE_RETURN(false)
 	return sprite->is_on_ceiling_only();
 }
 
 GdVec2 SpxSpriteMgr::get_last_motion(GdObj obj) {
-	check_and_get_sprite_r(GdVec2())
+	SPX_REQUIRE_SPRITE_RETURN(GdVec2())
 	return sprite->get_last_motion();
 }
 
 GdVec2 SpxSpriteMgr::get_position_delta(GdObj obj) {
-	check_and_get_sprite_r(GdVec2())
+	SPX_REQUIRE_SPRITE_RETURN(GdVec2())
 	return sprite->get_position_delta();
 }
 
 GdVec2 SpxSpriteMgr::get_floor_normal(GdObj obj) {
-	check_and_get_sprite_r(GdVec2())
+	SPX_REQUIRE_SPRITE_RETURN(GdVec2())
 	return sprite->get_floor_normal();
 }
 
 GdVec2 SpxSpriteMgr::get_wall_normal(GdObj obj) {
-	check_and_get_sprite_r(GdVec2())
+	SPX_REQUIRE_SPRITE_RETURN(GdVec2())
 	return sprite->get_wall_normal();
 }
 
 GdVec2 SpxSpriteMgr::get_real_velocity(GdObj obj) {
-	check_and_get_sprite_r(GdVec2())
+	SPX_REQUIRE_SPRITE_RETURN(GdVec2())
 	return sprite->get_real_velocity();
 }
 
 void SpxSpriteMgr::move_and_slide(GdObj obj) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->move_and_slide();
 }
 
 void SpxSpriteMgr::set_gravity(GdObj obj, GdFloat gravity) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_gravity(gravity);
 }
 
 GdFloat SpxSpriteMgr::get_gravity(GdObj obj) {
-	check_and_get_sprite_r(0)
+	SPX_REQUIRE_SPRITE_RETURN(0)
 	return sprite->get_gravity();
 }
 
 void SpxSpriteMgr::set_mass(GdObj obj, GdFloat mass) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_mass(mass);
 }
 
 GdFloat SpxSpriteMgr::get_mass(GdObj obj) {
-	check_and_get_sprite_r(0)
+	SPX_REQUIRE_SPRITE_RETURN(0)
 	return sprite->get_mass();
 }
 
 void SpxSpriteMgr::add_force(GdObj obj, GdVec2 force) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->add_force(force);
 }
 
 void SpxSpriteMgr::add_impulse(GdObj obj, GdVec2 impulse) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->add_impulse(impulse);
 }
 
 
 void SpxSpriteMgr::set_physics_mode(GdObj obj, GdInt mode) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_physics_mode(mode);
 }
 
 GdInt SpxSpriteMgr::get_physics_mode(GdObj obj) {
-	check_and_get_sprite_r(0)
+	SPX_REQUIRE_SPRITE_RETURN(0)
 	return sprite->get_physics_mode();
 }
 
 void SpxSpriteMgr::set_use_gravity(GdObj obj, GdBool enabled) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_use_gravity(enabled);
 }
 
 GdBool SpxSpriteMgr::is_use_gravity(GdObj obj) {
-	check_and_get_sprite_r(false)
+	SPX_REQUIRE_SPRITE_RETURN(false)
 	return sprite->is_use_gravity();
 }
 
 void SpxSpriteMgr::set_gravity_scale(GdObj obj, GdFloat scale) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_gravity_scale(scale);
 }
 
 GdFloat SpxSpriteMgr::get_gravity_scale(GdObj obj) {
-	check_and_get_sprite_r(1.0f)
+	SPX_REQUIRE_SPRITE_RETURN(1.0f)
 	return sprite->get_gravity_scale();
 }
 
 void SpxSpriteMgr::set_drag(GdObj obj, GdFloat drag) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_drag(drag);
 }
 
 GdFloat SpxSpriteMgr::get_drag(GdObj obj) {
-	check_and_get_sprite_r(0.0f)
+	SPX_REQUIRE_SPRITE_RETURN(0.0f)
 	return sprite->get_drag();
 }
 
 void SpxSpriteMgr::set_friction(GdObj obj, GdFloat friction) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_friction(friction);
 }
 
 GdFloat SpxSpriteMgr::get_friction(GdObj obj) {
-	check_and_get_sprite_r(0.0f)
+	SPX_REQUIRE_SPRITE_RETURN(0.0f)
 	return sprite->get_friction();
 }
 
 void SpxSpriteMgr::set_collision_layer(GdObj obj, GdInt layer) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_collision_layer((uint32_t)layer);
 }
 
 GdInt SpxSpriteMgr::get_collision_layer(GdObj obj) {
-	check_and_get_sprite_r(0)
+	SPX_REQUIRE_SPRITE_RETURN(0)
 	return sprite->get_collision_layer();
 }
 
 void SpxSpriteMgr::set_collision_mask(GdObj obj, GdInt mask) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_collision_mask((uint32_t)mask);
 }
 
 GdInt SpxSpriteMgr::get_collision_mask(GdObj obj) {
-	check_and_get_sprite_r(0)
+	SPX_REQUIRE_SPRITE_RETURN(0)
 	return sprite->get_collision_mask();
 }
 
 
 void SpxSpriteMgr::set_trigger_layer(GdObj obj, GdInt layer) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_trigger_layer(layer);
 }
 
 GdInt SpxSpriteMgr::get_trigger_layer(GdObj obj) {
-	check_and_get_sprite_r(0)
+	SPX_REQUIRE_SPRITE_RETURN(0)
 	return sprite->get_trigger_layer();
 }
 
 void SpxSpriteMgr::set_trigger_mask(GdObj obj, GdInt mask) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_trigger_mask(mask);
 }
 
 GdInt SpxSpriteMgr::get_trigger_mask(GdObj obj) {
-	check_and_get_sprite_r(0)
+	SPX_REQUIRE_SPRITE_RETURN(0)
 	return sprite->get_trigger_mask();
 }
 
 void SpxSpriteMgr::set_collider_rect(GdObj obj, GdVec2 center, GdVec2 size) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_collider_rect(center, size);
 }
 
 void SpxSpriteMgr::set_collider_circle(GdObj obj, GdVec2 center, GdFloat radius) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_collider_circle(center, radius);
 }
 
 void SpxSpriteMgr::set_collider_capsule(GdObj obj, GdVec2 center, GdVec2 size) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_collider_capsule(center, size);
 }
 
 void SpxSpriteMgr::set_collision_enabled(GdObj obj, GdBool enabled) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_collision_enabled(enabled);
 }
 
 GdBool SpxSpriteMgr::is_collision_enabled(GdObj obj) {
-	check_and_get_sprite_r(false)
+	SPX_REQUIRE_SPRITE_RETURN(false)
 	return sprite->is_collision_enabled();
 }
 
 void SpxSpriteMgr::set_trigger_rect(GdObj obj, GdVec2 center, GdVec2 size) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_trigger_rect(center, size);
 }
 
 void SpxSpriteMgr::set_trigger_circle(GdObj obj, GdVec2 center, GdFloat radius) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_trigger_circle(center, radius);
 }
 
 void SpxSpriteMgr::set_trigger_capsule(GdObj obj, GdVec2 center, GdVec2 size) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_trigger_capsule(center, size);
 }
 
 void SpxSpriteMgr::set_trigger_enabled(GdObj obj, GdBool trigger) {
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_trigger_enabled(trigger);
 }
 GdBool SpxSpriteMgr::is_trigger_enabled(GdObj obj) {
-	check_and_get_sprite_r(false)
+	SPX_REQUIRE_SPRITE_RETURN(false)
 	return sprite->is_trigger_enabled();
 }
 
@@ -891,12 +873,12 @@ Vector2 SpxSpriteMgr::_to_image_coord(const Transform2D &trans, Vector2 image_si
 }
 
 GdBool SpxSpriteMgr::check_collision_with_sprite(GdObj obj, GdObj obj_b, GdFloat alpha_threshold, GdBool use_pixel_perfect){
-	check_and_get_sprite_r(false)
-	check_and_get_target_sprite_r(obj_b, false)
+	SPX_REQUIRE_SPRITE_RETURN(false)
+	SPX_REQUIRE_TARGET_SPRITE_RETURN(obj_b, false)
 	
 	// If not using pixel-perfect collision, use simple collider2d collision detection
 	if (!use_pixel_perfect) {
-		return sprite->check_collision(sprite_obj_b, false, false);
+		return sprite->check_collision(sprite_target.get(), false, false);
 	}
 	
 	// Original pixel-perfect collision logic
@@ -914,7 +896,7 @@ GdBool SpxSpriteMgr::check_collision_with_sprite(GdObj obj, GdObj obj_b, GdFloat
 	Vector2i size1 = image1->get_size();
 	auto trans1 = transform1.affine_inverse();
 
-	AnimatedSprite2D *anim2 = sprite_obj_b->anim2d;
+	AnimatedSprite2D *anim2 = sprite_target->anim2d;
 	if (!anim2) {
 		return false;
 	}
@@ -969,7 +951,7 @@ GdBool SpxSpriteMgr::check_collision_by_alpha(GdObj obj, GdFloat alpha_threshold
 }
 
 GdBool SpxSpriteMgr::_check_collision(GdObj obj, ColorCheckFunc check_func) {
-	check_and_get_sprite_r(false) // Ensure sprite exists
+	SPX_REQUIRE_SPRITE_RETURN(false) // Ensure sprite exists
 
 	AnimatedSprite2D *anim1 = sprite->anim2d;
 	if (!anim1) {
@@ -988,7 +970,7 @@ GdBool SpxSpriteMgr::_check_collision(GdObj obj, ColorCheckFunc check_func) {
 	// Iterate through all objects
 	for (const auto &item : id_objects) {
 		SpxSprite *sp2 = item.value;
-		if (sprite == sp2) {
+		if (sprite.get() == sp2) {
 			continue; // Skip itself
 		}
 
@@ -1092,12 +1074,12 @@ void SpxSpriteMgr::_check_pixel_collision_events() {
 }
 
 void SpxSpriteMgr::set_pivot(GdObj obj, GdVec2 pivot){
-	check_and_get_sprite_v()
+	SPX_REQUIRE_SPRITE_VOID()
 	pivot.y = - pivot.y;
 	sprite->set_pivot(pivot);
 }
 GdVec2 SpxSpriteMgr::get_pivot(GdObj obj){
-	check_and_get_sprite_r(GdVec2())
+	SPX_REQUIRE_SPRITE_RETURN(GdVec2())
 	auto pivot= sprite->get_pivot();
 	return GdVec2(pivot.x,-pivot.y);
 }

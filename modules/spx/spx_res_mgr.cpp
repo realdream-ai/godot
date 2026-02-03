@@ -339,7 +339,6 @@ void SpxResMgr::update_caches(const Vector<String>& files) {
     }
 	for(auto& file : files){
 		auto path = _to_engine_path(file);
-
 		cached_texture.erase(path);
 		cached_audio.erase(path);
 	}
@@ -353,9 +352,8 @@ Ref<AudioStream> SpxResMgr::load_audio(String path, GdBool direct) {
 			return Ref<AudioStream>();
 		}
 		return res;
-	} else {
-		return _load_audio_direct(path);
-	}
+	} 
+	return _load_audio_direct(path);
 }
 
 Ref<SpriteFrames> SpxResMgr::get_anim_frames(const String &anim_name) {
@@ -453,9 +451,8 @@ GdVec2 SpxResMgr::get_image_size(GdString path) {
 	Ref<Texture2D> value = load_texture(path_str);
 	if (value.is_valid()) {
 		return value->get_size();
-	} else {
-		print_error("can not find a texture: " + path_str);
-	}
+	} 
+	print_error("can not find a texture: " + path_str);
 	return GdVec2(1, 1);
 }
 
