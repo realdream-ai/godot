@@ -997,6 +997,10 @@ void gdspx_sprite_set_collider_capsule(GdObj* obj, GdVec2* center, GdVec2* size)
 	 spriteMgr->set_collider_capsule(*obj, *center, *size);
 }
 EMSCRIPTEN_KEEPALIVE
+void gdspx_sprite_set_collider_polygon(GdObj* obj, GdVec2* center, GdArray* points) {
+	 spriteMgr->set_collider_polygon(*obj, *center, *points);
+}
+EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_set_collision_enabled(GdObj* obj, GdBool* enabled) {
 	 spriteMgr->set_collision_enabled(*obj, *enabled);
 }
@@ -1015,6 +1019,10 @@ void gdspx_sprite_set_trigger_circle(GdObj* obj, GdVec2* center, GdFloat* radius
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_set_trigger_capsule(GdObj* obj, GdVec2* center, GdVec2* size) {
 	 spriteMgr->set_trigger_capsule(*obj, *center, *size);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_sprite_set_trigger_polygon(GdObj* obj, GdVec2* center, GdArray* points) {
+	 spriteMgr->set_trigger_polygon(*obj, *center, *points);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_set_trigger_enabled(GdObj* obj, GdBool* trigger) {

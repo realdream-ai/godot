@@ -744,6 +744,9 @@ static void gdextension_spx_sprite_set_collider_circle(GdObj obj, GdVec2 center,
 static void gdextension_spx_sprite_set_collider_capsule(GdObj obj, GdVec2 center, GdVec2 size) {
 	 spriteMgr->set_collider_capsule(obj, center, size);
 }
+static void gdextension_spx_sprite_set_collider_polygon(GdObj obj, GdVec2 center, GdArray points) {
+	 spriteMgr->set_collider_polygon(obj, center, points);
+}
 static void gdextension_spx_sprite_set_collision_enabled(GdObj obj, GdBool enabled) {
 	 spriteMgr->set_collision_enabled(obj, enabled);
 }
@@ -758,6 +761,9 @@ static void gdextension_spx_sprite_set_trigger_circle(GdObj obj, GdVec2 center, 
 }
 static void gdextension_spx_sprite_set_trigger_capsule(GdObj obj, GdVec2 center, GdVec2 size) {
 	 spriteMgr->set_trigger_capsule(obj, center, size);
+}
+static void gdextension_spx_sprite_set_trigger_polygon(GdObj obj, GdVec2 center, GdArray points) {
+	 spriteMgr->set_trigger_polygon(obj, center, points);
 }
 static void gdextension_spx_sprite_set_trigger_enabled(GdObj obj, GdBool trigger) {
 	 spriteMgr->set_trigger_enabled(obj, trigger);
@@ -1213,11 +1219,13 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_collider_rect);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_collider_circle);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_collider_capsule);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_collider_polygon);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_collision_enabled);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_is_collision_enabled);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_trigger_rect);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_trigger_circle);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_trigger_capsule);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_trigger_polygon);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_trigger_enabled);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_is_trigger_enabled);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_check_collision_by_color);

@@ -265,12 +265,14 @@ public:
 	void set_collider_rect(GdObj obj, GdVec2 center, GdVec2 size);
 	void set_collider_circle(GdObj obj, GdVec2 center, GdFloat radius);
 	void set_collider_capsule(GdObj obj, GdVec2 center, GdVec2 size);
+	void set_collider_polygon(GdObj obj, GdVec2 center, GdArray points);
 	void set_collision_enabled(GdObj obj, GdBool enabled);
 	GdBool is_collision_enabled(GdObj obj);
 
 	void set_trigger_rect(GdObj obj, GdVec2 center, GdVec2 size);
 	void set_trigger_circle(GdObj obj, GdVec2 center, GdFloat radius);
 	void set_trigger_capsule(GdObj obj, GdVec2 center, GdVec2 size);
+	void set_trigger_polygon(GdObj obj, GdVec2 center, GdArray points);
 	void set_trigger_enabled(GdObj obj, GdBool trigger);
 	GdBool is_trigger_enabled(GdObj obj);
 

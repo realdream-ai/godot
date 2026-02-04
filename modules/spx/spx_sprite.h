@@ -318,12 +318,14 @@ public:
 	void set_collider_rect(GdVec2 center, GdVec2 size);
 	void set_collider_circle(GdVec2 center, GdFloat radius);
 	void set_collider_capsule(GdVec2 center, GdVec2 size);
+	void set_collider_polygon(GdVec2 center, GdArray points);
 	void set_collision_enabled(GdBool enabled);
 	GdBool is_collision_enabled();
 
 	void set_trigger_rect(GdVec2 center, GdVec2 size);
 	void set_trigger_circle(GdVec2 center, GdFloat radius);
 	void set_trigger_capsule(GdVec2 center, GdVec2 size);
+	void set_trigger_polygon(GdVec2 center, GdArray points);
 	void set_trigger_enabled(GdBool trigger);
 	GdBool is_trigger_enabled();
 

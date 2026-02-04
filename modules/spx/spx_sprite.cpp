@@ -39,6 +39,7 @@
 #include "scene/resources/atlas_texture.h"
 #include "scene/resources/2d/capsule_shape_2d.h"
 #include "scene/resources/2d/circle_shape_2d.h"
+#include "scene/resources/2d/convex_polygon_shape_2d.h"
 #include "scene/resources/2d/rectangle_shape_2d.h"
 #include "spx.h"
 #include "spx_engine.h"
@@ -735,6 +736,28 @@ void SpxSprite::set_collider_capsule(GdVec2 center, GdVec2 size) {
 	collider2d->set_position(center);
 }
 
+void SpxSprite::set_collider_polygon(GdVec2 center, GdArray points) {
+	if (!points || points->size < 6) {
+		// Need at least 3 points (6 floats: x1,y1,x2,y2,x3,y3)
+		print_error("set_collider_polygon: need at least 3 points");
+		return;
+	}
+	
+	Ref<ConvexPolygonShape2D> polygon = memnew(ConvexPolygonShape2D);
+	Vector<Vector2> polygon_points;
+	
+	const float* data = SpxBaseMgr::get_array<float>(points, 0);
+	int point_count = points->size / 2;
+	
+	for (int i = 0; i < point_count; i++) {
+		polygon_points.push_back(Vector2(data[i * 2], data[i * 2 + 1]));
+	}
+	
+	polygon->set_points(polygon_points);
+	collider2d->set_shape(polygon);
+	collider2d->set_position(center);
+}
+
 void SpxSprite::set_collision_enabled(GdBool enabled) {
 	_is_collision_enabled = enabled;
 	collider2d->set_disabled(!(_is_collision_enabled && is_visible()));
@@ -763,6 +786,28 @@ void SpxSprite::set_trigger_circle(GdVec2 center, GdFloat radius) {
 	Ref<CircleShape2D> circle = memnew(CircleShape2D);
 	circle->set_radius(radius);
 	trigger2d->set_shape(circle);
+	trigger2d->set_position(center);
+}
+
+void SpxSprite::set_trigger_polygon(GdVec2 center, GdArray points) {
+	if (!points || points->size < 6) {
+		// Need at least 3 points (6 floats: x1,y1,x2,y2,x3,y3)
+		print_error("set_trigger_polygon: need at least 3 points");
+		return;
+	}
+	
+	Ref<ConvexPolygonShape2D> polygon = memnew(ConvexPolygonShape2D);
+	Vector<Vector2> polygon_points;
+	
+	const float* data = SpxBaseMgr::get_array<float>(points, 0);
+	int point_count = points->size / 2;
+	
+	for (int i = 0; i < point_count; i++) {
+		polygon_points.push_back(Vector2(data[i * 2], -data[i * 2 + 1]));
+	}
+	
+	polygon->set_points(polygon_points);
+	trigger2d->set_shape(polygon);
 	trigger2d->set_position(center);
 }
 

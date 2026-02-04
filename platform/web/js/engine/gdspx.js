@@ -2305,6 +2305,18 @@ gdspx_sprite_set_collider_capsule(obj,center,size) {
 	FreeGdVec2(_arg2); 
 
 }
+gdspx_sprite_set_collider_polygon(obj,center,points) {
+	var _gdFuncPtr = Module._gdspx_sprite_set_collider_polygon; 
+	
+	var _arg0 = ToGdObj(obj);
+	var _arg1 = ToGdVec2(center);
+	var _arg2 = ToGdArray(points);
+	_gdFuncPtr(_arg0, _arg1, _arg2);
+	FreeGdObj(_arg0); 
+	FreeGdVec2(_arg1); 
+	FreeGdArray(_arg2); 
+
+}
 gdspx_sprite_set_collision_enabled(obj,enabled) {
 	var _gdFuncPtr = Module._gdspx_sprite_set_collision_enabled; 
 	
@@ -2359,6 +2371,18 @@ gdspx_sprite_set_trigger_capsule(obj,center,size) {
 	FreeGdObj(_arg0); 
 	FreeGdVec2(_arg1); 
 	FreeGdVec2(_arg2); 
+
+}
+gdspx_sprite_set_trigger_polygon(obj,center,points) {
+	var _gdFuncPtr = Module._gdspx_sprite_set_trigger_polygon; 
+	
+	var _arg0 = ToGdObj(obj);
+	var _arg1 = ToGdVec2(center);
+	var _arg2 = ToGdArray(points);
+	_gdFuncPtr(_arg0, _arg1, _arg2);
+	FreeGdObj(_arg0); 
+	FreeGdVec2(_arg1); 
+	FreeGdArray(_arg2); 
 
 }
 gdspx_sprite_set_trigger_enabled(obj,trigger) {
