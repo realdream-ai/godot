@@ -86,6 +86,7 @@ static SpxCallbackInfo get_default_spx_callbacks() {
 	callbacks.func_on_sprite_frame_changed = [](GdObj obj){};
 	callbacks.func_on_sprite_animation_looped = [](GdObj obj){};
 	callbacks.func_on_sprite_animation_finished = [](GdObj obj){};
+	callbacks.func_on_sprite_animation_finished_batch = [](GdInt count, GdArray ids, GdArray anim_names){};
 	callbacks.func_on_sprite_vfx_finished = [](GdObj obj){};
 	callbacks.func_on_sprite_screen_exited = [](GdObj obj){};
 	callbacks.func_on_sprite_screen_entered = [](GdObj obj){};

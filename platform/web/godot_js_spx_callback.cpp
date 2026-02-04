@@ -71,6 +71,10 @@ static void _godot_js_spx_on_sprite_animation_finished(GdObj obj){
 	godot_js_spx_on_sprite_animation_finished(&obj);
 }
 
+static void _godot_js_spx_on_sprite_animation_finished_batch(GdInt count, GdArray ids, GdArray anim_names){
+	godot_js_spx_on_sprite_animation_finished_batch(count, (void*)ids, (void*)anim_names);
+}
+
 static void _godot_js_spx_on_sprite_vfx_finished(GdObj obj){
 	godot_js_spx_on_sprite_vfx_finished(&obj);
 }
@@ -175,6 +179,7 @@ void OS_Web::register_spx_callbacks() {
 	callback_infos->func_on_sprite_frame_changed = &_godot_js_spx_on_sprite_frame_changed;
 	callback_infos->func_on_sprite_animation_looped = &_godot_js_spx_on_sprite_animation_looped;
 	callback_infos->func_on_sprite_animation_finished = &_godot_js_spx_on_sprite_animation_finished;
+	callback_infos->func_on_sprite_animation_finished_batch = &_godot_js_spx_on_sprite_animation_finished_batch;
 	callback_infos->func_on_sprite_vfx_finished = &_godot_js_spx_on_sprite_vfx_finished;
 	callback_infos->func_on_sprite_screen_exited = &_godot_js_spx_on_sprite_screen_exited;
 	callback_infos->func_on_sprite_screen_entered = &_godot_js_spx_on_sprite_screen_entered;

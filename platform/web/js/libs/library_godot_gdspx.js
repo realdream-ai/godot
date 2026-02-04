@@ -114,6 +114,11 @@ const GodotGdspx = {
 		FFI.gdspx_on_sprite_animation_finished(GodotRuntime.ToJsObj(obj));
 	},
 
+	godot_js_spx_on_sprite_animation_finished_batch__sig: 'viii',
+	godot_js_spx_on_sprite_animation_finished_batch: function (count, ids, anim_names) {
+		FFI.gdspx_on_sprite_animation_finished_batch(count, ids, anim_names);
+	},
+
 	godot_js_spx_on_sprite_vfx_finished__sig: 'vi',
 	godot_js_spx_on_sprite_vfx_finished: function (obj) {
 		FFI.gdspx_on_sprite_vfx_finished(GodotRuntime.ToJsObj(obj));

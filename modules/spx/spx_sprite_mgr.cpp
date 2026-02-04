@@ -108,6 +108,50 @@ void SpxSpriteMgr::on_update(float delta) {
 	SpxBaseMgr::on_update(delta);
 	_check_pixel_collision_events();
 
+	// Process batched animation finished events - use batch callback with ids and anim_names
+	if (!pending_animation_finished_ids.is_empty()) {
+		// Filter out destroyed sprites and prepare batch data
+		Vector<GdObj> valid_ids;
+		Vector<String> valid_names;
+		
+		for (int i = 0; i < pending_animation_finished_ids.size(); i++) {
+			GdObj gid = pending_animation_finished_ids[i];
+			// Check if sprite still exists (may have been destroyed during this frame)
+			if (get_sprite(gid) != nullptr) {
+				valid_ids.push_back(gid);
+				valid_names.push_back(pending_animation_finished_names[i]);
+			}
+		}
+		
+		// Clear pending lists
+		pending_animation_finished_ids.clear();
+		pending_animation_finished_names.clear();
+		
+		// Call batch callback if we have valid events
+		if (!valid_ids.is_empty()) {
+			// Create GdArray for ids
+			GdArray ids_array = SpxBaseMgr::create_array(GD_ARRAY_TYPE_INT64, valid_ids.size());
+			GdInt* ids_data = SpxBaseMgr::get_array<GdInt>(ids_array, 0);
+			for (int i = 0; i < valid_ids.size(); i++) {
+				ids_data[i] = valid_ids[i];
+			}
+			
+			// Create GdArray for animation names (as C-style string pointers)
+			GdArray names_array = SpxBaseMgr::create_array(GD_ARRAY_TYPE_STRING, valid_names.size());
+			char** names_data = SpxBaseMgr::get_array<char*>(names_array, 0);
+			for (int i = 0; i < valid_names.size(); i++) {
+				names_data[i] = (char*)SpxReturnStr(valid_names[i]);
+			}
+			
+			// Call batch callback
+			SPX_CALLBACK->func_on_sprite_animation_finished_batch(valid_ids.size(), ids_array, names_array);
+			
+			// Free the arrays (free_array handles freeing the C strings internally)
+			SpxBaseMgr::free_array(ids_array);
+			SpxBaseMgr::free_array(names_array);
+		}
+	}
+
 	Vector<ISortableSprite*> all_sortables;
 
 	for (auto& pair : id_objects) {
@@ -1240,4 +1284,10 @@ void SpxSpriteMgr::set_pixel_collision_sampling_step(GdInt step) {
 
 GdInt SpxSpriteMgr::get_pixel_collision_sampling_step() {
 	return pixel_collision_sampling_step;
+}
+
+void SpxSpriteMgr::queue_animation_finished(GdObj obj, const String &anim_name) {
+	// Queue the animation finished event for batched processing at end of frame
+	pending_animation_finished_ids.push_back(obj);
+	pending_animation_finished_names.push_back(anim_name);
 }

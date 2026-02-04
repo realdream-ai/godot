@@ -118,6 +118,7 @@ typedef void (*GDExtensionSpxCallbackOnSpriteAnimationChanged)(GdObj obj);
 typedef void (*GDExtensionSpxCallbackOnSpriteFrameChanged)(GdObj obj);
 typedef void (*GDExtensionSpxCallbackOnSpriteAnimationLooped)(GdObj obj);
 typedef void (*GDExtensionSpxCallbackOnSpriteAnimationFinished)(GdObj obj);
+typedef void (*GDExtensionSpxCallbackOnSpriteAnimationFinishedBatch)(GdInt count, GdArray ids, GdArray anim_names);
 
 typedef void (*GDExtensionSpxCallbackOnSpriteVfxFinished)(GdObj obj);
 
@@ -175,6 +176,8 @@ typedef struct {
 	GDExtensionSpxCallbackOnSpriteFrameChanged func_on_sprite_frame_changed;
 	GDExtensionSpxCallbackOnSpriteAnimationLooped func_on_sprite_animation_looped;
 	GDExtensionSpxCallbackOnSpriteAnimationFinished func_on_sprite_animation_finished;
+	GDExtensionSpxCallbackOnSpriteAnimationFinishedBatch func_on_sprite_animation_finished_batch;
+
 	// vfx
 	GDExtensionSpxCallbackOnSpriteVfxFinished func_on_sprite_vfx_finished;
 	// visibility

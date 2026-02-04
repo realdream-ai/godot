@@ -336,7 +336,10 @@ void SpxSprite::on_sprite_animation_finished() {
 	if (!Spx::initialed) {
 		return;
 	}
-	SPX_CALLBACK->func_on_sprite_animation_finished(this->gid);
+	// Queue for batched processing at end of frame instead of immediate callback
+	// This allows multiple animation finished events to be batched together in one frame
+	// Pass both sprite ID and animation name for batch callback
+	spriteMgr->queue_animation_finished(this->gid, current_anim_name);
 }
 
 void SpxSprite::on_sprite_vfx_finished() {

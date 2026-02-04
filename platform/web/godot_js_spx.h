@@ -22,7 +22,7 @@ extern void godot_js_spx_on_engine_destroy();
 extern void godot_js_spx_on_engine_reset();
 extern void godot_js_spx_on_engine_pause(GdBool is_paused);
 
-extern void godot_js_spx_on_scene_sprite_instantiated(GdObj* obj,GdString type_name);
+extern void godot_js_spx_on_scene_sprite_instantiated(GdObj* obj, GdString type_name);
 
 extern void godot_js_spx_on_sprite_ready(GdObj* obj);
 extern void godot_js_spx_on_sprite_updated(GdFloat delta);
@@ -34,6 +34,7 @@ extern void godot_js_spx_on_sprite_animation_changed(GdObj* obj);
 extern void godot_js_spx_on_sprite_frame_changed(GdObj* obj);
 extern void godot_js_spx_on_sprite_animation_looped(GdObj* obj);
 extern void godot_js_spx_on_sprite_animation_finished(GdObj* obj);
+extern void godot_js_spx_on_sprite_animation_finished_batch(GdInt count, void* ids, void* anim_names);
 
 extern void godot_js_spx_on_sprite_vfx_finished(GdObj* obj);
 

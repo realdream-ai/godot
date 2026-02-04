@@ -101,6 +101,11 @@ private:
 	std::unordered_set<TriggerPair> bounding_collision_pairs;
 	std::unordered_set<TriggerPair> pixel_collision_pairs;
 
+	// Batched animation finished events - collected during frame, processed at end of update
+	// Stores pairs of (sprite_id, anim_name) for batch callback to Go
+	Vector<GdObj> pending_animation_finished_ids;
+	Vector<String> pending_animation_finished_names;
+
 	Node* dont_destroy_root;
 	Node* sprite_root;
 
@@ -132,6 +137,8 @@ public:
 	GdObj _create_sprite(GdString path, GdVec2 pos, GdBool is_backdrop);
 	void destroy_all_sprites();
 	void collect_sortable_sprites(Vector<ISortableSprite*>& out);
+
+	void queue_animation_finished(GdObj obj, const String &anim_name);
 	
 public:
 	void set_dont_destroy_on_load(GdObj obj);
