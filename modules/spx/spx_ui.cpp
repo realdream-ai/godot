@@ -38,25 +38,27 @@
 
 #define UI_DEFAULT_THEME_NAME "default"
 
-#define check_and_get_node_r(VALUE)           \
-	auto node = get_control_item();           \
-	if (node == nullptr) {                    \
-		print_error("convert ui node error"); \
-		return VALUE;                         \
+// Internal control validation macros
+#define CHECK_AND_GET_NODE_R(VALUE)                                                    \
+	auto node = get_control_item();                                                    \
+	if (node == nullptr) {                                                             \
+		print_error(String("SpxUi::") + String(__func__) + ": control is nullptr");   \
+		return VALUE;                                                                  \
 	}
 
-#define check_and_get_node_v()                \
-	auto node = get_control_item();           \
-	if (node == nullptr) {                    \
-		print_error("convert ui node error"); \
-		return;                               \
+#define CHECK_AND_GET_NODE_V()                                                         \
+	auto node = get_control_item();                                                    \
+	if (node == nullptr) {                                                             \
+		print_error(String("SpxUi::") + String(__func__) + ": control is nullptr");   \
+		return;                                                                        \
 	}
 
-#define get_spx_control_type(VALUE)                              \
-	if (type != (int)ESpxUiType::VALUE) {                      \
-		print_error("convert ui node type miss error  " #VALUE); \
-		return nullptr;                                          \
-	}                                                            \
+#define GET_SPX_CONTROL_TYPE(VALUE)                                                    \
+	if (type != (int)ESpxUiType::VALUE) {                                              \
+		print_error(String("SpxUi type mismatch in ") + String(__func__) +            \
+		           ": expected " #VALUE ", got " + itos(type));                        \
+		return nullptr;                                                                \
+	}                                                                                  \
 	return (Spx##VALUE *)control;
 
 Control *SpxUi::get_control_item() const {
@@ -76,19 +78,19 @@ SpxControl *SpxUi::get_control() {
 	return control;
 }
 SpxLabel *SpxUi::get_label(){
-	get_spx_control_type(Label)
+	GET_SPX_CONTROL_TYPE(Label)
 }
 SpxImage *SpxUi::get_image(){
-	get_spx_control_type(Image)
+	GET_SPX_CONTROL_TYPE(Image)
 }
 SpxButton *SpxUi::get_button(){
-	get_spx_control_type(Button)
+	GET_SPX_CONTROL_TYPE(Button)
 }
 SpxToggle *SpxUi::get_toggle() {
-	get_spx_control_type(Toggle)
+	GET_SPX_CONTROL_TYPE(Toggle)
 }
 SpxInput *SpxUi::get_input() {
-	get_spx_control_type(Input)
+	GET_SPX_CONTROL_TYPE(Input)
 }
 
 
@@ -133,31 +135,31 @@ GdBool SpxUi::is_interactable() {
 }
 
 void SpxUi::set_rect(GdRect2 rect) {
-	check_and_get_node_v()
+	CHECK_AND_GET_NODE_V()
 			node->set_rect(rect);
 }
 
 GdRect2 SpxUi::get_rect() {
-	check_and_get_node_r(GdRect2()) return node->get_rect();
+	CHECK_AND_GET_NODE_R(GdRect2()) return node->get_rect();
 }
 
 void SpxUi::set_color(GdColor color) {
-	check_and_get_node_v()
+	CHECK_AND_GET_NODE_V()
 	node->set_self_modulate(color);
 }
 
 GdColor SpxUi::get_color() {
-	check_and_get_node_r(GdColor())
+	CHECK_AND_GET_NODE_R(GdColor())
 	return node->get_self_modulate();
 }
 
 void SpxUi::set_font_size(GdInt size) {
-	check_and_get_node_v()
+	CHECK_AND_GET_NODE_V()
 			node->add_theme_font_size_override(UI_DEFAULT_THEME_NAME, size);
 }
 
 GdInt SpxUi::get_font_size() {
-	check_and_get_node_r(0) return node->get_theme_font_size(UI_DEFAULT_THEME_NAME);
+	CHECK_AND_GET_NODE_R(0) return node->get_theme_font_size(UI_DEFAULT_THEME_NAME);
 }
 
 void SpxUi::set_font(GdString path) {
@@ -168,12 +170,12 @@ GdString SpxUi::get_font() {
 }
 
 void SpxUi::set_visible(GdBool visible) {
-	check_and_get_node_v()
+	CHECK_AND_GET_NODE_V()
 			node->set_visible(visible);
 }
 
 GdBool SpxUi::get_visible() {
-	check_and_get_node_r(false) return node->is_visible();
+	CHECK_AND_GET_NODE_R(false) return node->is_visible();
 }
 
 void SpxUi::set_text(GdString text) {

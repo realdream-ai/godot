@@ -304,6 +304,10 @@ void SpxSpriteMgr::destroy_all_sprites() {
 GdInt SpxSpriteMgr::clone_sprite(GdObj obj) {
 	SPX_REQUIRE_SPRITE_RETURN(NULL_OBJECT_ID)
 	SpxSprite *cloned = dynamic_cast<SpxSprite *>(sprite->duplicate());
+	if (unlikely(!cloned)) {
+		ERR_PRINT("Failed to clone sprite with GID: " + itos(obj));
+		return NULL_OBJECT_ID;
+	}
 	cloned->set_gid(get_unique_id());
 	sprite_root->add_child(cloned);
 	id_objects[cloned->get_gid()] = cloned;
