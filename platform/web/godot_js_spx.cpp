@@ -473,6 +473,14 @@ void gdspx_platform_set_time_scale(GdFloat* time_scale) {
 	 platformMgr->set_time_scale(*time_scale);
 }
 EMSCRIPTEN_KEEPALIVE
+void gdspx_platform_get_max_fps(GdInt *ret_val) {
+	*ret_val = platformMgr->get_max_fps();
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_platform_set_max_fps(GdInt* fps) {
+	 platformMgr->set_max_fps(*fps);
+}
+EMSCRIPTEN_KEEPALIVE
 void gdspx_platform_get_persistant_data_dir(GdString *ret_val) {
 	*ret_val = platformMgr->get_persistant_data_dir();
 }

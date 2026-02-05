@@ -941,6 +941,22 @@ gdspx_platform_set_time_scale(time_scale) {
 	FreeGdFloat(_arg0); 
 
 }
+gdspx_platform_get_max_fps() {
+	var _gdFuncPtr = Module._gdspx_platform_get_max_fps; 
+	var _retValue = AllocGdInt();
+	_gdFuncPtr(_retValue);
+	var _finalRetValue = ToJsInt(_retValue);
+	FreeGdInt(_retValue); 
+	return _finalRetValue
+}
+gdspx_platform_set_max_fps(fps) {
+	var _gdFuncPtr = Module._gdspx_platform_set_max_fps; 
+	
+	var _arg0 = ToGdInt(fps);
+	_gdFuncPtr(_arg0);
+	FreeGdInt(_arg0); 
+
+}
 gdspx_platform_get_persistant_data_dir() {
 	var _gdFuncPtr = Module._gdspx_platform_get_persistant_data_dir; 
 	var _retValue = AllocGdString();

@@ -65,6 +65,9 @@ public:
 	GdFloat get_time_scale();
 	void set_time_scale(GdFloat time_scale);
 
+	GdInt get_max_fps();
+	void set_max_fps(GdInt fps);
+
 	GdString get_persistant_data_dir();
 	void set_persistant_data_dir(GdString path);
 	GdBool is_in_persistant_data_dir(GdString path);

@@ -125,6 +125,14 @@ GdFloat SpxPlatformMgr::get_time_scale() {
 	return Engine::get_singleton()->get_time_scale();
 }
 
+void SpxPlatformMgr::set_max_fps(GdInt fps) {
+	Engine::get_singleton()->set_max_fps(fps);
+}
+
+GdInt SpxPlatformMgr::get_max_fps() {
+	return Engine::get_singleton()->get_max_fps();
+}
+
 GdString SpxPlatformMgr::get_persistant_data_dir(){
 	auto value = _get_persistant_data_dir();
 	return SpxReturnStr(value);
