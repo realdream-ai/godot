@@ -35,23 +35,9 @@
 #include "spx_base_mgr.h"
 #include "spx_engine.h"
 #include "spx_ui_mgr.h"
+#include "spx_object_guard.h"
 
 #define UI_DEFAULT_THEME_NAME "default"
-
-// Internal control validation macros
-#define CHECK_AND_GET_NODE_R(VALUE)                                                    \
-	auto node = get_control_item();                                                    \
-	if (node == nullptr) {                                                             \
-		print_error(String("SpxUi::") + String(__func__) + ": control is nullptr");   \
-		return VALUE;                                                                  \
-	}
-
-#define CHECK_AND_GET_NODE_V()                                                         \
-	auto node = get_control_item();                                                    \
-	if (node == nullptr) {                                                             \
-		print_error(String("SpxUi::") + String(__func__) + ": control is nullptr");   \
-		return;                                                                        \
-	}
 
 #define GET_SPX_CONTROL_TYPE(VALUE)                                                    \
 	if (type != (int)ESpxUiType::VALUE) {                                              \
@@ -135,31 +121,33 @@ GdBool SpxUi::is_interactable() {
 }
 
 void SpxUi::set_rect(GdRect2 rect) {
-	CHECK_AND_GET_NODE_V()
-			node->set_rect(rect);
+	SPX_UI_CONTROL_GUARD_VOID(__func__)
+	node->set_rect(rect);
 }
 
 GdRect2 SpxUi::get_rect() {
-	CHECK_AND_GET_NODE_R(GdRect2()) return node->get_rect();
+	SPX_UI_CONTROL_GUARD_RETURN(__func__, GdRect2())
+	return node->get_rect();
 }
 
 void SpxUi::set_color(GdColor color) {
-	CHECK_AND_GET_NODE_V()
+	SPX_UI_CONTROL_GUARD_VOID(__func__)
 	node->set_self_modulate(color);
 }
 
 GdColor SpxUi::get_color() {
-	CHECK_AND_GET_NODE_R(GdColor())
+	SPX_UI_CONTROL_GUARD_RETURN(__func__, GdColor())
 	return node->get_self_modulate();
 }
 
 void SpxUi::set_font_size(GdInt size) {
-	CHECK_AND_GET_NODE_V()
-			node->add_theme_font_size_override(UI_DEFAULT_THEME_NAME, size);
+	SPX_UI_CONTROL_GUARD_VOID(__func__)
+	node->add_theme_font_size_override(UI_DEFAULT_THEME_NAME, size);
 }
 
 GdInt SpxUi::get_font_size() {
-	CHECK_AND_GET_NODE_R(0) return node->get_theme_font_size(UI_DEFAULT_THEME_NAME);
+	SPX_UI_CONTROL_GUARD_RETURN(__func__, 0)
+	return node->get_theme_font_size(UI_DEFAULT_THEME_NAME);
 }
 
 void SpxUi::set_font(GdString path) {
@@ -170,12 +158,13 @@ GdString SpxUi::get_font() {
 }
 
 void SpxUi::set_visible(GdBool visible) {
-	CHECK_AND_GET_NODE_V()
-			node->set_visible(visible);
+	SPX_UI_CONTROL_GUARD_VOID(__func__)
+	node->set_visible(visible);
 }
 
 GdBool SpxUi::get_visible() {
-	CHECK_AND_GET_NODE_R(false) return node->is_visible();
+	SPX_UI_CONTROL_GUARD_RETURN(__func__, false)
+	return node->is_visible();
 }
 
 void SpxUi::set_text(GdString text) {

@@ -37,19 +37,7 @@
 #include "spx_engine.h"
 #include "spx_res_mgr.h"
 #include "spx_audio_bus_pool.h"
-
-
-#define check_and_get_aid_audio_v()                                           \
-	auto audio = _get_aid_audio(aid);                                         \
-	if (audio == nullptr) {                                                   \
-		return;                                                               \
-	}
-
-#define check_and_get_aid_audio_r(VALUE)                                      \
-	auto audio = _get_aid_audio(aid);                                         \
-	if (audio == nullptr) {                                                   \
-		return VALUE;                                                         \
-	}
+#include "spx_object_guard.h"
 
 AudioStreamPlayer2D *SpxAudio::_get_aid_audio(GdInt aid) {
 	if (aid_audios.has(aid)) {
@@ -143,56 +131,56 @@ void SpxAudio::play(GdInt aid, GdString path, Node* owner, GdFloat attenuation, 
 }
 
 GdBool SpxAudio::is_playing(GdInt aid) {
-	check_and_get_aid_audio_r(false)
+	SPX_AUDIO_GUARD_RETURN(aid, __func__, false)
 	return audio->is_playing();
 }
 
 void SpxAudio::pause(GdInt aid) {
-	check_and_get_aid_audio_v()
+	SPX_AUDIO_GUARD_VOID(aid, __func__)
 	audio->set_stream_paused(true);
 }
 
 void SpxAudio::resume(GdInt aid) {
-	check_and_get_aid_audio_v()
+	SPX_AUDIO_GUARD_VOID(aid, __func__)
 	audio->set_stream_paused(false);
 }
 
 void SpxAudio::stop(GdInt aid) {
-	check_and_get_aid_audio_v()
-	audios.erase(audio);
-	loop_audios.erase(audio);
+	SPX_AUDIO_GUARD_VOID(aid, __func__)
+	audios.erase(audio.get());
+	loop_audios.erase(audio.get());
 	aid_audios.erase(aid);
 	audio->stop();
 	audio->queue_free();
 }
 
 void SpxAudio::set_loop(GdInt aid, GdBool loop) {
-	check_and_get_aid_audio_v()
+	SPX_AUDIO_GUARD_VOID(aid, __func__)
 	if (loop) {
-		auto succ = audios.erase(audio);
+		auto succ = audios.erase(audio.get());
 		if (succ) {
-			loop_audios.push_back(audio);
+			loop_audios.push_back(audio.get());
 		}
 	} else {
-		auto succ = loop_audios.erase(audio);
+		auto succ = loop_audios.erase(audio.get());
 		if (succ) {
-			audios.push_back(audio);
+			audios.push_back(audio.get());
 		}
 	}
 }
 
 GdBool SpxAudio::get_loop(GdInt aid) {
-	check_and_get_aid_audio_r(false)
-	return loop_audios.find(audio) != nullptr;
+	SPX_AUDIO_GUARD_RETURN(aid, __func__, false)
+	return loop_audios.find(audio.get()) != nullptr;
 }
 
 GdFloat SpxAudio::get_timer(GdInt aid) {
-	check_and_get_aid_audio_r(0)
+	SPX_AUDIO_GUARD_RETURN(aid, __func__, 0)
 	return audio->get_playback_position();
 }
 
 void SpxAudio::set_timer(GdInt aid, GdFloat time) {
-	check_and_get_aid_audio_v()
+	SPX_AUDIO_GUARD_VOID(aid, __func__)
 	audio->seek(time);
 }
 

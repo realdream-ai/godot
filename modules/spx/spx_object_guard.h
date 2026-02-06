@@ -244,4 +244,72 @@ public:
 			[](SpxUiMgr *mgr, GdObj id) { return mgr->get_node(id); }); \
 	if (!node) return return_val;
 
+/**
+ * @brief Convenience macro for SPX audio validation (void return)
+ * 
+ * @example
+ * @code
+ * void SpxAudio::pause(GdInt aid) {
+ *     SPX_AUDIO_GUARD_VOID(aid, __func__);
+ *     audio->set_stream_paused(true);
+ * }
+ * @endcode
+ */
+#define SPX_AUDIO_GUARD_VOID(aid, context_name) \
+	SpxObjectGuard<AudioStreamPlayer2D, SpxAudio> audio(aid, context_name, this, \
+			[](SpxAudio *mgr, GdInt id) { return mgr->_get_aid_audio(id); }); \
+	if (!audio) return;
+
+/**
+ * @brief Convenience macro for SPX audio validation with return value
+ * 
+ * @example
+ * @code
+ * GdBool SpxAudio::is_playing(GdInt aid) {
+ *     SPX_AUDIO_GUARD_RETURN(aid, __func__, false);
+ *     return audio->is_playing();
+ * }
+ * @endcode
+ */
+#define SPX_AUDIO_GUARD_RETURN(aid, context_name, return_val) \
+	SpxObjectGuard<AudioStreamPlayer2D, SpxAudio> audio(aid, context_name, this, \
+			[](SpxAudio *mgr, GdInt id) { return mgr->_get_aid_audio(id); }); \
+	if (!audio) return return_val;
+
+/**
+ * @brief Convenience macro for SPX UI internal control validation (void return)
+ * 
+ * Used within SpxUi class methods to validate the internal control pointer.
+ * 
+ * @example
+ * @code
+ * void SpxUi::set_visible(GdBool visible) {
+ *     SPX_UI_CONTROL_GUARD_VOID(__func__);
+ *     node->set_visible(visible);
+ * }
+ * @endcode
+ */
+#define SPX_UI_CONTROL_GUARD_VOID(context_name) \
+	SpxObjectGuard<Control, SpxUi> node(0, context_name, this, \
+			[](SpxUi *ui, GdInt) { return ui->get_control_item(); }); \
+	if (!node) return;
+
+/**
+ * @brief Convenience macro for SPX UI internal control validation with return value
+ * 
+ * Used within SpxUi class methods to validate the internal control pointer.
+ * 
+ * @example
+ * @code
+ * GdRect2 SpxUi::get_rect() {
+ *     SPX_UI_CONTROL_GUARD_RETURN(__func__, GdRect2());
+ *     return node->get_rect();
+ * }
+ * @endcode
+ */
+#define SPX_UI_CONTROL_GUARD_RETURN(context_name, return_val) \
+	SpxObjectGuard<Control, SpxUi> node(0, context_name, this, \
+			[](SpxUi *ui, GdInt) { return ui->get_control_item(); }); \
+	if (!node) return return_val;
+
 #endif // SPX_OBJECT_GUARD_H
