@@ -47,10 +47,6 @@
 #include "spx_sprite.h"
 #include "spx_ui.h"
 
-//#define MINIZIP_ENABLED
-#ifdef MINIZIP_ENABLED
-#include "modules/zip/zip_reader.h"
-#endif
 
 // Simple node class for initialization
 class SpxEngineNode : public Node {
