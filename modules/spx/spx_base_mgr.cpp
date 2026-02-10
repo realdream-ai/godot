@@ -29,10 +29,13 @@
 /**************************************************************************/
 
 #include "spx_base_mgr.h"
-#include "spx_engine.h"
+
+#include <cstdio>
+
 #include "scene/2d/node_2d.h"
 #include "scene/main/window.h"
-#include <cstdio>
+
+#include "spx_engine.h"
 
 GdInt SpxBaseMgr::get_unique_id() {
 	return SpxEngine::get_singleton()->get_unique_id();

@@ -29,26 +29,6 @@
 /**************************************************************************/
 
 #include "spx_pen_mgr.h"
-#include "core/input/input_event.h"
-#include "core/math/color.h"
-#include "gdextension_spx_ext.h"
-#include "scene/2d/line_2d.h"
-#include "scene/2d/sprite_2d.h"
-#include "scene/2d/polygon_2d.h"
-#include "scene/2d/physics/static_body_2d.h"
-#include "scene/2d/physics/collision_shape_2d.h"
-#include "scene/resources/2d/capsule_shape_2d.h"
-#include "scene/resources/2d/circle_shape_2d.h"
-#include "scene/resources/2d/rectangle_shape_2d.h"
-#include "spx.h"
-#include "spx_engine.h"
-#include "spx_res_mgr.h"
-#include "spx_sprite.h"
-#include "spx_draw_tiles.h"
-#include "spx_layer_sorter.h"
-#include "spx_physics_mgr.h"
-
-#include <cmath>
 
 void SpxPenMgr::on_awake() {
 	SpxBaseMgr::on_awake();

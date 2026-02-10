@@ -28,8 +28,8 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef SPX_NAV_MGR_H
-#define SPX_NAV_MGR_H
+#ifndef SPX_NAVIGATION_MGR_H
+#define SPX_NAVIGATION_MGR_H
 
 #include "gdextension_spx_ext.h"
 #include "spx_base_mgr.h"
@@ -53,4 +53,4 @@ public:
 	GdArray find_path(GdVec2 p_from, GdVec2 p_to, GdBool with_jump);
 };
 
-#endif // SPX_NAV_MGR_H
+#endif // SPX_NAVIGATION_MGR_H

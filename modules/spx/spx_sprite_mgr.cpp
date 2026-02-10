@@ -31,6 +31,7 @@
 #include "spx_sprite_mgr.h"
 
 #include "core/templates/rb_map.h"
+#include "core/typedefs.h"
 #include "scene/2d/animated_sprite_2d.h"
 #include "scene/2d/physics/area_2d.h"
 #include "scene/2d/physics/collision_shape_2d.h"
@@ -39,15 +40,15 @@
 #include "scene/main/window.h"
 #include "scene/resources/2d/circle_shape_2d.h"
 #include "scene/resources/packed_scene.h"
+
 #include "spx_engine.h"
-#include "spx_res_mgr.h"
 #include "spx_ext_mgr.h"
-#include "spx_scene_mgr.h"
-#include "spx_physics_mgr.h"
 #include "spx_layer_sorter.h"
-#include "spx_sprite.h"
 #include "spx_object_guard.h"
-#include "core/typedefs.h"
+#include "spx_physics_mgr.h"
+#include "spx_res_mgr.h"
+#include "spx_scene_mgr.h"
+#include "spx_sprite.h"
 
 
 #define DEFAULT_COLLISION_ALPHA_THRESHOLD 0.05

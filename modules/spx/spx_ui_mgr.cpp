@@ -32,6 +32,7 @@
 
 #include "scene/main/canvas_layer.h"
 #include "scene/resources/packed_scene.h"
+
 #include "spx_object_guard.h"
 
 #define SPX_CALLBACK SpxEngine::get_singleton()->get_callbacks()

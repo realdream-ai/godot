@@ -44,12 +44,14 @@ public:
 
 private:
 	Camera2D *camera = nullptr;
+	
 public:
 	void on_awake() override;
 	void on_reset(int reset_code) override;
 	Camera2D *get_camera(){ return camera; }
 	Vector2 get_global_mouse_position();
 	void set_stretch_clear_color();
+
 public:
 	GdVec2 get_camera_position();
 	void set_camera_position(GdVec2 position);

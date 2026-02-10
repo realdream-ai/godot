@@ -28,15 +28,13 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include "core/input/input_event.h"
-#include "core/math/color.h"
+#include "spx_pen.h"
+
 #include "scene/2d/line_2d.h"
 #include "scene/2d/sprite_2d.h"
+
 #include "spx_engine.h"
-#include "spx_ext_mgr.h"
 #include "spx_res_mgr.h"
-#include "spx_sprite.h"
-#include "spx_pen.h"
 
 const int PEN_PROPERTY_SATURATION = 0;
 const int PEN_PROPERTY_BRIGHTNESS = 1;

@@ -1,4 +1,5 @@
 #include "register_types.h"
+
 #include "spx.h"
 
 void initialize_spx_module(ModuleInitializationLevel p_level) {

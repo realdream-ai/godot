@@ -31,9 +31,10 @@
 #ifndef SPX_PATH_FINER_H 
 #define SPX_PATH_FINER_H
 
+#include "core/math/a_star_grid_2d.h"
 #include "core/object/object.h"
 #include "scene/2d/node_2d.h"
-#include "core/math/a_star_grid_2d.h"
+#include "gdextension_spx_ext.h"
 
 class TileMapLayer;
 class Node;

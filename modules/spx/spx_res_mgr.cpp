@@ -29,25 +29,27 @@
 /**************************************************************************/
 
 #include "spx_res_mgr.h"
+
 #include "core/io/file_access.h"
 #include "core/io/image.h"
 #include "core/io/image_loader.h"
-#include "core/math/vector2.h"
 #include "core/io/json.h"
+#include "core/math/vector2.h"
 #include "modules/minimp3/audio_stream_mp3.h"
 #include "modules/modules_enabled.gen.h"
 #include "scene/2d/audio_stream_player_2d.h"
 #include "scene/main/window.h"
 #include "scene/resources/atlas_texture.h"
+#include "scene/resources/audio_importer_wav.h"
 #include "scene/resources/audio_stream_wav.h"
 #include "scene/resources/image_texture.h"
 #include "scene/resources/sprite_frames.h"
 #include "scene/theme/default_theme.h"
 #include "scene/theme/theme_db.h"
-#include "scene/resources/audio_importer_wav.h"
+
+#include "spx_engine.h"
 #include "spx_platform_mgr.h"
 #include "svg_mgr.h"
-#include "spx_engine.h"
 #ifdef TOOLS_ENABLED
 #include "editor/import/resource_importer_wav.h"
 #include "modules/minimp3/resource_importer_mp3.h"

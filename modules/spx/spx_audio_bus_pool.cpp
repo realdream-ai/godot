@@ -28,11 +28,13 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
+#include "spx_audio_bus_pool.h"
+
 #include "servers/audio/effects/audio_effect_panner.h"
+
 #include "spx_audio_mgr.h"
 #include "spx_engine.h"
 #include "spx_res_mgr.h"
-#include "spx_audio_bus_pool.h"
 
 StringName SpxAudioBusPool::STR_BUS_MASTER;
 StringName SpxAudioBusPool::STR_BUS_SFX;

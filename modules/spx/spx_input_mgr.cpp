@@ -29,10 +29,12 @@
 /**************************************************************************/
 
 #include "spx_input_mgr.h"
+
+#include "scene/main/window.h"
+
+#include "gdextension_spx_ext.h"
 #include "spx_camera_mgr.h"
 #include "spx_engine.h"
-#include "gdextension_spx_ext.h"
-#include "scene/main/window.h"
 
 void SpxInputMgr::on_start() {
 	SpxBaseMgr::on_start();

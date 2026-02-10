@@ -28,14 +28,13 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include "scene/2d/camera_2d.h"
-#include "scene/theme/theme_db.h"
-#include "scene/resources/font.h"
 #include "spx_layer_sorter.h"
-#include "spx_camera_mgr.h"
-#include "spx_platform_mgr.h"
-#include "spx_engine.h"
+
+#include "scene/theme/theme_db.h"
+
 #include "spx.h"
+#include "spx_camera_mgr.h"
+#include "spx_engine.h"
 
 
 void SpxLayerSorter::set_mode(LayerSortMode mode) {

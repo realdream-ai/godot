@@ -28,28 +28,29 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include "core/extension/spx_util.h"
 #include "spx.h"
-#include "gdextension_spx_ext.h"
-#include "scene/main/node.h"
-#include "scene/main/window.h"
-#include "scene/main/scene_tree.h"
+
+#include "core/extension/spx_util.h"
+#include "core/io/dir_access.h"
 #include "core/object/class_db.h"
+#include "core/os/thread.h"
+#include "scene/main/node.h"
+#include "scene/main/scene_tree.h"
+#include "scene/main/window.h"
+
+#include "gdextension_spx_ext.h"
+#include "spx_callback_proxy.h"
+#include "spx_draw_tiles.h"
 #include "spx_engine.h"
 #include "spx_input_proxy.h"
+#include "spx_path_finder.h"
 #include "spx_sprite.h"
 #include "spx_ui.h"
-#include "spx_draw_tiles.h"
-#include "spx_path_finder.h"
-#include "spx_callback_proxy.h"
-#include "core/io/dir_access.h"
-#include "core/os/thread.h"
 
 //#define MINIZIP_ENABLED
 #ifdef MINIZIP_ENABLED
 #include "modules/zip/zip_reader.h"
 #endif
-#include "core/os/thread.h"
 
 // Simple node class for initialization
 class SpxEngineNode : public Node {

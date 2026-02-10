@@ -1,9 +1,10 @@
 #include "svg_mgr.h"
 
 #include "core/io/image_loader.h"
-#include "spx_res_mgr.h"
-#include "spx_engine.h"
+
 #include "spx.h"
+#include "spx_engine.h"
+#include "spx_res_mgr.h"
 
 SvgManager *SvgManager::get_singleton() {
 	if (!singleton) {

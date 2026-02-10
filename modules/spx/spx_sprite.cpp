@@ -31,22 +31,23 @@
 #include "spx_sprite.h"
 
 #include "core/config/project_settings.h"
-#include "spx_base_mgr.h"
 #include "scene/2d/animated_sprite_2d.h"
 #include "scene/2d/physics/area_2d.h"
 #include "scene/2d/physics/collision_shape_2d.h"
 #include "scene/2d/visible_on_screen_notifier_2d.h"
-#include "scene/resources/atlas_texture.h"
 #include "scene/resources/2d/capsule_shape_2d.h"
 #include "scene/resources/2d/circle_shape_2d.h"
 #include "scene/resources/2d/convex_polygon_shape_2d.h"
 #include "scene/resources/2d/rectangle_shape_2d.h"
+#include "scene/resources/atlas_texture.h"
+
 #include "spx.h"
+#include "spx_base_mgr.h"
+#include "spx_camera_mgr.h"
 #include "spx_engine.h"
 #include "spx_physics_mgr.h"
 #include "spx_res_mgr.h"
 #include "spx_sprite_mgr.h"
-#include "spx_camera_mgr.h"
 #include "svg_mgr.h"
 
 

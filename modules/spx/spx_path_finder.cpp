@@ -28,18 +28,19 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include "scene/2d/tile_map_layer.h"
-#include "scene/2d/physics/static_body_2d.h"
-#include "scene/2d/physics/collision_shape_2d.h"
-#include "scene/resources/2d/rectangle_shape_2d.h"
-#include "core/math/geometry_2d.h"
-#include "core/variant/variant.h"
-#include "spx_sprite.h"
-#include "spx_base_mgr.h"
-#include "spx_sprite_mgr.h"
-#include "spx_scene_mgr.h"
-#include "spx_engine.h"
 #include "spx_path_finder.h"
+
+#include "core/math/geometry_2d.h"
+#include "scene/2d/physics/collision_shape_2d.h"
+#include "scene/2d/physics/static_body_2d.h"
+#include "scene/2d/tile_map_layer.h"
+#include "scene/resources/2d/rectangle_shape_2d.h"
+
+#include "spx_base_mgr.h"
+#include "spx_engine.h"
+#include "spx_scene_mgr.h"
+#include "spx_sprite.h"
+#include "spx_sprite_mgr.h"
 
 
 void SpxPathFinder::_bind_methods() {

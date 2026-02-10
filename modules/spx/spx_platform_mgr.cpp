@@ -28,12 +28,14 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
+#include "spx_platform_mgr.h"
+
 #include "core/config/engine.h"
 #include "scene/main/window.h"
-#include "spx_platform_mgr.h"
+
+#include "spx.h"
 #include "spx_camera_mgr.h"
 #include "spx_engine.h"
-#include "spx.h"
 
 void SpxPlatformMgr::on_awake() {
 	SpxBaseMgr::on_awake();

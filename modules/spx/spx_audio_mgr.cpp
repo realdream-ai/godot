@@ -29,15 +29,16 @@
 /**************************************************************************/
 
 #include "spx_audio_mgr.h"
-#include "spx_audio_bus_pool.h"
 
 #include "scene/2d/audio_stream_player_2d.h"
+#include "scene/2d/camera_2d.h"
+
+#include "spx_audio_bus_pool.h"
+#include "spx_camera_mgr.h"
 #include "spx_engine.h"
 #include "spx_res_mgr.h"
-#include "spx_camera_mgr.h"
-#include "spx_sprite_mgr.h"
 #include "spx_sprite.h"
-#include "scene/2d/camera_2d.h"
+#include "spx_sprite_mgr.h"
 
 
 SpxAudio *SpxAudioMgr::_get_aid_audio(GdInt aid) {

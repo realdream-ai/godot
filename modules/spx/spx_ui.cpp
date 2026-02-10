@@ -31,11 +31,12 @@
 #include "spx_ui.h"
 
 #include "scene/gui/label.h"
+
 #include "spx.h"
 #include "spx_base_mgr.h"
 #include "spx_engine.h"
-#include "spx_ui_mgr.h"
 #include "spx_object_guard.h"
+#include "spx_ui_mgr.h"
 
 #define UI_DEFAULT_THEME_NAME "default"
 

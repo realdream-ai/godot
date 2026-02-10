@@ -30,14 +30,15 @@
 
 #include "spx_audio.h"
 
-#include "gdextension_spx_ext.h"
 #include "scene/2d/audio_stream_player_2d.h"
 #include "scene/main/node.h"
+
+#include "gdextension_spx_ext.h"
+#include "spx_audio_bus_pool.h"
 #include "spx_audio_mgr.h"
 #include "spx_engine.h"
-#include "spx_res_mgr.h"
-#include "spx_audio_bus_pool.h"
 #include "spx_object_guard.h"
+#include "spx_res_mgr.h"
 
 AudioStreamPlayer2D *SpxAudio::_get_aid_audio(GdInt aid) {
 	if (aid_audios.has(aid)) {
