@@ -1306,4 +1306,5 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_rotation);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_flip);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_flip);
+	
 }
