@@ -44,7 +44,7 @@ public:
 
 private:
 	Camera2D *camera = nullptr;
-	
+
 public:
 	void on_awake() override;
 	void on_reset(int reset_code) override;

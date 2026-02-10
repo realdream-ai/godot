@@ -993,11 +993,8 @@ static void gdextension_spx_ui_set_flip(GdObj obj, GdBool horizontal, GdBool is_
 	uiMgr->set_flip(obj, horizontal, is_flip);
 }
 
-
-
 void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_global_register_callbacks);
-
 	REGISTER_SPX_INTERFACE_FUNC(spx_audio_stop_all);
 	REGISTER_SPX_INTERFACE_FUNC(spx_audio_create_audio);
 	REGISTER_SPX_INTERFACE_FUNC(spx_audio_destroy_audio);
@@ -1309,5 +1306,4 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_rotation);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_get_flip);
 	REGISTER_SPX_INTERFACE_FUNC(spx_ui_set_flip);
-	
 }
