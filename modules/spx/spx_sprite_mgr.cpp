@@ -140,8 +140,10 @@ void SpxSpriteMgr::collect_sortable_sprites(Vector<ISortableSprite*>& out) {
 }
 
 SpxSprite *SpxSpriteMgr::get_sprite(GdObj obj) {
-	if (id_objects.has(obj)) {
-		return id_objects[obj];
+	// Use single-lookup pattern: find() returns Element*, avoiding double hash lookup
+	auto element = id_objects.find(obj);
+	if (element != nullptr) {
+		return element->value();
 	}
 	return nullptr;
 }
@@ -1150,7 +1152,6 @@ void SpxSpriteMgr::batch_update_transforms(GdArray buffer) {
 		
 		idx += FIELDS_PER_SPRITE;
 		
-		// Get sprite from id_objects map
 		SpxSprite* sprite = get_sprite(sprite_id);
 		if (sprite == nullptr) {
 			continue;
@@ -1166,12 +1167,11 @@ void SpxSpriteMgr::batch_update_transforms(GdArray buffer) {
 		sprite->set_pivot(GdVec2(offset_x, -offset_y));
 	}
 	
-	// Process deletes using direct array access
+	// Process deletes
 	for (int i = 0; i < delete_count; i++) {
 		auto sprite_id = static_cast<GdObj>(buffer_data[idx]);
 		idx++;
-		
-		// Get sprite and destroy it
+
 		SpxSprite* sprite = get_sprite(sprite_id);
 		if (sprite != nullptr) {
 			sprite->set_block_signals(true);
@@ -1180,7 +1180,7 @@ void SpxSpriteMgr::batch_update_transforms(GdArray buffer) {
 	}
 }
 
-GdArray SpxSpriteMgr::batch_update_positions(GdArray objs) {
+GdArray SpxSpriteMgr::batch_retrieve_positions(GdArray objs) {
 	// Input: array of sprite IDs [id1, id2, id3, ...]
 	// Output: array of positions [x1, y1, x2, y2, x3, y3, ...]
 	if (!objs) {
@@ -1189,6 +1189,13 @@ GdArray SpxSpriteMgr::batch_update_positions(GdArray objs) {
 	
 	int count = objs->size;
 	if (count == 0) {
+		return nullptr;
+	}
+	
+	// Check for integer overflow before multiplication (count * 2)
+	// Maximum safe value is INT_MAX / 2 to prevent overflow
+	if (count > INT_MAX / 2) {
+		print_error("batch_retrieve_positions: count too large, would cause integer overflow.");
 		return nullptr;
 	}
 	
@@ -1204,7 +1211,7 @@ GdArray SpxSpriteMgr::batch_update_positions(GdArray objs) {
 	
 	// Check for null pointers to prevent crashes with malformed arrays
 	if (count > 0 && (!obj_data || !result_data)) {
-		print_error("batch_update_positions: Failed to access array data.");
+		print_error("batch_retrieve_positions: Failed to access array data.");
 		SpxBaseMgr::free_array(result);
 		return nullptr;
 	}
@@ -1214,7 +1221,6 @@ GdArray SpxSpriteMgr::batch_update_positions(GdArray objs) {
 	for (int i = 0; i < count; i++) {
 		GdObj sprite_id = obj_data[i];
 		
-		// Get sprite from id_objects map
 		SpxSprite* sprite = get_sprite(sprite_id);
 		if (sprite != nullptr) {
 			auto pos = sprite->get_position();

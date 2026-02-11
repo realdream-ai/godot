@@ -287,7 +287,7 @@ public:
 
 	// batch sync
 	void batch_update_transforms(GdArray buffer);
-	GdArray batch_update_positions(GdArray objs);
+	GdArray batch_retrieve_positions(GdArray objs);
 };
 
 #endif // SPX_SPRITE_MGR_H

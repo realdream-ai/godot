@@ -1065,8 +1065,8 @@ void gdspx_sprite_batch_update_transforms(GdArray* buffer) {
 	 spriteMgr->batch_update_transforms(*buffer);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_batch_update_positions(GdArray* objs, GdArray *ret_val) {
-	*ret_val = spriteMgr->batch_update_positions(*objs);
+void gdspx_sprite_batch_retrieve_positions(GdArray* objs, GdArray *ret_val) {
+	*ret_val = spriteMgr->batch_retrieve_positions(*objs);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_tilemap_open_draw_tiles_with_size(GdInt* tile_size) {
