@@ -956,7 +956,7 @@ void SpxSprite::_on_frame_changed() {
 			current_frame
 		);
 		
-		Vector2 final_offset = base_offset + frame_offset;
+		Vector2 final_offset = base_offset - pivot_offset + frame_offset * _render_scale;
 		anim2d->set_offset(final_offset);
 	}
 }

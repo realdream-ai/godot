@@ -1097,7 +1097,7 @@ void SpxSpriteMgr::set_pivot(GdObj obj, GdVec2 pivot){
 GdVec2 SpxSpriteMgr::get_pivot(GdObj obj){
 	SPX_REQUIRE_SPRITE_RETURN(GdVec2())
 	auto pivot= sprite->get_pivot();
-	return GdVec2(pivot.x,-pivot.y);
+	return GdVec2(pivot.x, -pivot.y);
 }
 
 void SpxSpriteMgr::batch_update_transforms(GdArray buffer) {
