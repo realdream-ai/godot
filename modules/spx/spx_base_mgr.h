@@ -46,15 +46,6 @@ public:                               \
 
 #define NULL_OBJECT_ID 0
 
-// GdArray support
-#define GD_ARRAY_TYPE_UNKNOWN  0
-#define GD_ARRAY_TYPE_INT64    1
-#define GD_ARRAY_TYPE_FLOAT    2
-#define GD_ARRAY_TYPE_BOOL     3
-#define GD_ARRAY_TYPE_STRING   4
-#define GD_ARRAY_TYPE_BYTE     5
-#define GD_ARRAY_TYPE_GDOBJ    6
-
 class Window;
 class SceneTree;
 class SpxBaseMgr {
