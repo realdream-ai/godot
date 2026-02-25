@@ -42,17 +42,15 @@ GdInt SpxBaseMgr::get_unique_id() {
 }
 
 void SpxBaseMgr::free_return_cstr(GdString str_ptr) {
-	free((void*)str_ptr);
+	free((void *)str_ptr);
 }
 
-GdString SpxBaseMgr::to_return_cstr(const String& ret_val) {
+GdString SpxBaseMgr::to_return_cstr(const String &ret_val) {
 	auto cstr = ret_val.utf8();
-	char* result = (char*)malloc(cstr.size() + 1);
+	char *result = (char *)malloc(cstr.size() + 1);
 	strcpy(result, cstr.get_data());
 	return result;
 }
-
-
 
 Window *SpxBaseMgr::get_root() {
 	return SpxEngine::get_singleton()->get_root();
@@ -73,7 +71,6 @@ void SpxBaseMgr::on_awake() {
 }
 
 void SpxBaseMgr::on_start() {
-	
 }
 
 void SpxBaseMgr::on_update(float delta) {
@@ -103,49 +100,55 @@ void SpxBaseMgr::on_resume() {
 	// Default implementation - override in derived classes if needed
 }
 
-
 GdArray SpxBaseMgr::create_array(int32_t type, int32_t size) {
 	if (size < 0) {
 		return nullptr;
 	}
-	
+
 	GdArray array = (GdArray)malloc(sizeof(GdArrayInfo));
 	if (!array) {
 		return nullptr;
 	}
-	
+
 	array->size = size;
 	array->type = type;
-	
+
 	if (size == 0) {
 		array->data = nullptr;
 		return array;
 	}
-	
+
 	constexpr auto get_element_size = [](int32_t array_type) -> size_t {
 		switch (array_type) {
-			case GD_ARRAY_TYPE_INT64: return sizeof(int64_t);
-			case GD_ARRAY_TYPE_FLOAT: return sizeof(float);
-			case GD_ARRAY_TYPE_BOOL: return sizeof(uint8_t);
-			case GD_ARRAY_TYPE_STRING: return sizeof(char*);
-			case GD_ARRAY_TYPE_BYTE: return sizeof(uint8_t);
-			case GD_ARRAY_TYPE_GDOBJ: return sizeof(GdObj);
-			default: return 0;
+			case GD_ARRAY_TYPE_INT64:
+				return sizeof(int64_t);
+			case GD_ARRAY_TYPE_FLOAT:
+				return sizeof(float);
+			case GD_ARRAY_TYPE_BOOL:
+				return sizeof(uint8_t);
+			case GD_ARRAY_TYPE_STRING:
+				return sizeof(char *);
+			case GD_ARRAY_TYPE_BYTE:
+				return sizeof(uint8_t);
+			case GD_ARRAY_TYPE_GDOBJ:
+				return sizeof(GdObj);
+			default:
+				return 0;
 		}
 	};
-	
+
 	const size_t element_size = get_element_size(type);
 	if (element_size == 0) {
 		free(array);
 		return nullptr;
 	}
-	
+
 	array->data = malloc(size * element_size);
 	if (!array->data && size > 0) {
 		free(array);
 		return nullptr;
 	}
-	
+
 	return array;
 }
 
@@ -155,23 +158,23 @@ void SpxBaseMgr::free_array(GdArray array) {
 	}
 	// Special handling for string arrays - need to free each string
 	if (array->type == GD_ARRAY_TYPE_STRING && array->data) {
-		char** strings = (char**)array->data;
+		char **strings = (char **)array->data;
 		for (int64_t i = 0; i < array->size; i++) {
 			if (strings[i]) {
 				free(strings[i]);
 			}
 		}
 	}
-	
+
 	if (array->data) {
 		free(array->data);
 	}
 	free(array);
 }
 
-void* SpxBaseMgr::_get_array(GdArray array, int64_t index, int type_size) {
+void *SpxBaseMgr::_get_array(GdArray array, int64_t index, int type_size) {
 	if (!array || index < 0 || index >= array->size) {
 		return nullptr;
 	}
-	return static_cast<char*>(array->data) + (index * type_size);
+	return static_cast<char *>(array->data) + (index * type_size);
 }

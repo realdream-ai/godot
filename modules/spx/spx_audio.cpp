@@ -47,7 +47,6 @@ AudioStreamPlayer2D *SpxAudio::_get_aid_audio(GdInt aid) {
 	return nullptr;
 }
 
-
 void SpxAudio::on_create(GdInt id, Node *root) {
 	this->root = root;
 	this->id = id;
@@ -96,7 +95,7 @@ void SpxAudio::on_update(float delta) {
 	for (auto item = loop_audios.front(); item;) {
 		const auto audio = item->get();
 		auto *next = item->next();
-		if (audio->get_stream().is_valid()&& !audio->is_playing()  && !audio->get_stream_paused()) {
+		if (audio->get_stream().is_valid() && !audio->is_playing() && !audio->get_stream_paused()) {
 			audio->play();
 		}
 		item = next;
@@ -111,11 +110,11 @@ void SpxAudio::on_reset(int reset_code) {
 	}
 }
 
-void SpxAudio::play(GdInt aid, GdString path, Node* owner, GdFloat attenuation, GdFloat max_distance) {
+void SpxAudio::play(GdInt aid, GdString path, Node *owner, GdFloat attenuation, GdFloat max_distance) {
 	auto path_str = SpxStr(path);
 	Ref<AudioStream> stream = resMgr->load_audio(path_str);
 	auto audio = memnew(AudioStreamPlayer2D);
-	if(owner != nullptr){
+	if (owner != nullptr) {
 		owner->add_child(audio);
 	} else {
 		root->add_child(audio);

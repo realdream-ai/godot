@@ -39,6 +39,7 @@ class SpxInputProxy : public Node {
 
 public:
 	void ready();
+
 protected:
 	void input(const Ref<InputEvent> &p_event) override;
 };

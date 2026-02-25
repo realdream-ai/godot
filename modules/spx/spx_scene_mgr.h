@@ -41,29 +41,29 @@ class SubViewport;
 class SpxSceneMgr : public SpxBaseMgr {
 	SPXCLASS(SpxSceneMgr, SpxBaseMgr)
 
-private:	 
+private:
 	const String DEFAULT_SAVE_PATH = "user://exported_scene.png";
-    bool export_pending = false;
-    double elapsed = 0.0;
-    SubViewport *viewport_to_export = nullptr;
-	Vector2 cached_cell_size{16, 16};
-	
+	bool export_pending = false;
+	double elapsed = 0.0;
+	SubViewport *viewport_to_export = nullptr;
+	Vector2 cached_cell_size{ 16, 16 };
+
 	void _request_export(SubViewport *viewport);
 	void _export_vp_png(SubViewport *viewport);
 
 public:
 	// Pure sprite management (kept in SpxExtMgr)
 	Node *pure_sprite_root;
-	RBMap<GdObj, ISortableSprite*> id_pure_sprites;
+	RBMap<GdObj, ISortableSprite *> id_pure_sprites;
 
 	void on_awake() override;
 	void on_update(float delta) override;
 	void on_destroy() override;
 	void on_reset(int reset_code) override;
 
-	void collect_sortable_sprites(Vector<ISortableSprite*>& out);
+	void collect_sortable_sprites(Vector<ISortableSprite *> &out);
 
-	_FORCE_INLINE_ void set_cached_cell_size(Vector2 cell_size){
+	_FORCE_INLINE_ void set_cached_cell_size(Vector2 cell_size) {
 		cached_cell_size = cell_size;
 	}
 	Rect2 get_scene_bounds(Node *node);

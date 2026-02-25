@@ -44,7 +44,7 @@ GdObj SpxPen::get_id() {
 	return id;
 }
 
-void SpxPen::on_create(GdInt id, Node * root) {
+void SpxPen::on_create(GdInt id, Node *root) {
 	this->root = root;
 	this->id = id;
 	current_line = _create_new_line();
@@ -52,7 +52,6 @@ void SpxPen::on_create(GdInt id, Node * root) {
 	min_draw_distance = 1.0f;
 	pen_properties.transparency = 1.0f;
 }
-
 
 Line2D *SpxPen::_create_new_line() {
 	Line2D *new_line = memnew(Line2D);
@@ -85,6 +84,7 @@ void SpxPen::on_update(float delta) {
 	if (move_by_mouse) {
 		current_pen_pos = Input::get_singleton()->get_mouse_position();
 	}
+
 	if (is_pen_down && current_line) {
 		if (current_line->get_point_count() > 0) {
 			Vector2 last_point = current_line->get_point_position(current_line->get_point_count() - 1);
@@ -106,7 +106,7 @@ void SpxPen::on_destroy() {
 		root->queue_free();
 		root = nullptr;
 	}
-    current_line = nullptr;
+	current_line = nullptr;
 }
 
 void SpxPen::erase_all() {

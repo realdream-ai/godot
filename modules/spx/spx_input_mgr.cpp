@@ -39,13 +39,13 @@
 void SpxInputMgr::on_start() {
 	SpxBaseMgr::on_start();
 	input_proxy = memnew(SpxInputProxy);
-	input_proxy->set_name( "input_proxy");
+	input_proxy->set_name("input_proxy");
 	get_spx_root()->add_child(input_proxy);
 	input_proxy->ready();
 }
 
 void SpxInputMgr::on_reset(int reset_code) {
-	if(input_proxy) {
+	if (input_proxy) {
 		input_proxy->queue_free();
 	}
 }
@@ -70,7 +70,7 @@ GdInt SpxInputMgr::get_key_state(GdInt key) {
 }
 
 GdFloat SpxInputMgr::get_axis(GdString neg_action, GdString pos_action) {
-	return Input::get_singleton()->get_axis(SpxStr(neg_action),SpxStr(pos_action));
+	return Input::get_singleton()->get_axis(SpxStr(neg_action), SpxStr(pos_action));
 }
 
 GdBool SpxInputMgr::is_action_pressed(GdString action) {

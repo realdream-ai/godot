@@ -396,4 +396,3 @@ bool SpxTileMapData::save_to_file(const String &json_path) const {
 
 	return true;
 }
-

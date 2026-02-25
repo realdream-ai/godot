@@ -48,14 +48,14 @@
 #include "spx_sprite.h"
 #include "spx_sprite_mgr.h"
 
-GdArray SpxRaycastInfo::ToArray(){
+GdArray SpxRaycastInfo::ToArray() {
 	GdArray result_array = SpxBaseMgr::create_array(GD_ARRAY_TYPE_INT64, 6);
-	SpxBaseMgr::set_array(result_array,0,(GdInt)collide);
-	SpxBaseMgr::set_array(result_array,1,(GdInt)sprite_gid);
-	SpxBaseMgr::set_array(result_array,2,spx_float_to_int(position.x));
-	SpxBaseMgr::set_array(result_array,3,spx_float_to_int(position.y));
-	SpxBaseMgr::set_array(result_array,4,spx_float_to_int(normal.x));
-	SpxBaseMgr::set_array(result_array,5,spx_float_to_int(normal.y));
+	SpxBaseMgr::set_array(result_array, 0, (GdInt)collide);
+	SpxBaseMgr::set_array(result_array, 1, (GdInt)sprite_gid);
+	SpxBaseMgr::set_array(result_array, 2, spx_float_to_int(position.x));
+	SpxBaseMgr::set_array(result_array, 3, spx_float_to_int(position.y));
+	SpxBaseMgr::set_array(result_array, 4, spx_float_to_int(normal.x));
+	SpxBaseMgr::set_array(result_array, 5, spx_float_to_int(normal.y));
 	return result_array;
 }
 
@@ -80,9 +80,8 @@ void SpxPhysicsDefine::set_global_air_drag(GdFloat air_drag) {
 }
 
 GdFloat SpxPhysicsDefine::get_global_air_drag() {
-	return SpxPhysicsDefine::global_air_drag	;
+	return SpxPhysicsDefine::global_air_drag;
 }
-
 
 void SpxPhysicsMgr::on_awake() {
 	SpxBaseMgr::on_awake();
@@ -95,24 +94,24 @@ void SpxPhysicsMgr::on_reset(int reset_code) {
 SpxRaycastInfo SpxPhysicsMgr::_raycast(GdVec2 from, GdVec2 to, GdArray ignore_sprites, GdInt collision_mask, GdBool collide_with_areas, GdBool collide_with_bodies) {
 	SpxRaycastInfo info;
 	info.collide = false;
-	info.position = GdVec2{0, 0};
-	info.normal = GdVec2{0, 0};
+	info.position = GdVec2{ 0, 0 };
+	info.normal = GdVec2{ 0, 0 };
 	info.sprite_gid = 0;
 
 	// invert y
-	GdVec2 current_from = GdVec2{from.x, -from.y};
-	GdVec2 target_to = GdVec2{to.x, -to.y};
+	GdVec2 current_from = GdVec2{ from.x, -from.y };
+	GdVec2 target_to = GdVec2{ to.x, -to.y };
 
 	HashSet<RID> ignore_set;
-	if(ignore_sprites && ignore_sprites->size > 0){
-		GdObj* sprite_data = (SpxBaseMgr::get_array<GdObj>(ignore_sprites, 0));
+	if (ignore_sprites && ignore_sprites->size > 0) {
+		GdObj *sprite_data = (SpxBaseMgr::get_array<GdObj>(ignore_sprites, 0));
 		for (int i = 0; i < ignore_sprites->size; i++) {
 			auto obj = sprite_data[i];
 			auto sprite = spriteMgr->get_sprite(obj);
-			if(sprite != nullptr){
+			if (sprite != nullptr) {
 				ignore_set.insert(sprite->get_rid());
 				auto trigger = sprite->get_area2d();
-				if(trigger != nullptr){
+				if (trigger != nullptr) {
 					ignore_set.insert(trigger->get_rid());
 				}
 			}
@@ -140,15 +139,13 @@ SpxRaycastInfo SpxPhysicsMgr::_raycast(GdVec2 from, GdVec2 to, GdArray ignore_sp
 	SpxSprite *collider = dynamic_cast<SpxSprite *>(result.collider);
 	GdObj current_gid = collider ? collider->get_gid() : 0;
 	info.collide = true;
-	info.position = GdVec2{result.position.x, -result.position.y};
-	info.normal = GdVec2{result.normal.x, -result.normal.y};
+	info.position = GdVec2{ result.position.x, -result.position.y };
+	info.normal = GdVec2{ result.normal.x, -result.normal.y };
 	info.sprite_gid = current_gid;
 	return info;
 }
 
-
-
-GdArray SpxPhysicsMgr::raycast_with_details(GdVec2 from, GdVec2 to, GdArray ignore_sprites, GdInt collision_mask, GdBool collide_with_areas, GdBool collide_with_bodies){
+GdArray SpxPhysicsMgr::raycast_with_details(GdVec2 from, GdVec2 to, GdArray ignore_sprites, GdInt collision_mask, GdBool collide_with_areas, GdBool collide_with_bodies) {
 	SpxRaycastInfo info = _raycast(from, to, ignore_sprites, collision_mask, collide_with_areas, collide_with_bodies);
 	return info.ToArray();
 }
@@ -213,7 +210,7 @@ GdInt SpxPhysicsMgr::_check_touched_boundaries(GdObj obj, GdBool use_stage_limit
 
 	// Get boundary rect from camera manager
 	Rect2 boundary_rect = use_stage_limits ? cameraMgr->get_stage_limits_rect() : cameraMgr->get_global_camera_rect();
-	
+
 	real_t bound_left = boundary_rect.position.x;
 	real_t bound_top = boundary_rect.position.y;
 	real_t bound_right = boundary_rect.position.x + boundary_rect.size.x;
@@ -240,7 +237,7 @@ GdInt SpxPhysicsMgr::_check_touched_boundaries(GdObj obj, GdBool use_stage_limit
 	bool is_colliding_right = sprite_shape->collide(sprite_transform, vertical_edge_shape, right_edge_transform);
 	bool is_colliding_top = sprite_shape->collide(sprite_transform, horizontal_edge_shape, top_edge_transform);
 	bool is_colliding_bottom = sprite_shape->collide(sprite_transform, horizontal_edge_shape, bottom_edge_transform);
-	
+
 	GdInt result = 0;
 	result += is_colliding_top ? BOUND_TOP : 0;
 	result += is_colliding_right ? BOUND_RIGHT : 0;
@@ -274,7 +271,7 @@ GdInt SpxPhysicsMgr::_check_nearest_touched_boundary(GdObj obj, GdBool use_stage
 	if (!collision_shape) {
 		return 0;
 	}
-	
+
 	Ref<Shape2D> sprite_shape = collision_shape->get_shape();
 	if (sprite_shape.is_null()) {
 		return 0;
@@ -282,11 +279,11 @@ GdInt SpxPhysicsMgr::_check_nearest_touched_boundary(GdObj obj, GdBool use_stage
 
 	Transform2D sprite_transform = sprite->get_global_transform();
 	Rect2 sprite_rect = sprite_shape->get_rect();
-	
+
 	// Transform the rect to world coordinates
 	Vector2 sprite_pos = sprite_transform.get_origin();
 	Vector2 sprite_scale = sprite_transform.get_scale();
-	
+
 	// Get the actual bounding box in world space
 	real_t left = sprite_pos.x + sprite_rect.position.x * sprite_scale.x;
 	real_t right = sprite_pos.x + (sprite_rect.position.x + sprite_rect.size.x) * sprite_scale.x;
@@ -314,20 +311,23 @@ GdInt SpxPhysicsMgr::_check_nearest_touched_boundary(GdObj obj, GdBool use_stage
 		min_dist = dist_left;
 		nearest_edge = BOUND_LEFT;
 	}
+
 	if (dist_top < min_dist) {
 		min_dist = dist_top;
 		nearest_edge = BOUND_TOP;
 	}
+
 	if (dist_right < min_dist) {
 		min_dist = dist_right;
 		nearest_edge = BOUND_RIGHT;
 	}
+
 	if (dist_bottom < min_dist) {
 		min_dist = dist_bottom;
 		nearest_edge = BOUND_BOTTOM;
 	}
 
-	if(min_dist > 0){
+	if (min_dist > 0) {
 		return 0;
 	}
 
@@ -379,8 +379,7 @@ GdFloat SpxPhysicsMgr::get_global_air_drag() {
 	return SpxPhysicsDefine::get_global_air_drag();
 }
 
-
-GdArray SpxPhysicsMgr::_check_collision(RID shape, GdVec2 pos, GdInt collision_mask){
+GdArray SpxPhysicsMgr::_check_collision(RID shape, GdVec2 pos, GdInt collision_mask) {
 	auto node = (Node2D *)get_root();
 	PhysicsDirectSpaceState2D *space_state = node->get_world_2d()->get_direct_space_state();
 	if (!space_state) {
@@ -402,21 +401,21 @@ GdArray SpxPhysicsMgr::_check_collision(RID shape, GdVec2 pos, GdInt collision_m
 	PhysicsDirectSpaceState2D::ShapeResult results[32];
 	int result_count = space_state->intersect_shape(params, results, 32);
 
-	Array resultIds;	
+	Array resultIds;
 	for (int i = 0; i < result_count; i++) {
 		Object *collider_obj = results[i].collider;
 		if (collider_obj) {
 			SpxSprite *sprite = dynamic_cast<SpxSprite *>(collider_obj);
 			if (sprite) {
-				resultIds.push_back(sprite->get_gid()); 
+				resultIds.push_back(sprite->get_gid());
 			}
 		}
 	}
 	int valid_count = resultIds.size();
 	GdArray result_array = create_array(GD_ARRAY_TYPE_GDOBJ, valid_count);
-	for(int i=0; i < valid_count; i++){
-		auto val=(GdObj)resultIds.get(i);
-		set_array(result_array,i,val);
+	for (int i = 0; i < valid_count; i++) {
+		auto val = (GdObj)resultIds.get(i);
+		set_array(result_array, i, val);
 	}
 	return result_array;
 }
@@ -430,6 +429,6 @@ GdArray SpxPhysicsMgr::check_collision_rect(GdVec2 pos, GdVec2 size, GdInt colli
 GdArray SpxPhysicsMgr::check_collision_circle(GdVec2 pos, GdFloat radius, GdInt collision_mask) {
 	Ref<CircleShape2D> circle_shape;
 	circle_shape.instantiate();
-	circle_shape->set_radius(radius); 
+	circle_shape->set_radius(radius);
 	return _check_collision(circle_shape->get_rid(), pos, collision_mask);
 }

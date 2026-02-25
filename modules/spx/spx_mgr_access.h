@@ -39,7 +39,7 @@ class SpxAudioBusPool;
 /**
  * @file spx_mgr_access.h
  * @brief Unified accessor macros for all SPX manager instances
- * 
+ *
  * This header provides convenient macros to access manager singletons throughout
  * the SPX module. All manager access macros are centralized here to avoid duplication.
  */

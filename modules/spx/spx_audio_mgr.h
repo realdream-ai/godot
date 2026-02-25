@@ -31,13 +31,13 @@
 #ifndef SPX_AUDIO_MGR_H
 #define SPX_AUDIO_MGR_H
 
+#include "core/templates/list.h"
+#include "core/templates/rb_map.h"
 #include "gdextension_spx_ext.h"
+#include "scene/2d/node_2d.h"
+#include "scene/main/node.h"
 #include "spx_audio.h"
 #include "spx_object_mgr.h"
-#include "scene/main/node.h"
-#include "scene/2d/node_2d.h"
-#include "core/templates/rb_map.h"
-#include "core/templates/list.h"
 
 // Forward declarations
 class AudioStreamPlayer2D;
@@ -51,7 +51,7 @@ private:
 	GdInt g_audio_id;
 
 	SpxAudio *_get_aid_audio(GdInt aid);
-	
+
 public:
 	virtual ~SpxAudioMgr() = default;
 
@@ -79,11 +79,10 @@ public:
 	void stop(GdInt aid);
 	void set_loop(GdInt aid, GdBool loop);
 	GdBool get_loop(GdInt aid);
-	
+
 	GdFloat get_timer(GdInt aid);
 	void set_timer(GdInt aid, GdFloat time);
 	GdBool is_playing(GdInt aid);
-	
 };
 
 #endif // SPX_AUDIO_MGR_H

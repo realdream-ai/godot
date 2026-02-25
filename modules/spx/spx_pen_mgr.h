@@ -32,8 +32,8 @@
 #define SPX_PEN_MGR_H
 
 #include "gdextension_spx_ext.h"
-#include "spx_pen.h"
 #include "spx_object_mgr.h"
+#include "spx_pen.h"
 
 class SpxPenMgr : public SpxObjectMgr<SpxPen> {
 	SPXCLASS(SpxPenMgr, SpxObjectMgr<SpxPen>)

@@ -46,11 +46,10 @@
 #include "spx_sprite.h"
 #include "spx_sprite_mgr.h"
 
-
 void SpxSceneMgr::_request_export(SubViewport *viewport) {
-    viewport_to_export = viewport;
-    export_pending = true;
-    elapsed = 0.0;
+	viewport_to_export = viewport;
+	export_pending = true;
+	elapsed = 0.0;
 }
 
 void SpxSceneMgr::_export_vp_png(SubViewport *viewport) {
@@ -75,12 +74,12 @@ void SpxSceneMgr::on_awake() {
 
 void SpxSceneMgr::on_update(float delta) {
 	if (export_pending) {
-        elapsed += delta;
-        if (elapsed >= 1.0) {
-            export_pending = false;
-            _export_vp_png(viewport_to_export);
-        }
-    }
+		elapsed += delta;
+		if (elapsed >= 1.0) {
+			export_pending = false;
+			_export_vp_png(viewport_to_export);
+		}
+	}
 }
 
 void SpxSceneMgr::on_destroy() {
@@ -98,7 +97,7 @@ void SpxSceneMgr::on_reset(int reset_code) {
 	clear_pure_sprites();
 }
 
-void SpxSceneMgr::clear_pure_sprites(){
+void SpxSceneMgr::clear_pure_sprites() {
 	id_pure_sprites.clear();
 	// Clear SpxLayerSorter to avoid dangling pointers
 	SpxLayerSorter::instance().reset();
@@ -110,11 +109,11 @@ void SpxSceneMgr::clear_pure_sprites(){
 	}
 }
 
-void SpxSceneMgr::create_pure_sprite(GdString texture_path, GdVec2 pos, GdInt zindex){
+void SpxSceneMgr::create_pure_sprite(GdString texture_path, GdVec2 pos, GdInt zindex) {
 	if (pure_sprite_root == nullptr) {
 		return;
 	}
-	create_render_sprite(texture_path, pos, 0, GdVec2(1, 1), zindex, GdVec2(0,0));
+	create_render_sprite(texture_path, pos, 0, GdVec2(1, 1), zindex, GdVec2(0, 0));
 }
 
 void SpxSceneMgr::destroy_pure_sprite(GdObj id) {
@@ -125,17 +124,17 @@ void SpxSceneMgr::destroy_pure_sprite(GdObj id) {
 		// Clear SpxLayerSorter to avoid dangling pointers
 		// Note: This is conservative but safe. Could be optimized later with per-id removal.
 		SpxLayerSorter::instance().reset();
-		
+
 		// Cast to Node2D to remove from scene tree
-		Node2D* node = dynamic_cast<Node2D*>(sprite);
+		Node2D *node = dynamic_cast<Node2D *>(sprite);
 		if (node && node->is_inside_tree()) {
 			node->queue_free();
 		}
 	}
 }
 
-void SpxSceneMgr::collect_sortable_sprites(Vector<ISortableSprite*>& out) {
-	for (auto& pair : id_pure_sprites) {
+void SpxSceneMgr::collect_sortable_sprites(Vector<ISortableSprite *> &out) {
+	for (auto &pair : id_pure_sprites) {
 		if (pair.value && pair.value->is_node_valid()) {
 			out.push_back(pair.value);
 		}
@@ -173,53 +172,55 @@ Rect2 SpxSceneMgr::get_scene_bounds(Node *node) {
 }
 
 Rect2 SpxSceneMgr::get_tilemap_bounds(TileMapLayer *layer) {
-	if (!layer) return Rect2();
+	if (!layer) {
+		return Rect2();
+	}
 
-    Rect2i used = layer->get_used_rect();
+	Rect2i used = layer->get_used_rect();
 
-    if (used.size == Vector2i(0, 0)) {
-        return Rect2();
-    }
+	if (used.size == Vector2i(0, 0)) {
+		return Rect2();
+	}
 
-    Vector2 top_left = layer->map_to_local(used.position);
-    Vector2 bottom_right = layer->map_to_local(used.position + used.size);
+	Vector2 top_left = layer->map_to_local(used.position);
+	Vector2 bottom_right = layer->map_to_local(used.position + used.size);
 
-    Rect2 rect(top_left - cached_cell_size / 2, bottom_right - top_left);
-    return rect;
+	Rect2 rect(top_left - cached_cell_size / 2, bottom_right - top_left);
+	return rect;
 }
 
 void SpxSceneMgr::export_scene_as_png(Node *root) {
-    if (!root) {
-        print_error("Root is null");
-        return;
-    }
+	if (!root) {
+		print_error("Root is null");
+		return;
+	}
 
-    Rect2 rect = get_scene_bounds(root);
-    if (rect.size == Vector2(0, 0)) {
-        print_error("No TileMapLayer found in scene!");
-        return;
-    }
+	Rect2 rect = get_scene_bounds(root);
+	if (rect.size == Vector2(0, 0)) {
+		print_error("No TileMapLayer found in scene!");
+		return;
+	}
 
-    SubViewport *viewport = memnew(SubViewport);
-    viewport->set_size(rect.size);
-    viewport->set_update_mode(SubViewport::UPDATE_ALWAYS);
-    viewport->set_clear_mode(SubViewport::CLEAR_MODE_ALWAYS);
+	SubViewport *viewport = memnew(SubViewport);
+	viewport->set_size(rect.size);
+	viewport->set_update_mode(SubViewport::UPDATE_ALWAYS);
+	viewport->set_clear_mode(SubViewport::CLEAR_MODE_ALWAYS);
 
-    Node *copy = root->duplicate(Node::DUPLICATE_USE_INSTANTIATION);
-    if (Node2D *n2d = Object::cast_to<Node2D>(copy)) {
-        n2d->set_position(n2d->get_global_position() - rect.position);
-    }
-    viewport->add_child(copy);
-    get_tree()->get_current_scene()->add_child(viewport);
-    _request_export(viewport);
+	Node *copy = root->duplicate(Node::DUPLICATE_USE_INSTANTIATION);
+	if (Node2D *n2d = Object::cast_to<Node2D>(copy)) {
+		n2d->set_position(n2d->get_global_position() - rect.position);
+	}
+	viewport->add_child(copy);
+	get_tree()->get_current_scene()->add_child(viewport);
+	_request_export(viewport);
 }
 
-GdObj SpxSceneMgr::create_render_sprite(GdString texture_path, GdVec2 pos, GdFloat degree, GdVec2 scale, GdInt zindex, GdVec2 pivot){
+GdObj SpxSceneMgr::create_render_sprite(GdString texture_path, GdVec2 pos, GdFloat degree, GdVec2 scale, GdInt zindex, GdVec2 pivot) {
 	if (pure_sprite_root == nullptr) {
 		return NULL_OBJECT_ID;
 	}
 
-	SpxRenderSprite* sprite = memnew(SpxRenderSprite);
+	SpxRenderSprite *sprite = memnew(SpxRenderSprite);
 	sprite->set_pivot(GdVec2(pivot.x, -pivot.y));
 	auto path_str = SpxStr(texture_path);
 	Ref<Texture2D> texture = resMgr->load_texture(path_str, true);
@@ -239,93 +240,92 @@ GdObj SpxSceneMgr::create_render_sprite(GdString texture_path, GdVec2 pos, GdFlo
 	return id;
 }
 
-GdObj SpxSceneMgr::create_static_sprite(GdString texture_path, GdVec2 pos, GdFloat degree, GdVec2 scale, GdInt zindex, GdVec2 pivot, GdInt collider_type, GdVec2 collider_pivot, GdArray collider_params){
+GdObj SpxSceneMgr::create_static_sprite(GdString texture_path, GdVec2 pos, GdFloat degree, GdVec2 scale, GdInt zindex, GdVec2 pivot, GdInt collider_type, GdVec2 collider_pivot, GdArray collider_params) {
 	if (pure_sprite_root == nullptr) {
 		return NULL_OBJECT_ID;
 	}
 	auto type = (ColliderType)collider_type;
-	if(type == ColliderType::NONE){
+	if (type == ColliderType::NONE) {
 		return create_render_sprite(texture_path, pos, degree, scale, zindex, pivot);
 	}
 
 	auto path_str = SpxStr(texture_path);
 	// Create StaticBody2D
-	SpxStaticSprite* static_body = memnew(SpxStaticSprite);
+	SpxStaticSprite *static_body = memnew(SpxStaticSprite);
 	static_body->set_position(Vector2(pos.x, -pos.y));
 	static_body->set_rotation_degrees(degree);
 	static_body->set_name(path_str.get_file());
 
 	// Load and create sprite child
-	Sprite2D* sprite = memnew(Sprite2D);
+	Sprite2D *sprite = memnew(Sprite2D);
 	Ref<Texture2D> texture = resMgr->load_texture(path_str, true);
 	sprite->set_texture(texture);
 	sprite->set_z_index(zindex);
-	static_body->add_child(sprite);   
+	static_body->add_child(sprite);
 	sprite->set_position(Vector2(pivot.x, -pivot.y));
 
 	// Create collision shape (default: rectangle matching texture size)
-	CollisionShape2D* collision_shape = memnew(CollisionShape2D);
+	CollisionShape2D *collision_shape = memnew(CollisionShape2D);
 
 	static_body->collider2d = collision_shape;
 	static_body->add_child(collision_shape);
 	collision_shape->set_position(Vector2(collider_pivot.x, -collider_pivot.y));
-	auto data_len =  collider_params == nullptr ? 0 : collider_params->size;
-	switch (type)
-	{
-	case ColliderType::NONE:
-		if (texture.is_valid()) {
+	auto data_len = collider_params == nullptr ? 0 : collider_params->size;
+	switch (type) {
+		case ColliderType::NONE:
+			if (texture.is_valid()) {
+				Ref<RectangleShape2D> rect = memnew(RectangleShape2D);
+				Vector2 texture_size = texture->get_size();
+				rect->set_size(texture_size);
+				collision_shape->set_shape(rect);
+			}
+			break;
+		case ColliderType::CIRCLE: {
+			Ref<CircleShape2D> circle = memnew(CircleShape2D);
+			if (data_len > 0) {
+				auto radius = *(SpxBaseMgr::get_array<real_t>(collider_params, 0));
+				circle->set_radius(radius);
+			}
+			collision_shape->set_shape(circle);
+			break;
+		}
+		case ColliderType::RECT: {
 			Ref<RectangleShape2D> rect = memnew(RectangleShape2D);
-			Vector2 texture_size = texture->get_size();
-			rect->set_size(texture_size);
+			if (data_len >= 2) {
+				auto width = *(SpxBaseMgr::get_array<real_t>(collider_params, 0));
+				auto height = *(SpxBaseMgr::get_array<real_t>(collider_params, 1));
+				rect->set_size(Vector2(width, height));
+			}
 			collision_shape->set_shape(rect);
+			break;
 		}
-		break;
-	case ColliderType::CIRCLE: {
-		Ref<CircleShape2D> circle = memnew(CircleShape2D);
-		if (data_len > 0) {
-			auto radius = *(SpxBaseMgr::get_array<real_t>(collider_params, 0));
-			circle->set_radius(radius);
+		case ColliderType::CAPSULE: {
+			Ref<CapsuleShape2D> capsule = memnew(CapsuleShape2D);
+			if (data_len >= 2) {
+				auto radius = *(SpxBaseMgr::get_array<real_t>(collider_params, 0));
+				auto height = *(SpxBaseMgr::get_array<real_t>(collider_params, 1));
+				capsule->set_radius(radius / 2);
+				capsule->set_height(height);
+			}
+			collision_shape->set_shape(capsule);
+			break;
 		}
-		collision_shape->set_shape(circle);
-		break;
-	}
-	case ColliderType::RECT: {
-		Ref<RectangleShape2D> rect = memnew(RectangleShape2D);
-		if (data_len >= 2) {
-			auto width = *(SpxBaseMgr::get_array<real_t>(collider_params, 0));
-			auto height = *(SpxBaseMgr::get_array<real_t>(collider_params, 1));
-			rect->set_size(Vector2(width, height));
+		case ColliderType::POLYGON: {
+			Ref<ConvexPolygonShape2D> polygon = memnew(ConvexPolygonShape2D);
+			Vector<Vector2> points = {};
+			auto len = data_len;
+			for (int i = 0; i + 1 < len; i += 2) {
+				auto x = *(SpxBaseMgr::get_array<real_t>(collider_params, i));
+				auto y = *(SpxBaseMgr::get_array<real_t>(collider_params, i + 1));
+				points.append(Vector2(x, y));
+			}
+			polygon->set_points(points);
+			collision_shape->set_shape(polygon);
+			break;
 		}
-		collision_shape->set_shape(rect);
-		break;
-	}
-	case ColliderType::CAPSULE: {
-		Ref<CapsuleShape2D> capsule = memnew(CapsuleShape2D);
-		if (data_len >= 2) {
-			auto radius = *(SpxBaseMgr::get_array<real_t>(collider_params, 0));
-			auto height = *(SpxBaseMgr::get_array<real_t>(collider_params, 1));
-			capsule->set_radius(radius/2);
-			capsule->set_height(height);
-		}
-		collision_shape->set_shape(capsule);
-		break;
-	}
-	case ColliderType::POLYGON: {
-		Ref<ConvexPolygonShape2D> polygon = memnew(ConvexPolygonShape2D);
-		Vector<Vector2> points = {};
-		auto len = data_len;
-		for (int i = 0; i + 1 < len; i += 2) {
-			auto x = *(SpxBaseMgr::get_array<real_t>(collider_params, i));
-			auto y = *(SpxBaseMgr::get_array<real_t>(collider_params, i + 1));
-			points.append(Vector2(x, y));
-		}
-		polygon->set_points(points);
-		collision_shape->set_shape(polygon);
-		break;
-	}
-	default:
-		print_error("Invalid collider type: " + itos((int)type));
-		break;
+		default:
+			print_error("Invalid collider type: " + itos((int)type));
+			break;
 	}
 
 	static_body->set_scale(Vector2(scale.x, scale.y));
@@ -339,7 +339,6 @@ GdObj SpxSceneMgr::create_static_sprite(GdString texture_path, GdVec2 pos, GdFlo
 
 	return id;
 }
-
 
 void SpxSceneMgr::destroy_all_sprites() {
 	spriteMgr->destroy_all_sprites();

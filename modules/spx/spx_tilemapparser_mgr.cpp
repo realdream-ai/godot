@@ -30,12 +30,12 @@
 
 #include "spx_tilemapparser_mgr.h"
 
+#include "core/core_bind.h"
 #include "core/io/marshalls.h"
 #include "scene/2d/tile_map_layer.h"
 #include "scene/resources/2d/tile_set.h"
 #include "spx_engine.h"
 #include "spx_res_mgr.h"
-#include "core/core_bind.h"
 
 // ============================================================================
 // Lifecycle Methods
@@ -120,12 +120,11 @@ void SpxTilemapparserMgr::load_tilemap(GdString json_path) {
 
 	// Store layers in cache
 	tilemap_layers[tilemap_name] = layers;
-
 }
 
 void SpxTilemapparserMgr::unload_tilemap(GdString name) {
 	String tilemap_name = SpxStr(name);
-	
+
 	// Destroy layers
 	if (tilemap_layers.has(tilemap_name)) {
 		Vector<TileMapLayer *> &layers = tilemap_layers[tilemap_name];
@@ -180,6 +179,7 @@ String SpxTilemapparserMgr::_get_base_path(const String &json_path) {
 	if (last_slash == -1) {
 		last_slash = json_path.rfind("\\");
 	}
+
 	if (last_slash != -1) {
 		return json_path.substr(0, last_slash);
 	}

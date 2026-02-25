@@ -54,7 +54,7 @@ public:
 	virtual void set_sort_z_index(int z) = 0;
 	virtual int get_sort_z_index() const = 0;
 	virtual bool is_node_valid() const = 0;
-	virtual bool is_sort_static() const {return false;}
+	virtual bool is_sort_static() const { return false; }
 };
 
 // SpxRenderSprite - Wrapper for Sprite2D with sortable interface
@@ -64,7 +64,6 @@ class SpxRenderSprite : public Sprite2D, public ISortableSprite {
 private:
 	GdObj sort_id = 0;
 	Vector2 pivot_offset;
-
 
 public:
 	SpxRenderSprite() = default;
@@ -79,10 +78,10 @@ public:
 	void set_sort_z_index(int z) override { set_z_index(z); }
 	int get_sort_z_index() const override { return get_z_index(); }
 	bool is_node_valid() const override { return is_inside_tree(); }
-	bool is_sort_static() const override{return true;};
-	
-	void set_pivot(GdVec2 pivot){pivot_offset = pivot;}
-	GdVec2 get_pivot(){return pivot_offset;}
+	bool is_sort_static() const override { return true; }
+
+	void set_pivot(GdVec2 pivot) { pivot_offset = pivot; }
+	GdVec2 get_pivot() { return pivot_offset; }
 };
 
 // SpxStaticSprite - Wrapper for StaticBody2D with sortable interface
@@ -105,10 +104,11 @@ public:
 	void set_sort_z_index(int z) override { set_z_index(z); }
 	int get_sort_z_index() const override { return get_z_index(); }
 	bool is_node_valid() const override { return is_inside_tree(); }
-	bool is_sort_static() const override{return true;};
-	
-	void set_pivot(GdVec2 pivot){pivot_offset = pivot;}
-	GdVec2 get_pivot(){return pivot_offset;}
+	bool is_sort_static() const override { return true; }
+
+	void set_pivot(GdVec2 pivot) { pivot_offset = pivot; }
+	GdVec2 get_pivot() { return pivot_offset; }
+
 protected:
 	void _notification(int p_what);
 	void _draw();
@@ -120,10 +120,10 @@ class SpxSprite : public CharacterBody2D, public ISortableSprite {
 public:
 	// Physics mode enumeration
 	enum PhysicsMode {
-		NO_PHYSICS = 0,    // Pure visual, no collision, best performance (current default)
-		KINEMATIC = 1,    // Code-controlled movement with collision detection
-		DYNAMIC = 2,      // Affected by physics, automatic gravity and collision
-		STATIC = 3,       // Static immovable, but has collision, affects other objects
+		NO_PHYSICS = 0, // Pure visual, no collision, best performance (current default)
+		KINEMATIC = 1, // Code-controlled movement with collision detection
+		DYNAMIC = 2, // Affected by physics, automatic gravity and collision
+		STATIC = 3, // Static immovable, but has collision, affects other objects
 	};
 
 private:
@@ -132,20 +132,20 @@ private:
 	Vector2 pivot_offset; // Pivot offset for sorting
 
 	// Physics mode related variables
-	PhysicsMode physics_mode = NO_PHYSICS;  // Current physics mode
-	bool use_gravity = true;                // Whether to use gravity
-	float gravity_scale = 1.0f;            // Gravity scale factor
-	float mass_value = 1.0f;               // Mass value
-	float drag_value = 0.0f;               // Drag coefficient
-	float friction_value = 300.0f;         // Ground friction coefficient
-	Vector2 external_forces = Vector2();   // External applied forces
-	Vector2 applied_forces = Vector2();    // Applied forces
-	bool collision_enabled = true;         // Whether collision is enabled
-	float _gravity = 980.0f;               // Gravity value (from ProjectSettings)
+	PhysicsMode physics_mode = NO_PHYSICS; // Current physics mode
+	bool use_gravity = true; // Whether to use gravity
+	float gravity_scale = 1.0f; // Gravity scale factor
+	float mass_value = 1.0f; // Mass value
+	float drag_value = 0.0f; // Drag coefficient
+	float friction_value = 300.0f; // Ground friction coefficient
+	Vector2 external_forces = Vector2(); // External applied forces
+	Vector2 applied_forces = Vector2(); // Applied forces
+	bool collision_enabled = true; // Whether collision is enabled
+	float _gravity = 980.0f; // Gravity value (from ProjectSettings)
 
 	bool _is_collision_enabled = false;
 	bool _is_trigger_enabled = false;
-	
+
 	template <typename T>
 	T *get_component(Node *node, GdBool recursive = false);
 	Node *get_component(Node *node, StringName name, GdBool recursive);
@@ -153,12 +153,12 @@ private:
 	bool use_default_frames;
 	void set_use_default_frames(bool is_on);
 	bool get_use_default_frames();
-	
+
 	// animation frame offset
-	bool enable_dynamic_frame_offset = true;  // enable dynamic frame offset
-	Vector2 base_offset = Vector2(0, 0);      // base offset
-	void _on_frame_changed();                 // frame changed callback
-	
+	bool enable_dynamic_frame_offset = true; // enable dynamic frame offset
+	Vector2 base_offset = Vector2(0, 0); // base offset
+	void _on_frame_changed(); // frame changed callback
+
 	// Simplified SVG state tracking
 	bool is_single_image_mode = false; // Whether it's a single image animation mode
 	bool is_svg_mode = false; // Whether it's an SVG animation mode
@@ -166,7 +166,6 @@ private:
 	String current_svg_path; // Name of the current SVG animation (image)
 	String current_svg_anim_key; // Name of the current SVG animation
 	String current_anim_name = ""; // Name of the current animation
-	
 
 	void update_anim_scale();
 	Vector2 _get_actual_render_scale();
@@ -177,14 +176,14 @@ protected:
 	void _draw();
 
 	// Physics processing methods
-	void _physics_process(double delta);               // Main physics processing loop
-	void _handle_dynamic_physics(double delta);       // Dynamic mode processing
-	void _handle_kinematic_physics(double delta);     // Kinematic mode processing
-	void _handle_static_physics(double delta);        // Static mode processing
-	void _handle_no_physics(double delta);            // NoPhysics mode processing
-	void _update_physics_mode();                      // Update physics mode state
-	void _enable_collision();                         // Enable collision
-	void _disable_collision();                        // Disable collision
+	void _physics_process(double delta); // Main physics processing loop
+	void _handle_dynamic_physics(double delta); // Dynamic mode processing
+	void _handle_kinematic_physics(double delta); // Kinematic mode processing
+	void _handle_static_physics(double delta); // Static mode processing
+	void _handle_no_physics(double delta); // NoPhysics mode processing
+	void _update_physics_mode(); // Update physics mode state
+	void _enable_collision(); // Enable collision
+	void _disable_collision(); // Disable collision
 
 	Ref<SpriteFrames> default_sprite_frames;
 	Ref<ShaderMaterial> default_material;
@@ -199,6 +198,7 @@ public:
 	CollisionShape2D *get_trigger() { return trigger2d; }
 	Area2D *get_area2d() { return area2d; }
 	bool is_backdrop;
+
 public:
 	template <typename T>
 	T *get_component(GdBool recursive = false);
@@ -234,8 +234,9 @@ public:
 	String get_spx_type_name();
 	// Enhanced animation scaling support
 	void _check_and_switch_animation_scale();
-	String _extract_base_animation_name(const String& full_anim_name);
+	String _extract_base_animation_name(const String &full_anim_name);
 	void _play_single_image_animation(Ref<Texture2D> texture);
+
 public:
 	void set_gid(GdObj id);
 	GdObj get_gid();
@@ -263,8 +264,8 @@ public:
 	void set_texture_direct(GdString path, GdBool direct);
 
 	GdString get_texture();
-	Rect2 get_rect()const;
-	
+	Rect2 get_rect() const;
+
 	void on_set_visible(GdBool visible);
 	// animation
 	void play_anim(GdString p_name, GdFloat p_speed = 1.0, GdBool isLoop = false, GdBool p_from_end = false);
@@ -338,8 +339,8 @@ public:
 	GdVec2 get_render_scale();
 	GdString get_current_anim_name();
 
-	void set_pivot(GdVec2 pivot){pivot_offset = pivot;}
-	GdVec2 get_pivot(){return pivot_offset;}
+	void set_pivot(GdVec2 pivot) { pivot_offset = pivot; }
+	GdVec2 get_pivot() { return pivot_offset; }
 
 	// ISortableSprite interface implementation
 	GdObj get_sort_id() const override { return gid; }
@@ -347,7 +348,7 @@ public:
 	void set_sort_z_index(int z) override { set_z_index(z); }
 	int get_sort_z_index() const override { return get_z_index(); }
 	bool is_node_valid() const override { return is_inside_tree(); }
-	bool is_sort_static() const override{return get_physics_mode() == PhysicsMode::STATIC;};
+	bool is_sort_static() const override { return get_physics_mode() == PhysicsMode::STATIC; }
 };
 
 template <typename T>

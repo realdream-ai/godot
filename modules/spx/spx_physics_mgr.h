@@ -34,12 +34,12 @@
 #include "gdextension_spx_ext.h"
 #include "spx_base_mgr.h"
 
-
-class SpxPhysicsDefine{
+class SpxPhysicsDefine {
 private:
 	static inline GdFloat global_gravity = 1.0;
 	static inline GdFloat global_friction = 1.0;
 	static inline GdFloat global_air_drag = 1.0;
+
 public:
 	static void set_global_gravity(GdFloat gravity);
 	static GdFloat get_global_gravity();
@@ -49,15 +49,16 @@ public:
 	static GdFloat get_global_air_drag();
 };
 
-class SpxRaycastInfo{
+class SpxRaycastInfo {
 public:
 	GdBool collide;
 	GdObj sprite_gid;
 	GdVec2 position;
 	GdVec2 normal;
+
 public:
-    SpxRaycastInfo() = default;
-    ~SpxRaycastInfo() = default;
+	SpxRaycastInfo() = default;
+	~SpxRaycastInfo() = default;
 	GdArray ToArray();
 };
 
@@ -83,7 +84,7 @@ class SpxPhysicsMgr : public SpxBaseMgr {
 private:
 	GdArray _check_collision(RID shape, GdVec2 pos, GdInt collision_mask);
 	SpxRaycastInfo _raycast(GdVec2 from, GdVec2 to, GdArray ignore_sprites, GdInt collision_mask, GdBool collide_with_areas, GdBool collide_with_bodies);
-	
+
 	// Internal boundary check helpers
 	GdInt _check_touched_boundaries(GdObj obj, GdBool use_stage_limits);
 	GdBool _check_touched_boundary(GdObj obj, GdInt board_type, GdBool use_stage_limits);
@@ -93,7 +94,6 @@ public:
 	bool is_collision_by_pixel;
 	void on_awake() override;
 	void on_reset(int reset_code) override;
-	
 
 public:
 	virtual ~SpxPhysicsMgr() = default; // Added virtual destructor to fix -Werror=non-virtual-dtor
@@ -102,7 +102,7 @@ public:
 	GdInt check_touched_camera_boundaries(GdObj obj);
 	GdBool check_touched_camera_boundary(GdObj obj, GdInt board_type);
 	GdInt check_nearest_touched_camera_boundary(GdObj obj);
-	
+
 	// Stage boundary check functions
 	GdInt check_touched_stage_boundaries(GdObj obj);
 	GdBool check_touched_stage_boundary(GdObj obj, GdInt board_type);

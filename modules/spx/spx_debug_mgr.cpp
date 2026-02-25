@@ -38,14 +38,13 @@ Mutex SpxDebugMgr::lock;
 
 void SpxDebugMgr::on_awake() {
 	SpxBaseMgr::on_awake();
-	
+
 	debug_root = memnew(Node2D);
 	debug_root->set_name("debug_root");
 	debug_root->set_z_index(1000);
 	debug_root->set_z_as_relative(false);
 	get_spx_root()->add_child(debug_root);
 }
-
 
 void SpxDebugMgr::on_update(float delta) {
 	SpxBaseMgr::on_update(delta);
@@ -71,7 +70,7 @@ void SpxDebugMgr::on_reset(int reset_code) {
 }
 
 void SpxDebugMgr::_clear_debug_shapes() {
-	for (const DebugShape& shape : debug_shapes) {
+	for (const DebugShape &shape : debug_shapes) {
 		if (shape.node && shape.node->is_inside_tree()) {
 			shape.node->queue_free();
 		}
@@ -85,10 +84,10 @@ void SpxDebugMgr::debug_draw_circle(GdVec2 pos, GdFloat radius, GdColor color) {
 	}
 
 	pos.y = -pos.y;
-	Line2D* circle = memnew(Line2D);
+	Line2D *circle = memnew(Line2D);
 	circle->set_default_color(color);
 	circle->set_width(2.0f);
-	
+
 	PackedVector2Array points;
 	int segments = MAX(16, (int)(radius * 0.8f));
 	for (int i = 0; i <= segments; i++) {
@@ -97,9 +96,9 @@ void SpxDebugMgr::debug_draw_circle(GdVec2 pos, GdFloat radius, GdColor color) {
 	}
 	circle->set_points(points);
 	circle->set_position(pos);
-	
+
 	debug_root->add_child(circle);
-	
+
 	DebugShape shape;
 	shape.type = DebugShape::CIRCLE;
 	shape.position = pos;
@@ -114,10 +113,10 @@ void SpxDebugMgr::debug_draw_rect(GdVec2 pos, GdVec2 size, GdColor color) {
 		return;
 	}
 
-	Line2D* rect = memnew(Line2D);
+	Line2D *rect = memnew(Line2D);
 	rect->set_default_color(color);
 	rect->set_width(2.0f);
-	
+
 	pos.y = -pos.y;
 	size = size * 0.5;
 	PackedVector2Array points;
@@ -128,9 +127,9 @@ void SpxDebugMgr::debug_draw_rect(GdVec2 pos, GdVec2 size, GdColor color) {
 	points.append(Vector2(-size.x, -size.y));
 	rect->set_points(points);
 	rect->set_position(pos);
-	
+
 	debug_root->add_child(rect);
-	
+
 	DebugShape shape;
 	shape.type = DebugShape::RECT;
 	shape.position = pos;
@@ -148,18 +147,18 @@ void SpxDebugMgr::debug_draw_line(GdVec2 from, GdVec2 to, GdColor color) {
 	from.y = -from.y;
 	to.y = -to.y;
 
-	Line2D* line = memnew(Line2D);
+	Line2D *line = memnew(Line2D);
 	line->set_default_color(color);
 	line->set_width(2.0f);
-	
+
 	PackedVector2Array points;
 	points.append(Vector2(0, 0));
 	points.append(Vector2(to.x - from.x, to.y - from.y));
 	line->set_points(points);
 	line->set_position(from);
-	
+
 	debug_root->add_child(line);
-	
+
 	DebugShape shape;
 	shape.type = DebugShape::LINE;
 	shape.position = from;

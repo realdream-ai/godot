@@ -50,7 +50,6 @@
 #include "spx_sprite_mgr.h"
 #include "svg_mgr.h"
 
-
 void SpxStaticSprite::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_DRAW: {
@@ -66,6 +65,7 @@ void SpxStaticSprite::_draw() {
 	if (!Spx::debug_mode) {
 		return;
 	}
+
 	if (collider2d != nullptr) {
 		collider2d->set_spx_debug_color(Color(0, 0, 1, 0.2));
 	}
@@ -126,16 +126,16 @@ void SpxSprite::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_physics_mode", "mode"), &SpxSprite::set_physics_mode);
 	ClassDB::bind_method(D_METHOD("get_physics_mode"), &SpxSprite::get_physics_mode);
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "physics_mode", PROPERTY_HINT_ENUM, "NoPhysics,Kinematic,Dynamic,Static"), "set_physics_mode", "get_physics_mode");
-	
+
 	// Gravity control
 	ClassDB::bind_method(D_METHOD("set_use_gravity", "enabled"), &SpxSprite::set_use_gravity);
 	ClassDB::bind_method(D_METHOD("is_use_gravity"), &SpxSprite::is_use_gravity);
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "use_gravity"), "set_use_gravity", "is_use_gravity");
-	
+
 	ClassDB::bind_method(D_METHOD("set_gravity_scale", "scale"), &SpxSprite::set_gravity_scale);
 	ClassDB::bind_method(D_METHOD("get_gravity_scale"), &SpxSprite::get_gravity_scale);
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "gravity_scale"), "set_gravity_scale", "get_gravity_scale");
-	
+
 	ClassDB::bind_method(D_METHOD("set_drag", "drag"), &SpxSprite::set_drag);
 	ClassDB::bind_method(D_METHOD("get_drag"), &SpxSprite::get_drag);
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "drag"), "set_drag", "get_drag");
@@ -145,15 +145,16 @@ void SpxSprite::_bind_methods() {
 }
 
 void SpxSprite::on_destroy_call() {
-	if (!Spx::initialed)
+	if (!Spx::initialed) {
 		return;
+	}
 	spriteMgr->on_sprite_destroy(this);
 }
 
 SpxSprite::SpxSprite() {
 	// Get project gravity settings
 	_gravity = ProjectSettings::get_singleton()->get_setting("physics/2d/default_gravity", 980.0);
-	
+
 	// Default to NO_PHYSICS mode for backward compatibility
 	physics_mode = NO_PHYSICS;
 }
@@ -184,9 +185,11 @@ void SpxSprite::_draw() {
 	if (!Spx::debug_mode) {
 		return;
 	}
+
 	if (trigger2d != nullptr) {
 		trigger2d->set_spx_debug_color(Color(1, 0, 0, 0.2));
 	}
+
 	if (collider2d != nullptr) {
 		collider2d->set_spx_debug_color(Color(0, 0, 1, 0.2));
 	}
@@ -199,14 +202,14 @@ void SpxSprite::on_start() {
 	if (area2d != nullptr) {
 		trigger2d = get_component<CollisionShape2D>(area2d);
 	}
-	
+
 	ERR_FAIL_COND_MSG(collider2d == nullptr, "SpxSprite: CollisionShape2D component is missing.");
 	ERR_FAIL_COND_MSG(anim2d == nullptr, "SpxSprite: AnimatedSprite2D component is missing.");
 	ERR_FAIL_COND_MSG(area2d == nullptr, "SpxSprite: Area2D component is missing.");
 	ERR_FAIL_COND_MSG(trigger2d == nullptr, "SpxSprite: Trigger2D component is missing.");
 
 	default_sprite_frames = anim2d->get_sprite_frames();
-	if(default_sprite_frames.is_null() || resMgr->is_dynamic_anim_mode()) {
+	if (default_sprite_frames.is_null() || resMgr->is_dynamic_anim_mode()) {
 		default_sprite_frames.instantiate();
 		anim2d->set_sprite_frames(default_sprite_frames);
 	}
@@ -223,6 +226,7 @@ void SpxSprite::on_start() {
 		area2d->connect("area_entered", Callable(this, "on_area_entered"));
 		area2d->connect("area_exited", Callable(this, "on_area_exited"));
 	}
+
 	if (anim2d != nullptr) {
 		anim2d->connect("sprite_frames_changed", Callable(this, "on_sprite_frames_set_changed"));
 		anim2d->connect("animation_changed", Callable(this, "on_sprite_animation_changed"));
@@ -230,6 +234,7 @@ void SpxSprite::on_start() {
 		anim2d->connect("animation_looped", Callable(this, "on_sprite_animation_looped"));
 		anim2d->connect("animation_finished", Callable(this, "on_sprite_animation_finished"));
 	}
+
 	if (visible_notifier != nullptr) {
 		visible_notifier->connect("screen_exited", Callable(this, "on_sprite_screen_exited"));
 		visible_notifier->connect("screen_entered", Callable(this, "on_sprite_screen_entered"));
@@ -263,8 +268,8 @@ void SpxSprite::on_area_entered(Node *node) {
 		return;
 	}
 	// backdrop would not collision with other
-	if(is_backdrop) {
-		return ;
+	if (is_backdrop) {
+		return;
 	}
 	Node *parent_node = node->get_parent();
 	const SpxSprite *other = Object::cast_to<SpxSprite>(parent_node);
@@ -278,8 +283,8 @@ void SpxSprite::on_area_exited(Node *node) {
 		return;
 	}
 	// backdrop would not collision with other
-	if(is_backdrop) {
-		return ;
+	if (is_backdrop) {
+		return;
 	}
 	Node *parent_node = node->get_parent();
 	const SpxSprite *other = Object::cast_to<SpxSprite>(parent_node);
@@ -310,10 +315,10 @@ void SpxSprite::on_sprite_frame_changed() {
 	if (!Spx::initialed) {
 		return;
 	}
-	
+
 	// Handle dynamic frame offset
 	_on_frame_changed();
-	
+
 	SPX_CALLBACK->func_on_sprite_frame_changed(this->gid);
 
 	// update effect shader's atlas's uv rect
@@ -371,13 +376,12 @@ GdColor SpxSprite::get_color() {
 void SpxSprite::set_material_shader(GdString path) {
 	Ref<Shader> shader = ResourceLoader::load(SpxStr(path));
 	if (shader.is_null()) {
-		print_line("load spx_sprite_shader failed !",SpxStr(path));
+		print_line("load spx_sprite_shader failed !", SpxStr(path));
 		return;
 	}
 
 	default_material = anim2d->get_material();
-	if (default_material.is_null())
-	{
+	if (default_material.is_null()) {
 		default_material.instantiate();
 		anim2d->set_material(default_material);
 	}
@@ -389,8 +393,7 @@ void SpxSprite::set_material_shader(GdString path) {
 
 GdString SpxSprite::get_material_shader() {
 	default_material = anim2d->get_material();
-	if (default_material.is_null())
-	{
+	if (default_material.is_null()) {
 		return nullptr;
 	}
 	auto path = default_material.ptr()->get_shader()->get_path();
@@ -398,8 +401,7 @@ GdString SpxSprite::get_material_shader() {
 }
 
 void SpxSprite::set_material_params(GdString effect, GdFloat amount) {
-	if (default_material.is_null())
-	{
+	if (default_material.is_null()) {
 		print_line("set_material_params failed, the material and shader have not been set, please initialize the shader first!");
 		return;
 	}
@@ -408,8 +410,7 @@ void SpxSprite::set_material_params(GdString effect, GdFloat amount) {
 }
 
 GdFloat SpxSprite::get_material_params(GdString effect) {
-	if (default_material.is_null())
-	{
+	if (default_material.is_null()) {
 		print_line("get_material_params failed, the material and shader have not been set, please initialize the shader first!");
 		return 0;
 	}
@@ -417,8 +418,7 @@ GdFloat SpxSprite::get_material_params(GdString effect) {
 }
 
 void SpxSprite::set_material_params_vec4(GdString effect, GdVec4 vec4) {
-	if (default_material.is_null())
-	{
+	if (default_material.is_null()) {
 		print_line("set_material_params_vec4 failed, the material and shader have not been set, please initialize the shader first!");
 		return;
 	}
@@ -426,8 +426,7 @@ void SpxSprite::set_material_params_vec4(GdString effect, GdVec4 vec4) {
 }
 
 GdVec4 SpxSprite::get_material_params_vec4(GdString effect) {
-	if (default_material.is_null())
-	{
+	if (default_material.is_null()) {
 		print_line("get_material_params_vec4 failed, the material and shader have not been set, please initialize the shader first!");
 		return GdVec4();
 	}
@@ -435,8 +434,7 @@ GdVec4 SpxSprite::get_material_params_vec4(GdString effect) {
 }
 
 void SpxSprite::set_material_params_color(GdString effect, GdColor color) {
-	if (default_material.is_null())
-	{
+	if (default_material.is_null()) {
 		print_line("set_material_params_color failed, the material and shader have not been set, please initialize the shader first!");
 		return;
 	}
@@ -444,8 +442,7 @@ void SpxSprite::set_material_params_color(GdString effect, GdColor color) {
 }
 
 GdColor SpxSprite::get_material_params_color(GdString effect) {
-	if (default_material.is_null())
-	{
+	if (default_material.is_null()) {
 		print_line("get_material_params_color failed, the material and shader have not been set, please initialize the shader first!");
 		return GdColor();
 	}
@@ -455,7 +452,7 @@ GdColor SpxSprite::get_material_params_color(GdString effect) {
 void SpxSprite::set_texture_atlas_direct(GdString path, GdRect2 rect2, GdBool direct) {
 	auto path_str = SpxStr(path);
 	current_anim_name = "";
-	is_svg_mode = false;// svg don't support atlas
+	is_svg_mode = false; // svg don't support atlas
 	Ref<Texture2D> texture = resMgr->load_texture(path_str, direct);
 
 	Ref<AtlasTexture> atlas_texture_frame = memnew(AtlasTexture);
@@ -465,25 +462,24 @@ void SpxSprite::set_texture_atlas_direct(GdString path, GdRect2 rect2, GdBool di
 	_play_single_image_animation(atlas_texture_frame);
 }
 
-
 void SpxSprite::set_texture_direct(GdString path, GdBool direct) {
 	auto path_str = SpxStr(path);
 	current_anim_name = "";
 
 	Ref<Texture2D> texture = nullptr;
 	is_svg_mode = svgMgr->is_svg_file(path_str);
-	if (is_svg_mode){
+	if (is_svg_mode) {
 		int target_scale = _get_actual_match_render_scale();
 		current_svg_scale = target_scale;
 		current_svg_path = path_str;
 		texture = svgMgr->get_svg_image(path_str, target_scale);
-	}else{
+	} else {
 		texture = resMgr->load_texture(path_str, direct);
 	}
 	_play_single_image_animation(texture);
 }
 
-void SpxSprite::_play_single_image_animation(Ref<Texture2D> texture){
+void SpxSprite::_play_single_image_animation(Ref<Texture2D> texture) {
 	if (texture.is_valid()) {
 		is_single_image_mode = true;
 		anim2d->set_sprite_frames(default_sprite_frames);
@@ -507,11 +503,11 @@ void SpxSprite::set_texture(GdString path) {
 }
 GdString SpxSprite::get_texture() {
 	auto tex = anim2d->get_sprite_frames()->get_frame_texture(SpxSpriteMgr::default_texture_anim, 0);
-	if (tex == nullptr)
+	if (tex == nullptr) {
 		return nullptr;
+	}
 	return SpxReturnStr(tex->get_name());
 }
-
 
 Rect2 SpxSprite::get_rect() const {
 	auto tex = anim2d->get_sprite_frames()->get_frame_texture(SpxSpriteMgr::default_texture_anim, 0);
@@ -567,9 +563,8 @@ void SpxSprite::play_anim(GdString p_name, GdFloat p_speed, GdBool isLoop, GdBoo
 	} else {
 		final_anim_key = anim_name;
 	}
-	
+
 	anim2d->play(final_anim_key, p_speed, p_from_end);
-	
 }
 
 void SpxSprite::play_backwards_anim(GdString p_name) {
@@ -632,7 +627,7 @@ GdBool SpxSprite::is_anim_centered() const {
 }
 
 void SpxSprite::set_anim_offset(GdVec2 p_offset) {
-	base_offset = p_offset;  // Save base offset
+	base_offset = p_offset; // Save base offset
 	anim2d->set_offset(p_offset);
 }
 
@@ -674,23 +669,25 @@ GdFloat SpxSprite::get_mass() {
 
 void SpxSprite::add_force(GdVec2 force) {
 	if (physics_mode == NO_PHYSICS || physics_mode == STATIC) {
-		return;  // These modes are not affected by forces
+		return; // These modes are not affected by forces
 	}
+
 	if (physics_mode == KINEMATIC) {
-		return;  // Kinematic mode is not affected by forces
+		return; // Kinematic mode is not affected by forces
 	}
-	
+
 	external_forces += Vector2(force.x, force.y);
 }
 
 void SpxSprite::add_impulse(GdVec2 impulse) {
 	if (physics_mode == NO_PHYSICS || physics_mode == STATIC) {
-		return;  // These modes are not affected by forces
+		return; // These modes are not affected by forces
 	}
+
 	if (physics_mode == KINEMATIC) {
-		return;  // Kinematic mode is not affected by forces
+		return; // Kinematic mode is not affected by forces
 	}
-	
+
 	applied_forces += Vector2(impulse.x, impulse.y);
 }
 
@@ -716,11 +713,10 @@ void SpxSprite::set_collider_rect(GdVec2 center, GdVec2 size) {
 	collider2d->set_shape(rect);
 	collider2d->set_position(center);
 }
-void SpxSprite::on_set_visible(GdBool visible){
+void SpxSprite::on_set_visible(GdBool visible) {
 	collider2d->set_disabled(!(_is_collision_enabled && is_visible()));
 	trigger2d->set_disabled(!(_is_trigger_enabled && is_visible()));
 }
-
 
 void SpxSprite::set_collider_circle(GdVec2 center, GdFloat radius) {
 	Ref<CircleShape2D> circle = memnew(CircleShape2D);
@@ -743,17 +739,17 @@ void SpxSprite::set_collider_polygon(GdVec2 center, GdArray points) {
 		print_error("set_collider_polygon: need at least 3 points");
 		return;
 	}
-	
+
 	Ref<ConvexPolygonShape2D> polygon = memnew(ConvexPolygonShape2D);
 	Vector<Vector2> polygon_points;
-	
-	const float* data = SpxBaseMgr::get_array<float>(points, 0);
+
+	const float *data = SpxBaseMgr::get_array<float>(points, 0);
 	int point_count = points->size / 2;
-	
+
 	for (int i = 0; i < point_count; i++) {
 		polygon_points.push_back(Vector2(data[i * 2], data[i * 2 + 1]));
 	}
-	
+
 	polygon->set_points(polygon_points);
 	collider2d->set_shape(polygon);
 	collider2d->set_position(center);
@@ -796,17 +792,17 @@ void SpxSprite::set_trigger_polygon(GdVec2 center, GdArray points) {
 		print_error("set_trigger_polygon: need at least 3 points");
 		return;
 	}
-	
+
 	Ref<ConvexPolygonShape2D> polygon = memnew(ConvexPolygonShape2D);
 	Vector<Vector2> polygon_points;
-	
-	const float* data = SpxBaseMgr::get_array<float>(points, 0);
+
+	const float *data = SpxBaseMgr::get_array<float>(points, 0);
 	int point_count = points->size / 2;
-	
+
 	for (int i = 0; i < point_count; i++) {
 		polygon_points.push_back(Vector2(data[i * 2], -data[i * 2 + 1]));
 	}
-	
+
 	polygon->set_points(polygon_points);
 	trigger2d->set_shape(polygon);
 	trigger2d->set_position(center);
@@ -826,13 +822,15 @@ CollisionShape2D *SpxSprite::get_collider(bool is_trigger) {
 }
 
 GdBool SpxSprite::check_collision(SpxSprite *other, GdBool is_src_trigger, GdBool is_dst_trigger) {
-	if (other == nullptr)
+	if (other == nullptr) {
 		return false;
+	}
 	auto this_shape = is_src_trigger ? this->trigger2d : this->collider2d;
 	auto other_shape = is_dst_trigger ? other->trigger2d : other->collider2d;
 	if (!this_shape->get_shape().is_valid()) {
 		return false;
 	}
+
 	if (!other_shape->get_shape().is_valid()) {
 		return false;
 	}
@@ -860,26 +858,26 @@ void SpxSprite::set_render_scale(GdVec2 new_scale) {
 	update_anim_scale();
 }
 
-void SpxSprite::update_anim_scale(){
+void SpxSprite::update_anim_scale() {
 	GdVec2 finalScale = _render_scale;
 	auto target_scale = _get_actual_match_render_scale();
-	if(target_scale != current_svg_scale){
+	if (target_scale != current_svg_scale) {
 		current_svg_scale = target_scale;
-		if(is_svg_mode){
-			if(is_single_image_mode){
+		if (is_svg_mode) {
+			if (is_single_image_mode) {
 				Ref<Texture2D> texture = svgMgr->get_svg_image(current_svg_path, target_scale);
 				_play_single_image_animation(texture);
-			}else{ 
+			} else {
 				// Save current animation state
 				bool was_playing = anim2d->is_playing();
 				int current_frame = anim2d->get_frame();
 				float frame_progress = anim2d->get_frame_progress();
 				float custom_speed_scale = anim2d->get_playing_speed() / anim2d->get_speed_scale();
-				
+
 				auto loop = false;
 				auto animation = anim2d->get_animation();
 				auto old_frames = anim2d->get_sprite_frames();
-				if(old_frames.is_valid() && old_frames->has_animation(animation)){
+				if (old_frames.is_valid() && old_frames->has_animation(animation)) {
 					loop = old_frames->get_animation_loop(animation);
 				}
 				auto base_anim_key = current_svg_anim_key;
@@ -887,17 +885,17 @@ void SpxSprite::update_anim_scale(){
 				if (frames.is_valid()) {
 					anim2d->set_sprite_frames(frames);
 					frames->set_animation_loop(base_anim_key, loop);
-					
+
 					// Set animation without resetting state
 					anim2d->set_animation(base_anim_key);
-					
+
 					// Restore animation state
 					int max_frame = frames->get_frame_count(base_anim_key) - 1;
 					if (current_frame > max_frame) {
 						current_frame = max_frame;
 					}
 					anim2d->set_frame_and_progress(current_frame, frame_progress);
-					
+
 					// Resume playing if it was playing before
 					if (was_playing) {
 						anim2d->play(base_anim_key, custom_speed_scale);
@@ -906,7 +904,8 @@ void SpxSprite::update_anim_scale(){
 			}
 		}
 	}
-	if(is_svg_mode){
+
+	if (is_svg_mode) {
 		finalScale.x = finalScale.x / current_svg_scale;
 		finalScale.y = finalScale.y / current_svg_scale;
 	}
@@ -927,17 +926,17 @@ Vector2 SpxSprite::_get_actual_render_scale() {
 	if (!anim2d) {
 		return Vector2(1.0f, 1.0f);
 	}
-	
+
 	// Get the global transform scale
 	Vector2 global_scale = get_global_transform().get_scale() * _render_scale;
-	
+
 	// Consider camera zoom if available
 	auto camera_mgr = SpxEngine::get_singleton()->get_camera();
 	if (camera_mgr) {
 		Vector2 camera_zoom = camera_mgr->get_camera_zoom();
 		global_scale *= camera_zoom;
 	}
-	
+
 	return global_scale;
 }
 
@@ -945,17 +944,16 @@ void SpxSprite::_on_frame_changed() {
 	if (anim2d == nullptr) {
 		return;
 	}
-	
+
 	// Handle dynamic frame offset
 	if (enable_dynamic_frame_offset) {
 		String current_anim = String(anim2d->get_animation());
 		int current_frame = anim2d->get_frame();
-		
+
 		Vector2 frame_offset = resMgr->get_animation_frame_offset(
-			current_anim, 
-			current_frame
-		);
-		
+				current_anim,
+				current_frame);
+
 		Vector2 final_offset = base_offset - pivot_offset + frame_offset * _render_scale;
 		anim2d->set_offset(final_offset);
 	}
@@ -963,7 +961,7 @@ void SpxSprite::_on_frame_changed() {
 
 void SpxSprite::set_dynamic_frame_offset_enabled(GdBool enabled) {
 	enable_dynamic_frame_offset = enabled;
-	
+
 	// if enable dynamic frame offset, update current frame offset immediately
 	if (enabled) {
 		_on_frame_changed();
@@ -1004,28 +1002,28 @@ void SpxSprite::_physics_process(double delta) {
 
 void SpxSprite::_handle_dynamic_physics(double delta) {
 	Vector2 vel = get_velocity();
-	
+
 	// Apply gravity
 	if (use_gravity && !is_on_floor()) {
-		vel.y += _gravity  * delta * gravity_scale * SpxPhysicsDefine::get_global_gravity();
+		vel.y += _gravity * delta * gravity_scale * SpxPhysicsDefine::get_global_gravity();
 	}
-	
+
 	// Apply forces
 	vel += applied_forces * delta / mass_value;
 	vel += external_forces * delta;
-	
+
 	// Apply drag
 	if (drag_value > 0) {
 		vel = vel.move_toward(Vector2(), drag_value * vel.length() * delta * SpxPhysicsDefine::get_global_air_drag());
 	}
-	
+
 	// Ground friction
 	if (is_on_floor() && ABS(vel.x) > 0) {
-		vel.x = Math::move_toward(double(vel.x), 0.0,  delta*friction_value *  SpxPhysicsDefine::get_global_friction());
+		vel.x = Math::move_toward(double(vel.x), 0.0, delta * friction_value * SpxPhysicsDefine::get_global_friction());
 	}
-	
+
 	set_velocity(vel);
-	
+
 	// Clear single-frame forces
 	applied_forces = Vector2();
 }
@@ -1048,7 +1046,7 @@ void SpxSprite::_handle_no_physics(double delta) {
 	if (vel != Vector2()) {
 		set_global_position(get_global_position() + vel * delta);
 	}
-	
+
 	// Clear all physics-related forces
 	external_forces = Vector2();
 	applied_forces = Vector2();
@@ -1105,11 +1103,11 @@ void SpxSprite::_update_physics_mode() {
 			break;
 		case STATIC:
 			_enable_collision();
-			set_physics_process(true);  // Need processing to clear any movement
+			set_physics_process(true); // Need processing to clear any movement
 			break;
 		case NO_PHYSICS:
 			_disable_collision();
-			set_physics_process(true);  // Still need to process transform movement
+			set_physics_process(true); // Still need to process transform movement
 			break;
 	}
 }
@@ -1123,9 +1121,8 @@ void SpxSprite::_enable_collision() {
 
 void SpxSprite::_disable_collision() {
 	collision_enabled = false;
-	set_velocity(Vector2());  // Clear velocity to avoid move_and_slide effects
+	set_velocity(Vector2()); // Clear velocity to avoid move_and_slide effects
 	if (collider2d != nullptr) {
 		collider2d->set_disabled(true);
 	}
 }
-

@@ -32,10 +32,10 @@
 #define SPX_RES_MGR_H
 
 #include "gdextension_spx_ext.h"
+#include "scene/resources/font.h"
 #include "scene/resources/sprite_frames.h"
 #include "servers/audio/audio_stream.h"
 #include "spx_base_mgr.h"
-#include "scene/resources/font.h"
 
 class AudioStreamMP3;
 class AudioStreamWAV;
@@ -75,6 +75,7 @@ private:
 	bool is_dynamic_anim = false;
 	// store animation frame offset information: anim_name -> frame_offset_list
 	HashMap<String, Vector<Vector2>> animation_frame_offsets;
+
 private:
 	static Ref<AudioStreamWAV> _load_wav(const String &path);
 	static Ref<AudioStream> _load_mp3(const String &path);
@@ -93,9 +94,9 @@ public:
 	Ref<AudioStream> load_audio(String path, GdBool direct = false);
 	Ref<Texture2D> _reload_texture(String path);
 	void set_game_datas(String path, Vector<String> files);
-	void update_caches(const Vector<String>& files);
-	Ref<SpriteFrames> get_anim_frames(const String& anim_name);
-	String get_anim_key_name(const String& sprite_type_name,const String& anim_name);
+	void update_caches(const Vector<String> &files);
+	Ref<SpriteFrames> get_anim_frames(const String &anim_name);
+	String get_anim_key_name(const String &sprite_type_name, const String &anim_name);
 	bool is_dynamic_anim_mode() const;
 	Vector2 get_animation_frame_offset(String anim_key, int frame_index);
 	String _to_engine_path(const String &p_path);

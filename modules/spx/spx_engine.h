@@ -31,14 +31,15 @@
 #ifndef SPX_ENGINE_H
 #define SPX_ENGINE_H
 
-#include "gdextension_spx_ext.h"
 #include "core/variant/callable.h"
+#include "gdextension_spx_ext.h"
 #include "spx_base_mgr.h"
 
 #include <cstdint>
 class SceneTree;
 class Window;
 class Node;
+class Image;
 class TextureRect;
 class CanvasLayer;
 class SpxInputMgr;
@@ -75,7 +76,6 @@ public:
 	virtual ~SpxEngine() = default;
 
 private:
-	// Manager lifecycle improvements: unified storage with RAII
 	Vector<SpxBaseMgr *> mgrs;
 	SpxInputMgr *input = nullptr;
 	SpxAudioMgr *audio = nullptr;
@@ -94,24 +94,14 @@ private:
 	SpxTilemapparserMgr *tilemapparser = nullptr;
 
 	SpxCallbackProxy *delay_proxy = nullptr;
-	
-	/**
-	 * @brief Manager factory method with RAII pattern
-	 * Creates and registers a manager instance
-	 * @tparam T Manager type (must inherit from SpxBaseMgr)
-	 * @return Pointer to created manager
-	 */
-	template<typename T>
-	T* create_manager() {
-		T* mgr = memnew(T);
-		mgrs.append(static_cast<SpxBaseMgr*>(mgr));
+
+	template <typename T>
+	T *create_manager() {
+		T *mgr = memnew(T);
+		mgrs.append(static_cast<SpxBaseMgr *>(mgr));
 		return mgr;
 	}
-	
-	/**
-	 * @brief Destroy all managers safely
-	 * Ensures proper cleanup in reverse order
-	 */
+
 	void destroy_all_managers();
 
 public:
@@ -140,7 +130,7 @@ private:
 	GDExtensionSpxGlobalRuntimeExitCallback on_runtime_exit;
 	GDExtensionSpxGlobalRuntimeResetCallback on_runtime_reset;
 
-	// freeze-frame support
+	// Freeze-frame support.
 	CanvasLayer *freeze_layer = nullptr;
 	TextureRect *freeze_screen = nullptr;
 	bool is_frozen_frame = false;
@@ -157,7 +147,7 @@ private:
 	bool should_execute_single_frame;
 
 public:
-	SpxCallbackInfo *get_callbacks() ;
+	SpxCallbackInfo *get_callbacks();
 	GDExtensionSpxGlobalRuntimePanicCallback get_on_runtime_panic() { return on_runtime_panic; }
 	GDExtensionSpxGlobalRuntimeExitCallback get_on_runtime_exit() { return on_runtime_exit; }
 	GDExtensionSpxGlobalRuntimeResetCallback get_on_runtime_reset() { return on_runtime_reset; }
@@ -180,29 +170,29 @@ public:
 	bool is_reset();
 	void restart();
 
-	// SPX Pause functionality - simplified interface
+	// SPX pause functionality.
 	void pause();
 	void resume();
 	bool is_paused() const;
 	void next_frame();
-	
-	// Frozen last Frame feature
+
+	// Frozen last frame feature.
 	void capture_last_frame();
 	void clear_frozen_frame();
 
 private:
-	// Internal methods for Godot pause synchronization
+	// Internal methods for Godot pause synchronization.
 	void _on_godot_pause_changed(bool is_godot_paused);
 
 	void _do_reset(int reset_code);
 	void _pause_pure();
 	void _resume_pure();
 	void _disconnect_reset_timer();
-	
-	/**
-	 * @brief Initialize all managers
-	 * Called during engine setup
-	 */
+
+	Ref<Image> _get_viewport_image() const;
+	TextureRect *_create_freeze_texture(const Ref<Image> &img) const;
+	void _attach_freeze_node(TextureRect *screen);
+
 	void _initialize_managers();
 };
 

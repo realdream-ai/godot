@@ -35,21 +35,21 @@
 #include <functional>
 
 class SpxCallbackProxy : public Node {
-    GDCLASS(SpxCallbackProxy, Node);
+	GDCLASS(SpxCallbackProxy, Node);
 
 public:
-    std::function<void()> callback;
+	std::function<void()> callback;
 
-    void on_timeout() {
-        if (callback) {
-            callback();
-        }
-    }
+	void on_timeout() {
+		if (callback) {
+			callback();
+		}
+	}
 
 protected:
-    static void _bind_methods() {
-        ClassDB::bind_method(D_METHOD("_on_timeout"), &SpxCallbackProxy::on_timeout);
-    }
+	static void _bind_methods() {
+		ClassDB::bind_method(D_METHOD("_on_timeout"), &SpxCallbackProxy::on_timeout);
+	}
 };
 
 #endif // SPX_CALLBACK_PROXY_H

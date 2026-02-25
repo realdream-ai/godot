@@ -37,6 +37,7 @@
 class SpxPlatformMgr : public SpxBaseMgr {
 	SPXCLASS(SpxPlatformMgr, SpxBaseMgr)
 	String persistant_data_dir = "res://";
+
 public:
 	virtual ~SpxPlatformMgr() = default; // Added virtual destructor to fix -Werror=non-virtual-dtor
 
@@ -44,7 +45,7 @@ public:
 	void on_reset(int reset_code) override;
 	void _set_persistant_data_dir(String path);
 	String _get_persistant_data_dir();
-	
+
 public:
 	//Expose as few interfaces as possible to prevent misuse.
 	void set_stretch_mode(GdBool enable);

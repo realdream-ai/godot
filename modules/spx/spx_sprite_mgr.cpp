@@ -50,7 +50,6 @@
 #include "spx_scene_mgr.h"
 #include "spx_sprite.h"
 
-
 #define DEFAULT_COLLISION_ALPHA_THRESHOLD 0.05
 
 StringName SpxSpriteMgr::default_texture_anim;
@@ -72,10 +71,10 @@ StringName SpxSpriteMgr::default_texture_anim;
 void SpxSpriteMgr::on_awake() {
 	SpxBaseMgr::on_awake();
 	default_texture_anim = "default";
-	
+
 	// Initialize pixel collision sampling step with default value of 2 (good balance between performance and accuracy)
 	pixel_collision_sampling_step = 2;
-	
+
 	dont_destroy_root = memnew(Node2D);
 	dont_destroy_root->set_name("dont_destroy_root");
 	get_spx_root()->add_child(dont_destroy_root);
@@ -87,10 +86,10 @@ void SpxSpriteMgr::on_awake() {
 
 void SpxSpriteMgr::on_start() {
 	SpxBaseMgr::on_start();
-	auto nodes = get_root()->find_children("*","SpxSprite",true,false);
-	for(int i = 0; i < nodes.size(); i++) {
+	auto nodes = get_root()->find_children("*", "SpxSprite", true, false);
+	for (int i = 0; i < nodes.size(); i++) {
 		auto sprite = Object::cast_to<SpxSprite>(nodes[i]);
-		if(sprite != nullptr) {
+		if (sprite != nullptr) {
 			sprite->set_gid(get_unique_id());
 			sprite->on_start();
 			spriteMgr->id_objects[sprite->get_gid()] = sprite;
@@ -109,9 +108,9 @@ void SpxSpriteMgr::on_update(float delta) {
 	SpxBaseMgr::on_update(delta);
 	_check_pixel_collision_events();
 
-	Vector<ISortableSprite*> all_sortables;
+	Vector<ISortableSprite *> all_sortables;
 
-	for (auto& pair : id_objects) {
+	for (auto &pair : id_objects) {
 		if (pair.value) {
 			all_sortables.push_back(pair.value);
 		}
@@ -127,12 +126,12 @@ void SpxSpriteMgr::on_reset(int reset_code) {
 	dont_destroy_root = memnew(Node2D);
 	dont_destroy_root->set_name("dont_destroy_root");
 	get_spx_root()->add_child(dont_destroy_root);
-	
+
 	destroy_all_sprites();
 }
 
-void SpxSpriteMgr::collect_sortable_sprites(Vector<ISortableSprite*>& out) {
-	for (auto& pair : id_objects) {
+void SpxSpriteMgr::collect_sortable_sprites(Vector<ISortableSprite *> &out) {
+	for (auto &pair : id_objects) {
 		if (pair.value) {
 			out.push_back(pair.value);
 		}
@@ -228,13 +227,13 @@ GdVec2 SpxSpriteMgr::get_child_scale(GdObj obj, GdString path) {
 
 GdBool SpxSpriteMgr::check_collision(GdObj obj, GdObj target, GdBool is_src_trigger, GdBool is_dst_trigger) {
 	SPX_REQUIRE_SPRITE_RETURN(false)
-	SPX_REQUIRE_TARGET_SPRITE_RETURN(target,false)
-	return sprite->check_collision(sprite_target.get(),is_src_trigger,is_dst_trigger);
+	SPX_REQUIRE_TARGET_SPRITE_RETURN(target, false)
+	return sprite->check_collision(sprite_target.get(), is_src_trigger, is_dst_trigger);
 }
 
 GdBool SpxSpriteMgr::check_collision_with_point(GdObj obj, GdVec2 point, GdBool is_trigger) {
 	SPX_REQUIRE_SPRITE_RETURN(false)
-	point.y = - point.y;
+	point.y = -point.y;
 	return sprite->check_collision_with_point(point, is_trigger);
 }
 
@@ -378,7 +377,8 @@ void SpxSpriteMgr::set_color(GdObj obj, GdColor color) {
 }
 
 GdColor SpxSpriteMgr::get_color(GdObj obj) {
-	SPX_REQUIRE_SPRITE_RETURN(GdColor()) return sprite->get_color();
+	SPX_REQUIRE_SPRITE_RETURN(GdColor())
+	return sprite->get_color();
 }
 
 void SpxSpriteMgr::set_material_shader(GdObj obj, GdString path) {
@@ -406,11 +406,10 @@ void SpxSpriteMgr::set_material_params_vec4(GdObj obj, GdString effect, GdVec4 v
 	sprite->set_material_params_vec4(effect, vec4);
 }
 
-void SpxSpriteMgr::set_material_params_vec(GdObj obj, GdString effect,  GdFloat x, GdFloat y, GdFloat z, GdFloat w){
+void SpxSpriteMgr::set_material_params_vec(GdObj obj, GdString effect, GdFloat x, GdFloat y, GdFloat z, GdFloat w) {
 	SPX_REQUIRE_SPRITE_VOID()
-	sprite->set_material_params_vec4(effect, GdVec4(x,y,z,w));
+	sprite->set_material_params_vec4(effect, GdVec4(x, y, z, w));
 }
-
 
 GdVec4 SpxSpriteMgr::get_material_params_vec4(GdObj obj, GdString effect) {
 	SPX_REQUIRE_SPRITE_RETURN(GdVec4())
@@ -684,7 +683,6 @@ void SpxSpriteMgr::add_impulse(GdObj obj, GdVec2 impulse) {
 	sprite->add_impulse(impulse);
 }
 
-
 void SpxSpriteMgr::set_physics_mode(GdObj obj, GdInt mode) {
 	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_physics_mode(mode);
@@ -754,7 +752,6 @@ GdInt SpxSpriteMgr::get_collision_mask(GdObj obj) {
 	SPX_REQUIRE_SPRITE_RETURN(0)
 	return sprite->get_collision_mask();
 }
-
 
 void SpxSpriteMgr::set_trigger_layer(GdObj obj, GdInt layer) {
 	SPX_REQUIRE_SPRITE_VOID()
@@ -861,12 +858,14 @@ Ref<Image> SpxSpriteMgr::_get_current_frame_image(AnimatedSprite2D *sprite) {
 }
 
 Rect2 SpxSpriteMgr::_get_sprite_aabb(AnimatedSprite2D *anim2d) {
-	if (!anim2d)
+	if (!anim2d) {
 		return Rect2();
+	}
 
 	Ref<Texture2D> texture = anim2d->get_sprite_frames()->get_frame_texture(anim2d->get_animation(), anim2d->get_frame());
-	if (texture.is_null())
+	if (texture.is_null()) {
 		return Rect2();
+	}
 
 	Vector2 texture_size = texture->get_size();
 	Transform2D transform = anim2d->get_global_transform();
@@ -887,18 +886,18 @@ Rect2 SpxSpriteMgr::_get_sprite_aabb(AnimatedSprite2D *anim2d) {
 Vector2 SpxSpriteMgr::_to_image_coord(const Transform2D &trans, Vector2 image_size, Vector2 pos) {
 	Vector2 xpos = trans.xform(pos);
 	auto half_size = Vector2(image_size.x / 2.0, image_size.y / 2.0);
-	return Vector2(xpos.x + half_size.x,  xpos.y + half_size.y);
+	return Vector2(xpos.x + half_size.x, xpos.y + half_size.y);
 }
 
-GdBool SpxSpriteMgr::check_collision_with_sprite(GdObj obj, GdObj obj_b, GdFloat alpha_threshold, GdBool use_pixel_perfect){
+GdBool SpxSpriteMgr::check_collision_with_sprite(GdObj obj, GdObj obj_b, GdFloat alpha_threshold, GdBool use_pixel_perfect) {
 	SPX_REQUIRE_SPRITE_RETURN(false)
 	SPX_REQUIRE_TARGET_SPRITE_RETURN(obj_b, false)
-	
+
 	// If not using pixel-perfect collision, use simple collider2d collision detection
 	if (!use_pixel_perfect) {
 		return sprite->check_collision(sprite_target.get(), false, false);
 	}
-	
+
 	// Original pixel-perfect collision logic
 	AnimatedSprite2D *anim1 = sprite->anim2d;
 	if (!anim1) {
@@ -940,10 +939,10 @@ GdBool SpxSpriteMgr::check_collision_with_sprite(GdObj obj, GdObj obj_b, GdFloat
 			Vector2 local_pos1 = _to_image_coord(trans1, size1, Vector2(x, y));
 			Vector2 local_pos2 = _to_image_coord(trans2, size2, Vector2(x, y));
 
-			if (local_pos1.x >= 0 && local_pos1.x <= size1.x-1 && local_pos1.y >= 0 && local_pos1.y <= size1.y-1 &&
-					local_pos2.x >= 0 && local_pos2.x <= size2.x-1 && local_pos2.y >= 0 && local_pos2.y <= size2.y-1) {
-				Color color1 = image1->get_pixel((int)local_pos1.x,  (int)local_pos1.y);
-				Color color2 = image2->get_pixel((int)local_pos2.x,  (int)local_pos2.y);
+			if (local_pos1.x >= 0 && local_pos1.x <= size1.x - 1 && local_pos1.y >= 0 && local_pos1.y <= size1.y - 1 &&
+					local_pos2.x >= 0 && local_pos2.x <= size2.x - 1 && local_pos2.y >= 0 && local_pos2.y <= size2.y - 1) {
+				Color color1 = image1->get_pixel((int)local_pos1.x, (int)local_pos1.y);
+				Color color2 = image2->get_pixel((int)local_pos2.x, (int)local_pos2.y);
 
 				if (color1.a > alpha_threshold && color2.a > alpha_threshold) {
 					return true; // Early exit on first collision detected
@@ -1032,73 +1031,72 @@ GdBool SpxSpriteMgr::_check_collision(GdObj obj, ColorCheckFunc check_func) {
 	return false;
 }
 
-
-void SpxSpriteMgr::on_trigger_enter(GdInt self_id, GdInt other_id){
-	if(physicsMgr->is_collision_by_pixel){
+void SpxSpriteMgr::on_trigger_enter(GdInt self_id, GdInt other_id) {
+	if (physicsMgr->is_collision_by_pixel) {
 		bounding_collision_pairs.insert(TriggerPair(self_id, other_id));
-	}else{
+	} else {
 		SPX_CALLBACK->func_on_trigger_enter(self_id, other_id);
 	}
 }
-void SpxSpriteMgr::on_trigger_exit(GdInt self_id, GdInt other_id){
-	if(physicsMgr->is_collision_by_pixel){
+void SpxSpriteMgr::on_trigger_exit(GdInt self_id, GdInt other_id) {
+	if (physicsMgr->is_collision_by_pixel) {
 		bounding_collision_pairs.erase(TriggerPair(self_id, other_id));
-	}else{
+	} else {
 		SPX_CALLBACK->func_on_trigger_exit(self_id, other_id);
 	}
 }
 
 void SpxSpriteMgr::_check_pixel_collision_events() {
 	// trigger pixel collision events
-	if(physicsMgr->is_collision_by_pixel){
+	if (physicsMgr->is_collision_by_pixel) {
 		Vector<TriggerPair> triggers;
 		Vector<TriggerPair> delete_triggers;
-		for(auto &trigger : bounding_collision_pairs){
+		for (auto &trigger : bounding_collision_pairs) {
 			auto sprite1 = get_sprite(trigger.id1);
-			if(sprite1 == nullptr) {
+			if (sprite1 == nullptr) {
 				delete_triggers.push_back(trigger);
 				continue;
 			}
 			auto sprite2 = get_sprite(trigger.id2);
-			if(sprite2 == nullptr) {
+			if (sprite2 == nullptr) {
 				delete_triggers.push_back(trigger);
 				continue;
 			}
 		}
 
-		for(auto &trigger : delete_triggers) {
+		for (auto &trigger : delete_triggers) {
 			pixel_collision_pairs.erase(trigger);
 			bounding_collision_pairs.erase(trigger);
 		}
 		// check collision by pixel
-		for(auto &trigger : bounding_collision_pairs){
+		for (auto &trigger : bounding_collision_pairs) {
 			auto is_collide = check_collision_with_sprite(trigger.id1, trigger.id2, DEFAULT_COLLISION_ALPHA_THRESHOLD, true);
-			if(is_collide) {
-				if(pixel_collision_pairs.find(trigger) == pixel_collision_pairs.end()) {
+			if (is_collide) {
+				if (pixel_collision_pairs.find(trigger) == pixel_collision_pairs.end()) {
 					pixel_collision_pairs.insert(trigger);
 					triggers.push_back(trigger);
 				}
-			}else{
+			} else {
 				pixel_collision_pairs.erase(trigger);
 			}
 		}
 
 		// trigger pixel collision enter events
-		for(auto &trigger : triggers){
+		for (auto &trigger : triggers) {
 			SPX_CALLBACK->func_on_trigger_enter(trigger.id1, trigger.id2);
 			SPX_CALLBACK->func_on_trigger_enter(trigger.id2, trigger.id1);
 		}
 	}
 }
 
-void SpxSpriteMgr::set_pivot(GdObj obj, GdVec2 pivot){
+void SpxSpriteMgr::set_pivot(GdObj obj, GdVec2 pivot) {
 	SPX_REQUIRE_SPRITE_VOID()
-	pivot.y = - pivot.y;
+	pivot.y = -pivot.y;
 	sprite->set_pivot(pivot);
 }
-GdVec2 SpxSpriteMgr::get_pivot(GdObj obj){
+GdVec2 SpxSpriteMgr::get_pivot(GdObj obj) {
 	SPX_REQUIRE_SPRITE_RETURN(GdVec2())
-	auto pivot= sprite->get_pivot();
+	auto pivot = sprite->get_pivot();
 	return GdVec2(pivot.x, -pivot.y);
 }
 
@@ -1109,34 +1107,34 @@ void SpxSpriteMgr::batch_update_transforms(GdArray buffer) {
 	// - Delete section: [id1, id2, id3, ...] (1 field per sprite)
 	const int FIELDS_PER_SPRITE = 9;
 	const int HEADER_SIZE = 2;
-	
+
 	if (!buffer) {
 		return;
 	}
-	
+
 	auto len = buffer->size;
 	if (len < HEADER_SIZE) {
 		return;
 	}
-	
+
 	// Get pointer to buffer data for faster access
-	const float* buffer_data = SpxBaseMgr::get_array<float>(buffer, 0);
-	
+	const float *buffer_data = SpxBaseMgr::get_array<float>(buffer, 0);
+
 	// Read header using direct array access
 	int update_count = static_cast<int>(buffer_data[0]);
 	int delete_count = static_cast<int>(buffer_data[1]);
-	
+
 	// Validate buffer size
 	int expected_size = HEADER_SIZE + update_count * FIELDS_PER_SPRITE + delete_count;
 	if (len != expected_size) {
-		print_error("batch_update_transforms: buffer size " + itos(len) + 
-		            " does not match expected size " + itos(expected_size) +
-		            " (updateCount=" + itos(update_count) + ", deleteCount=" + itos(delete_count) + ")");
+		print_error("batch_update_transforms: buffer size " + itos(len) +
+				" does not match expected size " + itos(expected_size) +
+				" (updateCount=" + itos(update_count) + ", deleteCount=" + itos(delete_count) + ")");
 		return;
 	}
-	
+
 	int idx = HEADER_SIZE;
-	
+
 	// Process updates
 	for (int i = 0; i < update_count; i++) {
 		// Extract sprite ID and data using direct array access
@@ -1149,14 +1147,14 @@ void SpxSpriteMgr::batch_update_transforms(GdArray buffer) {
 		auto offset_x = buffer_data[idx + 6];
 		auto offset_y = buffer_data[idx + 7];
 		auto visible = buffer_data[idx + 8] != 0.0;
-		
+
 		idx += FIELDS_PER_SPRITE;
-		
-		SpxSprite* sprite = get_sprite(sprite_id);
+
+		SpxSprite *sprite = get_sprite(sprite_id);
 		if (sprite == nullptr) {
 			continue;
 		}
-		
+
 		// Apply transforms
 		// Note: Y-axis is flipped in Godot coordinate system
 		sprite->set_position(GdVec2(x, -y));
@@ -1166,13 +1164,13 @@ void SpxSpriteMgr::batch_update_transforms(GdArray buffer) {
 		sprite->on_set_visible(visible);
 		sprite->set_pivot(GdVec2(offset_x, -offset_y));
 	}
-	
+
 	// Process deletes
 	for (int i = 0; i < delete_count; i++) {
 		auto sprite_id = static_cast<GdObj>(buffer_data[idx]);
 		idx++;
 
-		SpxSprite* sprite = get_sprite(sprite_id);
+		SpxSprite *sprite = get_sprite(sprite_id);
 		if (sprite != nullptr) {
 			sprite->set_block_signals(true);
 			sprite->queue_free();
@@ -1186,42 +1184,42 @@ GdArray SpxSpriteMgr::batch_retrieve_positions(GdArray objs) {
 	if (!objs) {
 		return nullptr;
 	}
-	
+
 	int count = objs->size;
 	if (count == 0) {
 		return nullptr;
 	}
-	
+
 	// Check for integer overflow before multiplication (count * 2)
 	// Maximum safe value is INT_MAX / 2 to prevent overflow
 	if (count > INT_MAX / 2) {
 		print_error("batch_retrieve_positions: count too large, would cause integer overflow.");
 		return nullptr;
 	}
-	
+
 	// Create result array: 2 floats (x, y) per sprite
 	GdArray result = SpxBaseMgr::create_array(GD_ARRAY_TYPE_FLOAT, count * 2);
 	if (!result) {
 		return nullptr;
 	}
-	
+
 	// Get pointer to input array (GdObj IDs) for faster access
-	const GdObj* obj_data = SpxBaseMgr::get_array<GdObj>(objs, 0);
-	float* result_data = SpxBaseMgr::get_array<float>(result, 0);
-	
+	const GdObj *obj_data = SpxBaseMgr::get_array<GdObj>(objs, 0);
+	float *result_data = SpxBaseMgr::get_array<float>(result, 0);
+
 	// Check for null pointers to prevent crashes with malformed arrays
 	if (count > 0 && (!obj_data || !result_data)) {
 		print_error("batch_retrieve_positions: Failed to access array data.");
 		SpxBaseMgr::free_array(result);
 		return nullptr;
 	}
-	
+
 	// Process each sprite ID
 	int result_idx = 0;
 	for (int i = 0; i < count; i++) {
 		GdObj sprite_id = obj_data[i];
-		
-		SpxSprite* sprite = get_sprite(sprite_id);
+
+		SpxSprite *sprite = get_sprite(sprite_id);
 		if (sprite != nullptr) {
 			auto pos = sprite->get_position();
 			result_data[result_idx++] = pos.x;
@@ -1231,7 +1229,7 @@ GdArray SpxSpriteMgr::batch_retrieve_positions(GdArray objs) {
 			result_data[result_idx++] = 0.0f;
 		}
 	}
-	
+
 	return result;
 }
 

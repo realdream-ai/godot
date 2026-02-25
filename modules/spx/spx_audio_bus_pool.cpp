@@ -55,7 +55,6 @@ StringName SpxAudioBusPool::get_bus_name(int id) {
 	return String::num_real(float(id));
 }
 void SpxAudioBusPool::init() {
-
 	SpxAudioBusPool::STR_BUS_MASTER = "Master";
 	SpxAudioBusPool::STR_BUS_SFX = "Sfx";
 	SpxAudioBusPool::STR_BUS_MUSIC = "Music";
@@ -67,7 +66,7 @@ void SpxAudioBusPool::init() {
 void SpxAudioBusPool::reset() {
 	singleton->free_buses.clear();
 	singleton->active_buses.clear();
-	
+
 	// Start with DEFAULT_BUS_COUNT buses (includes master)
 	AudioServer::get_singleton()->set_bus_count(DEFAULT_BUS_COUNT);
 	// Master bus is at index 0, so we start from 1
@@ -121,8 +120,9 @@ void SpxAudioBusPool::free(int id) {
 }
 
 void SpxAudioBusPool::set_volume(int id, GdFloat volume) {
-	if (!is_valid_bus(id))
+	if (!is_valid_bus(id)) {
 		return;
+	}
 
 	// Convert to decibels (Godot uses decibel scale for volume)
 	auto db = Math::linear_to_db(volume);
@@ -130,8 +130,9 @@ void SpxAudioBusPool::set_volume(int id, GdFloat volume) {
 }
 
 GdFloat SpxAudioBusPool::get_volume(int id) {
-	if (!is_valid_bus(id))
+	if (!is_valid_bus(id)) {
 		return 0.0f;
+	}
 
 	// Get volume in decibels
 	float db = AudioServer::get_singleton()->get_bus_volume_db(id);
@@ -139,8 +140,9 @@ GdFloat SpxAudioBusPool::get_volume(int id) {
 }
 
 void SpxAudioBusPool::set_pan(int id, GdFloat pan) {
-	if (!is_valid_bus(id))
+	if (!is_valid_bus(id)) {
 		return;
+	}
 
 	// Clamp pan between -1 and 1
 	pan = CLAMP(pan, -1.0f, 1.0f);
@@ -171,8 +173,9 @@ void SpxAudioBusPool::set_pan(int id, GdFloat pan) {
 }
 
 GdFloat SpxAudioBusPool::get_pan(int id) {
-	if (!is_valid_bus(id))
+	if (!is_valid_bus(id)) {
 		return 0.0f;
+	}
 
 	// Find panner effect
 	int effect_count = AudioServer::get_singleton()->get_bus_effect_count(id);

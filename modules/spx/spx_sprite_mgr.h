@@ -31,11 +31,11 @@
 #ifndef SPX_SPRITE_MGR_H
 #define SPX_SPRITE_MGR_H
 
+#include "core/templates/hash_map.h"
 #include "gdextension_spx_ext.h"
 #include "scene/2d/animated_sprite_2d.h"
 #include "spx_base_mgr.h"
 #include "spx_layer_sorter.h"
-#include "core/templates/hash_map.h"
 #include <functional>
 #include <unordered_set>
 
@@ -87,8 +87,7 @@ struct hash<TriggerPair> {
 		return pair.std_hash();
 	}
 };
-}
-
+} //namespace std
 
 class SpxSpriteMgr : public SpxBaseMgr {
 	SPXCLASS(SpxSpriteMgr, SpxBaseMgr)
@@ -101,8 +100,8 @@ private:
 	std::unordered_set<TriggerPair> bounding_collision_pairs;
 	std::unordered_set<TriggerPair> pixel_collision_pairs;
 
-	Node* dont_destroy_root;
-	Node* sprite_root;
+	Node *dont_destroy_root;
+	Node *sprite_root;
 
 	// Pixel-perfect collision sampling step: check every N pixels instead of every pixel
 	// Higher values = better performance but lower accuracy
@@ -131,8 +130,8 @@ public:
 	void on_trigger_exit(GdInt self_id, GdInt other_id);
 	GdObj _create_sprite(GdString path, GdVec2 pos, GdBool is_backdrop);
 	void destroy_all_sprites();
-	void collect_sortable_sprites(Vector<ISortableSprite*>& out);
-	
+	void collect_sortable_sprites(Vector<ISortableSprite *> &out);
+
 public:
 	void set_dont_destroy_on_load(GdObj obj);
 	// process
@@ -143,7 +142,7 @@ public:
 
 	void set_pivot(GdObj obj, GdVec2 pivot);
 	GdVec2 get_pivot(GdObj obj);
-	
+
 	// children
 	void set_child_position(GdObj obj, GdString path, GdVec2 pos);
 	GdVec2 get_child_position(GdObj obj, GdString path);
@@ -156,7 +155,7 @@ public:
 	GdBool check_collision_with_point(GdObj obj, GdVec2 point, GdBool is_trigger);
 	//
 	GdObj create_backdrop(GdString path);
-	GdObj create_sprite(GdString path,  GdVec2 pos);
+	GdObj create_sprite(GdString path, GdVec2 pos);
 	GdObj clone_sprite(GdObj obj);
 	GdBool destroy_sprite(GdObj obj);
 	GdBool is_sprite_alive(GdObj obj);
@@ -197,7 +196,7 @@ public:
 
 	// animation
 	void play_anim(GdObj obj, GdString p_name, GdFloat p_speed, GdBool isLoop, GdBool p_revert);
-	void play_backwards_anim(GdObj obj,  GdString p_name );
+	void play_backwards_anim(GdObj obj, GdString p_name);
 	void pause_anim(GdObj obj);
 	void stop_anim(GdObj obj);
 	GdBool is_playing_anim(GdObj obj);
@@ -217,7 +216,7 @@ public:
 	void set_anim_flip_v(GdObj obj, GdBool p_flip);
 	GdBool is_anim_flipped_v(GdObj obj);
 	GdString get_current_anim_name(GdObj obj);
-	
+
 	// physics
 	void set_velocity(GdObj obj, GdVec2 velocity);
 	GdVec2 get_velocity(GdObj obj);

@@ -47,15 +47,15 @@ void SpxPlatformMgr::on_reset(int reset_code) {
 }
 
 void SpxPlatformMgr::set_stretch_mode(GdBool enable) {
-    if (auto root = get_root()) {
-        auto target_mode = enable
-            ? Window::ContentScaleMode::CONTENT_SCALE_MODE_CANVAS_ITEMS
-            : Window::ContentScaleMode::CONTENT_SCALE_MODE_DISABLED;
+	if (auto root = get_root()) {
+		auto target_mode = enable
+				? Window::ContentScaleMode::CONTENT_SCALE_MODE_CANVAS_ITEMS
+				: Window::ContentScaleMode::CONTENT_SCALE_MODE_DISABLED;
 
-        if (root->get_content_scale_mode() != target_mode) {
-            root->set_content_scale_mode(target_mode);
-        }
-    }
+		if (root->get_content_scale_mode() != target_mode) {
+			root->set_content_scale_mode(target_mode);
+		}
+	}
 
 	set_stretch_aspect(false);
 }
@@ -63,10 +63,10 @@ void SpxPlatformMgr::set_stretch_mode(GdBool enable) {
 void SpxPlatformMgr::set_stretch_aspect(GdBool is_keep) {
 	if (auto root = get_root()) {
 		auto target_aspect = is_keep
-	        ? Window::ContentScaleAspect::CONTENT_SCALE_ASPECT_KEEP
-			: Window::ContentScaleAspect::CONTENT_SCALE_ASPECT_IGNORE;
+				? Window::ContentScaleAspect::CONTENT_SCALE_ASPECT_KEEP
+				: Window::ContentScaleAspect::CONTENT_SCALE_ASPECT_IGNORE;
 
-		if(root->get_content_scale_aspect() != target_aspect){
+		if (root->get_content_scale_aspect() != target_aspect) {
 			root->set_content_scale_aspect(target_aspect);
 		}
 	}
@@ -84,7 +84,9 @@ GdVec2 SpxPlatformMgr::get_window_position() {
 	return GdVec2(pos.x, pos.y);
 }
 void SpxPlatformMgr::set_window_size(GdInt width, GdInt height, GdBool with_content_scale) {
-	if(with_content_scale) set_stretch_content_scale(width, height);
+	if (with_content_scale) {
+		set_stretch_content_scale(width, height);
+	}
 	get_root()->set_size(Size2i(width, height));
 }
 
@@ -135,24 +137,24 @@ GdInt SpxPlatformMgr::get_max_fps() {
 	return Engine::get_singleton()->get_max_fps();
 }
 
-GdString SpxPlatformMgr::get_persistant_data_dir(){
+GdString SpxPlatformMgr::get_persistant_data_dir() {
 	auto value = _get_persistant_data_dir();
 	return SpxReturnStr(value);
 }
 
-String SpxPlatformMgr::_get_persistant_data_dir(){
+String SpxPlatformMgr::_get_persistant_data_dir() {
 	return persistant_data_dir;
 }
 
-void SpxPlatformMgr::_set_persistant_data_dir(String path){
+void SpxPlatformMgr::_set_persistant_data_dir(String path) {
 	persistant_data_dir = path;
 }
-void SpxPlatformMgr::set_persistant_data_dir(GdString path){
+void SpxPlatformMgr::set_persistant_data_dir(GdString path) {
 	auto path_str = SpxStr(path);
 	_set_persistant_data_dir(path_str);
 }
 
-GdBool SpxPlatformMgr::is_in_persistant_data_dir(GdString path){
+GdBool SpxPlatformMgr::is_in_persistant_data_dir(GdString path) {
 	auto path_str = SpxStr(path);
 	return path_str.begins_with(persistant_data_dir);
 }

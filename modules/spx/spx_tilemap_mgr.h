@@ -44,10 +44,9 @@ public:
 	void on_reset(int reset_code) override;
 
 private:
-	SpxDrawTiles* draw_tiles = nullptr;
+	SpxDrawTiles *draw_tiles = nullptr;
 
 public:
-
 	void open_draw_tiles_with_size(GdInt tile_size);
 	void open_draw_tiles();
 	void set_layer_index(GdInt index);
@@ -66,7 +65,7 @@ public:
 	void close_draw_tiles();
 	void exit_tilemap_editor_mode();
 
-	template<typename Func>
+	template <typename Func>
 	void with_draw_tiles(Func f, const String error_msg = "The draw tiles node is null, first open it!!!") {
 		if (draw_tiles == nullptr) {
 			print_error(error_msg);
@@ -75,7 +74,7 @@ public:
 		f();
 	}
 
-	template<typename Func>
+	template <typename Func>
 	void without_draw_tiles(Func f) {
 		if (draw_tiles == nullptr) {
 			open_draw_tiles();

@@ -40,7 +40,6 @@
 #include "spx_sprite.h"
 #include "spx_sprite_mgr.h"
 
-
 SpxAudio *SpxAudioMgr::_get_aid_audio(GdInt aid) {
 	if (aid_audios.has(aid)) {
 		return aid_audios[aid];
@@ -77,7 +76,6 @@ void SpxAudioMgr::on_destroy() {
 	SpxBaseMgr::on_destroy();
 }
 
-
 GdObj SpxAudioMgr::create_audio() {
 	return _create_object();
 }
@@ -107,11 +105,10 @@ void SpxAudioMgr::destroy_audio(GdObj obj) {
 		}
 	}
 	rw_lock.write_unlock();
-	
+
 	// Now destroy the object using parent class method
 	destroy_object(obj);
 }
-
 
 void SpxAudioMgr::set_pitch(GdObj obj, GdFloat pitch) {
 	SPX_CHECK_AND_GET_OBJECT_V(audio, get_object(obj), SpxAudio)
@@ -157,6 +154,7 @@ GdInt SpxAudioMgr::play_with_attenuation(GdObj obj, GdString path, GdObj owner_i
 	} else {
 		owner = static_cast<Node *>(spriteMgr->get_sprite(owner_id));
 	}
+
 	if (owner == nullptr) {
 		owner = static_cast<Node *>(root);
 	}

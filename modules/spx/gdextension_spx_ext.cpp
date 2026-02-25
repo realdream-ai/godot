@@ -55,7 +55,7 @@
 #include "spx_ui_mgr.h"
 
 
-#define REGISTER_SPX_INTERFACE_FUNC(m_name) GDExtension::register_interface_function( #m_name, (GDExtensionInterfaceFunctionPtr)&gdextension_##m_name)
+#define REGISTER_SPX_INTERFACE_FUNC(m_name) GDExtension::register_interface_function(#m_name, (GDExtensionInterfaceFunctionPtr)&gdextension_##m_name)
 static void gdextension_spx_global_register_callbacks(GDExtensionSpxCallbackInfoPtr callback_ptr) {
 	SpxEngine::register_callbacks(callback_ptr);
 }

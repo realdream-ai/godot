@@ -44,20 +44,20 @@ public:
 private:
 	RBMap<GdObj, SpxUi *> id_objects;
 
-	Control* create_control(GdString path);
+	Control *create_control(GdString path);
 
 public:
 	void on_awake() override;
 	void on_reset(int reset_code) override;
 
 	void on_node_destroy(SpxUi *node);
-	SpxUi* on_create_node(Control *control, GdInt type, bool is_attach = true);
+	SpxUi *on_create_node(Control *control, GdInt type, bool is_attach = true);
 	SpxUi *get_node(GdObj obj);
 
-	static ESpxUiType get_node_type(Node* obj);
+	static ESpxUiType get_node_type(Node *obj);
 	void on_click(ISpxUi *node);
-public:
 
+public:
 	GdObj bind_node(GdObj obj, GdString rel_path);
 
 	GdObj create_node(GdString path);
@@ -84,7 +84,6 @@ public:
 	GdBool get_interactable(GdObj obj);
 	void set_rect(GdObj obj, GdRect2 rect);
 	GdRect2 get_rect(GdObj obj);
-
 
 	GdInt get_layout_direction(GdObj obj);
 	void set_layout_direction(GdObj obj, GdInt value);

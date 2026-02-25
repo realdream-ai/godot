@@ -33,13 +33,15 @@
 
 #include "gdextension_spx_ext.h"
 #include "scene/2d/node_2d.h"
-#include "svg_mgr.h"
-#include "spx_utils.h"
 #include "spx_mgr_access.h"
+#include "spx_utils.h"
+#include "svg_mgr.h"
 
-#define SPXCLASS(m_class, m_inherits) \
-public:                               \
-	String get_class_name() const override { return #m_class; }
+#define SPXCLASS(m_class, m_inherits)        \
+public:                                      \
+	String get_class_name() const override { \
+		return #m_class;                     \
+	}
 
 #define SpxStr(str) (String::utf8((const char *)str))
 #define SpxReturnStr(str) (SpxBaseMgr::to_return_cstr(str))
@@ -50,10 +52,10 @@ class Window;
 class SceneTree;
 class SpxBaseMgr {
 private:
-	static void* _get_array(GdArray array, int64_t index, int type_size);
+	static void *_get_array(GdArray array, int64_t index, int type_size);
 
 public:
-	static GdString to_return_cstr(const String& ret_val);
+	static GdString to_return_cstr(const String &ret_val);
 	static void free_return_cstr(GdString ret_val);
 	static GdArray create_array(int32_t type, int32_t size);
 	static void free_array(GdArray array);
@@ -61,14 +63,17 @@ public:
 	template <typename T>
 	static void set_array(GdArray array, int64_t index, T value);
 	template <typename T>
-	static T* get_array(GdArray array, int64_t index);
+	static T *get_array(GdArray array, int64_t index);
+
 protected:
 	Node *owner;
+
 protected:
 	virtual GdInt get_unique_id();
 	virtual SceneTree *get_tree();
 	virtual Window *get_root();
 	virtual Node *get_spx_root();
+
 public:
 	virtual String get_class_name() const { return "SpxBaseMgr"; }
 	virtual void on_awake();
@@ -85,7 +90,7 @@ public:
 
 template <typename T>
 T *SpxBaseMgr::get_array(GdArray array, int64_t index) {
-	return static_cast<T*>(_get_array(array, index, sizeof(T)));
+	return static_cast<T *>(_get_array(array, index, sizeof(T)));
 }
 template <typename T>
 void SpxBaseMgr::set_array(GdArray array, int64_t index, T value) {

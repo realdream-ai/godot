@@ -35,16 +35,16 @@
 #include "spx_base_mgr.h"
 #include "spx_input_proxy.h"
 
-
-
 class SpxInputMgr : public SpxBaseMgr {
 	SPXCLASS(SpxInputMgr, SpxBaseMgr)
 public:
 	virtual ~SpxInputMgr() = default; // Added virtual destructor to fix -Werror=non-virtual-dtor
 	virtual void on_start() override;
 	void on_reset(int reset_code) override;
+
 protected:
 	SpxInputProxy *input_proxy;
+
 public:
 	GdVec2 get_global_mouse_pos();
 	GdBool get_key(GdInt key);

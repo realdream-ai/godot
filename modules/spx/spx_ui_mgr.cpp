@@ -45,7 +45,6 @@
 #define SPX_REQUIRE_UI_RETURN(VALUE) \
 	SPX_UI_GUARD_RETURN(obj, __func__, VALUE)
 
-
 SpxUi *SpxUiMgr::get_node(GdObj obj) {
 	if (id_objects.has(obj)) {
 		return id_objects[obj];
@@ -57,22 +56,26 @@ ESpxUiType SpxUiMgr::get_node_type(Node *obj) {
 	if (obj == nullptr) {
 		return ESpxUiType::None;
 	}
+
 	if (dynamic_cast<SpxLabel *>(obj)) {
 		return ESpxUiType::Label;
 	}
+
 	if (dynamic_cast<SpxButton *>(obj)) {
 		return ESpxUiType::Button;
 	}
+
 	if (dynamic_cast<SpxImage *>(obj)) {
 		return ESpxUiType::Image;
 	}
+
 	if (dynamic_cast<SpxToggle *>(obj)) {
 		return ESpxUiType::Toggle;
 	}
+
 	if (dynamic_cast<SpxInput *>(obj)) {
 		return ESpxUiType::Input;
 	}
-
 
 	if (dynamic_cast<SpxControl *>(obj)) {
 		return ESpxUiType::Control;
@@ -123,11 +126,9 @@ Control *SpxUiMgr::create_control(GdString path) {
 	return node;
 }
 
-
-
-SpxUi *SpxUiMgr::on_create_node(Control *control, GdInt type,bool is_attach) {
+SpxUi *SpxUiMgr::on_create_node(Control *control, GdInt type, bool is_attach) {
 	SpxUi *node = memnew(SpxUi);
-	if(is_attach) {
+	if (is_attach) {
 		owner->add_child(control);
 	}
 	node->set_type(type);
@@ -139,12 +140,12 @@ SpxUi *SpxUiMgr::on_create_node(Control *control, GdInt type,bool is_attach) {
 	return node;
 }
 
-#define CREATE_UI_NODE(TYPE) \
+#define CREATE_UI_NODE(TYPE)                                              \
 	Spx##TYPE *control = dynamic_cast<Spx##TYPE *>(create_control(path)); \
-	if (control == nullptr) { \
-		control = memnew(Spx##TYPE); \
-	} \
-	auto node = on_create_node(control,(GdInt)ESpxUiType::TYPE);
+	if (control == nullptr) {                                             \
+		control = memnew(Spx##TYPE);                                      \
+	}                                                                     \
+	auto node = on_create_node(control, (GdInt)ESpxUiType::TYPE);
 
 GdObj SpxUiMgr::create_node(GdString path) {
 	auto control = create_control(path);
@@ -183,7 +184,6 @@ GdObj SpxUiMgr::create_slider(GdString path, GdFloat value) {
 	return 0;
 }
 
-
 GdObj SpxUiMgr::create_input(GdString path, GdString text) {
 	return 0;
 }
@@ -193,24 +193,28 @@ GdBool SpxUiMgr::destroy_node(GdObj obj) {
 	node->queue_free();
 	return true;
 }
+
 GdObj SpxUiMgr::bind_node(GdObj obj, GdString rel_path) {
-	auto parent_node  = get_node(obj);
-	if(parent_node == nullptr) {
+	auto parent_node = get_node(obj);
+	if (parent_node == nullptr) {
 		print_line("bind_node error :can not find a node ", obj);
 		return NULL_OBJECT_ID;
 	}
+
 	auto path = SpxStr(rel_path);
-	if(! parent_node->control->has_node(path)) {
+	if (!parent_node->control->has_node(path)) {
 		print_line("bind_node error :can not find a child node ", obj, path);
 		return NULL_OBJECT_ID;
 	}
+
 	auto child = parent_node->control->get_node(path);
 	auto type = get_node_type(child);
-	if(type == ESpxUiType::None) {
+	if (type == ESpxUiType::None) {
 		print_line("bind_node error : unknown type ", obj, path);
 		return NULL_OBJECT_ID;
 	}
-	auto node = on_create_node( (Control*) child, (GdInt)type,false);
+
+	auto node = on_create_node((Control *)child, (GdInt)type, false);
 	return node->get_gid();
 }
 
@@ -289,27 +293,31 @@ GdString SpxUiMgr::get_texture(GdObj obj) {
 	return node->get_texture();
 }
 
-
 GdInt SpxUiMgr::get_layout_direction(GdObj obj) {
 	SPX_REQUIRE_UI_RETURN(0)
 	return node->get_layout_direction();
 }
+
 void SpxUiMgr::set_layout_direction(GdObj obj, GdInt value) {
 	SPX_REQUIRE_UI_VOID()
 	node->set_layout_direction(value);
 }
+
 GdInt SpxUiMgr::get_layout_mode(GdObj obj) {
 	SPX_REQUIRE_UI_RETURN(0)
 	return node->get_layout_mode();
 }
+
 void SpxUiMgr::set_layout_mode(GdObj obj, GdInt value) {
 	SPX_REQUIRE_UI_VOID()
 	node->set_layout_mode(value);
 }
+
 GdInt SpxUiMgr::get_anchors_preset(GdObj obj) {
 	SPX_REQUIRE_UI_RETURN(0)
 	return node->get_anchors_preset();
 }
+
 void SpxUiMgr::set_anchors_preset(GdObj obj, GdInt value) {
 	SPX_REQUIRE_UI_VOID()
 	node->set_anchors_preset(value);
@@ -318,26 +326,28 @@ void SpxUiMgr::set_anchors_preset(GdObj obj, GdInt value) {
 GdVec2 SpxUiMgr::get_scale(GdObj obj) {
 	SPX_REQUIRE_UI_RETURN(GdVec2())
 	return node->get_scale();
-
 }
+
 void SpxUiMgr::set_scale(GdObj obj, GdVec2 value) {
 	SPX_REQUIRE_UI_VOID()
 	node->set_scale(value);
 }
+
 GdVec2 SpxUiMgr::get_position(GdObj obj) {
 	SPX_REQUIRE_UI_RETURN(GdVec2())
 	return node->get_position();
-
 }
+
 void SpxUiMgr::set_position(GdObj obj, GdVec2 value) {
 	SPX_REQUIRE_UI_VOID()
 	node->set_position(value);
 }
+
 GdVec2 SpxUiMgr::get_size(GdObj obj) {
 	SPX_REQUIRE_UI_RETURN(GdVec2())
 	return node->get_size();
-
 }
+
 void SpxUiMgr::set_size(GdObj obj, GdVec2 value) {
 	SPX_REQUIRE_UI_VOID()
 	node->set_size(value);
@@ -347,24 +357,28 @@ GdVec2 SpxUiMgr::get_global_position(GdObj obj) {
 	SPX_REQUIRE_UI_RETURN(GdVec2())
 	return node->get_global_position();
 }
+
 void SpxUiMgr::set_global_position(GdObj obj, GdVec2 value) {
 	SPX_REQUIRE_UI_VOID()
 	node->set_global_position(value);
 }
+
 GdFloat SpxUiMgr::get_rotation(GdObj obj) {
 	SPX_REQUIRE_UI_RETURN(GdFloat())
 	return node->get_rotation();
-
 }
+
 void SpxUiMgr::set_rotation(GdObj obj, GdFloat value) {
 	SPX_REQUIRE_UI_VOID()
 	node->set_rotation(value);
 }
+
 GdBool SpxUiMgr::get_flip(GdObj obj, GdBool horizontal) {
 	SPX_REQUIRE_UI_RETURN(GdBool())
 	return node->get_flip(horizontal);
 }
+
 void SpxUiMgr::set_flip(GdObj obj, GdBool horizontal, GdBool is_flip) {
 	SPX_REQUIRE_UI_VOID()
-	node->set_flip(horizontal,is_flip);
+	node->set_flip(horizontal, is_flip);
 }

@@ -43,8 +43,8 @@ public:
 
 private:
 	Ref<SpxPathFinder> path_finder;
-	const GdVec2 default_grid_size{100, 100};
-	const GdVec2 default_cell_size{16, 16};
+	const GdVec2 default_grid_size{ 100, 100 };
+	const GdVec2 default_cell_size{ 16, 16 };
 
 public:
 	void setup_path_finder_with_size(GdVec2 grid_size, GdVec2 cell_size, GdBool with_jump, GdBool with_debug);

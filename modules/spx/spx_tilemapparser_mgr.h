@@ -32,9 +32,9 @@
 #define SPX_TILEMAP_PARSER_MGR_H
 
 #include "gdextension_spx_ext.h"
+#include "scene/resources/2d/tile_set.h"
 #include "spx_base_mgr.h"
 #include "spx_tilemap_types.h"
-#include "scene/resources/2d/tile_set.h"
 
 class TileMapLayer;
 class TileSetAtlasSource;

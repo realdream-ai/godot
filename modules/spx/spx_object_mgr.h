@@ -31,34 +31,34 @@
 #ifndef SPX_OBJECT_MGR_H
 #define SPX_OBJECT_MGR_H
 
-#include "spx_base_mgr.h"
 #include "core/os/mutex.h"
 #include "core/os/rw_lock.h"
 #include "core/templates/hash_map.h"
 #include "gdextension_spx_ext.h"
+#include "spx_base_mgr.h"
 
 /**
  * @brief Generic object manager template for SPX objects
- * 
+ *
  * This template provides common functionality for managing SPX objects:
  * - Thread-safe object storage and retrieval using RWLock
  * - Automatic lifecycle management (create, destroy, update)
  * - Common helper macros for null checks
- * 
+ *
  * Thread Safety:
  * - Read operations (get_object) use shared locks for better concurrency
  * - Write operations (create, destroy) use exclusive locks
  * - All public methods are thread-safe
- * 
+ *
  * @tparam T The type of object being managed (e.g., SpxAudio, SpxPen)
  */
 template <typename T>
 class SpxObjectMgr : public SpxBaseMgr {
 protected:
 	HashMap<GdObj, T *> id_objects;
-	mutable RWLock rw_lock;  // Read-Write lock for better concurrent performance
+	mutable RWLock rw_lock; // Read-Write lock for better concurrent performance
 	Node2D *root = nullptr;
-	
+
 	/**
 	 * @brief Create and register a new object
 	 * Can be called directly from derived classes
@@ -160,7 +160,7 @@ void SpxObjectMgr<T>::_destroy_all() {
 	}
 	id_objects.clear();
 	rw_lock.write_unlock();
-	
+
 	if (root) {
 		root->queue_free();
 		root = nullptr;
@@ -176,7 +176,7 @@ void SpxObjectMgr<T>::_update_all(float delta) {
 		objects_copy.push_back(E.value);
 	}
 	rw_lock.read_unlock();
-	
+
 	// Call callbacks without holding lock to avoid deadlocks
 	for (T *obj : objects_copy) {
 		obj->on_update(delta);
@@ -208,18 +208,18 @@ void SpxObjectMgr<T>::destroy_object(GdObj obj) {
 }
 
 // Common macros for checking and getting objects with error handling
-#define SPX_CHECK_AND_GET_OBJECT_V(obj, getter, obj_type)                     \
-	auto obj = getter;                                                         \
-	if (obj == nullptr) {                                                      \
-		print_error("try to access null " #obj_type " object");                \
-		return;                                                                \
+#define SPX_CHECK_AND_GET_OBJECT_V(obj, getter, obj_type)       \
+	auto obj = getter;                                          \
+	if (obj == nullptr) {                                       \
+		print_error("try to access null " #obj_type " object"); \
+		return;                                                 \
 	}
 
-#define SPX_CHECK_AND_GET_OBJECT_R(obj, getter, obj_type, ret_value)          \
-	auto obj = getter;                                                         \
-	if (obj == nullptr) {                                                      \
-		print_error("try to access null " #obj_type " object");                \
-		return ret_value;                                                      \
+#define SPX_CHECK_AND_GET_OBJECT_R(obj, getter, obj_type, ret_value) \
+	auto obj = getter;                                               \
+	if (obj == nullptr) {                                            \
+		print_error("try to access null " #obj_type " object");      \
+		return ret_value;                                            \
 	}
 
 #endif // SPX_OBJECT_MGR_H

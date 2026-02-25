@@ -28,13 +28,13 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef SPX_PATH_FINER_H 
+#ifndef SPX_PATH_FINER_H
 #define SPX_PATH_FINER_H
 
 #include "core/math/a_star_grid_2d.h"
 #include "core/object/object.h"
-#include "scene/2d/node_2d.h"
 #include "gdextension_spx_ext.h"
+#include "scene/2d/node_2d.h"
 
 class TileMapLayer;
 class Node;
@@ -42,118 +42,119 @@ class PathDebugDrawer;
 class CollisionShape2D;
 
 class SpxPathFinder : public RefCounted {
-    GDCLASS(SpxPathFinder, RefCounted);
+	GDCLASS(SpxPathFinder, RefCounted);
 
 private:
-    Ref<AStarGrid2D> astar;
-    bool is_precise_check = false;
-    PathDebugDrawer *drawer = nullptr;
-    
-    Vector2 cached_cell_size{16, 16};
+	Ref<AStarGrid2D> astar;
+	bool is_precise_check = false;
+	PathDebugDrawer *drawer = nullptr;
+
+	Vector2 cached_cell_size{ 16, 16 };
 
 protected:
-    static void _bind_methods();
+	static void _bind_methods();
 
 public:
-    SpxPathFinder();
-    ~SpxPathFinder();
-    
-    void setup_spx(GdVec2 size, GdVec2 cell_size, GdBool with_debug);
+	SpxPathFinder();
+	~SpxPathFinder();
+
+	void setup_spx(GdVec2 size, GdVec2 cell_size, GdBool with_debug);
 	void setup(Vector2i size, Vector2i cell_size, bool with_debug = false);
 
 	void set_jumping_enabled(bool p_enabled);
 	void add_all_obstacles(Node *root);
 
-    void set_sprite_obstacle(GdObj obj, bool enabled);
+	void set_sprite_obstacle(GdObj obj, bool enabled);
 
-    GdArray find_path_spx(GdVec2 p_from, GdVec2 p_to);
+	GdArray find_path_spx(GdVec2 p_from, GdVec2 p_to);
 	PackedVector2Array find_path(Vector2 start, Vector2 end);
 
-    _FORCE_INLINE_ void reset(){
-        astar->clear();
-        _destroy_drawer();
-    }
+	_FORCE_INLINE_ void reset() {
+		astar->clear();
+		_destroy_drawer();
+	}
 
-    _FORCE_INLINE_ Rect2i get_region() const {
-        return astar->get_region();
-    }
+	_FORCE_INLINE_ Rect2i get_region() const {
+		return astar->get_region();
+	}
 
-    _FORCE_INLINE_ Vector2i get_size() const {
-        return astar->get_size();
-    }
+	_FORCE_INLINE_ Vector2i get_size() const {
+		return astar->get_size();
+	}
 
-    _FORCE_INLINE_ Vector2 get_cell_size() const {
-        return astar->get_cell_size();
-    }
+	_FORCE_INLINE_ Vector2 get_cell_size() const {
+		return astar->get_cell_size();
+	}
 
-    _FORCE_INLINE_ bool is_cell_solid(Vector2i cell) const {
-        return astar->is_point_solid(cell);
-    }
+	_FORCE_INLINE_ bool is_cell_solid(Vector2i cell) const {
+		return astar->is_point_solid(cell);
+	}
 
-    _FORCE_INLINE_ Vector2 cell_to_world_gd(Vector2i cell) const {
-        return _cell_to_world(cell);
-    }
+	_FORCE_INLINE_ Vector2 cell_to_world_gd(Vector2i cell) const {
+		return _cell_to_world(cell);
+	}
 
-    _FORCE_INLINE_ void clear_drawer() {
-        drawer = nullptr;
-    };
+	_FORCE_INLINE_ void clear_drawer() {
+		drawer = nullptr;
+	}
 
 private:
-    Vector2i _world_to_cell(const Vector2 &pos) const;
-    Vector2 _cell_to_world(const Vector2i &cell) const;
-    Vector2 _cell_to_world_tl(const Vector2i &cell) const;
-    void _set_point_solid(int cx, int cy, PackedVector2Array &world_poly);
+	Vector2i _world_to_cell(const Vector2 &pos) const;
+	Vector2 _cell_to_world(const Vector2i &cell) const;
+	Vector2 _cell_to_world_tl(const Vector2i &cell) const;
+	void _set_point_solid(int cx, int cy, PackedVector2Array &world_poly);
 
-    void _setup_astar(Node *root, Vector2i &grid_size, Vector2i &cell_size);
+	void _setup_astar(Node *root, Vector2i &grid_size, Vector2i &cell_size);
 
-    void _process_rectangle_shape(Node2D *owner, CollisionShape2D *shape, bool add = true);
-    void _process_static_obstacles(Node2D *body, bool add = true);
+	void _process_rectangle_shape(Node2D *owner, CollisionShape2D *shape, bool add = true);
+	void _process_static_obstacles(Node2D *body, bool add = true);
 	void _process_tilemap_obstacles(TileMapLayer *tilemap, int p_layer_id = 0);
 	void _process_sprite_obstacle(GdObj obj, bool add);
 
-    Rect2 _get_scene_bounds(Node *root);
-    void _destroy_drawer();
+	Rect2 _get_scene_bounds(Node *root);
+	void _destroy_drawer();
 };
 
 class PathDebugDrawer : public Node2D {
-    GDCLASS(PathDebugDrawer, Node2D);
+	GDCLASS(PathDebugDrawer, Node2D);
 
 private:
-    Ref<SpxPathFinder> path_finder;
-    PackedVector2Array path;
+	Ref<SpxPathFinder> path_finder;
+	PackedVector2Array path;
 
-    Vector2 start;
-    Vector2 end;
-    bool start_set = false;
-    bool end_set = false;
-    float drag_threshold = 10.0;
+	Vector2 start;
+	Vector2 end;
+	bool start_set = false;
+	bool end_set = false;
+	float drag_threshold = 10.0;
 
-    enum DragState { NONE, DRAG_START, DRAG_END };
-    DragState dragging = NONE;
+	enum DragState { NONE,
+		DRAG_START,
+		DRAG_END };
+	DragState dragging = NONE;
 
 protected:
-    PathDebugDrawer() = default;
-    ~PathDebugDrawer() = default;
+	PathDebugDrawer() = default;
+	~PathDebugDrawer() = default;
 
-    static void _bind_methods();
-    void _notification(int p_what);
-    void _ready();
+	static void _bind_methods();
+	void _notification(int p_what);
+	void _ready();
 	void _draw();
-    void _exit_tree();
+	void _exit_tree();
 	void input(const Ref<InputEvent> &p_event) override;
 
 public:
-    explicit PathDebugDrawer(const Ref<SpxPathFinder> &p_path_finder) {
-        path_finder = p_path_finder;
-    }
+	explicit PathDebugDrawer(const Ref<SpxPathFinder> &p_path_finder) {
+		path_finder = p_path_finder;
+	}
 
-    void set_path_finder(const Ref<SpxPathFinder> &p_path_finder);
-    void set_path(const PackedVector2Array &p_path);
+	void set_path_finder(const Ref<SpxPathFinder> &p_path_finder);
+	void set_path(const PackedVector2Array &p_path);
 
 private:
-    void _update_path();
-    bool _is_near(const Vector2 &p1, const Vector2 &p2) const;
+	void _update_path();
+	bool _is_near(const Vector2 &p1, const Vector2 &p2) const;
 };
 
-
-#endif // SPX_PATH_FINER_H 
+#endif // SPX_PATH_FINER_H

@@ -58,12 +58,13 @@ typedef CheckButton SpxToggle;
 typedef Control SpxControl;
 typedef LineEdit SpxInput;
 
-class SpxUi :ISpxUi{
+class SpxUi : ISpxUi {
 public:
 	virtual ~SpxUi() = default; // Added virtual destructor to fix -Werror=non-virtual-dtor
 
 	GdObj gid;
 	GdInt type;
+
 public:
 	SpxControl *control = nullptr;
 
@@ -73,9 +74,10 @@ public:
 	SpxButton *get_button();
 	SpxToggle *get_toggle();
 	SpxInput *get_input();
+
 public:
 	virtual void on_destroy_call() override;
-	virtual void on_start()  override;
+	virtual void on_start() override;
 	void set_type(GdInt etype);
 
 	Control *get_control_item() const;
@@ -105,7 +107,6 @@ public:
 	void set_texture(GdString path);
 	GdString get_texture();
 
-
 	GdInt get_layout_direction();
 	void set_layout_direction(GdInt value);
 	GdInt get_layout_mode();
@@ -124,7 +125,6 @@ public:
 	void set_global_position(GdVec2 value);
 	GdFloat get_rotation();
 	void set_rotation(GdFloat value);
-
 
 	GdBool get_flip(GdBool horizontal);
 	void set_flip(GdBool horizontal, GdBool is_flip);

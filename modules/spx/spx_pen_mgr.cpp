@@ -54,7 +54,7 @@ GdObj SpxPenMgr::create_pen() {
 }
 
 void SpxPenMgr::destroy_pen(GdObj obj) {
-	destroy_object(obj); 
+	destroy_object(obj);
 }
 
 void SpxPenMgr::destroy_all_pens() {

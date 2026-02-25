@@ -31,32 +31,32 @@
 #ifndef SPX_OBJECT_GUARD_H
 #define SPX_OBJECT_GUARD_H
 
-#include "gdextension_spx_ext.h"
 #include "core/string/ustring.h"
+#include "gdextension_spx_ext.h"
 
 /**
  * @class SpxObjectGuard
  * @brief Universal RAII-style guard for SPX object validation and access
- * 
+ *
  * This template class provides a type-safe, unified approach to object validation
  * across all SPX managers (Sprite, UI, Audio, etc.), replacing the macro-based
  * validation pattern with a maintainable, extensible solution.
- * 
+ *
  * Benefits:
  * - Type safety: Template-based, compile-time type checking
  * - Unified interface: Same pattern for all manager types
  * - Easy to extend: Can add logging, performance monitoring, etc.
  * - Better debugging: Clear stack traces and error context
  * - Zero overhead: Compiler inline optimization
- * 
+ *
  * @tparam T The object type (e.g., SpxSprite, SpxUi)
  * @tparam Mgr The manager type (e.g., SpxSpriteMgr, SpxUiMgr)
- * 
+ *
  * @example
  * @code
  * // In SpxSpriteMgr
  * void set_position(GdObj obj, GdVec2 pos) {
- *     SpxObjectGuard<SpxSprite, SpxSpriteMgr> sprite(obj, "set_position", this, 
+ *     SpxObjectGuard<SpxSprite, SpxSpriteMgr> sprite(obj, "set_position", this,
  *         [](SpxSpriteMgr* mgr, GdObj id) { return mgr->get_sprite(id); });
  *     if (sprite) {
  *         sprite->set_position(pos);
@@ -88,7 +88,7 @@ public:
 
 			if (!valid) {
 				print_error(String("Try to access property of a null object in ") +
-						   String(context) + " (gid=" + itos(obj) + ")");
+						String(context) + " (gid=" + itos(obj) + ")");
 			}
 		}
 	}
@@ -148,7 +148,7 @@ public:
 
 /**
  * @brief Convenience macro for SPX sprite validation (void return)
- * 
+ *
  * @example
  * @code
  * void SpxSpriteMgr::set_position(GdObj obj, GdVec2 pos) {
@@ -157,14 +157,15 @@ public:
  * }
  * @endcode
  */
-#define SPX_SPRITE_GUARD_VOID(obj, context_name) \
-	SpxObjectGuard<SpxSprite, SpxSpriteMgr> sprite(obj, context_name, this, \
+#define SPX_SPRITE_GUARD_VOID(obj, context_name)                              \
+	SpxObjectGuard<SpxSprite, SpxSpriteMgr> sprite(obj, context_name, this,   \
 			[](SpxSpriteMgr *mgr, GdObj id) { return mgr->get_sprite(id); }); \
-	if (!sprite) return;
+	if (!sprite)                                                              \
+		return;
 
 /**
  * @brief Convenience macro for SPX sprite validation with return value
- * 
+ *
  * @example
  * @code
  * GdVec2 SpxSpriteMgr::get_position(GdObj obj) {
@@ -173,14 +174,15 @@ public:
  * }
  * @endcode
  */
-#define SPX_SPRITE_GUARD_RETURN(obj, context_name, return_val) \
-	SpxObjectGuard<SpxSprite, SpxSpriteMgr> sprite(obj, context_name, this, \
+#define SPX_SPRITE_GUARD_RETURN(obj, context_name, return_val)                \
+	SpxObjectGuard<SpxSprite, SpxSpriteMgr> sprite(obj, context_name, this,   \
 			[](SpxSpriteMgr *mgr, GdObj id) { return mgr->get_sprite(id); }); \
-	if (!sprite) return return_val;
+	if (!sprite)                                                              \
+		return return_val;
 
 /**
  * @brief Convenience macro for SPX target sprite validation (void return)
- * 
+ *
  * @example
  * @code
  * void SpxSpriteMgr::copy_properties(GdObj src, GdObj target) {
@@ -190,14 +192,15 @@ public:
  * }
  * @endcode
  */
-#define SPX_TARGET_SPRITE_GUARD_VOID(target_obj, context_name) \
+#define SPX_TARGET_SPRITE_GUARD_VOID(target_obj, context_name)                            \
 	SpxObjectGuard<SpxSprite, SpxSpriteMgr> sprite_target(target_obj, context_name, this, \
-			[](SpxSpriteMgr *mgr, GdObj id) { return mgr->get_sprite(id); }); \
-	if (!sprite_target) return;
+			[](SpxSpriteMgr *mgr, GdObj id) { return mgr->get_sprite(id); });             \
+	if (!sprite_target)                                                                   \
+		return;
 
 /**
  * @brief Convenience macro for SPX target sprite validation with return value
- * 
+ *
  * @example
  * @code
  * GdBool SpxSpriteMgr::check_collision(GdObj obj, GdObj target) {
@@ -207,14 +210,15 @@ public:
  * }
  * @endcode
  */
-#define SPX_TARGET_SPRITE_GUARD_RETURN(target_obj, context_name, return_val) \
+#define SPX_TARGET_SPRITE_GUARD_RETURN(target_obj, context_name, return_val)              \
 	SpxObjectGuard<SpxSprite, SpxSpriteMgr> sprite_target(target_obj, context_name, this, \
-			[](SpxSpriteMgr *mgr, GdObj id) { return mgr->get_sprite(id); }); \
-	if (!sprite_target) return return_val;
+			[](SpxSpriteMgr *mgr, GdObj id) { return mgr->get_sprite(id); });             \
+	if (!sprite_target)                                                                   \
+		return return_val;
 
 /**
  * @brief Convenience macro for SPX UI node validation (void return)
- * 
+ *
  * @example
  * @code
  * void SpxUiMgr::set_text(GdObj obj, GdString text) {
@@ -223,14 +227,15 @@ public:
  * }
  * @endcode
  */
-#define SPX_UI_GUARD_VOID(obj, context_name) \
-	SpxObjectGuard<SpxUi, SpxUiMgr> node(obj, context_name, this, \
+#define SPX_UI_GUARD_VOID(obj, context_name)                            \
+	SpxObjectGuard<SpxUi, SpxUiMgr> node(obj, context_name, this,       \
 			[](SpxUiMgr *mgr, GdObj id) { return mgr->get_node(id); }); \
-	if (!node) return;
+	if (!node)                                                          \
+		return;
 
 /**
  * @brief Convenience macro for SPX UI node validation with return value
- * 
+ *
  * @example
  * @code
  * GdString SpxUiMgr::get_text(GdObj obj) {
@@ -239,14 +244,15 @@ public:
  * }
  * @endcode
  */
-#define SPX_UI_GUARD_RETURN(obj, context_name, return_val) \
-	SpxObjectGuard<SpxUi, SpxUiMgr> node(obj, context_name, this, \
+#define SPX_UI_GUARD_RETURN(obj, context_name, return_val)              \
+	SpxObjectGuard<SpxUi, SpxUiMgr> node(obj, context_name, this,       \
 			[](SpxUiMgr *mgr, GdObj id) { return mgr->get_node(id); }); \
-	if (!node) return return_val;
+	if (!node)                                                          \
+		return return_val;
 
 /**
  * @brief Convenience macro for SPX audio validation (void return)
- * 
+ *
  * @example
  * @code
  * void SpxAudio::pause(GdInt aid) {
@@ -255,14 +261,15 @@ public:
  * }
  * @endcode
  */
-#define SPX_AUDIO_GUARD_VOID(aid, context_name) \
+#define SPX_AUDIO_GUARD_VOID(aid, context_name)                                  \
 	SpxObjectGuard<AudioStreamPlayer2D, SpxAudio> audio(aid, context_name, this, \
-			[](SpxAudio *mgr, GdInt id) { return mgr->_get_aid_audio(id); }); \
-	if (!audio) return;
+			[](SpxAudio *mgr, GdInt id) { return mgr->_get_aid_audio(id); });    \
+	if (!audio)                                                                  \
+		return;
 
 /**
  * @brief Convenience macro for SPX audio validation with return value
- * 
+ *
  * @example
  * @code
  * GdBool SpxAudio::is_playing(GdInt aid) {
@@ -271,16 +278,17 @@ public:
  * }
  * @endcode
  */
-#define SPX_AUDIO_GUARD_RETURN(aid, context_name, return_val) \
+#define SPX_AUDIO_GUARD_RETURN(aid, context_name, return_val)                    \
 	SpxObjectGuard<AudioStreamPlayer2D, SpxAudio> audio(aid, context_name, this, \
-			[](SpxAudio *mgr, GdInt id) { return mgr->_get_aid_audio(id); }); \
-	if (!audio) return return_val;
+			[](SpxAudio *mgr, GdInt id) { return mgr->_get_aid_audio(id); });    \
+	if (!audio)                                                                  \
+		return return_val;
 
 /**
  * @brief Convenience macro for SPX UI internal control validation (void return)
- * 
+ *
  * Used within SpxUi class methods to validate the internal control pointer.
- * 
+ *
  * @example
  * @code
  * void SpxUi::set_visible(GdBool visible) {
@@ -289,16 +297,17 @@ public:
  * }
  * @endcode
  */
-#define SPX_UI_CONTROL_GUARD_VOID(context_name) \
-	SpxObjectGuard<Control, SpxUi> node(0, context_name, this, \
+#define SPX_UI_CONTROL_GUARD_VOID(context_name)                       \
+	SpxObjectGuard<Control, SpxUi> node(0, context_name, this,        \
 			[](SpxUi *ui, GdInt) { return ui->get_control_item(); }); \
-	if (!node) return;
+	if (!node)                                                        \
+		return;
 
 /**
  * @brief Convenience macro for SPX UI internal control validation with return value
- * 
+ *
  * Used within SpxUi class methods to validate the internal control pointer.
- * 
+ *
  * @example
  * @code
  * GdRect2 SpxUi::get_rect() {
@@ -307,9 +316,10 @@ public:
  * }
  * @endcode
  */
-#define SPX_UI_CONTROL_GUARD_RETURN(context_name, return_val) \
-	SpxObjectGuard<Control, SpxUi> node(0, context_name, this, \
+#define SPX_UI_CONTROL_GUARD_RETURN(context_name, return_val)         \
+	SpxObjectGuard<Control, SpxUi> node(0, context_name, this,        \
 			[](SpxUi *ui, GdInt) { return ui->get_control_item(); }); \
-	if (!node) return return_val;
+	if (!node)                                                        \
+		return return_val;
 
 #endif // SPX_OBJECT_GUARD_H

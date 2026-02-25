@@ -36,14 +36,15 @@
 void SpxCameraMgr::on_awake() {
 	SpxBaseMgr::on_awake();
 	camera = nullptr;
-	auto nodes = get_root()->find_children("*","Camera2D",true,false);
-	for(int i = 0; i < nodes.size(); i++) {
-		camera =  Object::cast_to<Camera2D>(nodes[i]);
-		if(camera != nullptr) {
+	auto nodes = get_root()->find_children("*", "Camera2D", true, false);
+	for (int i = 0; i < nodes.size(); i++) {
+		camera = Object::cast_to<Camera2D>(nodes[i]);
+		if (camera != nullptr) {
 			break;
 		}
 	}
-	if(camera == nullptr) {
+
+	if (camera == nullptr) {
 		camera = memnew(Camera2D);
 		camera->set_name("SpxCamera2D");
 		get_spx_root()->add_child(camera);
@@ -51,7 +52,9 @@ void SpxCameraMgr::on_awake() {
 }
 
 void SpxCameraMgr::on_reset(int reset_code) {
-	if(camera) camera->set_position(Point2(0.0, 0.0));
+	if (camera) {
+		camera->set_position(Point2(0.0, 0.0));
+	}
 }
 
 Vector2 SpxCameraMgr::get_global_mouse_position() {
@@ -62,7 +65,7 @@ void SpxCameraMgr::set_stretch_clear_color() {
 	Viewport *vp = camera->get_viewport();
 	vp->set_transparent_background(true);
 	vp->set_use_hdr_2d(false);
-	RenderingServer::get_singleton()->set_default_clear_color(Color(0,0,0,0));
+	RenderingServer::get_singleton()->set_default_clear_color(Color(0, 0, 0, 0));
 }
 
 GdVec2 SpxCameraMgr::get_camera_position() {
@@ -100,12 +103,12 @@ GdRect2 SpxCameraMgr::get_stage_limits_rect() {
 	if (!camera) {
 		return Rect2();
 	}
-	
+
 	real_t left = camera->get_limit(SIDE_LEFT);
 	real_t top = camera->get_limit(SIDE_TOP);
 	real_t right = camera->get_limit(SIDE_RIGHT);
 	real_t bottom = camera->get_limit(SIDE_BOTTOM);
-	
+
 	return Rect2(left, top, right - left, bottom - top);
 }
 

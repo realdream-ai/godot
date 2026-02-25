@@ -32,7 +32,6 @@
 
 #include "spx_engine.h"
 
-
 void SpxInputProxy::ready() {
 	set_process_input(true);
 }

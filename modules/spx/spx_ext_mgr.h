@@ -35,7 +35,6 @@
 #include "scene/2d/node_2d.h"
 #include "spx_base_mgr.h"
 
-
 class SpxExtMgr : public SpxBaseMgr {
 	SPXCLASS(SpxExtMgr, SpxBaseMgr)
 public:

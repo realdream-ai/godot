@@ -40,12 +40,12 @@
 
 #define UI_DEFAULT_THEME_NAME "default"
 
-#define GET_SPX_CONTROL_TYPE(VALUE)                                                    \
-	if (type != (int)ESpxUiType::VALUE) {                                              \
-		print_error(String("SpxUi type mismatch in ") + String(__func__) +            \
-		           ": expected " #VALUE ", got " + itos(type));                        \
-		return nullptr;                                                                \
-	}                                                                                  \
+#define GET_SPX_CONTROL_TYPE(VALUE)                                        \
+	if (type != (int)ESpxUiType::VALUE) {                                  \
+		print_error(String("SpxUi type mismatch in ") + String(__func__) + \
+				": expected " #VALUE ", got " + itos(type));               \
+		return nullptr;                                                    \
+	}                                                                      \
 	return (Spx##VALUE *)control;
 
 Control *SpxUi::get_control_item() const {
@@ -64,26 +64,31 @@ void SpxUi::on_click_internal() {
 SpxControl *SpxUi::get_control() {
 	return control;
 }
+
 SpxLabel *SpxUi::get_label(){
 	GET_SPX_CONTROL_TYPE(Label)
 }
+
 SpxImage *SpxUi::get_image(){
 	GET_SPX_CONTROL_TYPE(Image)
 }
+
 SpxButton *SpxUi::get_button(){
 	GET_SPX_CONTROL_TYPE(Button)
 }
-SpxToggle *SpxUi::get_toggle() {
+
+SpxToggle *SpxUi::get_toggle(){
 	GET_SPX_CONTROL_TYPE(Toggle)
 }
+
 SpxInput *SpxUi::get_input() {
 	GET_SPX_CONTROL_TYPE(Input)
 }
 
-
 void SpxUi::on_destroy_call() {
-	if (!Spx::initialed)
+	if (!Spx::initialed) {
 		return;
+	}
 	uiMgr->on_node_destroy(this);
 }
 
@@ -108,8 +113,9 @@ GdInt SpxUi::get_type() {
 
 void SpxUi::queue_free() {
 	auto node = get_control_item();
-	if (node != nullptr)
+	if (node != nullptr) {
 		node->queue_free();
+	}
 }
 
 void SpxUi::set_interactable(GdBool interactable) {
@@ -254,67 +260,82 @@ GdString SpxUi::get_texture() {
 			print_error("not support get_texture() type " + itos(type));
 			break;
 	}
-	if (value == nullptr)
+
+	if (value == nullptr) {
 		return nullptr;
+	}
 	return SpxReturnStr(value->get_name());
 }
 
 GdInt SpxUi::get_layout_direction() {
 	return get_control()->get_layout_direction();
 }
+
 void SpxUi::set_layout_direction(GdInt value) {
 	get_control()->set_layout_direction((Control::LayoutDirection)value);
 }
+
 GdInt SpxUi::get_layout_mode() {
 	return get_control()->get_layout_mode();
 }
+
 void SpxUi::set_layout_mode(GdInt value) {
 	get_control()->set_layout_mode((Control::LayoutMode)value);
 }
+
 GdInt SpxUi::get_anchors_preset() {
 	return get_control()->get_anchors_preset();
 }
+
 void SpxUi::set_anchors_preset(GdInt value) {
-	return get_control()->set_anchors_preset((Control::LayoutPreset)value);
+	get_control()->set_anchors_preset((Control::LayoutPreset)value);
 }
+
 GdVec2 SpxUi::get_scale() {
 	return get_control()->get_scale();
 }
+
 void SpxUi::set_scale(GdVec2 value) {
-	return get_control()->set_scale(value);
+	get_control()->set_scale(value);
 }
 
 GdVec2 SpxUi::get_size() {
 	return get_control()->get_size();
 }
+
 void SpxUi::set_size(GdVec2 value) {
-	return get_control()->set_size(value);
+	get_control()->set_size(value);
 }
 
 GdVec2 SpxUi::get_position() {
 	return get_control()->get_position();
 }
+
 void SpxUi::set_position(GdVec2 value) {
-	return get_control()->set_position(value);
+	get_control()->set_position(value);
 }
 
 GdVec2 SpxUi::get_global_position() {
 	return get_control()->get_global_position();
 }
+
 void SpxUi::set_global_position(GdVec2 value) {
-	return get_control()->set_global_position(value);
+	get_control()->set_global_position(value);
 }
 
 GdFloat SpxUi::get_rotation() {
 	return get_control()->get_rotation();
 }
+
 void SpxUi::set_rotation(GdFloat value) {
-	return get_control()->set_rotation(value);
+	get_control()->set_rotation(value);
 }
+
 GdBool SpxUi::get_flip(GdBool horizontal) {
 	auto image = get_image();
 	return horizontal ? image->is_flipped_h() : image->is_flipped_v();
 }
+
 void SpxUi::set_flip(GdBool horizontal, GdBool is_flip) {
 	auto image = get_image();
 	if (horizontal) {

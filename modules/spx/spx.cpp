@@ -47,13 +47,11 @@
 #include "spx_sprite.h"
 #include "spx_ui.h"
 
-
 // Simple node class for initialization
 class SpxEngineNode : public Node {
 	GDCLASS(SpxEngineNode, Node);
 };
 
-   
 #define SPX_ENGINE SpxEngine::get_singleton()
 
 void Spx::register_extension_functions() {
@@ -77,18 +75,19 @@ void Spx::register_types() {
 
 void Spx::on_start(void *p_tree) {
 	initialed = true;
-	restart_requested.clear();  // Initialize restart flag to false
-	reset_requested.clear();  // Initialize reset flag to false
-	reset_exit_code.set(0);  // Initialize reset exit code to 0
-	pause_requested.clear();  // Initialize pause flag to false
-	resume_requested.clear();  // Initialize resume flag to false
-	next_frame_requested.clear();  // Initialize next_frame flag to false
+	restart_requested.clear(); // Initialize restart flag to false
+	reset_requested.clear(); // Initialize reset flag to false
+	reset_exit_code.set(0); // Initialize reset exit code to 0
+	pause_requested.clear(); // Initialize pause flag to false
+	resume_requested.clear(); // Initialize resume flag to false
+	next_frame_requested.clear(); // Initialize next_frame flag to false
 	if (!SpxEngine::has_initialed()) {
 		return;
 	}
 	auto tree = (SceneTree *)p_tree;
-	if (tree == nullptr)
+	if (tree == nullptr) {
 		return;
+	}
 	Window *root = tree->get_root();
 	if (root == nullptr) {
 		return;
@@ -116,39 +115,39 @@ void Spx::on_update(double delta) {
 
 	// Check if restart was requested from a non-main thread
 	if (restart_requested.is_set()) {
-		restart_requested.clear();  // Clear the flag first
+		restart_requested.clear(); // Clear the flag first
 		SPX_ENGINE->restart();
-		return;  // Skip the normal update after restart
+		return; // Skip the normal update after restart
 	}
 
 	// Check if reset was requested from a non-main thread
 	if (reset_requested.is_set()) {
 		// Read exit code BEFORE clearing the flag to avoid TOCTOU race condition
 		int exit_code = reset_exit_code.get();
-		reset_requested.clear();  // Clear the flag after reading
+		reset_requested.clear(); // Clear the flag after reading
 		SPX_ENGINE->on_reset(exit_code);
 		auto callback = SPX_ENGINE->get_on_runtime_reset();
 		if (callback != nullptr) {
 			callback(exit_code);
 		}
-		return;  // Skip the normal update after reset
+		return; // Skip the normal update after reset
 	}
 
 	// Check if pause was requested from a non-main thread
 	if (pause_requested.is_set()) {
-		pause_requested.clear();  // Clear the flag first
+		pause_requested.clear(); // Clear the flag first
 		SPX_ENGINE->pause();
 	}
 
 	// Check if resume was requested from a non-main thread
 	if (resume_requested.is_set()) {
-		resume_requested.clear();  // Clear the flag first
+		resume_requested.clear(); // Clear the flag first
 		SPX_ENGINE->resume();
 	}
 
 	// Check if next_frame was requested from a non-main thread
 	if (next_frame_requested.is_set()) {
-		next_frame_requested.clear();  // Clear the flag first
+		next_frame_requested.clear(); // Clear the flag first
 		SPX_ENGINE->next_frame();
 	}
 
@@ -174,7 +173,6 @@ void Spx::reset(int exit_code) {
 	if (!initialed || !SpxEngine::has_initialed()) {
 		return;
 	}
-
 
 	// Check if we're on the main thread
 	if (Thread::is_main_thread()) {
