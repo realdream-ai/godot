@@ -87,8 +87,7 @@ public:
 			valid = (object != nullptr);
 
 			if (!valid) {
-				print_error(String("Try to access property of a null object in ") +
-						String(context) + " (gid=" + itos(obj) + ")");
+				WARN_PRINT(vformat("Try to access property of a null object in %s (gid=%d)", context, obj));
 			}
 		}
 	}
