@@ -58,22 +58,18 @@
 #include "spx_tilemapparser_mgr.h"
 #include "spx_ui_mgr.h"
 
-// Register runtime panic callback.
 void SpxEngine::register_runtime_panic_callbacks(GDExtensionSpxGlobalRuntimePanicCallback callback) {
 	singleton->on_runtime_panic = callback;
 }
 
-// Register runtime exit callback.
 void SpxEngine::register_runtime_exit_callbacks(GDExtensionSpxGlobalRuntimeExitCallback callback) {
 	singleton->on_runtime_exit = callback;
 }
 
-// Register runtime reset callback.
 void SpxEngine::register_runtime_reset_callbacks(GDExtensionSpxGlobalRuntimeResetCallback callback) {
 	singleton->on_runtime_reset = callback;
 }
 
-// Get default SPX callbacks with empty lambdas.
 static SpxCallbackInfo get_default_spx_callbacks() {
 	SpxCallbackInfo callbacks;
 	callbacks.func_on_engine_start = []() {};
@@ -121,7 +117,6 @@ static SpxCallbackInfo get_default_spx_callbacks() {
 	return callbacks;
 }
 
-// Register callbacks and initialize engine singleton.
 void SpxEngine::register_callbacks(GDExtensionSpxCallbackInfoPtr callback_ptr) {
 	if (singleton != nullptr) {
 		print_error("SpxEngine::register_callbacks failed, already initialed! ");
@@ -136,32 +131,26 @@ void SpxEngine::register_callbacks(GDExtensionSpxCallbackInfoPtr callback_ptr) {
 	singleton->should_execute_single_frame = false;
 }
 
-// Get callbacks struct.
 SpxCallbackInfo *SpxEngine::get_callbacks() {
 	return &callbacks;
 }
 
-// Get next unique ID.
 GdInt SpxEngine::get_unique_id() {
 	return global_id++;
 }
 
-// Get SPX root node.
 Node *SpxEngine::get_spx_root() {
 	return spx_root;
 }
 
-// Get scene tree.
 SceneTree *SpxEngine::get_tree() {
 	return tree;
 }
 
-// Get root window.
 Window *SpxEngine::get_root() {
 	return tree->get_root();
 }
 
-// Set root node and initialize callback proxy.
 void SpxEngine::set_root_node(SceneTree *p_tree, Node *p_node) {
 	this->tree = p_tree;
 	spx_root = p_node;
@@ -172,7 +161,6 @@ void SpxEngine::set_root_node(SceneTree *p_tree, Node *p_node) {
 	}
 }
 
-// Called when engine awakes.
 void SpxEngine::on_awake() {
 	if (has_exit) {
 		return;
@@ -191,7 +179,6 @@ void SpxEngine::on_awake() {
 	}
 }
 
-// Called on fixed update.
 void SpxEngine::on_fixed_update(float delta) {
 	if (has_exit) {
 		return;
@@ -210,7 +197,6 @@ void SpxEngine::on_fixed_update(float delta) {
 	}
 }
 
-// Called on frame update.
 void SpxEngine::on_update(float delta) {
 	if (has_exit) {
 		return;
@@ -220,7 +206,6 @@ void SpxEngine::on_update(float delta) {
 		return;
 	}
 
-	// ---- internal state sync ----
 	if (should_execute_single_frame) {
 		should_execute_single_frame = false;
 	}
@@ -230,17 +215,14 @@ void SpxEngine::on_update(float delta) {
 		is_defer_call_pause = false;
 	}
 
-	// ---- managers ----
 	for (auto mgr : mgrs) {
 		mgr->on_update(delta);
 	}
 
-	// ---- callbacks ----
 	if (callbacks.func_on_engine_update) {
 		callbacks.func_on_engine_update(delta);
 	}
 
-	// ---- pause sync ----
 	if (is_spx_paused && !tree->is_paused()) {
 		if (Thread::is_main_thread()) {
 			tree->set_pause(true);
@@ -250,23 +232,6 @@ void SpxEngine::on_update(float delta) {
 	}
 }
 
-// Called when engine exits.
-void SpxEngine::on_exit(int exit_code) {
-	if (has_exit) {
-		return;
-	}
-
-	capture_last_frame();
-	has_exit = true;
-
-	for (auto mgr : mgrs) {
-		mgr->on_exit(exit_code);
-	}
-
-	callbacks = get_default_spx_callbacks();
-}
-
-// Called when engine destroys.
 void SpxEngine::on_destroy() {
 	for (auto mgr : mgrs) {
 		mgr->on_destroy();
@@ -285,16 +250,39 @@ void SpxEngine::on_destroy() {
 
 	callbacks = get_default_spx_callbacks();
 	svgMgr->destroy();
-	destroy_all_managers();
+	_destroy_all_managers();
 	singleton = nullptr;
 }
 
-// Check if engine is in reset state.
+void SpxEngine::on_exit(int exit_code) {
+	if (has_exit) {
+		return;
+	}
+
+	capture_last_frame();
+	has_exit = true;
+
+	for (auto mgr : mgrs) {
+		mgr->on_exit(exit_code);
+	}
+
+	callbacks = get_default_spx_callbacks();
+}
+
+void SpxEngine::on_reset(int reset_code) {
+	if (is_spx_reset) {
+		return;
+	}
+
+	is_spx_reset = true;
+	capture_last_frame();
+	_do_reset(reset_code);
+}
+
 bool SpxEngine::is_reset() {
 	return is_spx_reset;
 }
 
-// Restart engine from reset state.
 void SpxEngine::restart() {
 	if (!is_spx_reset) {
 		return;
@@ -314,74 +302,10 @@ void SpxEngine::restart() {
 	}
 }
 
-// Called when engine resets.
-void SpxEngine::on_reset(int reset_code) {
-	if (is_spx_reset) {
-		return;
-	}
-
-	is_spx_reset = true;
-	capture_last_frame();
-	_do_reset(reset_code);
+void SpxEngine::set_delay_runtime_reset(bool p_delay) {
+	should_delay_runtime_reset = p_delay;
 }
 
-// Pause the engine.
-void SpxEngine::pause() {
-	if (!tree) {
-		return;
-	}
-
-	if (Thread::is_main_thread()) {
-		tree->set_pause(true);
-		_on_godot_pause_changed(true);
-	} else {
-		tree->call_deferred("set_pause", true);
-		is_defer_call_pause = true;
-		defer_pause_value = true;
-	}
-}
-
-// Resume the engine.
-void SpxEngine::resume() {
-	if (!tree) {
-		return;
-	}
-
-	if (Thread::is_main_thread()) {
-		tree->set_pause(false);
-		_on_godot_pause_changed(false);
-	} else {
-		tree->call_deferred("set_pause", false);
-		is_defer_call_pause = true;
-		defer_pause_value = false;
-	}
-}
-
-// Check if engine is paused.
-bool SpxEngine::is_paused() const {
-	return is_spx_paused;
-}
-
-// Execute single frame when paused.
-void SpxEngine::next_frame() {
-	if (!is_spx_paused) {
-		return;
-	}
-
-	if (!tree) {
-		return;
-	}
-
-	if (Thread::is_main_thread()) {
-		tree->set_pause(false);
-		should_execute_single_frame = true;
-	} else {
-		tree->call_deferred("set_pause", false);
-		should_execute_single_frame = true;
-	}
-}
-
-// Capture current frame as frozen texture.
 void SpxEngine::capture_last_frame() {
 	if (is_frozen_frame || !tree) {
 		return;
@@ -397,7 +321,6 @@ void SpxEngine::capture_last_frame() {
 	is_frozen_frame = true;
 }
 
-// Clear frozen frame texture.
 void SpxEngine::clear_frozen_frame() {
 	if (!is_frozen_frame) {
 		return;
@@ -416,7 +339,103 @@ void SpxEngine::clear_frozen_frame() {
 	is_frozen_frame = false;
 }
 
-// Handle Godot pause state change.
+void SpxEngine::pause() {
+	if (!tree) {
+		return;
+	}
+
+	if (Thread::is_main_thread()) {
+		tree->set_pause(true);
+		_on_godot_pause_changed(true);
+	} else {
+		tree->call_deferred("set_pause", true);
+		is_defer_call_pause = true;
+		defer_pause_value = true;
+	}
+}
+
+void SpxEngine::resume() {
+	if (!tree) {
+		return;
+	}
+
+	if (Thread::is_main_thread()) {
+		tree->set_pause(false);
+		_on_godot_pause_changed(false);
+	} else {
+		tree->call_deferred("set_pause", false);
+		is_defer_call_pause = true;
+		defer_pause_value = false;
+	}
+}
+
+bool SpxEngine::is_paused() const {
+	return is_spx_paused;
+}
+
+void SpxEngine::next_frame() {
+	if (!is_spx_paused) {
+		return;
+	}
+
+	if (!tree) {
+		return;
+	}
+
+	if (Thread::is_main_thread()) {
+		tree->set_pause(false);
+		should_execute_single_frame = true;
+	} else {
+		tree->call_deferred("set_pause", false);
+		should_execute_single_frame = true;
+	}
+}
+
+void SpxEngine::_do_reset(int reset_code) {
+	if (callbacks.func_on_engine_reset) {
+		callbacks.func_on_engine_reset();
+	}
+
+	for (auto mgr : mgrs) {
+		mgr->on_reset(reset_code);
+	}
+
+	SvgManager::get_singleton()->reset(false);
+
+	if (should_delay_runtime_reset) {
+		_invoke_runtime_reset_delayed(reset_code);
+	} else {
+		_invoke_runtime_reset(reset_code);
+	}
+}
+
+void SpxEngine::_invoke_runtime_reset(int reset_code) {
+	_pause_pure();
+	auto callback = get_on_runtime_reset();
+	if (callback) {
+		callback(reset_code);
+	}
+}
+
+void SpxEngine::_invoke_runtime_reset_delayed(int reset_code) {
+	if (!tree || !delay_proxy) {
+		return;
+	}
+
+	_disconnect_reset_timer();
+	reset_timer = tree->create_timer(RESET_PAUSE_DELAY_SEC);
+	delay_proxy->callback = [this, reset_code]() {
+		_invoke_runtime_reset(reset_code);
+	};
+	reset_timer->connect("timeout", on_timeout_callable);
+}
+
+void SpxEngine::_disconnect_reset_timer() {
+	if (!reset_timer.is_null() && reset_timer.is_valid() && reset_timer->has_connections("timeout")) {
+		reset_timer->disconnect("timeout", on_timeout_callable);
+	}
+}
+
 void SpxEngine::_on_godot_pause_changed(bool is_godot_paused) {
 	if (is_godot_paused != is_spx_paused) {
 		is_spx_paused = is_godot_paused;
@@ -435,35 +454,6 @@ void SpxEngine::_on_godot_pause_changed(bool is_godot_paused) {
 	}
 }
 
-// Execute reset logic.
-void SpxEngine::_do_reset(int reset_code) {
-	if (callbacks.func_on_engine_reset) {
-		callbacks.func_on_engine_reset();
-	}
-
-	for (auto mgr : mgrs) {
-		mgr->on_reset(reset_code);
-	}
-
-	SvgManager::get_singleton()->reset(false);
-
-	if (!tree || !delay_proxy) {
-		return;
-	}
-
-	_disconnect_reset_timer();
-	reset_timer = tree->create_timer(RESET_PAUSE_DELAY_SEC);
-	delay_proxy->callback = [this, reset_code]() {
-		this->_pause_pure();
-		auto callback = get_on_runtime_reset();
-		if (callback) {
-			callback(reset_code);
-		}
-	};
-	reset_timer->connect("timeout", on_timeout_callable);
-}
-
-// Pause without callbacks.
 void SpxEngine::_pause_pure() {
 	if (!tree) {
 		is_spx_paused = true;
@@ -479,7 +469,6 @@ void SpxEngine::_pause_pure() {
 	is_spx_paused = true;
 }
 
-// Resume without callbacks.
 void SpxEngine::_resume_pure() {
 	if (!tree) {
 		is_spx_paused = false;
@@ -493,13 +482,6 @@ void SpxEngine::_resume_pure() {
 	}
 
 	is_spx_paused = false;
-}
-
-// Disconnect reset timer signal.
-void SpxEngine::_disconnect_reset_timer() {
-	if (!reset_timer.is_null() && reset_timer.is_valid() && reset_timer->has_connections("timeout")) {
-		reset_timer->disconnect("timeout", on_timeout_callable);
-	}
 }
 
 Ref<Image> SpxEngine::_get_viewport_image() const {
@@ -535,34 +517,28 @@ void SpxEngine::_attach_freeze_node(TextureRect *screen) {
 	freeze_layer->add_child(screen);
 }
 
-// Initialize all managers.
 void SpxEngine::_initialize_managers() {
-	// Core.
 	input = create_manager<SpxInputMgr>();
 	audio = create_manager<SpxAudioMgr>();
 	physics = create_manager<SpxPhysicsMgr>();
 
-	// Rendering.
 	sprite = create_manager<SpxSpriteMgr>();
 	ui = create_manager<SpxUiMgr>();
 	scene = create_manager<SpxSceneMgr>();
 	camera = create_manager<SpxCameraMgr>();
 
-	// System.
 	platform = create_manager<SpxPlatformMgr>();
 	res = create_manager<SpxResMgr>();
 	ext = create_manager<SpxExtMgr>();
 	debug = create_manager<SpxDebugMgr>();
 
-	// Scene.
 	navigation = create_manager<SpxNavigationMgr>();
 	pen = create_manager<SpxPenMgr>();
 	tilemap = create_manager<SpxTilemapMgr>();
 	tilemapparser = create_manager<SpxTilemapparserMgr>();
 }
 
-// Destroy all managers in reverse order.
-void SpxEngine::destroy_all_managers() {
+void SpxEngine::_destroy_all_managers() {
 	for (int i = mgrs.size() - 1; i >= 0; --i) {
 		memdelete(mgrs[i]);
 	}

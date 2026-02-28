@@ -102,7 +102,7 @@ private:
 		return mgr;
 	}
 
-	void destroy_all_managers();
+	void _destroy_all_managers();
 
 public:
 	SpxInputMgr *get_input() { return input; }
@@ -130,7 +130,6 @@ private:
 	GDExtensionSpxGlobalRuntimeExitCallback on_runtime_exit;
 	GDExtensionSpxGlobalRuntimeResetCallback on_runtime_reset;
 
-	// Freeze-frame support.
 	CanvasLayer *freeze_layer = nullptr;
 	TextureRect *freeze_screen = nullptr;
 	bool is_frozen_frame = false;
@@ -138,6 +137,7 @@ private:
 	Ref<SceneTreeTimer> reset_timer;
 	Callable on_timeout_callable;
 	const double RESET_PAUSE_DELAY_SEC = 5.0f;
+	bool should_delay_runtime_reset = false;
 
 	bool has_exit;
 	bool is_spx_reset = true;
@@ -163,31 +163,30 @@ public:
 	void on_fixed_update(float delta) override;
 	void on_update(float delta) override;
 	void on_destroy() override;
-	void on_reset(int reset_code) override;
-
 	void on_exit(int exit_code) override;
+	void on_reset(int reset_code) override;
 
 	bool is_reset();
 	void restart();
+	void set_delay_runtime_reset(bool p_delay);
 
-	// SPX pause functionality.
+	void capture_last_frame();
+	void clear_frozen_frame();
+
 	void pause();
 	void resume();
 	bool is_paused() const;
 	void next_frame();
 
-	// Frozen last frame feature.
-	void capture_last_frame();
-	void clear_frozen_frame();
-
 private:
-	// Internal methods for Godot pause synchronization.
-	void _on_godot_pause_changed(bool is_godot_paused);
-
 	void _do_reset(int reset_code);
+	void _invoke_runtime_reset(int reset_code);
+	void _invoke_runtime_reset_delayed(int reset_code);
+	void _disconnect_reset_timer();
+
+	void _on_godot_pause_changed(bool is_godot_paused);
 	void _pause_pure();
 	void _resume_pure();
-	void _disconnect_reset_timer();
 
 	Ref<Image> _get_viewport_image() const;
 	TextureRect *_create_freeze_texture(const Ref<Image> &img) const;
