@@ -329,15 +329,7 @@ void SpxSprite::on_sprite_frame_changed() {
 	_on_frame_changed();
 
 	SPX_CALLBACK->func_on_sprite_frame_changed(this->gid);
-
-	// update effect shader's atlas's uv rect
-	if (anim2d != nullptr) {
-		auto uv_rect = anim2d->get_uv_rect();
-		if (default_material.is_null()) {
-			return;
-		}
-		default_material->set_shader_parameter("atlas_uv_rect2", uv_rect);
-	}
+	_update_current_frame_shader_uv_rect();
 }
 
 void SpxSprite::on_sprite_animation_looped() {
@@ -563,9 +555,9 @@ void SpxSprite::play_anim(GdString p_name, GdFloat p_speed, GdBool isLoop, GdBoo
 			frames = svgMgr->get_svg_animation(base_anim_key, target_scale);
 			final_anim_key = base_anim_key;
 		} else {
-			frames = resMgr->get_anim_frames(final_anim_key);
-			// Use base animation for non-SVG animations
 			final_anim_key = base_anim_key;
+			// Use base animation for non-SVG animations.
+			frames = resMgr->get_anim_frames(final_anim_key);
 		}
 		anim2d->set_sprite_frames(frames);
 		frames->set_animation_loop(final_anim_key, isLoop);
@@ -977,6 +969,15 @@ void SpxSprite::_on_frame_changed() {
 	}
 }
 
+void SpxSprite::_update_current_frame_shader_uv_rect() {
+	if (anim2d == nullptr || default_material.is_null()) {
+		return;
+	}
+
+	Rect2 uv_rect = anim2d->get_uv_rect();
+	default_material->set_shader_parameter("atlas_uv_rect2", uv_rect);
+}
+
 void SpxSprite::set_dynamic_frame_offset_enabled(GdBool enabled) {
 	enable_dynamic_frame_offset = enabled;
 
@@ -1144,4 +1145,3 @@ void SpxSprite::_disable_collision() {
 		collider2d->set_disabled(true);
 	}
 }
-

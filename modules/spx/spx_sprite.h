@@ -159,6 +159,7 @@ private:
 	bool enable_dynamic_frame_offset = true; // enable dynamic frame offset
 	Vector2 base_offset = Vector2(0, 0); // base offset
 	void _on_frame_changed(); // frame changed callback
+	void _update_current_frame_shader_uv_rect(); // update shader atlas UV for current frame
 
 	// Simplified SVG state tracking
 	bool is_single_image_mode = false; // Whether it's a single image animation mode
