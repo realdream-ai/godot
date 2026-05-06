@@ -43,6 +43,8 @@ class SpriteFrames;
 class AnimatedSprite2D;
 class Area2D;
 class CollisionShape2D;
+class ShaderMaterial;
+class Texture2D;
 class VisibleOnScreenNotifier2D;
 
 // Interface for sortable sprites
@@ -61,216 +63,119 @@ public:
 class SpxRenderSprite : public Sprite2D, public ISortableSprite {
 	GDCLASS(SpxRenderSprite, Sprite2D);
 
-private:
-	GdObj sort_id = 0;
-	Vector2 pivot_offset;
-
 public:
 	SpxRenderSprite() = default;
 	~SpxRenderSprite() override = default;
 
-	void set_sort_id(GdObj id) { sort_id = id; }
+	void set_sort_id(GdObj p_id) { sort_id = p_id; }
 	GdObj get_sort_id_internal() const { return sort_id; }
+	void set_pivot(GdVec2 p_pivot) { pivot_offset = p_pivot; }
+	GdVec2 get_pivot() { return pivot_offset; }
 
 	// ISortableSprite interface implementation
 	GdObj get_sort_id() const override { return sort_id; }
 	Point2 get_sort_position() const override { return get_global_position() - pivot_offset; }
-	void set_sort_z_index(int z) override { set_z_index(z); }
+	void set_sort_z_index(int p_z_index) override { set_z_index(p_z_index); }
 	int get_sort_z_index() const override { return get_z_index(); }
 	bool is_node_valid() const override { return is_inside_tree(); }
 	bool is_sort_static() const override { return true; }
 
-	void set_pivot(GdVec2 pivot) { pivot_offset = pivot; }
-	GdVec2 get_pivot() { return pivot_offset; }
+private:
+	GdObj sort_id = 0;
+	Vector2 pivot_offset;
 };
 
 // SpxStaticSprite - Wrapper for StaticBody2D with sortable interface
 class SpxStaticSprite : public StaticBody2D, public ISortableSprite {
 	GDCLASS(SpxStaticSprite, StaticBody2D);
 
-private:
-	GdObj sort_id = 0;
-	Vector2 pivot_offset;
-
 public:
-	CollisionShape2D *collider2d;
-
-	void set_sort_id(GdObj id) { sort_id = id; }
+	void set_sort_id(GdObj p_id) { sort_id = p_id; }
 	GdObj get_sort_id_internal() const { return sort_id; }
+	void set_collider(CollisionShape2D *p_collider) { collider2d = p_collider; }
+	CollisionShape2D *get_collider() const { return collider2d; }
+	void set_pivot(GdVec2 p_pivot) { pivot_offset = p_pivot; }
+	GdVec2 get_pivot() { return pivot_offset; }
 
 	// ISortableSprite interface implementation
 	GdObj get_sort_id() const override { return sort_id; }
 	Point2 get_sort_position() const override { return get_global_position() - pivot_offset; }
-	void set_sort_z_index(int z) override { set_z_index(z); }
+	void set_sort_z_index(int p_z_index) override { set_z_index(p_z_index); }
 	int get_sort_z_index() const override { return get_z_index(); }
 	bool is_node_valid() const override { return is_inside_tree(); }
 	bool is_sort_static() const override { return true; }
 
-	void set_pivot(GdVec2 pivot) { pivot_offset = pivot; }
-	GdVec2 get_pivot() { return pivot_offset; }
-
 protected:
 	void _notification(int p_what);
 	void _draw();
+
+private:
+	GdObj sort_id = 0;
+	Vector2 pivot_offset;
+	CollisionShape2D *collider2d = nullptr;
 };
 
 class SpxSprite : public CharacterBody2D, public ISortableSprite {
 	GDCLASS(SpxSprite, CharacterBody2D);
 
 public:
-	// Physics mode enumeration
 	enum PhysicsMode {
-		NO_PHYSICS = 0, // Pure visual, no collision, best performance (current default)
-		KINEMATIC = 1, // Code-controlled movement with collision detection
-		DYNAMIC = 2, // Affected by physics, automatic gravity and collision
-		STATIC = 3, // Static immovable, but has collision, affects other objects
+		NO_PHYSICS = 0,
+		KINEMATIC = 1,
+		DYNAMIC = 2,
+		STATIC = 3,
 	};
 
-private:
-	GdObj gid;
-
-	Vector2 pivot_offset; // Pivot offset for sorting
-
-	// Physics mode related variables
-	PhysicsMode physics_mode = NO_PHYSICS; // Current physics mode
-	bool use_gravity = true; // Whether to use gravity
-	float gravity_scale = 1.0f; // Gravity scale factor
-	float mass_value = 1.0f; // Mass value
-	float drag_value = 0.0f; // Drag coefficient
-	float friction_value = 300.0f; // Ground friction coefficient
-	Vector2 external_forces = Vector2(); // External applied forces
-	Vector2 applied_forces = Vector2(); // Applied forces
-	bool collision_enabled = true; // Whether collision is enabled
-	float _gravity = 980.0f; // Gravity value (from ProjectSettings)
-
-	bool _is_collision_enabled = false;
-	bool _is_trigger_enabled = false;
-	bool debug_collision_visible = true; // Per-sprite debug collision visibility control
-
-	template <typename T>
-	T *get_component(Node *node, GdBool recursive = false);
-	Node *get_component(Node *node, StringName name, GdBool recursive);
-
-	bool use_default_frames;
-	void set_use_default_frames(bool is_on);
-	bool get_use_default_frames();
-
-	// animation frame offset
-	bool enable_dynamic_frame_offset = true; // enable dynamic frame offset
-	Vector2 base_offset = Vector2(0, 0); // base offset
-	void _on_frame_changed(); // frame changed callback
-	void _update_current_frame_shader_uv_rect(); // update shader atlas UV for current frame
-
-	// Simplified SVG state tracking
-	bool is_single_image_mode = false; // Whether it's a single image animation mode
-	bool is_svg_mode = false; // Whether it's an SVG animation mode
-	int current_svg_scale = 1; // Current SVG animation scale
-	String current_svg_path; // Name of the current SVG animation (image)
-	String current_svg_anim_key; // Name of the current SVG animation
-	String current_anim_name = ""; // Name of the current animation
-
-	void update_anim_scale();
-	Vector2 _get_actual_render_scale();
-	int _get_actual_match_render_scale();
-
-protected:
-	void _notification(int p_what);
-	void _draw();
-
-	// Physics processing methods
-	void _physics_process(double delta); // Main physics processing loop
-	void _handle_dynamic_physics(double delta); // Dynamic mode processing
-	void _handle_kinematic_physics(double delta); // Kinematic mode processing
-	void _handle_static_physics(double delta); // Static mode processing
-	void _handle_no_physics(double delta); // NoPhysics mode processing
-	void _update_physics_mode(); // Update physics mode state
-	void _enable_collision(); // Enable collision
-	void _disable_collision(); // Disable collision
-
-	Ref<SpriteFrames> default_sprite_frames;
-	Ref<ShaderMaterial> default_material;
-	Area2D *area2d;
-	CollisionShape2D *trigger2d;
-	CollisionShape2D *collider2d;
-	VisibleOnScreenNotifier2D *visible_notifier;
-	Vector2 _render_scale = Vector2(1.0f, 1.0f);
-
-public:
-	AnimatedSprite2D *anim2d;
-	CollisionShape2D *get_trigger() { return trigger2d; }
-	Area2D *get_area2d() { return area2d; }
-	bool is_backdrop;
-
-public:
-	template <typename T>
-	T *get_component(GdBool recursive = false);
-	template <typename T>
-	T *get_component(StringName name, GdBool recursive);
-
-public:
-	String spx_type_name;
-
-public:
 	static void _bind_methods();
-	void on_destroy_call();
 	SpxSprite();
 	~SpxSprite() override;
+
+	// Lifecycle
 	void on_start();
-	void on_area_entered(Node *node);
-	void on_area_exited(Node *node);
+	void on_destroy_call();
 
 	void set_block_signals(bool p_block);
-	// animation events
-	void on_sprite_frames_set_changed();
-	void on_sprite_animation_changed();
-	void on_sprite_frame_changed();
-	void on_sprite_animation_looped();
-	void on_sprite_animation_finished();
-	// vfx
-	void on_sprite_vfx_finished();
-	// visibility
-	void on_sprite_screen_exited();
-	void on_sprite_screen_entered();
 
-	void set_spx_type_name(String type_name);
-	String get_spx_type_name();
-	// Enhanced animation scaling support
-	void _check_and_switch_animation_scale();
-	String _extract_base_animation_name(const String &full_anim_name);
-	void _play_single_image_animation(Ref<Texture2D> texture);
-
-public:
-	void set_gid(GdObj id);
+	// Metadata
+	void set_gid(GdObj p_id);
 	GdObj get_gid();
+	void set_type_name(GdString p_type_name);
+	void set_spx_type_name(String p_type_name);
+	String get_spx_type_name();
+	void set_backdrop(GdBool p_is_backdrop) { is_backdrop = p_is_backdrop; }
+	bool is_backdrop_sprite() const { return is_backdrop; }
 
-	void set_type_name(GdString type_name);
-	// render
-	void set_material_shader(GdString path);
+	// Components
+	AnimatedSprite2D *get_anim2d() const { return anim2d; }
+	Area2D *get_area2d() const { return area2d; }
+	CollisionShape2D *get_trigger() const { return trigger2d; }
+
+	// Rendering
+	void set_pivot(GdVec2 p_pivot) { pivot_offset = p_pivot; }
+	GdVec2 get_pivot() { return pivot_offset; }
+	void set_render_scale(GdVec2 p_scale);
+	GdVec2 get_render_scale();
+	void set_material_shader(GdString p_path);
 	GdString get_material_shader();
-	void set_color(GdColor color);
+	void set_color(GdColor p_color);
 	GdColor get_color();
-
-	void set_material_params(GdString effect, GdFloat amount);
-	GdFloat get_material_params(GdString effect);
-
-	void set_material_params_vec4(GdString effect, GdVec4 vec4);
-	GdVec4 get_material_params_vec4(GdString effect);
-
-	void set_material_params_color(GdString effect, GdColor color);
-	GdColor get_material_params_color(GdString effect);
-
-	void set_texture_atlas(GdString path, GdRect2 rect2);
-	void set_texture(GdString path);
-
-	void set_texture_atlas_direct(GdString path, GdRect2 rect2, GdBool direct);
-	void set_texture_direct(GdString path, GdBool direct);
-
+	void set_material_params(GdString p_effect, GdFloat p_amount);
+	GdFloat get_material_params(GdString p_effect);
+	void set_material_params_vec4(GdString p_effect, GdVec4 p_vec4);
+	GdVec4 get_material_params_vec4(GdString p_effect);
+	void set_material_params_color(GdString p_effect, GdColor p_color);
+	GdColor get_material_params_color(GdString p_effect);
+	void set_texture_atlas(GdString p_path, GdRect2 p_region);
+	void set_texture(GdString p_path);
+	void set_texture_atlas_direct(GdString p_path, GdRect2 p_region, GdBool p_direct);
+	void set_texture_direct(GdString p_path, GdBool p_direct);
 	GdString get_texture();
 	Rect2 get_rect() const;
+	GdString get_current_anim_name();
+	void on_set_visible(GdBool p_visible);
 
-	void on_set_visible(GdBool visible);
-	// animation
-	void play_anim(GdString p_name, GdFloat p_speed = 1.0, GdBool isLoop = false, GdBool p_from_end = false);
+	// Animation
+	void play_anim(GdString p_name, GdFloat p_speed = 1.0, GdBool p_is_loop = false, GdBool p_from_end = false);
 	void play_backwards_anim(GdString p_name);
 	void pause_anim();
 	void stop_anim();
@@ -290,81 +195,167 @@ public:
 	GdBool is_anim_flipped_h() const;
 	void set_anim_flip_v(GdBool p_flip);
 	GdBool is_anim_flipped_v() const;
-
-	void set_dynamic_frame_offset_enabled(GdBool enabled);
+	void set_dynamic_frame_offset_enabled(GdBool p_enabled);
 	GdBool is_dynamic_frame_offset_enabled() const;
 
-	// physics
-	void set_physics_mode(GdInt mode);
+	// Physics
+	void set_physics_mode(GdInt p_mode);
 	GdInt get_physics_mode() const;
-	void set_use_gravity(GdBool enabled);
+	void set_use_gravity(GdBool p_enabled);
 	GdBool is_use_gravity() const;
-	void set_gravity_scale(GdFloat scale);
+	void set_gravity_scale(GdFloat p_scale);
 	GdFloat get_gravity_scale() const;
-	void set_drag(GdFloat drag);
+	void set_drag(GdFloat p_drag);
 	GdFloat get_drag() const;
-	void set_friction(GdFloat friction);
+	void set_friction(GdFloat p_friction);
 	GdFloat get_friction() const;
-
-	void set_gravity(GdFloat gravity);
+	void set_gravity(GdFloat p_gravity);
 	GdFloat get_gravity();
-	void set_mass(GdFloat mass);
+	void set_mass(GdFloat p_mass);
 	GdFloat get_mass();
-	void add_force(GdVec2 force);
-	void add_impulse(GdVec2 impulse);
-
-	void set_trigger_layer(GdInt layer);
+	void add_force(GdVec2 p_force);
+	void add_impulse(GdVec2 p_impulse);
+	void set_trigger_layer(GdInt p_layer);
 	GdInt get_trigger_layer();
-	void set_trigger_mask(GdInt mask);
+	void set_trigger_mask(GdInt p_mask);
 	GdInt get_trigger_mask();
-
-	void set_collider_rect(GdVec2 center, GdVec2 size);
-	void set_collider_circle(GdVec2 center, GdFloat radius);
-	void set_collider_capsule(GdVec2 center, GdVec2 size);
-	void set_collider_polygon(GdVec2 center, GdArray points);
-	void set_collision_enabled(GdBool enabled);
+	void set_collider_rect(GdVec2 p_center, GdVec2 p_size);
+	void set_collider_circle(GdVec2 p_center, GdFloat p_radius);
+	void set_collider_capsule(GdVec2 p_center, GdVec2 p_size);
+	void set_collider_polygon(GdVec2 p_center, GdArray p_points);
+	void set_collision_enabled(GdBool p_enabled);
 	GdBool is_collision_enabled();
-
-	void set_trigger_rect(GdVec2 center, GdVec2 size);
-	void set_trigger_circle(GdVec2 center, GdFloat radius);
-	void set_trigger_capsule(GdVec2 center, GdVec2 size);
-	void set_trigger_polygon(GdVec2 center, GdArray points);
-	void set_trigger_enabled(GdBool trigger);
+	void set_trigger_rect(GdVec2 p_center, GdVec2 p_size);
+	void set_trigger_circle(GdVec2 p_center, GdFloat p_radius);
+	void set_trigger_capsule(GdVec2 p_center, GdVec2 p_size);
+	void set_trigger_polygon(GdVec2 p_center, GdArray p_points);
+	void set_trigger_enabled(GdBool p_enabled);
 	GdBool is_trigger_enabled();
 
-	// collision
-	CollisionShape2D *get_collider(bool is_trigger = false);
-	GdBool check_collision(SpxSprite *other, GdBool is_src_trigger = true, GdBool is_dst_trigger = true);
-	GdBool check_collision_with_point(GdVec2 point, GdBool is_trigger = true);
-	void set_debug_collision_visible(GdBool enabled);
+	// Collision
+	CollisionShape2D *get_collider(bool p_is_trigger = false);
+	GdBool check_collision(SpxSprite *p_other, GdBool p_is_src_trigger = true, GdBool p_is_dst_trigger = true);
+	GdBool check_collision_with_point(GdVec2 p_point, GdBool p_is_trigger = true);
+	void set_debug_collision_visible(GdBool p_enabled);
 	GdBool is_debug_collision_visible() const;
 
-	void set_render_scale(GdVec2 scale);
-	GdVec2 get_render_scale();
-	GdString get_current_anim_name();
-
-	void set_pivot(GdVec2 pivot) { pivot_offset = pivot; }
-	GdVec2 get_pivot() { return pivot_offset; }
-
-	// ISortableSprite interface implementation
+	// ISortableSprite
 	GdObj get_sort_id() const override { return gid; }
 	Point2 get_sort_position() const override { return get_global_position() - pivot_offset; }
-	void set_sort_z_index(int z) override { set_z_index(z); }
+	void set_sort_z_index(int p_z_index) override { set_z_index(p_z_index); }
 	int get_sort_z_index() const override { return get_z_index(); }
 	bool is_node_valid() const override { return is_inside_tree(); }
 	bool is_sort_static() const override { return get_physics_mode() == PhysicsMode::STATIC; }
+
+protected:
+	void _notification(int p_what);
+	void _draw();
+	void _physics_process(double p_delta);
+	void _handle_dynamic_physics(double p_delta);
+	void _handle_kinematic_physics(double p_delta);
+	void _handle_static_physics(double p_delta);
+	void _handle_no_physics(double p_delta);
+
+private:
+	// Component helpers
+	template <typename T>
+	T *_get_component(Node *p_node, GdBool p_recursive = false);
+	template <typename T>
+	T *_get_component(GdBool p_recursive = false);
+
+	// Property bindings
+	void _set_use_default_frames(bool p_enabled);
+	bool _get_use_default_frames();
+
+	// Runtime initialization
+	void _resolve_runtime_components();
+	void _initialize_default_frames();
+	void _ensure_visible_notifier();
+	void _connect_runtime_signals();
+
+	// Signal callbacks
+	void _on_area_entered(Node *p_node);
+	void _on_area_exited(Node *p_node);
+	void _on_sprite_frames_set_changed();
+	void _on_sprite_animation_changed();
+	void _on_sprite_frame_changed();
+	void _on_sprite_animation_looped();
+	void _on_sprite_animation_finished();
+	void _on_sprite_vfx_finished();
+	void _on_sprite_screen_exited();
+	void _on_sprite_screen_entered();
+
+	// Runtime updates
+	bool _can_enable_collider() const;
+	void _update_collider_disabled_state();
+	void _update_trigger_disabled_state();
+	void _update_physics_mode();
+	void _enable_collision();
+	void _disable_collision();
+
+	bool _ensure_material_ready(const char *p_context, GdBool p_create_if_missing = false);
+	bool _update_anim_scale();
+	bool _update_svg_scale_content(int p_target_scale);
+	void _update_svg_animation_scale(int p_target_scale);
+	void _on_frame_changed();
+	void _update_current_frame_shader_uv_rect();
+	void _play_single_image_animation(Ref<Texture2D> p_texture);
+	Vector2 _get_actual_render_scale();
+	int _get_actual_match_render_scale();
+
+	// State
+	GdObj gid = 0;
+	Vector2 pivot_offset;
+
+	PhysicsMode physics_mode = NO_PHYSICS;
+	bool use_gravity = true;
+	float gravity_scale = 1.0f;
+	float mass_value = 1.0f;
+	float drag_value = 0.0f;
+	float friction_value = 300.0f;
+	Vector2 external_forces = Vector2();
+	Vector2 applied_forces = Vector2();
+	float _gravity = 980.0f;
+
+	bool _is_collision_enabled = true;
+	bool _is_trigger_enabled = true;
+	bool debug_collision_visible = true;
+	bool use_default_frames = false;
+	bool enable_dynamic_frame_offset = true;
+	bool is_single_image_mode = false;
+	bool is_svg_mode = false;
+	bool is_backdrop = false;
+
+	int current_svg_scale = 1;
+
+	Vector2 base_offset = Vector2(0, 0);
+	Vector2 _render_scale = Vector2(1.0f, 1.0f);
+
+	String spx_type_name;
+	String current_svg_path;
+	String current_svg_anim_key;
+	String current_anim_name = "";
+
+	Ref<SpriteFrames> default_sprite_frames;
+	Ref<ShaderMaterial> default_material;
+
+	Area2D *area2d = nullptr;
+	CollisionShape2D *trigger2d = nullptr;
+	CollisionShape2D *collider2d = nullptr;
+	VisibleOnScreenNotifier2D *visible_notifier = nullptr;
+	AnimatedSprite2D *anim2d = nullptr;
 };
 
 template <typename T>
-T *SpxSprite::get_component(Node *node, GdBool recursive) {
-	for (int i = 0; i < node->get_child_count(); ++i) {
-		Node *child = node->get_child(i);
+T *SpxSprite::_get_component(Node *p_node, GdBool p_recursive) {
+	for (int i = 0; i < p_node->get_child_count(); ++i) {
+		Node *child = p_node->get_child(i);
 		T *component = Object::cast_to<T>(child);
 		if (component != nullptr) {
 			return component;
 		}
-		if (recursive) {
-			component = get_component<T>(child, true);
+		if (p_recursive) {
+			component = _get_component<T>(child, true);
 			if (component != nullptr) {
 				return component;
 			}
@@ -374,13 +365,7 @@ T *SpxSprite::get_component(Node *node, GdBool recursive) {
 }
 
 template <typename T>
-T *SpxSprite::get_component(GdBool recursive) {
-	return get_component<T>(this, recursive);
-}
-
-template <typename T>
-T *SpxSprite::get_component(StringName name, GdBool recursive) {
-	Node *node = get_component(this, name, recursive);
-	return Object::cast_to<T>(node);
+T *SpxSprite::_get_component(GdBool p_recursive) {
+	return _get_component<T>(this, p_recursive);
 }
 #endif // SPX_SPRITE_H
