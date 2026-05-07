@@ -207,7 +207,11 @@ def get_opts():
         BoolVariable("debug_crt", "Compile with MSVC's debug CRT (/MDd)", False),
         BoolVariable("incremental_link", "Use MSVC incremental linking. May increase or decrease build times.", False),
         BoolVariable("silence_msvc", "Silence MSVC's cl/link stdout bloat, redirecting any errors to stderr.", True),
-        ("angle_libs", "Path to the ANGLE static libraries", ""),
+        (
+            "angle_libs",
+            "Path to the ANGLE static libraries",
+            os.path.join(d3d12_deps_folder, "angle"),
+        ),
         # Direct3D 12 support.
         (
             "mesa_libs",
@@ -547,17 +551,33 @@ def configure_msvc(env: "SConsEnvironment", vcvars_msvc_config):
         env.Append(LIBPATH=[env["mesa_libs"] + "/bin"])
         LIBS += ["libNIR.windows." + env["arch"] + prebuilt_lib_extra_suffix]
 
+    if not env["opengl3"] or not env["angle"]:
+        env["angle_libs"] = ""
+
     if env["opengl3"]:
         env.AppendUnique(CPPDEFINES=["GLES3_ENABLED"])
-        if env["angle_libs"] != "":
-            env.AppendUnique(CPPDEFINES=["EGL_STATIC"])
-            env.Append(LIBPATH=[env["angle_libs"]])
-            LIBS += [
-                "libANGLE.windows." + env["arch"] + prebuilt_lib_extra_suffix,
-                "libEGL.windows." + env["arch"] + prebuilt_lib_extra_suffix,
-                "libGLES.windows." + env["arch"] + prebuilt_lib_extra_suffix,
-            ]
-            LIBS += ["dxgi", "d3d9", "d3d11"]
+        if env["angle"]:
+            angle_path = env["angle_libs"] + "-" + env["arch"] + "-msvc"
+            if not os.path.exists(angle_path):
+                angle_path = env["angle_libs"]
+            if os.path.exists(angle_path):
+                env["angle_libs"] = angle_path
+                env.AppendUnique(CPPDEFINES=["ANGLE_ENABLED", "EGL_STATIC"])
+                env.Append(LIBPATH=[angle_path])
+                LIBS += [
+                    "libANGLE.windows." + env["arch"] + prebuilt_lib_extra_suffix,
+                    "libEGL.windows." + env["arch"] + prebuilt_lib_extra_suffix,
+                    "libGLES.windows." + env["arch"] + prebuilt_lib_extra_suffix,
+                ]
+                LIBS += ["dxgi", "d3d9", "d3d11"]
+            else:
+                print_warning(
+                    "The ANGLE rendering driver requires dependencies to be installed.\n"
+                    f"You can install them by running `python {os.path.join('misc', 'scripts', 'install_angle.py')}`.\n"
+                    "Alternatively, disable this driver by compiling with `angle=no` explicitly."
+                )
+                env["angle"] = False
+                env["angle_libs"] = ""
         env.Prepend(CPPPATH=["#thirdparty/angle/include"])
 
     if env["target"] in ["editor", "template_debug"]:
@@ -887,19 +907,35 @@ def configure_mingw(env: "SConsEnvironment"):
         env.Append(LIBS=["libNIR.windows." + env["arch"]])
         env.Append(LIBS=["version"])  # Mesa dependency.
 
+    if not env["opengl3"] or not env["angle"]:
+        env["angle_libs"] = ""
+
     if env["opengl3"]:
         env.Append(CPPDEFINES=["GLES3_ENABLED"])
-        if env["angle_libs"] != "":
-            env.AppendUnique(CPPDEFINES=["EGL_STATIC"])
-            env.Append(LIBPATH=[env["angle_libs"]])
-            env.Append(
-                LIBS=[
-                    "EGL.windows." + env["arch"],
-                    "GLES.windows." + env["arch"],
-                    "ANGLE.windows." + env["arch"],
-                ]
-            )
-            env.Append(LIBS=["dxgi", "d3d9", "d3d11"])
+        if env["angle"]:
+            angle_path = env["angle_libs"] + "-" + env["arch"] + ("-llvm" if env["use_llvm"] else "-gcc")
+            if not os.path.exists(angle_path):
+                angle_path = env["angle_libs"]
+            if os.path.exists(angle_path):
+                env["angle_libs"] = angle_path
+                env.AppendUnique(CPPDEFINES=["ANGLE_ENABLED", "EGL_STATIC"])
+                env.Append(LIBPATH=[angle_path])
+                env.Append(
+                    LIBS=[
+                        "EGL.windows." + env["arch"],
+                        "GLES.windows." + env["arch"],
+                        "ANGLE.windows." + env["arch"],
+                    ]
+                )
+                env.Append(LIBS=["dxgi", "d3d9", "d3d11"])
+            else:
+                print_warning(
+                    "The ANGLE rendering driver requires dependencies to be installed.\n"
+                    f"You can install them by running `python {os.path.join('misc', 'scripts', 'install_angle.py')}`.\n"
+                    "Alternatively, disable this driver by compiling with `angle=no` explicitly."
+                )
+                env["angle"] = False
+                env["angle_libs"] = ""
         env.Prepend(CPPPATH=["#thirdparty/angle/include"])
 
     env.Append(CPPDEFINES=["MINGW_ENABLED", ("MINGW_HAS_SECURE_API", 1)])

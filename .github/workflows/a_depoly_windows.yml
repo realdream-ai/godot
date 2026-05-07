@@ -81,10 +81,21 @@ jobs:
       - name: Setup Python and SCons
         uses: ./.github/actions/godot-deps
 
+      - name: Download pre-built ANGLE
+        shell: sh
+        id: angle-sdk
+        run: |
+          if python ./misc/scripts/install_angle.py; then
+            echo "ANGLE_ENABLED=yes" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::ANGLE SDK installation failed, building without ANGLE support."
+            echo "ANGLE_ENABLED=no" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build Windows Editor (${{ matrix.arch }})
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: platform=windows target=editor arch=${{ matrix.arch }} ${{ inputs.common_args }} ${{ inputs.editor_args }} use_llvm=yes 
+          sconsflags: platform=windows target=editor arch=${{ matrix.arch }} ${{ inputs.common_args }} ${{ inputs.editor_args }} use_llvm=yes angle=${{ steps.angle-sdk.outputs.ANGLE_ENABLED }}
           platform: windows
           target: editor
 
@@ -141,18 +152,29 @@ jobs:
       - name: Setup Python and SCons
         uses: ./.github/actions/godot-deps
 
+      - name: Download pre-built ANGLE
+        shell: sh
+        id: angle-sdk
+        run: |
+          if python ./misc/scripts/install_angle.py; then
+            echo "ANGLE_ENABLED=yes" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::ANGLE SDK installation failed, building without ANGLE support."
+            echo "ANGLE_ENABLED=no" >> "$GITHUB_OUTPUT"
+          fi
+
       # Build debug template first to maximize cache utilization
       - name: Build Windows Template Debug (${{ matrix.arch }})
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: platform=windows target=template_debug arch=${{ matrix.arch }} ${{ inputs.common_args }} ${{ inputs.release_args }} use_llvm=yes 
+          sconsflags: platform=windows target=template_debug arch=${{ matrix.arch }} ${{ inputs.common_args }} ${{ inputs.release_args }} use_llvm=yes angle=${{ steps.angle-sdk.outputs.ANGLE_ENABLED }}
           platform: windows
           target: template_debug
 
       - name: Build Windows Template Release (${{ matrix.arch }})
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: platform=windows target=template_release arch=${{ matrix.arch }} ${{ inputs.common_args }} ${{ inputs.release_args }} use_llvm=yes 
+          sconsflags: platform=windows target=template_release arch=${{ matrix.arch }} ${{ inputs.common_args }} ${{ inputs.release_args }} use_llvm=yes angle=${{ steps.angle-sdk.outputs.ANGLE_ENABLED }}
           platform: windows
           target: template_release
 
