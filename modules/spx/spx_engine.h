@@ -129,7 +129,7 @@ private:
 	GDExtensionSpxGlobalRuntimePanicCallback on_runtime_panic = nullptr;
 	GDExtensionSpxGlobalRuntimeExitCallback on_runtime_exit = nullptr;
 	GDExtensionSpxGlobalRuntimeResetCallback on_runtime_reset = nullptr;
-	
+
 	template <typename Callback>
 	static void _register_runtime_callback(
 			Callback SpxEngine::*member,
