@@ -37,12 +37,25 @@
 #include "spx_camera_mgr.h"
 #include "spx_engine.h"
 
+#ifdef MACOS_ENABLED
+static Size2i _spx_scale_window_size_for_macos(const Size2i &p_size) {
+	const float scale = DisplayServer::get_singleton()->screen_get_max_scale();
+	return Size2i((Vector2(p_size) * scale).round());
+}
+
+static Size2i _spx_unscale_window_size_for_macos(const Size2i &p_size) {
+	const float scale = DisplayServer::get_singleton()->screen_get_max_scale();
+	return Size2i((Vector2(p_size) / scale).round());
+}
+#endif
+
 void SpxPlatformMgr::on_awake() {
 	SpxBaseMgr::on_awake();
 	persistant_data_dir = ::OS::get_singleton()->get_user_data_dir();
 }
 
 void SpxPlatformMgr::on_reset(int reset_code) {
+	window_size_uses_content_scale = false;
 	set_stretch_mode(false);
 }
 
@@ -87,11 +100,29 @@ void SpxPlatformMgr::set_window_size(GdInt width, GdInt height, GdBool with_cont
 	if (with_content_scale) {
 		set_stretch_content_scale(width, height);
 	}
-	get_root()->set_size(Size2i(width, height));
+
+	window_size_uses_content_scale = with_content_scale;
+
+	Size2i window_size(width, height);
+#ifdef MACOS_ENABLED
+	if (window_size_uses_content_scale) {
+		// Godot's macOS backend normalizes window sizes by the global max display
+		// scale. SPX callers pass logical window dimensions, so convert explicitly
+		// to keep the visible window size stable on HiDPI displays.
+		window_size = _spx_scale_window_size_for_macos(window_size);
+	}
+#endif
+
+	get_root()->set_size(window_size);
 }
 
 GdVec2 SpxPlatformMgr::get_window_size() {
 	auto size = DisplayServer::get_singleton()->window_get_size_ext();
+#ifdef MACOS_ENABLED
+	if (window_size_uses_content_scale) {
+		size = _spx_unscale_window_size_for_macos(size);
+	}
+#endif
 	return GdVec2(size.x, size.y);
 }
 

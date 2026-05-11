@@ -37,6 +37,7 @@
 class SpxPlatformMgr : public SpxBaseMgr {
 	SPXCLASS(SpxPlatformMgr, SpxBaseMgr)
 	String persistant_data_dir = "res://";
+	bool window_size_uses_content_scale = false;
 
 public:
 	virtual ~SpxPlatformMgr() = default; // Added virtual destructor to fix -Werror=non-virtual-dtor
