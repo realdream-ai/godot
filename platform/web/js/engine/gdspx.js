@@ -2512,6 +2512,24 @@ gdspx_sprite_check_collision_by_color(obj_low,obj_high,color,color_threshold,alp
 	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
+gdspx_sprite_check_collision_by_colors(obj_low,obj_high,sprite_color,target_color,color_threshold,alpha_threshold) {
+	var _gdFuncPtr = Module._gdspx_sprite_check_collision_by_colors; 
+	var _retValue = AllocGdBool();
+	var _arg0 = Module._gdspx_new_obj(obj_high, obj_low);
+	var _arg1 = ToGdColor(sprite_color);
+	var _arg2 = ToGdColor(target_color);
+	var _arg3 = ToGdFloat(color_threshold);
+	var _arg4 = ToGdFloat(alpha_threshold);
+	_gdFuncPtr(_arg0, _arg1, _arg2, _arg3, _arg4, _retValue);
+	FreeGdObj(_arg0); 
+	FreeGdColor(_arg1); 
+	FreeGdColor(_arg2); 
+	FreeGdFloat(_arg3); 
+	FreeGdFloat(_arg4); 
+	var _finalRetValue = ToJsBool(_retValue);
+	FreeGdBool(_retValue); 
+	return _finalRetValue
+}
 gdspx_sprite_check_collision_by_alpha(obj_low,obj_high,alpha_threshold) {
 	var _gdFuncPtr = Module._gdspx_sprite_check_collision_by_alpha; 
 	var _retValue = AllocGdBool();

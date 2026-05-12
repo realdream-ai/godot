@@ -283,7 +283,10 @@ public:
 	SPX_API GdBool is_trigger_enabled(GdObj obj);
 
 	// misc
+	// Matches any opaque source pixel against the target pixel color; the source pixel color itself is not filtered.
 	SPX_API GdBool check_collision_by_color(GdObj obj, GdColor color, GdFloat color_threshold, GdFloat alpha_threshold);
+	// Matches both source and target pixel colors using the same RGBA distance threshold on each side.
+	SPX_API GdBool check_collision_by_colors(GdObj obj, GdColor sprite_color, GdColor target_color, GdFloat color_threshold, GdFloat alpha_threshold);
 	SPX_API GdBool check_collision_by_alpha(GdObj obj, GdFloat alpha_threshold);
 	SPX_API GdBool check_collision_with_sprite(GdObj obj, GdObj obj_b, GdFloat alpha_threshold, GdBool use_pixel_perfect);
 
