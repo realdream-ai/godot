@@ -791,6 +791,9 @@ static void gdextension_spx_sprite_is_trigger_enabled(GdObj obj, GdBool *ret_val
 static void gdextension_spx_sprite_check_collision_by_color(GdObj obj, GdColor color, GdFloat color_threshold, GdFloat alpha_threshold, GdBool *ret_val) {
 	*ret_val = spriteMgr->check_collision_by_color(obj, color, color_threshold, alpha_threshold);
 }
+static void gdextension_spx_sprite_check_collision_by_colors(GdObj obj, GdColor sprite_color, GdColor target_color, GdFloat color_threshold, GdFloat alpha_threshold, GdBool *ret_val) {
+	*ret_val = spriteMgr->check_collision_by_colors(obj, sprite_color, target_color, color_threshold, alpha_threshold);
+}
 static void gdextension_spx_sprite_check_collision_by_alpha(GdObj obj, GdFloat alpha_threshold, GdBool *ret_val) {
 	*ret_val = spriteMgr->check_collision_by_alpha(obj, alpha_threshold);
 }
@@ -1251,6 +1254,7 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_trigger_enabled);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_is_trigger_enabled);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_check_collision_by_color);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_check_collision_by_colors);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_check_collision_by_alpha);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_check_collision_with_sprite);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_pixel_collision_sampling_step);
