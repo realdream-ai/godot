@@ -268,15 +268,19 @@ GdInt SpxSpriteMgr::_create_sprite(GdString path, GdVec2 pos, GdBool is_backdrop
 		sprite = memnew(SpxSprite);
 		sprite->set_position(GdVec2(pos.x, -pos.y));
 		AnimatedSprite2D *animated_sprite = memnew(AnimatedSprite2D);
+		animated_sprite->set_name("Anim2D");
 		sprite->add_child(animated_sprite);
 		Area2D *area = memnew(Area2D);
+		area->set_name("Area2D");
 		sprite->add_child(area);
 		CollisionShape2D *area_collision_shape = memnew(CollisionShape2D);
+		area_collision_shape->set_name("Trigger2D");
 		const Ref<CircleShape2D> area_shape = memnew(CircleShape2D);
 		area_shape->set_radius(10.0f);
 		area_collision_shape->set_shape(area_shape);
 		area->add_child(area_collision_shape);
 		CollisionShape2D *body_collision_shape = memnew(CollisionShape2D);
+		body_collision_shape->set_name("Collider2D");
 		const Ref<CircleShape2D> body_shape = memnew(CircleShape2D);
 		body_shape->set_radius(10.0f);
 		body_collision_shape->set_shape(body_shape);
@@ -305,7 +309,7 @@ GdInt SpxSpriteMgr::_create_sprite(GdString path, GdVec2 pos, GdBool is_backdrop
 		}
 	}
 
-	sprite->is_backdrop = is_backdrop;
+	sprite->set_backdrop(is_backdrop);
 	sprite->set_gid(get_unique_id());
 	sprite_root->add_child(sprite);
 	sprite->on_start();
@@ -924,7 +928,7 @@ GdBool SpxSpriteMgr::check_collision_with_sprite(GdObj obj, GdObj obj_b, GdFloat
 }
 
 bool SpxSpriteMgr::_check_pixel_collision_between(SpxSprite *sprite_a, SpxSprite *sprite_b, GdFloat alpha_threshold) {
-	AnimatedSprite2D *anim1 = sprite_a->anim2d;
+	AnimatedSprite2D *anim1 = sprite_a->get_anim2d();
 	if (!anim1) {
 		return false;
 	}
@@ -938,7 +942,7 @@ bool SpxSpriteMgr::_check_pixel_collision_between(SpxSprite *sprite_a, SpxSprite
 	Vector2i size1 = image1->get_size();
 	auto trans1 = transform1.affine_inverse();
 
-	AnimatedSprite2D *anim2 = sprite_b->anim2d;
+	AnimatedSprite2D *anim2 = sprite_b->get_anim2d();
 	if (!anim2) {
 		return false;
 	}
@@ -995,7 +999,7 @@ GdBool SpxSpriteMgr::check_collision_by_alpha(GdObj obj, GdFloat alpha_threshold
 GdBool SpxSpriteMgr::_check_collision(GdObj obj, ColorCheckFunc check_func) {
 	SPX_REQUIRE_SPRITE_RETURN(false) // Ensure sprite exists
 
-	AnimatedSprite2D *anim1 = sprite->anim2d;
+	AnimatedSprite2D *anim1 = sprite->get_anim2d();
 	if (!anim1) {
 		return false;
 	}
@@ -1016,7 +1020,7 @@ GdBool SpxSpriteMgr::_check_collision(GdObj obj, ColorCheckFunc check_func) {
 			continue; // Skip itself
 		}
 
-		AnimatedSprite2D *anim2 = sp2->anim2d;
+		AnimatedSprite2D *anim2 = sp2->get_anim2d();
 		if (!anim2) {
 			continue;
 		}

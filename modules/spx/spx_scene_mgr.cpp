@@ -267,7 +267,7 @@ GdObj SpxSceneMgr::create_static_sprite(GdString texture_path, GdVec2 pos, GdFlo
 	// Create collision shape (default: rectangle matching texture size)
 	CollisionShape2D *collision_shape = memnew(CollisionShape2D);
 
-	static_body->collider2d = collision_shape;
+	static_body->set_collider(collision_shape);
 	static_body->add_child(collision_shape);
 	collision_shape->set_position(Vector2(collider_pivot.x, -collider_pivot.y));
 	auto data_len = collider_params == nullptr ? 0 : collider_params->size;
