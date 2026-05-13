@@ -197,7 +197,6 @@ GdInt SpxPhysicsMgr::_check_touched_boundaries(GdObj obj, GdBool use_stage_limit
 		print_error("try to get property of a null sprite gid=" + itos(obj));
 		return false;
 	}
-	Transform2D sprite_transform = sprite->get_global_transform();
 
 	CollisionShape2D *collision_shape = sprite->get_trigger();
 	if (!collision_shape) {
@@ -207,6 +206,7 @@ GdInt SpxPhysicsMgr::_check_touched_boundaries(GdObj obj, GdBool use_stage_limit
 	if (sprite_shape.is_null()) {
 		return false;
 	}
+	Transform2D shape_transform = collision_shape->get_global_transform();
 
 	// Get boundary rect from camera manager
 	Rect2 boundary_rect = use_stage_limits ? cameraMgr->get_stage_limits_rect() : cameraMgr->get_global_camera_rect();
@@ -233,10 +233,10 @@ GdInt SpxPhysicsMgr::_check_touched_boundaries(GdObj obj, GdBool use_stage_limit
 	Transform2D top_edge_transform(0, Vector2(center_pos.x, bound_top));
 	Transform2D bottom_edge_transform(0, Vector2(center_pos.x, bound_bottom));
 
-	bool is_colliding_left = sprite_shape->collide(sprite_transform, vertical_edge_shape, left_edge_transform);
-	bool is_colliding_right = sprite_shape->collide(sprite_transform, vertical_edge_shape, right_edge_transform);
-	bool is_colliding_top = sprite_shape->collide(sprite_transform, horizontal_edge_shape, top_edge_transform);
-	bool is_colliding_bottom = sprite_shape->collide(sprite_transform, horizontal_edge_shape, bottom_edge_transform);
+	bool is_colliding_left = sprite_shape->collide(shape_transform, vertical_edge_shape, left_edge_transform);
+	bool is_colliding_right = sprite_shape->collide(shape_transform, vertical_edge_shape, right_edge_transform);
+	bool is_colliding_top = sprite_shape->collide(shape_transform, horizontal_edge_shape, top_edge_transform);
+	bool is_colliding_bottom = sprite_shape->collide(shape_transform, horizontal_edge_shape, bottom_edge_transform);
 
 	GdInt result = 0;
 	result += is_colliding_top ? BOUND_TOP : 0;
@@ -277,18 +277,13 @@ GdInt SpxPhysicsMgr::_check_nearest_touched_boundary(GdObj obj, GdBool use_stage
 		return 0;
 	}
 
-	Transform2D sprite_transform = sprite->get_global_transform();
-	Rect2 sprite_rect = sprite_shape->get_rect();
 
-	// Transform the rect to world coordinates
-	Vector2 sprite_pos = sprite_transform.get_origin();
-	Vector2 sprite_scale = sprite_transform.get_scale();
-
-	// Get the actual bounding box in world space
-	real_t left = sprite_pos.x + sprite_rect.position.x * sprite_scale.x;
-	real_t right = sprite_pos.x + (sprite_rect.position.x + sprite_rect.size.x) * sprite_scale.x;
-	real_t top = sprite_pos.y + sprite_rect.position.y * sprite_scale.y;
-	real_t bottom = sprite_pos.y + (sprite_rect.position.y + sprite_rect.size.y) * sprite_scale.y;
+	Transform2D shape_transform = collision_shape->get_global_transform();
+	Rect2 world_rect = shape_transform.xform(sprite_shape->get_rect());
+	real_t left = world_rect.position.x;
+	real_t right = world_rect.position.x + world_rect.size.x;
+	real_t top = world_rect.position.y;
+	real_t bottom = world_rect.position.y + world_rect.size.y;
 
 	// Get boundary rect from camera manager
 	Rect2 boundary_rect = use_stage_limits ? cameraMgr->get_stage_limits_rect() : cameraMgr->get_global_camera_rect();
