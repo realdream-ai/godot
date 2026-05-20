@@ -32,6 +32,7 @@
 
 #include "core/os/memory.h"
 #include "core/variant/variant.h"
+#include "svg_utils.h"
 
 #include <lunasvg.h>
 
@@ -81,6 +82,8 @@ Ref<Image> ImageLoaderSVG::load_mem_svg(const uint8_t *p_svg, int p_size, float 
 
 Error ImageLoaderSVG::create_image_from_utf8_buffer(Ref<Image> p_image, const uint8_t *p_buffer, int p_buffer_size, float p_scale, bool p_upsample) {
 	ERR_FAIL_COND_V_MSG(Math::is_zero_approx(p_scale), ERR_INVALID_PARAMETER, "ImageLoaderSVG: Can't load SVG with a scale of 0.");
+
+	SVGUtils::ensure_font_faces_registered();
 
 	auto document = lunasvg::Document::loadFromData((const char *)p_buffer, p_buffer_size);
 	if (document == nullptr) {
