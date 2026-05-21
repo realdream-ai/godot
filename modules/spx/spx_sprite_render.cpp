@@ -36,6 +36,7 @@
 #include "spx_camera_mgr.h"
 #include "spx_engine.h"
 #include "spx_res_mgr.h"
+#include "spx_sprite_render_util.h"
 #include "svg_mgr.h"
 
 void SpxSprite::set_render_scale(GdVec2 p_scale) {
@@ -172,7 +173,7 @@ void SpxSprite::_on_frame_changed() {
 	String current_anim = String(anim2d->get_animation());
 	int current_frame = anim2d->get_frame();
 	Vector2 frame_offset = resMgr->get_animation_frame_offset(current_anim, current_frame);
-	Vector2 final_offset = base_offset - pivot_offset + frame_offset * _render_scale;
+	Vector2 final_offset = spx_compute_anim_offset(is_single_image_mode, base_offset, pivot_offset, frame_offset, _render_scale);
 	anim2d->set_offset(final_offset);
 }
 
