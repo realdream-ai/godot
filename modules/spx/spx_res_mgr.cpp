@@ -59,6 +59,36 @@
 #include "modules/svg/svg_utils.h"
 #endif
 
+struct SpxFontLoadOptions {
+	String resource_path;
+	String svg_family;
+	bool register_only = false;
+};
+
+static SpxFontLoadOptions _parse_font_load_options(const String &p_font_path) {
+	SpxFontLoadOptions options;
+	int fragment_index = p_font_path.find("#");
+	if (fragment_index < 0) {
+		options.resource_path = p_font_path;
+		return options;
+	}
+
+	options.resource_path = p_font_path.substr(0, fragment_index);
+	String fragment = p_font_path.substr(fragment_index + 1, -1);
+	Vector<String> params = fragment.split("&", false);
+	for (int i = 0; i < params.size(); i++) {
+		const String &param = params[i];
+		if (param == "spx-register-only=1") {
+			options.register_only = true;
+			continue;
+		}
+		if (param.begins_with("spx-family=")) {
+			options.svg_family = param.get_slice("=", 1);
+		}
+	}
+	return options;
+}
+
 void SpxResMgr::on_awake() {
 	SpxBaseMgr::on_awake();
 	is_load_direct = true;
@@ -496,7 +526,12 @@ GdBool SpxResMgr::has_file(GdString p_path) {
 }
 
 void SpxResMgr::set_default_font(GdString font_path) {
-	String path = SpxStr(font_path);
+	SpxFontLoadOptions options = _parse_font_load_options(SpxStr(font_path));
+	String path = options.resource_path;
+	if (path.is_empty()) {
+		ERR_PRINT("Can not open empty font path.");
+		return;
+	}
 	Vector<uint8_t> font_data;
 	Ref<FontFile> rawFont = ResourceLoader::load(path);
 	if (!rawFont.is_null()) {
@@ -513,8 +548,16 @@ void SpxResMgr::set_default_font(GdString font_path) {
 	}
 	// update svg
 #ifdef MODULE_SVG_ENABLED
-	SVGUtils::set_default_font(font_data.ptrw(), (int)font_data.size());
+	if (!options.svg_family.is_empty()) {
+		SVGUtils::add_font_face(options.svg_family, font_data.ptrw(), (int)font_data.size());
+	}
+	if (!options.register_only) {
+		SVGUtils::set_default_font(font_data.ptrw(), (int)font_data.size());
+	}
 #endif
+	if (options.register_only) {
+		return;
+	}
 
 	// update theme
 	Ref<FontFile> font;
