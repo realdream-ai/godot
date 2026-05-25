@@ -112,6 +112,7 @@ public:
 	SPX_API void reload_texture(GdString path);
 	SPX_API void free_str(GdString str);
 	SPX_API void set_default_font(GdString font_path);
+	SPX_API void register_svg_font_face(GdString font_path, GdString family);
 };
 
 #endif // SPX_RES_MGR_H
