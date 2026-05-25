@@ -47,6 +47,8 @@
 #include "scene/theme/default_theme.h"
 #include "scene/theme/theme_db.h"
 
+#include <limits>
+
 #include "spx_engine.h"
 #include "spx_platform_mgr.h"
 #include "svg_mgr.h"
@@ -63,6 +65,10 @@ static bool _load_font_data_from_path(const String &p_path, const String &p_engi
 	Ref<FontFile> raw_font = ResourceLoader::load(p_path);
 	if (!raw_font.is_null()) {
 		r_font_data = raw_font->get_data();
+		if (r_font_data.is_empty()) {
+			ERR_PRINT("Loaded font resource has no data: " + p_path);
+			return false;
+		}
 		return true;
 	}
 
@@ -72,8 +78,23 @@ static bool _load_font_data_from_path(const String &p_path, const String &p_engi
 		return false;
 	}
 
-	r_font_data.resize(file->get_length());
-	file->get_buffer(r_font_data.ptrw(), r_font_data.size());
+	uint64_t font_size = file->get_length();
+	if (font_size == 0) {
+		ERR_PRINT("Font file is empty: " + p_path + " engine_path= " + p_engine_path);
+		return false;
+	}
+	if (font_size > uint64_t(std::numeric_limits<int>::max())) {
+		ERR_PRINT("Font file is too large: " + p_path + " engine_path= " + p_engine_path);
+		return false;
+	}
+
+	r_font_data.resize((int)font_size);
+	uint64_t read_bytes = file->get_buffer(r_font_data.ptrw(), font_size);
+	if (read_bytes != font_size) {
+		ERR_PRINT("Can not read full font file: " + p_path + " engine_path= " + p_engine_path);
+		r_font_data.resize(0);
+		return false;
+	}
 	return true;
 }
 
