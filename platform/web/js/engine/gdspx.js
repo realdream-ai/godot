@@ -6,114 +6,6 @@
 //   "gdspx.js.tmpl" so they can be included in the generated
 //   code.
 //----------------------------------------------------------------------------*/
-const SPX_DEFAULT_FONT_RESOURCE_PATH = "res://engine/fonts/CnFont.ttf";
-const SPX_SCRATCH_FONT_RESOURCE_ROOT = "res://engine/fonts/scratch/";
-const SPX_SCRATCH_PACKAGED_FONT_DEFS = [
-	{ family: "Sans Serif", path: SPX_SCRATCH_FONT_RESOURCE_ROOT + "NotoSans-Medium.ttf" },
-	{ family: "Serif", path: SPX_SCRATCH_FONT_RESOURCE_ROOT + "SourceSerifPro-Regular.otf" },
-	{ family: "Handwriting", path: SPX_SCRATCH_FONT_RESOURCE_ROOT + "handlee-regular.ttf" },
-	{ family: "Marker", path: SPX_SCRATCH_FONT_RESOURCE_ROOT + "Knewave.ttf" },
-	{ family: "Curly", path: SPX_SCRATCH_FONT_RESOURCE_ROOT + "Griffy-Regular.ttf" },
-	{ family: "Pixel", path: SPX_SCRATCH_FONT_RESOURCE_ROOT + "Grand9K-Pixel.ttf" },
-	{ family: "Scratch", path: SPX_SCRATCH_FONT_RESOURCE_ROOT + "Scratch.ttf" },
-];
-const SPX_SCRATCH_CJK_FONT_STACKS = [
-	{ label: "中文", stack: '"Microsoft YaHei", "微软雅黑", STXihei, "华文细黑"' },
-	{ label: "日本語", stack: '"ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic Pro", Osaka, "メイリオ", Meiryo, "ＭＳ Ｐゴシック", "MS PGothic"' },
-	{ label: "한국어", stack: "Malgun Gothic" },
-];
-const SPX_SCRATCH_FONT_FACE_STATE = globalThis.__spxScratchFontFaceState || (globalThis.__spxScratchFontFaceState = {
-	registered: false,
-	moduleRef: null,
-});
-
-function spxNormalizeFontRequestName(value) {
-	return String(value || "")
-		.toLowerCase()
-		.replace(/["',]/g, "")
-		.replace(/[\s_-]+/g, "")
-		.trim();
-}
-
-const SPX_SCRATCH_FONT_ALIAS_MAP = (function () {
-	var _map = Object.create(null);
-	function _registerAlias(alias, resolvedPath, svgFamily) {
-		var _key = spxNormalizeFontRequestName(alias);
-		if (_key === "") {
-			return;
-		}
-		_map[_key] = {
-			resolvedPath: resolvedPath,
-			svgFamily: svgFamily || "",
-		};
-	}
-
-	for (var _i = 0; _i < SPX_SCRATCH_PACKAGED_FONT_DEFS.length; _i++) {
-		var _fontDef = SPX_SCRATCH_PACKAGED_FONT_DEFS[_i];
-		_registerAlias(_fontDef.family, _fontDef.path, _fontDef.family);
-		_registerAlias(_fontDef.path, _fontDef.path, _fontDef.family);
-	}
-
-	for (var _j = 0; _j < SPX_SCRATCH_CJK_FONT_STACKS.length; _j++) {
-		var _cjkDef = SPX_SCRATCH_CJK_FONT_STACKS[_j];
-		_registerAlias(_cjkDef.label, SPX_DEFAULT_FONT_RESOURCE_PATH, "");
-		_registerAlias(_cjkDef.stack, SPX_DEFAULT_FONT_RESOURCE_PATH, "");
-	}
-
-	return _map;
-})();
-
-function spxBuildManagedFontPath(fontPath, options) {
-	var _metadata = [];
-	if (options != null && options.family) {
-		_metadata.push("spx-family=" + String(options.family));
-	}
-	if (options != null && options.registerOnly) {
-		_metadata.push("spx-register-only=1");
-	}
-	if (_metadata.length === 0) {
-		return String(fontPath || "");
-	}
-	return String(fontPath || "") + "#" + _metadata.join("&");
-}
-
-function spxResolveFontRequest(fontPath) {
-	var _requestedPath = String(fontPath || "");
-	var _aliasKey = spxNormalizeFontRequestName(_requestedPath);
-	var _matched = _aliasKey === "" ? null : SPX_SCRATCH_FONT_ALIAS_MAP[_aliasKey];
-	if (_matched != null) {
-		return {
-			requestedPath: _requestedPath,
-			resolvedPath: _matched.resolvedPath,
-			svgFamily: _matched.svgFamily,
-		};
-	}
-	return {
-		requestedPath: _requestedPath,
-		resolvedPath: _requestedPath,
-		svgFamily: "",
-	};
-}
-
-function spxEnsureScratchFontFacesRegistered(runtimeModule, registerFontFace) {
-	var _state = SPX_SCRATCH_FONT_FACE_STATE;
-	if (_state.moduleRef !== runtimeModule) {
-		_state.registered = false;
-		_state.moduleRef = runtimeModule;
-	}
-	if (_state.registered || typeof registerFontFace !== "function") {
-		return;
-	}
-	for (var _i = 0; _i < SPX_SCRATCH_PACKAGED_FONT_DEFS.length; _i++) {
-		var _fontDef = SPX_SCRATCH_PACKAGED_FONT_DEFS[_i];
-		registerFontFace(spxBuildManagedFontPath(_fontDef.path, {
-			family: _fontDef.family,
-			registerOnly: true,
-		}));
-	}
-	_state.registered = true;
-}
-
 class GdspxFuncs {
 constructor() {
 	this._inputMousePosScratch = null;
@@ -152,12 +44,6 @@ _readGdIntLike(ptr, scratch) {
 	scratch.low = _u32[_word];
 	scratch.high = _u32[_word + 1];
 	return scratch;
-}
-
-_invokeResSetDefaultFont(gdFuncPtr, fontPath) {
-	var _arg0 = ToGdString(fontPath);
-	gdFuncPtr(_arg0);
-	FreeGdString(_arg0);
 }
 gdspx_audio_stop_all() {
 	var _gdFuncPtr = Module._gdspx_audio_stop_all; 
@@ -1232,14 +1118,20 @@ gdspx_res_free_str(str) {
 }
 gdspx_res_set_default_font(font_path) {
 	var _gdFuncPtr = Module._gdspx_res_set_default_font; 
-	var _module = Module;
-	var _fontRequest = spxResolveFontRequest(font_path);
-	spxEnsureScratchFontFacesRegistered(_module, function (managedFontPath) {
-		this._invokeResSetDefaultFont(_gdFuncPtr, managedFontPath);
-	}.bind(this));
-	this._invokeResSetDefaultFont(_gdFuncPtr, spxBuildManagedFontPath(_fontRequest.resolvedPath, {
-		family: _fontRequest.svgFamily,
-	}));
+	
+	var _arg0 = ToGdString(font_path);
+	_gdFuncPtr(_arg0);
+	FreeGdString(_arg0); 
+
+}
+gdspx_res_register_svg_font_face(font_path,family) {
+	var _gdFuncPtr = Module._gdspx_res_register_svg_font_face; 
+	
+	var _arg0 = ToGdString(font_path);
+	var _arg1 = ToGdString(family);
+	_gdFuncPtr(_arg0, _arg1);
+	FreeGdString(_arg0); 
+	FreeGdString(_arg1); 
 
 }
 gdspx_scene_change_scene_to_file(path) {

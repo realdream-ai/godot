@@ -398,6 +398,9 @@ static void gdextension_spx_res_free_str(GdString str) {
 static void gdextension_spx_res_set_default_font(GdString font_path) {
 	resMgr->set_default_font(font_path);
 }
+static void gdextension_spx_res_register_svg_font_face(GdString font_path, GdString family) {
+	resMgr->register_svg_font_face(font_path, family);
+}
 static void gdextension_spx_scene_change_scene_to_file(GdString path) {
 	sceneMgr->change_scene_to_file(path);
 }
@@ -1123,6 +1126,7 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_reload_texture);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_free_str);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_set_default_font);
+	REGISTER_SPX_INTERFACE_FUNC(spx_res_register_svg_font_face);
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_change_scene_to_file);
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_destroy_all_sprites);
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_reload_current_scene);
