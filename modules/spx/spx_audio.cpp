@@ -154,6 +154,17 @@ void SpxAudio::stop(GdInt aid) {
 	audio->queue_free();
 }
 
+GdBool SpxAudio::restart(GdInt aid) {
+	SPX_AUDIO_GUARD_RETURN(aid, __func__, false)
+	if (!audio->get_stream().is_valid()) {
+		return false;
+	}
+	audio->set_stream_paused(false);
+	audio->stop();
+	audio->play();
+	return true;
+}
+
 void SpxAudio::set_loop(GdInt aid, GdBool loop) {
 	SPX_AUDIO_GUARD_VOID(aid, __func__)
 	if (loop) {

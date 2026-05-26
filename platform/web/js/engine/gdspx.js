@@ -181,6 +181,16 @@ gdspx_audio_stop(aid_low,aid_high) {
 	FreeGdInt(_arg0); 
 
 }
+gdspx_audio_restart(aid_low,aid_high) {
+	var _gdFuncPtr = Module._gdspx_audio_restart; 
+	var _retValue = AllocGdBool();
+	var _arg0 = Module._gdspx_new_int(aid_high, aid_low);
+	_gdFuncPtr(_arg0, _retValue);
+	FreeGdInt(_arg0); 
+	var _finalRetValue = ToJsBool(_retValue);
+	FreeGdBool(_retValue); 
+	return _finalRetValue
+}
 gdspx_audio_set_loop(aid_low,aid_high,loop) {
 	var _gdFuncPtr = Module._gdspx_audio_set_loop; 
 	

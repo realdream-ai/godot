@@ -74,6 +74,7 @@ public:
 	void pause(GdInt aid);
 	void resume(GdInt aid);
 	void stop(GdInt aid);
+	GdBool restart(GdInt aid);
 	void set_loop(GdInt aid, GdBool loop);
 	GdBool get_loop(GdInt aid);
 
