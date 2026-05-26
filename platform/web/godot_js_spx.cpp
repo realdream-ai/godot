@@ -136,6 +136,10 @@ void gdspx_audio_stop(GdInt *aid) {
 	 audioMgr->stop(*aid);
 }
 EMSCRIPTEN_KEEPALIVE
+void gdspx_audio_restart(GdInt *aid, GdBool *ret_val) {
+	*ret_val = audioMgr->restart(*aid);
+}
+EMSCRIPTEN_KEEPALIVE
 void gdspx_audio_set_loop(GdInt *aid, GdBool *loop) {
 	 audioMgr->set_loop(*aid, *loop);
 }

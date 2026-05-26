@@ -154,6 +154,15 @@ void SpxAudio::stop(GdInt aid) {
 	audio->queue_free();
 }
 
+GdBool SpxAudio::restart(GdInt aid) {
+	SPX_AUDIO_GUARD_RETURN(aid, __func__, false)
+	if (audio->is_queued_for_deletion() || !audio->get_stream().is_valid()) {
+		return false;
+	}
+	audio->play(0.0f);
+	return audio->is_playing();
+}
+
 void SpxAudio::set_loop(GdInt aid, GdBool loop) {
 	SPX_AUDIO_GUARD_VOID(aid, __func__)
 	if (loop) {

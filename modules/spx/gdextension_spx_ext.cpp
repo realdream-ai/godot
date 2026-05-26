@@ -101,6 +101,9 @@ static void gdextension_spx_audio_resume(GdInt aid) {
 static void gdextension_spx_audio_stop(GdInt aid) {
 	audioMgr->stop(aid);
 }
+static void gdextension_spx_audio_restart(GdInt aid, GdBool *ret_val) {
+	*ret_val = audioMgr->restart(aid);
+}
 static void gdextension_spx_audio_set_loop(GdInt aid, GdBool loop) {
 	audioMgr->set_loop(aid, loop);
 }
@@ -1027,6 +1030,7 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_audio_pause);
 	REGISTER_SPX_INTERFACE_FUNC(spx_audio_resume);
 	REGISTER_SPX_INTERFACE_FUNC(spx_audio_stop);
+	REGISTER_SPX_INTERFACE_FUNC(spx_audio_restart);
 	REGISTER_SPX_INTERFACE_FUNC(spx_audio_set_loop);
 	REGISTER_SPX_INTERFACE_FUNC(spx_audio_get_loop);
 	REGISTER_SPX_INTERFACE_FUNC(spx_audio_get_timer);

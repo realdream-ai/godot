@@ -78,6 +78,7 @@ public:
 	SPX_API void pause(GdInt aid);
 	SPX_API void resume(GdInt aid);
 	SPX_API void stop(GdInt aid);
+	SPX_API GdBool restart(GdInt aid);
 	SPX_API void set_loop(GdInt aid, GdBool loop);
 	SPX_API GdBool get_loop(GdInt aid);
 

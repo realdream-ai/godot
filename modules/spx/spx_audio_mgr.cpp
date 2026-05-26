@@ -245,6 +245,19 @@ void SpxAudioMgr::stop(GdInt aid) {
 	audio->stop(aid);
 }
 
+GdBool SpxAudioMgr::restart(GdInt aid) {
+	MutexLock aid_lock(aid_mutex);
+	SpxAudio *audio = _get_aid_audio(aid);
+	if (audio == nullptr) {
+		return false;
+	}
+	GdBool restarted = audio->restart(aid);
+	if (!restarted) {
+		aid_audios.erase(aid);
+	}
+	return restarted;
+}
+
 void SpxAudioMgr::set_loop(GdInt aid, GdBool loop) {
 	SpxAudio *audio = nullptr;
 	{
