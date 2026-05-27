@@ -257,8 +257,8 @@ static void gdextension_spx_pen_set_pen_size_to(GdObj obj, GdFloat size) {
 static void gdextension_spx_pen_set_pen_stamp_texture(GdObj obj, GdString texture_path) {
 	penMgr->set_pen_stamp_texture(obj, texture_path);
 }
-static void gdextension_spx_pen_pen_stamp_with_transform(GdObj obj, GdVec2 position, GdString texture_path, GdFloat rotation, GdVec2 scale) {
-	penMgr->pen_stamp_with_transform(obj, position, texture_path, rotation, scale);
+static void gdextension_spx_pen_pen_stamp_with_transform(GdObj obj, GdString texture_path, GdVec2 position, GdFloat rotation_radians, GdVec2 scale) {
+	penMgr->pen_stamp_with_transform(obj, texture_path, position, rotation_radians, scale);
 }
 static void gdextension_spx_physics_raycast(GdVec2 from, GdVec2 to, GdInt collision_mask, GdObj *ret_val) {
 	*ret_val = physicsMgr->raycast(from, to, collision_mask);

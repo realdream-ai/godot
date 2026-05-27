@@ -111,6 +111,6 @@ void SpxPenMgr::set_pen_stamp_texture(GdObj obj, GdString texture_path) {
 	SPX_WITH_PEN_OR_RETURN(obj, pen->set_stamp_texture(texture_path))
 }
 
-void SpxPenMgr::pen_stamp_with_transform(GdObj obj, GdVec2 position, GdString texture_path, GdFloat rotation, GdVec2 scale) {
-	SPX_WITH_PEN_OR_RETURN(obj, pen->stamp_with_transform(position, texture_path, rotation, scale))
+void SpxPenMgr::pen_stamp_with_transform(GdObj obj, GdString texture_path, GdVec2 position, GdFloat rotation_radians, GdVec2 scale) {
+	SPX_WITH_PEN_OR_RETURN(obj, pen->stamp_with_transform(texture_path, position, rotation_radians, scale))
 }

@@ -344,8 +344,8 @@ void gdspx_pen_set_pen_stamp_texture(GdObj *obj, GdString *texture_path) {
 	 penMgr->set_pen_stamp_texture(*obj, *texture_path);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_pen_pen_stamp_with_transform(GdObj *obj, GdVec2 *position, GdString *texture_path, GdFloat *rotation, GdVec2 *scale) {
-	 penMgr->pen_stamp_with_transform(*obj, *position, *texture_path, *rotation, *scale);
+void gdspx_pen_pen_stamp_with_transform(GdObj *obj, GdString *texture_path, GdVec2 *position, GdFloat *rotation_radians, GdVec2 *scale) {
+	 penMgr->pen_stamp_with_transform(*obj, *texture_path, *position, *rotation_radians, *scale);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_physics_raycast(GdVec2 *from, GdVec2 *to, GdInt *collision_mask, GdObj *ret_val) {
