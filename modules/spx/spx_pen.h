@@ -65,6 +65,7 @@ private:
 	Line2D *_create_new_line();
 	void _start_new_line();
 	Color _get_current_color() const;
+	void _stamp_texture(const Ref<Texture2D> &texture, GdVec2 position, GdFloat rotation, GdVec2 scale);
 
 public:
 	void on_create(GdInt id, Node *root);
@@ -86,6 +87,7 @@ public:
 	void change_size_by(GdFloat amount);
 	void set_size_to(GdFloat size);
 	void set_stamp_texture(GdString texture_path);
+	void stamp_with_transform(GdVec2 position, GdString texture_path, GdFloat rotation, GdVec2 scale);
 };
 
 #endif // SPX_PEN_H

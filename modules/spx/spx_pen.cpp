@@ -144,17 +144,24 @@ void SpxPen::erase_all() {
 	is_pen_down = false;
 }
 
-void SpxPen::stamp() {
-	if (!stamp_texture.is_valid()) {
+void SpxPen::_stamp_texture(const Ref<Texture2D> &texture, GdVec2 position, GdFloat rotation, GdVec2 scale) {
+	if (!texture.is_valid()) {
 		return;
 	}
 	if (pen_root == nullptr) {
 		return;
 	}
+	current_pen_pos = position;
 	Sprite2D *new_stamp = memnew(Sprite2D);
-	new_stamp->set_texture(stamp_texture);
-	new_stamp->set_position(current_pen_pos);
+	new_stamp->set_texture(texture);
+	new_stamp->set_position(position);
+	new_stamp->set_rotation(rotation);
+	new_stamp->set_scale(scale);
 	pen_root->add_child(new_stamp);
+}
+
+void SpxPen::stamp() {
+	_stamp_texture(stamp_texture, current_pen_pos, 0.0f, Vector2(1.0f, 1.0f));
 }
 
 void SpxPen::move_to(GdVec2 position) {
@@ -213,4 +220,10 @@ void SpxPen::set_size_to(GdFloat size) {
 void SpxPen::set_stamp_texture(GdString texture_path) {
 	auto path_str = SpxStr(texture_path);
 	stamp_texture = resMgr->load_texture(path_str, false);
+}
+
+void SpxPen::stamp_with_transform(GdVec2 position, GdString texture_path, GdFloat rotation, GdVec2 scale) {
+	auto path_str = SpxStr(texture_path);
+	Ref<Texture2D> texture = resMgr->load_texture(path_str, false);
+	_stamp_texture(texture, position, rotation, scale);
 }

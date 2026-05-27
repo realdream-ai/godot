@@ -59,6 +59,7 @@ public:
 	SPX_API void change_pen_size_by(GdObj obj, GdFloat amount);
 	SPX_API void set_pen_size_to(GdObj obj, GdFloat size);
 	SPX_API void set_pen_stamp_texture(GdObj obj, GdString texture_path);
+	SPX_API void pen_stamp_with_transform(GdObj obj, GdVec2 position, GdString texture_path, GdFloat rotation, GdVec2 scale);
 };
 
 #endif // SPX_PEN_MGR_H
