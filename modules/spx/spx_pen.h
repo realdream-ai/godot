@@ -59,12 +59,15 @@ private:
 	bool move_by_mouse = false;
 
 	Ref<Texture2D> stamp_texture;
+	String stamp_texture_path;
 
 private:
 	void _destroy_pen_root();
 	Line2D *_create_new_line();
 	void _start_new_line();
 	Color _get_current_color() const;
+	void _stamp_texture(const Ref<Texture2D> &texture, GdVec2 position, GdFloat rotation_radians, GdVec2 scale);
+	Ref<Texture2D> _resolve_stamp_texture(const String &texture_path);
 
 public:
 	void on_create(GdInt id, Node *root);
@@ -86,6 +89,8 @@ public:
 	void change_size_by(GdFloat amount);
 	void set_size_to(GdFloat size);
 	void set_stamp_texture(GdString texture_path);
+	// rotation_radians is in radians.
+	void stamp_with_transform(GdString texture_path, GdVec2 position, GdFloat rotation_radians, GdVec2 scale);
 };
 
 #endif // SPX_PEN_H

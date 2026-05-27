@@ -670,6 +670,22 @@ gdspx_pen_set_pen_stamp_texture(obj_low,obj_high,texture_path) {
 	FreeGdString(_arg1); 
 
 }
+gdspx_pen_pen_stamp_with_transform(obj_low,obj_high,texture_path,position,rotation_radians,scale) {
+	var _gdFuncPtr = Module._gdspx_pen_pen_stamp_with_transform; 
+	
+	var _arg0 = Module._gdspx_new_obj(obj_high, obj_low);
+	var _arg1 = ToGdString(texture_path);
+	var _arg2 = ToGdVec2(position);
+	var _arg3 = ToGdFloat(rotation_radians);
+	var _arg4 = ToGdVec2(scale);
+	_gdFuncPtr(_arg0, _arg1, _arg2, _arg3, _arg4);
+	FreeGdObj(_arg0); 
+	FreeGdString(_arg1); 
+	FreeGdVec2(_arg2); 
+	FreeGdFloat(_arg3); 
+	FreeGdVec2(_arg4); 
+
+}
 gdspx_physics_raycast(from,to,collision_mask_low,collision_mask_high) {
 	var _gdFuncPtr = Module._gdspx_physics_raycast; 
 	var _retValue = AllocGdObj();

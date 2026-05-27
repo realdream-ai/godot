@@ -257,6 +257,9 @@ static void gdextension_spx_pen_set_pen_size_to(GdObj obj, GdFloat size) {
 static void gdextension_spx_pen_set_pen_stamp_texture(GdObj obj, GdString texture_path) {
 	penMgr->set_pen_stamp_texture(obj, texture_path);
 }
+static void gdextension_spx_pen_pen_stamp_with_transform(GdObj obj, GdString texture_path, GdVec2 position, GdFloat rotation_radians, GdVec2 scale) {
+	penMgr->pen_stamp_with_transform(obj, texture_path, position, rotation_radians, scale);
+}
 static void gdextension_spx_physics_raycast(GdVec2 from, GdVec2 to, GdInt collision_mask, GdObj *ret_val) {
 	*ret_val = physicsMgr->raycast(from, to, collision_mask);
 }
@@ -1082,6 +1085,7 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_pen_change_pen_size_by);
 	REGISTER_SPX_INTERFACE_FUNC(spx_pen_set_pen_size_to);
 	REGISTER_SPX_INTERFACE_FUNC(spx_pen_set_pen_stamp_texture);
+	REGISTER_SPX_INTERFACE_FUNC(spx_pen_pen_stamp_with_transform);
 	REGISTER_SPX_INTERFACE_FUNC(spx_physics_raycast);
 	REGISTER_SPX_INTERFACE_FUNC(spx_physics_check_collision);
 	REGISTER_SPX_INTERFACE_FUNC(spx_physics_check_touched_camera_boundaries);
