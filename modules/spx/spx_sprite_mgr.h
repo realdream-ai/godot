@@ -167,6 +167,7 @@ public:
 	SPX_API GdBool destroy_sprite(GdObj obj);
 	SPX_API GdBool is_sprite_alive(GdObj obj);
 	SPX_API void set_position(GdObj obj, GdVec2 pos);
+	SPX_API void set_transform(GdObj obj, GdVec2 pos, GdFloat rot, GdVec2 scale, GdBool visible, GdVec2 pivot);
 	SPX_API GdVec2 get_position(GdObj obj);
 	SPX_API void set_rotation(GdObj obj, GdFloat rot);
 	SPX_API GdFloat get_rotation(GdObj obj);

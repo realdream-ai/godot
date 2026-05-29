@@ -1512,6 +1512,24 @@ gdspx_sprite_set_position(obj_low,obj_high,pos) {
 	FreeGdVec2(_arg1); 
 
 }
+gdspx_sprite_set_transform(obj_low,obj_high,pos,rot,scale,visible,pivot) {
+	var _gdFuncPtr = Module._gdspx_sprite_set_transform; 
+	
+	var _arg0 = Module._gdspx_new_obj(obj_high, obj_low);
+	var _arg1 = ToGdVec2(pos);
+	var _arg2 = ToGdFloat(rot);
+	var _arg3 = ToGdVec2(scale);
+	var _arg4 = ToGdBool(visible);
+	var _arg5 = ToGdVec2(pivot);
+	_gdFuncPtr(_arg0, _arg1, _arg2, _arg3, _arg4, _arg5);
+	FreeGdObj(_arg0); 
+	FreeGdVec2(_arg1); 
+	FreeGdFloat(_arg2); 
+	FreeGdVec2(_arg3); 
+	FreeGdBool(_arg4); 
+	FreeGdVec2(_arg5); 
+
+}
 gdspx_sprite_get_position(obj_low,obj_high) {
 	var _gdFuncPtr = Module._gdspx_sprite_get_position; 
 	var _retValue = AllocGdVec2();

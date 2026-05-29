@@ -672,6 +672,10 @@ void gdspx_sprite_set_position(GdObj *obj, GdVec2 *pos) {
 	 spriteMgr->set_position(*obj, *pos);
 }
 EMSCRIPTEN_KEEPALIVE
+void gdspx_sprite_set_transform(GdObj *obj, GdVec2 *pos, GdFloat *rot, GdVec2 *scale, GdBool *visible, GdVec2 *pivot) {
+	 spriteMgr->set_transform(*obj, *pos, *rot, *scale, *visible, *pivot);
+}
+EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_get_position(GdObj *obj, GdVec2 *ret_val) {
 	*ret_val = spriteMgr->get_position(*obj);
 }
