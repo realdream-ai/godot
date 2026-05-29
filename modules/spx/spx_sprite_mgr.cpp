@@ -369,6 +369,17 @@ void SpxSpriteMgr::set_position(GdObj obj, GdVec2 pos) {
 	sprite->set_position(GdVec2(pos.x, -pos.y));
 }
 
+void SpxSpriteMgr::set_transform(GdObj obj, GdVec2 pos, GdFloat rot, GdVec2 scale, GdBool visible, GdVec2 pivot) {
+	SPX_REQUIRE_SPRITE_VOID()
+	sprite->set_position(GdVec2(pos.x, -pos.y));
+	sprite->set_rotation(rot);
+	sprite->set_scale(scale);
+	sprite->set_visible(visible);
+	sprite->on_set_visible(visible);
+	pivot.y = -pivot.y;
+	sprite->set_pivot(pivot);
+}
+
 void SpxSpriteMgr::set_rotation(GdObj obj, GdFloat rot) {
 	SPX_REQUIRE_SPRITE_VOID()
 	sprite->set_rotation(rot);

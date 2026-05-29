@@ -503,6 +503,9 @@ static void gdextension_spx_sprite_is_sprite_alive(GdObj obj, GdBool *ret_val) {
 static void gdextension_spx_sprite_set_position(GdObj obj, GdVec2 pos) {
 	spriteMgr->set_position(obj, pos);
 }
+static void gdextension_spx_sprite_set_transform(GdObj obj, GdVec2 pos, GdFloat rot, GdVec2 scale, GdBool visible, GdVec2 pivot) {
+	spriteMgr->set_transform(obj, pos, rot, scale, visible, pivot);
+}
 static void gdextension_spx_sprite_get_position(GdObj obj, GdVec2 *ret_val) {
 	*ret_val = spriteMgr->get_position(obj);
 }
@@ -1167,6 +1170,7 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_destroy_sprite);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_is_sprite_alive);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_position);
+	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_transform);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_position);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_set_rotation);
 	REGISTER_SPX_INTERFACE_FUNC(spx_sprite_get_rotation);
