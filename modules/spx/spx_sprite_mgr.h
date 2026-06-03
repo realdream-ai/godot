@@ -119,6 +119,7 @@ private:
 	bool _erase_pixel_collision_pair(const TriggerPair &pair);
 	void _remove_collision_pairs_for_sprite(GdObj obj);
 	void _check_pixel_collision_events();
+	void _batch_write_positions(const GdObj *ids, int count, float *out, int out_len);
 
 public:
 	static StringName default_texture_anim;
@@ -297,7 +298,8 @@ public:
 	// batch sync
 	SPX_API void batch_update_transforms(const float *buffer_data, int len);
 	SPX_API void batch_update_visuals(const float *buffer_data, int len);
-	SPX_API GdArray batch_retrieve_positions(GdArray objs);
+	SPX_API void batch_retrieve_positions(const GdObj *ids, int count, float *out, int out_len);
+	SPX_API void batch_update_physics(const float *buffer_data, int len);
 };
 
 #endif // SPX_SPRITE_MGR_H

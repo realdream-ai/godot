@@ -90,3 +90,65 @@ GdBool SpxInputMgr::is_action_just_pressed(GdString action) {
 GdBool SpxInputMgr::is_action_just_released(GdString action) {
 	return Input::get_singleton()->is_action_just_released(SpxStr(action));
 }
+
+GdInt SpxInputMgr::register_action(GdString action) {
+	StringName name(SpxStr(action));
+	if (action_ids.has(name)) {
+		return action_ids[name];
+	}
+
+	GdInt id = action_names.size();
+	action_names.push_back(name);
+	action_ids.insert(name, id);
+	return id;
+}
+
+GdFloat SpxInputMgr::get_axis_id(GdInt neg_action_id, GdInt pos_action_id) {
+	const StringName *neg = get_registered_action(neg_action_id);
+	const StringName *pos = get_registered_action(pos_action_id);
+	if (neg == nullptr || pos == nullptr) {
+		return 0;
+	}
+	return Input::get_singleton()->get_axis(*neg, *pos);
+}
+
+GdBool SpxInputMgr::is_action_pressed_id(GdInt action_id) {
+	const StringName *action = get_registered_action(action_id);
+	return action != nullptr && Input::get_singleton()->is_action_pressed(*action);
+}
+
+GdBool SpxInputMgr::is_action_just_pressed_id(GdInt action_id) {
+	const StringName *action = get_registered_action(action_id);
+	return action != nullptr && Input::get_singleton()->is_action_just_pressed(*action);
+}
+
+GdBool SpxInputMgr::is_action_just_released_id(GdInt action_id) {
+	const StringName *action = get_registered_action(action_id);
+	return action != nullptr && Input::get_singleton()->is_action_just_released(*action);
+}
+
+void SpxInputMgr::write_snapshot(float *out, int len) {
+	if (!out || len < 3) {
+		return;
+	}
+
+	GdVec2 pos = get_global_mouse_pos();
+	uint32_t mouse_bits = 0;
+	Input *input = Input::get_singleton();
+	for (int i = (int)MouseButton::LEFT; i <= (int)MouseButton::MIDDLE; i++) {
+		if (input->is_mouse_button_pressed((MouseButton)i)) {
+			mouse_bits |= 1u << i;
+		}
+	}
+
+	out[0] = pos.x;
+	out[1] = pos.y;
+	out[2] = (float)mouse_bits;
+}
+
+const StringName *SpxInputMgr::get_registered_action(GdInt action_id) const {
+	if (action_id < 0 || action_id >= action_names.size()) {
+		return nullptr;
+	}
+	return &action_names[action_id];
+}

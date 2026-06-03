@@ -1,4 +1,20 @@
 const DIRECT_CALLBACK_HANDLER_SLOTS = globalThis.__spxDirectCallbackHandlerSlots || (globalThis.__spxDirectCallbackHandlerSlots = Object.create(null));
+const CONTACT_CALLBACK_EXPORT_NAMES = [
+	"gdspx_on_collision_enter",
+	"gdspx_on_collision_stay",
+	"gdspx_on_collision_exit",
+	"gdspx_on_trigger_enter",
+	"gdspx_on_trigger_stay",
+	"gdspx_on_trigger_exit",
+];
+const CONTACT_CALLBACK_EVENT_NAMES = [
+	"OnCollisionEnter",
+	"OnCollisionStay",
+	"OnCollisionExit",
+	"OnTriggerEnter",
+	"OnTriggerStay",
+	"OnTriggerExit",
+];
 
 const GodotGdspx = {
 	$GodotGdspx__deps: ['$GodotConfig', '$GodotRuntime', '$GodotFS'],
@@ -58,6 +74,40 @@ const GodotGdspx = {
 		call2: function (exportName, eventName, arg0, arg1, directHandler = null) {
 			GodotGdspx.callN(exportName, eventName, directHandler, arg0, arg1);
 		},
+
+		contactEvents: [],
+
+		queueContact: function (type, selfPtr, otherPtr) {
+			const self = GodotRuntime.ToJsInt(selfPtr);
+			const other = GodotRuntime.ToJsInt(otherPtr);
+			GodotGdspx.contactEvents.push(type, self.low, self.high, other.low, other.high);
+		},
+
+		flushContactEvents: function () {
+			const events = GodotGdspx.contactEvents;
+			if (events.length === 0) {
+				return;
+			}
+			GodotGdspx.contactEvents = [];
+
+			const direct = typeof globalThis.gdspx_on_contact_events === 'function' ? globalThis.gdspx_on_contact_events : null;
+			if (direct) {
+				direct(events);
+				return;
+			}
+
+			for (let i = 0; i + 4 < events.length; i += 5) {
+				const type = events[i] | 0;
+				const self = { low: events[i + 1] >>> 0, high: events[i + 2] >>> 0 };
+				const other = { low: events[i + 3] >>> 0, high: events[i + 4] >>> 0 };
+				const exportName = CONTACT_CALLBACK_EXPORT_NAMES[type - 1];
+				const eventName = CONTACT_CALLBACK_EVENT_NAMES[type - 1];
+				if (exportName && eventName) {
+					const directHandler = GodotGdspx.getDirectHandler(exportName);
+					GodotGdspx.call2(exportName, eventName, self, other, directHandler);
+				}
+			}
+		},
 	},
 
 	// godot gdspx extensions
@@ -73,12 +123,14 @@ const GodotGdspx = {
 
 	godot_js_spx_on_engine_update__sig: 'vf',
 	godot_js_spx_on_engine_update: function (delta) {
+		GodotGdspx.flushContactEvents();
 		const directHandler = GodotGdspx.getDirectHandler("gdspx_on_engine_update");
 		GodotGdspx.call1("gdspx_on_engine_update", "OnEngineUpdate", delta, directHandler);
 	},
 
 	godot_js_spx_on_engine_fixed_update__sig: 'vf',
 	godot_js_spx_on_engine_fixed_update: function (delta) {
+		GodotGdspx.flushContactEvents();
 		const directHandler = GodotGdspx.getDirectHandler("gdspx_on_engine_fixed_update");
 		GodotGdspx.call1("gdspx_on_engine_fixed_update", "OnEngineFixedUpdate", delta, directHandler);
 	},
@@ -247,38 +299,32 @@ const GodotGdspx = {
 
 	godot_js_spx_on_collision_enter__sig: 'vii',
 	godot_js_spx_on_collision_enter: function (self_id, other_id) {
-		const directHandler = GodotGdspx.getDirectHandler("gdspx_on_collision_enter");
-		GodotGdspx.call2("gdspx_on_collision_enter", "OnCollisionEnter", GodotGdspx.toCallbackInt(self_id, directHandler), GodotGdspx.toCallbackInt(other_id, directHandler), directHandler);
+		GodotGdspx.queueContact(1, self_id, other_id);
 	},
 
 	godot_js_spx_on_collision_stay__sig: 'vii',
 	godot_js_spx_on_collision_stay: function (self_id, other_id) {
-		const directHandler = GodotGdspx.getDirectHandler("gdspx_on_collision_stay");
-		GodotGdspx.call2("gdspx_on_collision_stay", "OnCollisionStay", GodotGdspx.toCallbackInt(self_id, directHandler), GodotGdspx.toCallbackInt(other_id, directHandler), directHandler);
+		GodotGdspx.queueContact(2, self_id, other_id);
 	},
 
 	godot_js_spx_on_collision_exit__sig: 'vii',
 	godot_js_spx_on_collision_exit: function (self_id, other_id) {
-		const directHandler = GodotGdspx.getDirectHandler("gdspx_on_collision_exit");
-		GodotGdspx.call2("gdspx_on_collision_exit", "OnCollisionExit", GodotGdspx.toCallbackInt(self_id, directHandler), GodotGdspx.toCallbackInt(other_id, directHandler), directHandler);
+		GodotGdspx.queueContact(3, self_id, other_id);
 	},
 
 	godot_js_spx_on_trigger_enter__sig: 'vii',
 	godot_js_spx_on_trigger_enter: function (self_id, other_id) {
-		const directHandler = GodotGdspx.getDirectHandler("gdspx_on_trigger_enter");
-		GodotGdspx.call2("gdspx_on_trigger_enter", "OnTriggerEnter", GodotGdspx.toCallbackInt(self_id, directHandler), GodotGdspx.toCallbackInt(other_id, directHandler), directHandler);
+		GodotGdspx.queueContact(4, self_id, other_id);
 	},
 
 	godot_js_spx_on_trigger_stay__sig: 'vii',
 	godot_js_spx_on_trigger_stay: function (self_id, other_id) {
-		const directHandler = GodotGdspx.getDirectHandler("gdspx_on_trigger_stay");
-		GodotGdspx.call2("gdspx_on_trigger_stay", "OnTriggerStay", GodotGdspx.toCallbackInt(self_id, directHandler), GodotGdspx.toCallbackInt(other_id, directHandler), directHandler);
+		GodotGdspx.queueContact(5, self_id, other_id);
 	},
 
 	godot_js_spx_on_trigger_exit__sig: 'vii',
 	godot_js_spx_on_trigger_exit: function (self_id, other_id) {
-		const directHandler = GodotGdspx.getDirectHandler("gdspx_on_trigger_exit");
-		GodotGdspx.call2("gdspx_on_trigger_exit", "OnTriggerExit", GodotGdspx.toCallbackInt(self_id, directHandler), GodotGdspx.toCallbackInt(other_id, directHandler), directHandler);
+		GodotGdspx.queueContact(6, self_id, other_id);
 	},
 
 	godot_js_spx_on_ui_ready__sig: 'vi',
