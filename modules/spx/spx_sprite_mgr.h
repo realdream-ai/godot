@@ -112,7 +112,6 @@ private:
 
 	Ref<Image> _get_current_frame_image(AnimatedSprite2D *sprite);
 	Rect2 _get_sprite_aabb(AnimatedSprite2D *anim2d);
-	Vector2 _to_image_coord(const Transform2D &trans, Vector2 image_size, Vector2 pos);
 	GdBool _check_collision(GdObj obj, ColorCheckFunc check_func);
 	bool _check_pixel_collision_between(SpxSprite *sprite_a, SpxSprite *sprite_b, GdFloat alpha_threshold);
 	void _notify_pixel_collision_enter(const TriggerPair &pair);

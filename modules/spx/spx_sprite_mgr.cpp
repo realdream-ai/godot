@@ -30,6 +30,7 @@
 
 #include "spx_sprite_mgr.h"
 
+#include "core/math/math_funcs.h"
 #include "core/templates/rb_map.h"
 #include "core/typedefs.h"
 #include "scene/2d/animated_sprite_2d.h"
@@ -68,12 +69,139 @@ StringName SpxSpriteMgr::default_texture_anim;
 #define SPX_REQUIRE_TARGET_SPRITE_RETURN(TARGET, VALUE) \
 	SPX_TARGET_SPRITE_GUARD_RETURN(TARGET, __func__, VALUE)
 
-static _FORCE_INLINE_ GdFloat _spx_color_distance_squared(const GdColor &p_a, const GdColor &p_b) {
+static _FORCE_INLINE_ GdFloat color_distance_squared(const GdColor &p_a, const GdColor &p_b) {
 	const GdFloat dr = p_a.r - p_b.r;
 	const GdFloat dg = p_a.g - p_b.g;
 	const GdFloat db = p_a.b - p_b.b;
 	const GdFloat da = p_a.a - p_b.a;
 	return dr * dr + dg * dg + db * db + da * da;
+}
+
+static _FORCE_INLINE_ Ref<Texture2D> get_current_frame_texture(AnimatedSprite2D *p_anim2d) {
+	if (!p_anim2d) {
+		return Ref<Texture2D>();
+	}
+
+	Ref<SpriteFrames> frames = p_anim2d->get_sprite_frames();
+	if (frames.is_null()) {
+		return Ref<Texture2D>();
+	}
+
+	const StringName current_animation = p_anim2d->get_animation();
+	const int current_frame = p_anim2d->get_frame();
+	if (!frames->has_animation(current_animation)) {
+		return Ref<Texture2D>();
+	}
+
+	return frames->get_frame_texture(current_animation, current_frame);
+}
+
+static _FORCE_INLINE_ Rect2 get_anim_local_rect(AnimatedSprite2D *p_anim2d, const Vector2 &p_texture_size) {
+	Vector2 ofs = p_anim2d->get_offset();
+	if (p_anim2d->is_centered()) {
+		ofs -= p_texture_size / 2.0;
+	}
+	return Rect2(ofs, p_texture_size);
+}
+
+static _FORCE_INLINE_ Rect2 get_transformed_rect_aabb(const Transform2D &p_transform, const Rect2 &p_local_rect) {
+	const Vector2 top_left = p_transform.xform(p_local_rect.position);
+	const Vector2 top_right = p_transform.xform(p_local_rect.position + Vector2(p_local_rect.size.x, 0));
+	const Vector2 bottom_left = p_transform.xform(p_local_rect.position + Vector2(0, p_local_rect.size.y));
+	const Vector2 bottom_right = p_transform.xform(p_local_rect.position + p_local_rect.size);
+
+	const float min_x = MIN(MIN(top_left.x, top_right.x), MIN(bottom_left.x, bottom_right.x));
+	const float max_x = MAX(MAX(top_left.x, top_right.x), MAX(bottom_left.x, bottom_right.x));
+	const float min_y = MIN(MIN(top_left.y, top_right.y), MIN(bottom_left.y, bottom_right.y));
+	const float max_y = MAX(MAX(top_left.y, top_right.y), MAX(bottom_left.y, bottom_right.y));
+
+	return Rect2(Vector2(min_x, min_y), Vector2(max_x - min_x, max_y - min_y));
+}
+
+struct PixelCollisionQuery {
+	Ref<Texture2D> texture;
+	Ref<Image> image;
+	Rect2 bounds;
+	Rect2 local_rect;
+	Transform2D inverse_transform;
+	Vector2i image_size;
+	bool flip_h = false;
+	bool flip_v = false;
+};
+
+static _FORCE_INLINE_ Rect2i snap_rect_to_pixel_rect(const Rect2 &p_rect) {
+	const Vector2i begin(
+			(int)Math::ceil(p_rect.position.x - 0.5f),
+			(int)Math::ceil(p_rect.position.y - 0.5f));
+	const Vector2i end(
+			(int)Math::floor(p_rect.position.x + p_rect.size.x - 0.5f) + 1,
+			(int)Math::floor(p_rect.position.y + p_rect.size.y - 0.5f) + 1);
+
+	return Rect2i(begin, Vector2i(MAX(end.x - begin.x, 0), MAX(end.y - begin.y, 0)));
+}
+
+static _FORCE_INLINE_ Rect2i get_pixel_overlap_rect(const Rect2 &p_a, const Rect2 &p_b) {
+	return snap_rect_to_pixel_rect(p_a).intersection(snap_rect_to_pixel_rect(p_b));
+}
+
+static _FORCE_INLINE_ bool read_image_pixel(const Ref<Image> &p_image, const Vector2i &p_image_size, const Vector2 &p_local_pos, Color &r_color) {
+	const int px = (int)Math::floor(p_local_pos.x);
+	const int py = (int)Math::floor(p_local_pos.y);
+	if (px < 0 || px >= p_image_size.x || py < 0 || py >= p_image_size.y) {
+		return false;
+	}
+
+	r_color = p_image->get_pixel(px, py);
+	return true;
+}
+
+static _FORCE_INLINE_ bool build_pixel_collision_query(AnimatedSprite2D *p_anim2d, PixelCollisionQuery &r_query) {
+	r_query.texture = get_current_frame_texture(p_anim2d);
+	if (r_query.texture.is_null()) {
+		return false;
+	}
+
+	const Vector2 texture_size = r_query.texture->get_size();
+	r_query.local_rect = get_anim_local_rect(p_anim2d, texture_size);
+	r_query.bounds = get_transformed_rect_aabb(p_anim2d->get_global_transform(), r_query.local_rect);
+	r_query.inverse_transform = p_anim2d->get_global_transform().affine_inverse();
+	r_query.image_size = Vector2i((int)texture_size.x, (int)texture_size.y);
+	r_query.flip_h = p_anim2d->is_flipped_h();
+	r_query.flip_v = p_anim2d->is_flipped_v();
+	return true;
+}
+
+static _FORCE_INLINE_ bool ensure_query_image(PixelCollisionQuery &r_query) {
+	if (r_query.image.is_valid()) {
+		return true;
+	}
+
+	r_query.image = r_query.texture->get_image();
+	if (r_query.image.is_null()) {
+		return false;
+	}
+
+	r_query.image_size = r_query.image->get_size();
+	return true;
+}
+
+static _FORCE_INLINE_ Vector2 to_image_coord(const PixelCollisionQuery &p_query, const Vector2 &p_world_pos) {
+	Vector2 image_pos = p_query.inverse_transform.xform(p_world_pos) - p_query.local_rect.position;
+	if (p_query.flip_h) {
+		image_pos.x = (real_t)p_query.image_size.x - image_pos.x;
+	}
+	if (p_query.flip_v) {
+		image_pos.y = (real_t)p_query.image_size.y - image_pos.y;
+	}
+	return image_pos;
+}
+
+static _FORCE_INLINE_ bool read_query_pixel(
+		const PixelCollisionQuery &p_query,
+		const Vector2 &p_world_pos,
+		Color &r_color) {
+	const Vector2 local_pos = to_image_coord(p_query, p_world_pos);
+	return read_image_pixel(p_query.image, p_query.image_size, local_pos, r_color);
 }
 
 void SpxSpriteMgr::on_awake() {
@@ -879,22 +1007,11 @@ GdBool SpxSpriteMgr::is_trigger_enabled(GdObj obj) {
 }
 
 Ref<Image> SpxSpriteMgr::_get_current_frame_image(AnimatedSprite2D *sprite) {
-	Ref<SpriteFrames> frames = sprite->get_sprite_frames();
-	if (frames.is_null()) {
-		return Ref<Texture2D>();
-	}
-
-	String current_animation = sprite->get_animation();
-	int current_frame = sprite->get_frame();
-
-	if (!frames->has_animation(current_animation)) {
-		return Ref<Texture2D>();
-	}
-
-	auto texture = frames->get_frame_texture(current_animation, current_frame);
+	Ref<Texture2D> texture = get_current_frame_texture(sprite);
 	if (texture.is_null()) {
 		return Ref<Image>();
 	}
+
 	Ref<Image> image = texture->get_image();
 	if (image.is_null()) {
 		return Ref<Image>();
@@ -907,31 +1024,12 @@ Rect2 SpxSpriteMgr::_get_sprite_aabb(AnimatedSprite2D *anim2d) {
 		return Rect2();
 	}
 
-	Ref<Texture2D> texture = anim2d->get_sprite_frames()->get_frame_texture(anim2d->get_animation(), anim2d->get_frame());
+	Ref<Texture2D> texture = get_current_frame_texture(anim2d);
 	if (texture.is_null()) {
 		return Rect2();
 	}
 
-	Vector2 texture_size = texture->get_size();
-	Transform2D transform = anim2d->get_global_transform();
-
-	Vector2 top_left = transform.xform(Vector2(-texture_size.x / 2, -texture_size.y / 2));
-	Vector2 top_right = transform.xform(Vector2(texture_size.x / 2, -texture_size.y / 2));
-	Vector2 bottom_left = transform.xform(Vector2(-texture_size.x / 2, texture_size.y / 2));
-	Vector2 bottom_right = transform.xform(Vector2(texture_size.x / 2, texture_size.y / 2));
-
-	float min_x = MIN(MIN(top_left.x, top_right.x), MIN(bottom_left.x, bottom_right.x));
-	float max_x = MAX(MAX(top_left.x, top_right.x), MAX(bottom_left.x, bottom_right.x));
-	float min_y = MIN(MIN(top_left.y, top_right.y), MIN(bottom_left.y, bottom_right.y));
-	float max_y = MAX(MAX(top_left.y, top_right.y), MAX(bottom_left.y, bottom_right.y));
-
-	return Rect2(Vector2(min_x, min_y), Vector2(max_x - min_x, max_y - min_y));
-}
-
-Vector2 SpxSpriteMgr::_to_image_coord(const Transform2D &trans, Vector2 image_size, Vector2 pos) {
-	Vector2 xpos = trans.xform(pos);
-	auto half_size = Vector2(image_size.x / 2.0, image_size.y / 2.0);
-	return Vector2(xpos.x + half_size.x, xpos.y + half_size.y);
+	return get_transformed_rect_aabb(anim2d->get_global_transform(), get_anim_local_rect(anim2d, texture->get_size()));
 }
 
 GdBool SpxSpriteMgr::check_collision_with_sprite(GdObj obj, GdObj obj_b, GdFloat alpha_threshold, GdBool use_pixel_perfect) {
@@ -947,54 +1045,37 @@ GdBool SpxSpriteMgr::check_collision_with_sprite(GdObj obj, GdObj obj_b, GdFloat
 }
 
 bool SpxSpriteMgr::_check_pixel_collision_between(SpxSprite *sprite_a, SpxSprite *sprite_b, GdFloat alpha_threshold) {
-	AnimatedSprite2D *anim1 = sprite_a->get_anim2d();
-	if (!anim1) {
+	PixelCollisionQuery query_a;
+	PixelCollisionQuery query_b;
+	AnimatedSprite2D *anim_a = sprite_a->get_anim2d();
+	AnimatedSprite2D *anim_b = sprite_b->get_anim2d();
+	if (!anim_a || !anim_b) {
 		return false;
 	}
-	Ref<Image> image1 = _get_current_frame_image(anim1);
-	if (image1.is_null()) {
+	if (!build_pixel_collision_query(anim_a, query_a) || !build_pixel_collision_query(anim_b, query_b)) {
 		return false;
 	}
-	// Calculate the sprite's AABB
-	Rect2 rect1 = _get_sprite_aabb(anim1);
-	Transform2D transform1 = anim1->get_global_transform();
-	Vector2i size1 = image1->get_size();
-	auto trans1 = transform1.affine_inverse();
 
-	AnimatedSprite2D *anim2 = sprite_b->get_anim2d();
-	if (!anim2) {
+	const Rect2i overlap_rect = get_pixel_overlap_rect(query_a.bounds, query_b.bounds);
+	if (!overlap_rect.has_area()) {
 		return false;
 	}
-	Ref<Image> image2 = _get_current_frame_image(anim2);
-	if (image2.is_null()) {
+	if (!ensure_query_image(query_a) || !ensure_query_image(query_b)) {
 		return false;
 	}
-	Rect2 rect2 = _get_sprite_aabb(anim2);
-	if (!rect1.intersects(rect2)) {
-		return false; // Skip if AABBs do not intersect
-	}
+	const Vector2i overlap_end = overlap_rect.position + overlap_rect.size;
 
-	// Compute the overlapping region
-	Rect2 overlap = rect1.intersection(rect2);
-	Transform2D transform2 = anim2->get_global_transform();
-	Vector2i size2 = image2->get_size();
-	auto trans2 = transform2.affine_inverse();
+	for (int x = overlap_rect.position.x; x < overlap_end.x; x += pixel_collision_sampling_step) {
+		for (int y = overlap_rect.position.y; y < overlap_end.y; y += pixel_collision_sampling_step) {
+			const Vector2 sample_pos((real_t)x + 0.5f, (real_t)y + 0.5f);
+			Color color_a;
+			if (!read_query_pixel(query_a, sample_pos, color_a) || color_a.a <= alpha_threshold) {
+				continue;
+			}
 
-	// Iterate through the overlapping area for pixel-perfect collision detection
-	// Use sampling step for performance optimization - check every Nth pixel instead of every pixel
-	for (int x = overlap.position.x; x < overlap.position.x + overlap.size.x; x += pixel_collision_sampling_step) {
-		for (int y = overlap.position.y; y < overlap.position.y + overlap.size.y; y += pixel_collision_sampling_step) {
-			Vector2 local_pos1 = _to_image_coord(trans1, size1, Vector2(x, y));
-			Vector2 local_pos2 = _to_image_coord(trans2, size2, Vector2(x, y));
-
-			if (local_pos1.x >= 0 && local_pos1.x <= size1.x - 1 && local_pos1.y >= 0 && local_pos1.y <= size1.y - 1 &&
-					local_pos2.x >= 0 && local_pos2.x <= size2.x - 1 && local_pos2.y >= 0 && local_pos2.y <= size2.y - 1) {
-				Color color1 = image1->get_pixel((int)local_pos1.x, (int)local_pos1.y);
-				Color color2 = image2->get_pixel((int)local_pos2.x, (int)local_pos2.y);
-
-				if (color1.a > alpha_threshold && color2.a > alpha_threshold) {
-					return true; // Early exit on first collision detected
-				}
+			Color color_b;
+			if (read_query_pixel(query_b, sample_pos, color_b) && color_b.a > alpha_threshold) {
+				return true; // Early exit on first collision detected
 			}
 		}
 	}
@@ -1007,7 +1088,7 @@ GdBool SpxSpriteMgr::check_collision_by_color(GdObj obj, GdColor color, GdFloat 
 		if (a.a <= alpha_threshold) {
 			return false;
 		}
-		return _spx_color_distance_squared(color, b) < threshold_sq;
+		return color_distance_squared(color, b) < threshold_sq;
 	});
 }
 
@@ -1017,10 +1098,10 @@ GdBool SpxSpriteMgr::check_collision_by_colors(GdObj obj, GdColor sprite_color, 
 		if (a.a <= alpha_threshold || b.a <= alpha_threshold) {
 			return false;
 		}
-		if (_spx_color_distance_squared(sprite_color, a) >= threshold_sq) {
+		if (color_distance_squared(sprite_color, a) >= threshold_sq) {
 			return false;
 		}
-		return _spx_color_distance_squared(target_color, b) < threshold_sq;
+		return color_distance_squared(target_color, b) < threshold_sq;
 	});
 }
 
@@ -1037,15 +1118,13 @@ GdBool SpxSpriteMgr::_check_collision(GdObj obj, ColorCheckFunc check_func) {
 	if (!anim1) {
 		return false;
 	}
-	Ref<Image> image1 = _get_current_frame_image(anim1);
-	if (image1.is_null()) {
+	PixelCollisionQuery query1;
+	if (!build_pixel_collision_query(anim1, query1)) {
 		return false;
 	}
-	// Calculate the sprite's AABB
-	Rect2 rect1 = _get_sprite_aabb(anim1);
-	Transform2D transform1 = anim1->get_global_transform();
-	Vector2i size1 = image1->get_size();
-	auto trans1 = transform1.affine_inverse();
+	if (!ensure_query_image(query1)) {
+		return false;
+	}
 
 	// Iterate through all objects
 	for (const auto &item : id_objects) {
@@ -1058,35 +1137,37 @@ GdBool SpxSpriteMgr::_check_collision(GdObj obj, ColorCheckFunc check_func) {
 		if (!anim2) {
 			continue;
 		}
-		Ref<Image> image2 = _get_current_frame_image(anim2);
-		if (image2.is_null()) {
+		PixelCollisionQuery query2;
+		if (!build_pixel_collision_query(anim2, query2)) {
 			continue;
 		}
 
-		Rect2 rect2 = _get_sprite_aabb(anim2);
-		if (!rect1.intersects(rect2)) {
-			continue; // Skip if AABBs do not intersect
+		const Rect2i overlap_rect = get_pixel_overlap_rect(query1.bounds, query2.bounds);
+		if (!overlap_rect.has_area()) {
+			continue;
 		}
-		// Compute the overlapping region
-		Rect2 overlap = rect1.intersection(rect2);
-		Transform2D transform2 = anim2->get_global_transform();
-		Vector2i size2 = image2->get_size();
-		auto trans2 = transform2.affine_inverse();
+		if (!ensure_query_image(query2)) {
+			continue;
+		}
+		const Vector2i overlap_end = overlap_rect.position + overlap_rect.size;
 
 		// Iterate through the overlapping area for pixel-perfect collision detection
 		// Use sampling step for performance optimization
-		for (int x = overlap.position.x; x < overlap.position.x + overlap.size.x; x += pixel_collision_sampling_step) {
-			for (int y = overlap.position.y; y < overlap.position.y + overlap.size.y; y += pixel_collision_sampling_step) {
-				Vector2 local_pos1 = _to_image_coord(trans1, size1, Vector2(x, y));
-				Vector2 local_pos2 = _to_image_coord(trans2, size2, Vector2(x, y));
+		for (int x = overlap_rect.position.x; x < overlap_end.x; x += pixel_collision_sampling_step) {
+			for (int y = overlap_rect.position.y; y < overlap_end.y; y += pixel_collision_sampling_step) {
+				const Vector2 sample_pos((real_t)x + 0.5f, (real_t)y + 0.5f);
+				Color color1;
+				if (!read_query_pixel(query1, sample_pos, color1)) {
+					continue;
+				}
 
-				if (local_pos1.x >= 0 && local_pos1.x <= size1.x - 1 && local_pos1.y >= 0 && local_pos1.y <= size1.y - 1 &&
-						local_pos2.x >= 0 && local_pos2.x <= size2.x - 1 && local_pos2.y >= 0 && local_pos2.y <= size2.y - 1) {
-					Color color1 = image1->get_pixel((int)local_pos1.x, (int)local_pos1.y);
-					Color color2 = image2->get_pixel((int)local_pos2.x, (int)local_pos2.y);
-					if (check_func(color1, color2)) {
-						return true; // Early exit on collision detected
-					}
+				Color color2;
+				if (!read_query_pixel(query2, sample_pos, color2)) {
+					continue;
+				}
+
+				if (check_func(color1, color2)) {
+					return true; // Early exit on collision detected
 				}
 			}
 		}
