@@ -2,6 +2,10 @@ const GDSPX_HAS_BIG_INT64 = typeof DataView.prototype.getBigInt64 === 'function'
 const GDSPX_UTF8_ENCODER = new TextEncoder();
 const GDSPX_UTF8_DECODER = new TextDecoder("utf-8");
 
+// -----------------------------------------------------------------------------
+// Wasm Function Pointers
+// -----------------------------------------------------------------------------
+
 let gdspxFunctionPointerModule = null;
 let gdspxMalloc = null;
 let gdspxFree = null;
@@ -44,50 +48,56 @@ let gdspxToGdArray = null;
 let gdspxToGdArrayRaw = null;
 let gdspxToJsArray = null;
 
+function BindGdspxFunctionPointers(module) {
+    ({
+        _cmalloc: gdspxMalloc,
+        _cfree: gdspxFree,
+        _gdspx_alloc_array: gdspxAllocArray,
+        _gdspx_alloc_bool: gdspxAllocBool,
+        _gdspx_alloc_color: gdspxAllocColor,
+        _gdspx_alloc_float: gdspxAllocFloat,
+        _gdspx_alloc_int: gdspxAllocInt,
+        _gdspx_alloc_obj: gdspxAllocObj,
+        _gdspx_alloc_rect2: gdspxAllocRect2,
+        _gdspx_alloc_string: gdspxAllocString,
+        _gdspx_alloc_vec2: gdspxAllocVec2,
+        _gdspx_alloc_vec3: gdspxAllocVec3,
+        _gdspx_alloc_vec4: gdspxAllocVec4,
+        _gdspx_free_array: gdspxFreeArray,
+        _gdspx_free_bool: gdspxFreeBool,
+        _gdspx_free_color: gdspxFreeColor,
+        _gdspx_free_cstr: gdspxFreeCstr,
+        _gdspx_free_float: gdspxFreeFloat,
+        _gdspx_free_int: gdspxFreeInt,
+        _gdspx_free_obj: gdspxFreeObj,
+        _gdspx_free_rect2: gdspxFreeRect2,
+        _gdspx_free_string: gdspxFreeString,
+        _gdspx_free_vec2: gdspxFreeVec2,
+        _gdspx_free_vec3: gdspxFreeVec3,
+        _gdspx_free_vec4: gdspxFreeVec4,
+        _gdspx_get_string: gdspxGetString,
+        _gdspx_get_string_len: gdspxGetStringLen,
+        _gdspx_new_bool: gdspxNewBool,
+        _gdspx_new_color: gdspxNewColor,
+        _gdspx_new_float: gdspxNewFloat,
+        _gdspx_new_int: gdspxNewInt,
+        _gdspx_new_obj: gdspxNewObj,
+        _gdspx_new_rect2: gdspxNewRect2,
+        _gdspx_new_string: gdspxNewString,
+        _gdspx_new_vec2: gdspxNewVec2,
+        _gdspx_new_vec3: gdspxNewVec3,
+        _gdspx_new_vec4: gdspxNewVec4,
+        _gdspx_to_gd_array: gdspxToGdArray,
+        _gdspx_to_gd_array_raw: gdspxToGdArrayRaw,
+        _gdspx_to_js_array: gdspxToJsArray,
+    } = module);
+}
+
 function EnsureGdspxFunctionPointers() {
     if (gdspxFunctionPointerModule === Module) {
         return;
     }
-    gdspxMalloc = Module._cmalloc;
-    gdspxFree = Module._cfree;
-    gdspxAllocArray = Module._gdspx_alloc_array;
-    gdspxAllocBool = Module._gdspx_alloc_bool;
-    gdspxAllocColor = Module._gdspx_alloc_color;
-    gdspxAllocFloat = Module._gdspx_alloc_float;
-    gdspxAllocInt = Module._gdspx_alloc_int;
-    gdspxAllocObj = Module._gdspx_alloc_obj;
-    gdspxAllocRect2 = Module._gdspx_alloc_rect2;
-    gdspxAllocString = Module._gdspx_alloc_string;
-    gdspxAllocVec2 = Module._gdspx_alloc_vec2;
-    gdspxAllocVec3 = Module._gdspx_alloc_vec3;
-    gdspxAllocVec4 = Module._gdspx_alloc_vec4;
-    gdspxFreeArray = Module._gdspx_free_array;
-    gdspxFreeBool = Module._gdspx_free_bool;
-    gdspxFreeColor = Module._gdspx_free_color;
-    gdspxFreeCstr = Module._gdspx_free_cstr;
-    gdspxFreeFloat = Module._gdspx_free_float;
-    gdspxFreeInt = Module._gdspx_free_int;
-    gdspxFreeObj = Module._gdspx_free_obj;
-    gdspxFreeRect2 = Module._gdspx_free_rect2;
-    gdspxFreeString = Module._gdspx_free_string;
-    gdspxFreeVec2 = Module._gdspx_free_vec2;
-    gdspxFreeVec3 = Module._gdspx_free_vec3;
-    gdspxFreeVec4 = Module._gdspx_free_vec4;
-    gdspxGetString = Module._gdspx_get_string;
-    gdspxGetStringLen = Module._gdspx_get_string_len;
-    gdspxNewBool = Module._gdspx_new_bool;
-    gdspxNewColor = Module._gdspx_new_color;
-    gdspxNewFloat = Module._gdspx_new_float;
-    gdspxNewInt = Module._gdspx_new_int;
-    gdspxNewObj = Module._gdspx_new_obj;
-    gdspxNewRect2 = Module._gdspx_new_rect2;
-    gdspxNewString = Module._gdspx_new_string;
-    gdspxNewVec2 = Module._gdspx_new_vec2;
-    gdspxNewVec3 = Module._gdspx_new_vec3;
-    gdspxNewVec4 = Module._gdspx_new_vec4;
-    gdspxToGdArray = Module._gdspx_to_gd_array;
-    gdspxToGdArrayRaw = Module._gdspx_to_gd_array_raw;
-    gdspxToJsArray = Module._gdspx_to_js_array;
+    BindGdspxFunctionPointers(Module);
     gdspxFunctionPointerModule = Module;
 }
 
@@ -103,7 +113,10 @@ function GetHeapDataView() {
     return gdspxHeapDataView;
 }
 
-// Bool-related functions
+// -----------------------------------------------------------------------------
+// Scalar and Object Value Bridges
+// -----------------------------------------------------------------------------
+
 function ToGdBool(value) {
     EnsureGdspxFunctionPointers();
     return gdspxNewBool(value);
@@ -129,6 +142,8 @@ function FreeGdBool(ptr) {
     gdspxFreeBool(ptr);
 }
 
+// Legacy Object aliases keep the Object/ObjectPtr naming used by some generated
+// bridge code while delegating to the canonical GdObj helpers below.
 function ToGdObject(object) {
     return ToGdObj(object);
 }
@@ -216,6 +231,10 @@ function FreeGdInt(ptr) {
     EnsureGdspxFunctionPointers();
     gdspxFreeInt(ptr);
 }
+
+// -----------------------------------------------------------------------------
+// Strings and Structured Math Types
+// -----------------------------------------------------------------------------
 
 function ToGdFloat(value) {
     EnsureGdspxFunctionPointers();
@@ -439,6 +458,10 @@ function FreeGdRect2(ptr) {
     gdspxFreeRect2(ptr);
 }
 
+// -----------------------------------------------------------------------------
+// Fast Arrays and Shared Wasm Transfer Buffers
+// -----------------------------------------------------------------------------
+
 const GDSPX_ARRAY_TYPE_INT64 = 1;
 const GDSPX_ARRAY_TYPE_FLOAT = 2;
 const GDSPX_ARRAY_TYPE_BYTE = 5;
@@ -447,15 +470,28 @@ const GDSPX_FAST_RING_BYTES = 1024 * 1024;
 const GDSPX_FAST_RING_ALIGN = 8;
 const GDSPX_FAST_POOL = "default";
 const GDSPX_INPUT_POOL = "input";
+const GDSPX_INPUT_SNAP_POOL = "input-snapshot";
 const GDSPX_RET_POOL = "return";
+const GDSPX_EMPTY_U8 = new Uint8Array(0);
 
 let fastRingModule = null;
 const fastRings = new Map();
-let inputActionModule = null;
-let inputActionEpoch = 0;
-const inputActionIds = new Map();
+const deferredFastRingFrees = [];
+const inputActionRegistry = {
+    module: null,
+    epoch: 0,
+    ids: new Map(),
+};
 let inputBridgeModule = null;
 let inputBridge = null;
+
+function HasActiveModule() {
+    return typeof Module !== 'undefined' && Module !== null;
+}
+
+function HasActiveModuleHeap() {
+    return HasActiveModule() && !!Module.HEAPU8;
+}
 
 function FreePtrMap(map) {
     for (const item of map.values()) {
@@ -485,6 +521,43 @@ function NextFastRingCap(minSize) {
     return capacity;
 }
 
+function GetFastArrayDataView(ptr, byteLength, module) {
+    if (!Number.isInteger(byteLength) || byteLength < 0) {
+        return GDSPX_EMPTY_U8;
+    }
+    if (!HasActiveModuleHeap() || module !== Module) {
+        return GDSPX_EMPTY_U8;
+    }
+    if (!Number.isInteger(ptr) || ptr < 0) {
+        return byteLength === 0 ? Module.HEAPU8.subarray(0, 0) : GDSPX_EMPTY_U8;
+    }
+    return Module.HEAPU8.subarray(ptr, ptr + byteLength);
+}
+
+function QueueDeferredFastRingFree(ptr, freeFn) {
+    if (!Number.isInteger(ptr) || ptr === 0 || typeof freeFn !== 'function') {
+        return;
+    }
+    deferredFastRingFrees.push({ ptr, free: freeFn });
+}
+
+function GdspxFlushDeferredFrees() {
+    if (deferredFastRingFrees.length === 0) {
+        return;
+    }
+    const pending = deferredFastRingFrees.splice(0, deferredFastRingFrees.length);
+    for (const item of pending) {
+        if (!item || item.ptr === 0 || typeof item.free !== 'function') {
+            continue;
+        }
+        try {
+            item.free(item.ptr);
+        } catch {
+            // The previous wasm instance may already be torn down during restart.
+        }
+    }
+}
+
 function GetFastRing(minSize, poolName = GDSPX_FAST_POOL) {
     EnsureGdspxFunctionPointers();
     if (typeof gdspxMalloc !== 'function' || typeof gdspxFree !== 'function') {
@@ -508,7 +581,7 @@ function GetFastRing(minSize, poolName = GDSPX_FAST_POOL) {
         return null;
     }
     if (ring && ring.ptr !== 0) {
-        ring.free(ring.ptr);
+        QueueDeferredFastRingFree(ring.ptr, ring.free);
     }
 
     ring = {
@@ -531,7 +604,7 @@ function GdspxBorrowFastArray(arrayType, count, dataSize, poolName = GDSPX_FAST_
     if (!Number.isInteger(count) || count < 0) {
         return null;
     }
-    if (typeof Module === 'undefined' || Module === null || !Module.HEAPU8) {
+    if (!HasActiveModuleHeap()) {
         return null;
     }
 
@@ -552,12 +625,11 @@ function GdspxBorrowFastArray(arrayType, count, dataSize, poolName = GDSPX_FAST_
     ring.offset += alignedSize;
     ring.sequence += 1;
 
-    return {
+    const wrapper = {
         __gdspx_fast_array: true,
         __gdspx_wasm_array: true,
         type: arrayType,
         count,
-        data: Module.HEAPU8.subarray(ptr, ptr + dataSize),
         ptr,
         module: Module,
         byteLength: dataSize,
@@ -565,6 +637,14 @@ function GdspxBorrowFastArray(arrayType, count, dataSize, poolName = GDSPX_FAST_
         pool: ring.pool,
         shared: typeof SharedArrayBuffer === 'function' && Module.HEAPU8.buffer instanceof SharedArrayBuffer,
     };
+    Object.defineProperty(wrapper, "data", {
+        configurable: true,
+        enumerable: true,
+        get() {
+            return GetFastArrayDataView(this.ptr, this.byteLength, this.module);
+        },
+    });
+    return wrapper;
 }
 
 function FastArrayCount(array) {
@@ -576,6 +656,16 @@ function FastArrayByteLength(array) {
     const data = array && array.data;
     const length = Number(data && data.length);
     return Number.isInteger(length) && length >= 0 ? length : -1;
+}
+
+function IsFastArrayLike(array) {
+    if (!array || typeof array !== 'object') {
+        return false;
+    }
+    if (!Number.isInteger(array.type)) {
+        return false;
+    }
+    return FastArrayCount(array) >= 0 && FastArrayByteLength(array) >= 0;
 }
 
 function GetFastArrayElemSize(arrayType) {
@@ -633,8 +723,23 @@ function GetFastArrayWasmPtr(array) {
     return borrowed ? borrowed.ptr : 0;
 }
 
+function RequireWasmFastArray(array, opName) {
+    if (!array || array.__gdspx_wasm_array !== true) {
+        throw new Error(opName + " requires a pre-allocated Wasm array");
+    }
+    if (array.module !== Module) {
+        throw new Error(opName + " requires a Wasm array from the active module");
+    }
+    if (!Number.isInteger(array.ptr) || array.ptr < 0) {
+        throw new Error(opName + " requires a valid Wasm array pointer");
+    }
+    return array.ptr;
+}
+
+// Array-transform bridges take a fast-array input, run a raw wasm transform,
+// and return another fast-array view over the shared return pool.
 function TryArrayTransformFastPath(call, input, inputArrayType, outputArrayType, outputCountScale) {
-    if (!input || input.__gdspx_fast_array !== true) {
+    if (!IsFastArrayLike(input)) {
         return null;
     }
     if (!IsCompatibleFastArrayType(input.type, inputArrayType)) {
@@ -688,7 +793,7 @@ function TryArrayTransformFastPath(call, input, inputArrayType, outputArrayType,
 }
 
 function GdspxInputSnapshot() {
-    if (typeof Module === 'undefined' || Module === null) {
+    if (!HasActiveModule()) {
         return null;
     }
     const call = Module._gdspx_input_write_snapshot;
@@ -696,7 +801,7 @@ function GdspxInputSnapshot() {
         return null;
     }
 
-    const out = GdspxBorrowFastArray(GDSPX_ARRAY_TYPE_FLOAT, 3, 12, GDSPX_RET_POOL);
+    const out = GdspxBorrowFastArray(GDSPX_ARRAY_TYPE_FLOAT, 3, 12, GDSPX_INPUT_SNAP_POOL);
     if (!out || out.ptr === 0) {
         return null;
     }
@@ -704,8 +809,12 @@ function GdspxInputSnapshot() {
     return out;
 }
 
+// -----------------------------------------------------------------------------
+// Input Bridge and Action-ID Cache
+// -----------------------------------------------------------------------------
+
 function GetInputBridge() {
-    if (typeof Module === 'undefined' || Module === null) {
+    if (!HasActiveModule()) {
         return null;
     }
     if (typeof globalThis.gdspx_input_register_action === 'function') {
@@ -728,42 +837,63 @@ function ToStableActionID(value) {
     return Number(value) | 0;
 }
 
+// Input bridge wrappers expose simple JS calls while hiding whether the active
+// implementation comes from direct globals or a generated GdspxFuncs instance.
+function GetBoundBridgeCall(bridge, functionName) {
+    if (!bridge || typeof functionName !== 'string') {
+        return null;
+    }
+    const call = bridge[functionName];
+    return typeof call === 'function' ? call.bind(bridge) : null;
+}
+
+function GetInputActionBoolCallName(kind) {
+    switch (kind | 0) {
+        case 1:
+            return "gdspx_input_is_action_pressed_id";
+        case 2:
+            return "gdspx_input_is_action_just_pressed_id";
+        case 3:
+            return "gdspx_input_is_action_just_released_id";
+        default:
+            return null;
+    }
+}
+
 function EnsureInputActionRegistry() {
-    if (typeof Module === 'undefined' || Module === null) {
+    if (!HasActiveModule()) {
         return false;
     }
-    if (inputActionModule !== Module) {
-        inputActionModule = Module;
-        inputActionEpoch += 1;
-        inputActionIds.clear();
+    if (inputActionRegistry.module !== Module) {
+        inputActionRegistry.module = Module;
+        inputActionRegistry.epoch += 1;
+        inputActionRegistry.ids.clear();
     }
     return true;
 }
 
 function GdspxInputActionEpoch() {
     EnsureInputActionRegistry();
-    return inputActionEpoch;
+    return inputActionRegistry.epoch;
 }
 
 function GdspxInputActionID(action) {
     if (!EnsureInputActionRegistry()) {
         return -1;
     }
-    if (inputActionIds.has(action)) {
-        return inputActionIds.get(action);
+    if (inputActionRegistry.ids.has(action)) {
+        return inputActionRegistry.ids.get(action);
     }
 
     const bridge = GetInputBridge();
-    const call = bridge && typeof bridge.gdspx_input_register_action === 'function'
-        ? bridge.gdspx_input_register_action.bind(bridge)
-        : null;
+    const call = GetBoundBridgeCall(bridge, "gdspx_input_register_action");
     if (typeof call !== 'function') {
         return -1;
     }
 
     const id = ToStableActionID(call(action));
     if (id >= 0) {
-        inputActionIds.set(action, id);
+        inputActionRegistry.ids.set(action, id);
     }
     return id;
 }
@@ -774,26 +904,11 @@ function GdspxInputActionBool(kind, actionID) {
     }
 
     const bridge = GetInputBridge();
-    let call = null;
-    switch (kind | 0) {
-        case 1:
-            call = bridge && typeof bridge.gdspx_input_is_action_pressed_id === 'function'
-                ? bridge.gdspx_input_is_action_pressed_id.bind(bridge)
-                : null;
-            break;
-        case 2:
-            call = bridge && typeof bridge.gdspx_input_is_action_just_pressed_id === 'function'
-                ? bridge.gdspx_input_is_action_just_pressed_id.bind(bridge)
-                : null;
-            break;
-        case 3:
-            call = bridge && typeof bridge.gdspx_input_is_action_just_released_id === 'function'
-                ? bridge.gdspx_input_is_action_just_released_id.bind(bridge)
-                : null;
-            break;
-        default:
-            return null;
+    const callName = GetInputActionBoolCallName(kind);
+    if (callName == null) {
+        return null;
     }
+    const call = GetBoundBridgeCall(bridge, callName);
     if (typeof call !== 'function') {
         return null;
     }
@@ -805,14 +920,16 @@ function GdspxInputAxisByID(negActionID, posActionID) {
         return null;
     }
     const bridge = GetInputBridge();
-    const call = bridge && typeof bridge.gdspx_input_get_axis_id === 'function'
-        ? bridge.gdspx_input_get_axis_id.bind(bridge)
-        : null;
+    const call = GetBoundBridgeCall(bridge, "gdspx_input_get_axis_id");
     if (typeof call !== 'function') {
         return null;
     }
     return Number(call(negActionID | 0, 0, posActionID | 0, 0));
 }
+
+// -----------------------------------------------------------------------------
+// Batch Helpers and Generic Array Serialization
+// -----------------------------------------------------------------------------
 
 function GdspxBatchSpritePhysics(buffer) {
     if (!buffer || buffer.__gdspx_fast_array !== true) {
@@ -825,7 +942,7 @@ function GdspxBatchSpritePhysics(buffer) {
     if (count <= 0 || FastArrayByteLength(buffer) < count * 4) {
         return false;
     }
-    if (typeof Module === 'undefined' || Module === null) {
+    if (!HasActiveModule()) {
         return false;
     }
     const call = Module._gdspx_sprite_batch_update_physics;

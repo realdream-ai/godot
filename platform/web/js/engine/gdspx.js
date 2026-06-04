@@ -556,7 +556,7 @@ gdspx_input_is_action_just_released_id(action_id_low,action_id_high) {
 }
 gdspx_input_write_snapshot(out) {
 	var _gdFuncPtr = Module._gdspx_input_write_snapshot; 
-	var _arg0 = GetFastArrayWasmPtr(out);
+	var _arg0 = RequireWasmFastArray(out, "gdspx_input_write_snapshot");
 	var _arg1 = out.count;
 	_gdFuncPtr(_arg0, _arg1);
 }

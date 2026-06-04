@@ -15,6 +15,8 @@ const CONTACT_CALLBACK_EVENT_NAMES = [
 	"OnTriggerStay",
 	"OnTriggerExit",
 ];
+const CONTACT_EVENT_FIELDS = 5;
+const CONTACT_EVENT_WARN_THRESHOLD = 4096 * CONTACT_EVENT_FIELDS;
 
 const GodotGdspx = {
 	$GodotGdspx__deps: ['$GodotConfig', '$GodotRuntime', '$GodotFS'],
@@ -75,12 +77,36 @@ const GodotGdspx = {
 			GodotGdspx.callN(exportName, eventName, directHandler, arg0, arg1);
 		},
 
+		toContactLowHigh: function (ptr) {
+			const value = GodotRuntime.ToJsInt(ptr);
+			if (value && typeof value === 'object' && typeof value.low === 'number' && typeof value.high === 'number') {
+				return value;
+			}
+			if (typeof value === 'bigint') {
+				return {
+					low: Number(value & 0xffffffffn) >>> 0,
+					high: Number((value >> 32n) & 0xffffffffn) >>> 0,
+				};
+			}
+			const numberValue = Number(value) || 0;
+			return {
+				low: numberValue >>> 0,
+				high: (numberValue / 0x100000000) >>> 0,
+			};
+		},
+
 		contactEvents: [],
+		contactEventsWarned: false,
 
 		queueContact: function (type, selfPtr, otherPtr) {
-			const self = GodotRuntime.ToJsInt(selfPtr);
-			const other = GodotRuntime.ToJsInt(otherPtr);
-			GodotGdspx.contactEvents.push(type, self.low, self.high, other.low, other.high);
+			const self = GodotGdspx.toContactLowHigh(selfPtr);
+			const other = GodotGdspx.toContactLowHigh(otherPtr);
+			const events = GodotGdspx.contactEvents;
+			events.push(type, self.low, self.high, other.low, other.high);
+			if (!GodotGdspx.contactEventsWarned && events.length >= CONTACT_EVENT_WARN_THRESHOLD) {
+				GodotGdspx.contactEventsWarned = true;
+				GodotRuntime.error("gdspx contact event queue is growing large before flush.");
+			}
 		},
 
 		flushContactEvents: function () {
@@ -89,10 +115,11 @@ const GodotGdspx = {
 				return;
 			}
 			GodotGdspx.contactEvents = [];
+			GodotGdspx.contactEventsWarned = false;
 
 			const direct = typeof globalThis.gdspx_on_contact_events === 'function' ? globalThis.gdspx_on_contact_events : null;
 			if (direct) {
-				direct(events);
+				direct(new Uint8Array(Uint32Array.from(events).buffer));
 				return;
 			}
 
@@ -123,6 +150,9 @@ const GodotGdspx = {
 
 	godot_js_spx_on_engine_update__sig: 'vf',
 	godot_js_spx_on_engine_update: function (delta) {
+		if (typeof GdspxFlushDeferredFrees === 'function') {
+			GdspxFlushDeferredFrees();
+		}
 		GodotGdspx.flushContactEvents();
 		const directHandler = GodotGdspx.getDirectHandler("gdspx_on_engine_update");
 		GodotGdspx.call1("gdspx_on_engine_update", "OnEngineUpdate", delta, directHandler);
@@ -130,6 +160,9 @@ const GodotGdspx = {
 
 	godot_js_spx_on_engine_fixed_update__sig: 'vf',
 	godot_js_spx_on_engine_fixed_update: function (delta) {
+		if (typeof GdspxFlushDeferredFrees === 'function') {
+			GdspxFlushDeferredFrees();
+		}
 		GodotGdspx.flushContactEvents();
 		const directHandler = GodotGdspx.getDirectHandler("gdspx_on_engine_fixed_update");
 		GodotGdspx.call1("gdspx_on_engine_fixed_update", "OnEngineFixedUpdate", delta, directHandler);
@@ -137,12 +170,18 @@ const GodotGdspx = {
 
 	godot_js_spx_on_engine_destroy__sig: 'v',
 	godot_js_spx_on_engine_destroy: function () {
+		if (typeof GdspxFlushDeferredFrees === 'function') {
+			GdspxFlushDeferredFrees();
+		}
 		const directHandler = GodotGdspx.getDirectHandler("gdspx_on_engine_destroy");
 		GodotGdspx.call0("gdspx_on_engine_destroy", "OnEngineDestroy", directHandler);
 	},
 
 	godot_js_spx_on_engine_reset__sig: 'v',
 	godot_js_spx_on_engine_reset: function () {
+		if (typeof GdspxFlushDeferredFrees === 'function') {
+			GdspxFlushDeferredFrees();
+		}
 		const directHandler = GodotGdspx.getDirectHandler("gdspx_on_engine_reset");
 		GodotGdspx.call0("gdspx_on_engine_reset", "OnEngineReset", directHandler);
 	},

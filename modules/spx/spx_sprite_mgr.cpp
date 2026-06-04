@@ -53,6 +53,8 @@
 
 #include <cstdint>
 #include <cstring>
+#include <limits>
+#include <type_traits>
 
 #define DEFAULT_COLLISION_ALPHA_THRESHOLD 0.05
 
@@ -1316,13 +1318,21 @@ uint32_t read_u32_lane(float value) {
 	return bits;
 }
 
+template <typename T>
+T gd_obj_from_i64(int64_t value) {
+	if constexpr (std::is_pointer_v<T>) {
+		return reinterpret_cast<T>(static_cast<uintptr_t>(value));
+	}
+	return static_cast<T>(value);
+}
+
 GdObj read_gd_obj_lanes(const float *record) {
 	uint64_t low = read_u32_lane(record[1]);
 	uint64_t high = read_u32_lane(record[2]);
 	uint64_t bits = (high << 32) | low;
 	int64_t value = 0;
 	std::memcpy(&value, &bits, sizeof(value));
-	return static_cast<GdObj>(value);
+	return gd_obj_from_i64<GdObj>(value);
 }
 
 void batch_update_transforms_impl(SpxSpriteMgr *mgr, const float *buffer_data, int len, const char *op_name) {
@@ -1519,8 +1529,9 @@ void SpxSpriteMgr::_batch_write_positions(const GdObj *ids, int count, float *ou
 			out[j++] = pos.x;
 			out[j++] = -pos.y;
 		} else {
-			out[j++] = 0.0f;
-			out[j++] = 0.0f;
+			const float missing = std::numeric_limits<float>::quiet_NaN();
+			out[j++] = missing;
+			out[j++] = missing;
 		}
 	}
 }
@@ -1530,7 +1541,7 @@ void SpxSpriteMgr::batch_retrieve_positions(const GdObj *ids, int count, float *
 }
 
 void SpxSpriteMgr::batch_update_physics(const float *buffer_data, int len) {
-	// Buffer format: [count, cmd, spriteIdLowBits, spriteIdHighBits, a, b, reserved0, ...].
+	// Buffer format: [count] + count x [cmd, spriteIdLowBits, spriteIdHighBits, a, b, reserved0].
 	// Integer lanes are carried as raw float32 bits to preserve 32/64-bit ids and masks.
 	if (buffer_data == nullptr || len < 1) {
 		return;

@@ -1370,7 +1370,7 @@ static void gdextension_spx_sprite_batch_retrieve_positions(GdArray objs, GdArra
 	}
 
 	int count = objs->size;
-	if (count == 0) {
+	if (count <= 0) {
 		*ret_val = nullptr;
 		return;
 	}

@@ -52,6 +52,8 @@ void SpxInputMgr::on_reset(int reset_code) {
 		input_proxy->queue_free();
 		input_proxy = nullptr;
 	}
+	action_names.clear();
+	action_ids.clear();
 }
 
 // input
@@ -137,7 +139,9 @@ void SpxInputMgr::write_snapshot(float *out, int len) {
 	Input *input = Input::get_singleton();
 	for (int i = (int)MouseButton::LEFT; i <= (int)MouseButton::MIDDLE; i++) {
 		if (input->is_mouse_button_pressed((MouseButton)i)) {
-			mouse_bits |= 1u << i;
+			// Compact the hot-path snapshot to zero-based button lanes:
+			// bit 0 = left, bit 1 = right, bit 2 = middle.
+			mouse_bits |= 1u << (i - (int)MouseButton::LEFT);
 		}
 	}
 
