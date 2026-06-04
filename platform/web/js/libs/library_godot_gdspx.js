@@ -1,28 +1,31 @@
-const DIRECT_CALLBACK_HANDLER_SLOTS = globalThis.__spxDirectCallbackHandlerSlots || (globalThis.__spxDirectCallbackHandlerSlots = Object.create(null));
-const CONTACT_CALLBACK_EXPORT_NAMES = [
-	"gdspx_on_collision_enter",
-	"gdspx_on_collision_stay",
-	"gdspx_on_collision_exit",
-	"gdspx_on_trigger_enter",
-	"gdspx_on_trigger_stay",
-	"gdspx_on_trigger_exit",
-];
-const CONTACT_CALLBACK_EVENT_NAMES = [
-	"OnCollisionEnter",
-	"OnCollisionStay",
-	"OnCollisionExit",
-	"OnTriggerEnter",
-	"OnTriggerStay",
-	"OnTriggerExit",
-];
-const CONTACT_EVENT_FIELDS = 5;
-const CONTACT_EVENT_WARN_THRESHOLD = 4096 * CONTACT_EVENT_FIELDS;
-
 const GodotGdspx = {
 	$GodotGdspx__deps: ['$GodotConfig', '$GodotRuntime', '$GodotFS'],
 	$GodotGdspx: {
+		// Keep library-local constants under $GodotGdspx itself because emscripten
+		// library methods are emitted independently and should not rely on top-level
+		// lexical bindings remaining in scope at runtime.
+		directCallbackHandlerSlots: globalThis.__spxDirectCallbackHandlerSlots || (globalThis.__spxDirectCallbackHandlerSlots = Object.create(null)),
+		contactCallbackExportNames: [
+			"gdspx_on_collision_enter",
+			"gdspx_on_collision_stay",
+			"gdspx_on_collision_exit",
+			"gdspx_on_trigger_enter",
+			"gdspx_on_trigger_stay",
+			"gdspx_on_trigger_exit",
+		],
+		contactCallbackEventNames: [
+			"OnCollisionEnter",
+			"OnCollisionStay",
+			"OnCollisionExit",
+			"OnTriggerEnter",
+			"OnTriggerStay",
+			"OnTriggerExit",
+		],
+		contactEventFields: 5,
+		contactEventWarnThreshold: 4096 * 5,
+
 		getDirectHandler: function (exportName) {
-			const directHandler = DIRECT_CALLBACK_HANDLER_SLOTS[exportName];
+			const directHandler = GodotGdspx.directCallbackHandlerSlots[exportName];
 			return typeof directHandler === 'function' ? directHandler : null;
 		},
 
@@ -103,7 +106,7 @@ const GodotGdspx = {
 			const other = GodotGdspx.toContactLowHigh(otherPtr);
 			const events = GodotGdspx.contactEvents;
 			events.push(type, self.low, self.high, other.low, other.high);
-			if (!GodotGdspx.contactEventsWarned && events.length >= CONTACT_EVENT_WARN_THRESHOLD) {
+			if (!GodotGdspx.contactEventsWarned && events.length >= GodotGdspx.contactEventWarnThreshold) {
 				GodotGdspx.contactEventsWarned = true;
 				GodotRuntime.error("gdspx contact event queue is growing large before flush.");
 			}
@@ -127,8 +130,8 @@ const GodotGdspx = {
 				const type = events[i] | 0;
 				const self = { low: events[i + 1] >>> 0, high: events[i + 2] >>> 0 };
 				const other = { low: events[i + 3] >>> 0, high: events[i + 4] >>> 0 };
-				const exportName = CONTACT_CALLBACK_EXPORT_NAMES[type - 1];
-				const eventName = CONTACT_CALLBACK_EVENT_NAMES[type - 1];
+				const exportName = GodotGdspx.contactCallbackExportNames[type - 1];
+				const eventName = GodotGdspx.contactCallbackEventNames[type - 1];
 				if (exportName && eventName) {
 					const directHandler = GodotGdspx.getDirectHandler(exportName);
 					GodotGdspx.call2(exportName, eventName, self, other, directHandler);
