@@ -51,7 +51,31 @@
 #include "spx_scene_mgr.h"
 #include "spx_sprite.h"
 
+#include <cstdint>
+#include <cstring>
+#include <limits>
+#include <type_traits>
+
 #define DEFAULT_COLLISION_ALPHA_THRESHOLD 0.05
+
+enum SpxPhysicsBatchCmd {
+	SPX_PHYSICS_CMD_VELOCITY = 1,
+	SPX_PHYSICS_CMD_GRAVITY = 2,
+	SPX_PHYSICS_CMD_MASS = 3,
+	SPX_PHYSICS_CMD_MODE = 4,
+	SPX_PHYSICS_CMD_USE_GRAVITY = 5,
+	SPX_PHYSICS_CMD_GRAVITY_SCALE = 6,
+	SPX_PHYSICS_CMD_DRAG = 7,
+	SPX_PHYSICS_CMD_FRICTION = 8,
+	SPX_PHYSICS_CMD_COLLISION_LAYER = 9,
+	SPX_PHYSICS_CMD_COLLISION_MASK = 10,
+	SPX_PHYSICS_CMD_TRIGGER_LAYER = 11,
+	SPX_PHYSICS_CMD_TRIGGER_MASK = 12,
+	SPX_PHYSICS_CMD_COLLISION_ENABLED = 13,
+	SPX_PHYSICS_CMD_TRIGGER_ENABLED = 14,
+};
+
+static constexpr int SPX_PHYSICS_BATCH_FIELDS = 6;
 
 StringName SpxSpriteMgr::default_texture_anim;
 
@@ -1288,6 +1312,29 @@ GdVec2 SpxSpriteMgr::get_pivot(GdObj obj) {
 
 namespace {
 
+uint32_t read_u32_lane(float value) {
+	uint32_t bits = 0;
+	std::memcpy(&bits, &value, sizeof(bits));
+	return bits;
+}
+
+template <typename T>
+T gd_obj_from_i64(int64_t value) {
+	if constexpr (std::is_pointer_v<T>) {
+		return reinterpret_cast<T>(static_cast<uintptr_t>(value));
+	}
+	return static_cast<T>(value);
+}
+
+GdObj read_gd_obj_lanes(const float *record) {
+	uint64_t low = read_u32_lane(record[1]);
+	uint64_t high = read_u32_lane(record[2]);
+	uint64_t bits = (high << 32) | low;
+	int64_t value = 0;
+	std::memcpy(&value, &bits, sizeof(value));
+	return gd_obj_from_i64<GdObj>(value);
+}
+
 void batch_update_transforms_impl(SpxSpriteMgr *mgr, const float *buffer_data, int len, const char *op_name) {
 	// Buffer format with header: [updateCount, deleteCount, update_data..., delete_ids...]
 	// - Header: [updateCount, deleteCount]
@@ -1307,12 +1354,20 @@ void batch_update_transforms_impl(SpxSpriteMgr *mgr, const float *buffer_data, i
 	// Read header using direct array access
 	int update_count = static_cast<int>(buffer_data[0]);
 	int delete_count = static_cast<int>(buffer_data[1]);
+	if (update_count < 0 || delete_count < 0) {
+		print_error(String(op_name) + ": buffer counts must be non-negative.");
+		return;
+	}
 
 	// Validate buffer size
-	int expected_size = HEADER_SIZE + update_count * FIELDS_PER_SPRITE + delete_count;
+	int64_t expected_size = (int64_t)HEADER_SIZE + (int64_t)update_count * FIELDS_PER_SPRITE + delete_count;
+	if (expected_size > INT_MAX) {
+		print_error(String(op_name) + ": buffer count too large, would cause integer overflow.");
+		return;
+	}
 	if (len != expected_size) {
 		print_error(String(op_name) + ": buffer size " + itos(len) +
-				" does not match expected size " + itos(expected_size) +
+				" does not match expected size " + itos((int)expected_size) +
 				" (updateCount=" + itos(update_count) + ", deleteCount=" + itos(delete_count) + ")");
 		return;
 	}
@@ -1379,11 +1434,19 @@ void batch_update_visuals_impl(SpxSpriteMgr *mgr, const float *buffer_data, int 
 	}
 
 	int count = static_cast<int>(buffer_data[0]);
+	if (count < 0) {
+		print_error(String(op_name) + ": buffer count must be non-negative.");
+		return;
+	}
 
-	int expected_size = HEADER_SIZE + count * VISUAL_FIELDS_PER_SPRITE;
+	int64_t expected_size = (int64_t)HEADER_SIZE + (int64_t)count * VISUAL_FIELDS_PER_SPRITE;
+	if (expected_size > INT_MAX) {
+		print_error(String(op_name) + ": buffer count too large, would cause integer overflow.");
+		return;
+	}
 	if (len != expected_size) {
 		print_error(String(op_name) + ": buffer size " + itos(len) +
-				" does not match expected size " + itos(expected_size) +
+				" does not match expected size " + itos((int)expected_size) +
 				" (count=" + itos(count) + ")");
 		return;
 	}
@@ -1442,59 +1505,120 @@ void SpxSpriteMgr::batch_update_visuals(const float *buffer_data, int len) {
 	batch_update_visuals_impl(this, buffer_data, len, "batch_update_visuals");
 }
 
-GdArray SpxSpriteMgr::batch_retrieve_positions(GdArray objs) {
-	// Input: array of sprite IDs [id1, id2, id3, ...]
-	// Output: array of positions [x1, y1, x2, y2, x3, y3, ...]
-	if (!objs) {
-		return nullptr;
+void SpxSpriteMgr::_batch_write_positions(const GdObj *ids, int count, float *out, int out_len) {
+	if (count <= 0) {
+		return;
 	}
-
-	int count = objs->size;
-	if (count == 0) {
-		return nullptr;
-	}
-
-	// Check for integer overflow before multiplication (count * 2)
-	// Maximum safe value is INT_MAX / 2 to prevent overflow
 	if (count > INT_MAX / 2) {
-		print_error("batch_retrieve_positions: count too large, would cause integer overflow.");
-		return nullptr;
+		print_error("_batch_write_positions: count too large, would cause integer overflow.");
+		return;
 	}
 
-	// Create result array: 2 floats (x, y) per sprite
-	GdArray result = SpxBaseMgr::create_array(GD_ARRAY_TYPE_FLOAT, count * 2);
-	if (!result) {
-		return nullptr;
+	int need = count * 2;
+	if (!ids || !out || out_len < need) {
+		print_error("_batch_write_positions: invalid input or output buffer.");
+		return;
 	}
 
-	// Get pointer to input array (GdObj IDs) for faster access
-	const GdObj *obj_data = SpxBaseMgr::get_array<GdObj>(objs, 0);
-	float *result_data = SpxBaseMgr::get_array<float>(result, 0);
-
-	// Check for null pointers to prevent crashes with malformed arrays
-	if (count > 0 && (!obj_data || !result_data)) {
-		print_error("batch_retrieve_positions: Failed to access array data.");
-		SpxBaseMgr::free_array(result);
-		return nullptr;
-	}
-
-	// Process each sprite ID
-	int result_idx = 0;
+	int j = 0;
 	for (int i = 0; i < count; i++) {
-		GdObj sprite_id = obj_data[i];
-
-		SpxSprite *sprite = get_sprite(sprite_id);
+		GdObj id = ids[i];
+		SpxSprite *sprite = get_sprite(id);
 		if (sprite != nullptr) {
 			auto pos = sprite->get_position();
-			result_data[result_idx++] = pos.x;
-			result_data[result_idx++] = -pos.y;
+			out[j++] = pos.x;
+			out[j++] = -pos.y;
 		} else {
-			result_data[result_idx++] = 0.0f;
-			result_data[result_idx++] = 0.0f;
+			const float missing = std::numeric_limits<float>::quiet_NaN();
+			out[j++] = missing;
+			out[j++] = missing;
 		}
 	}
+}
 
-	return result;
+void SpxSpriteMgr::batch_retrieve_positions(const GdObj *ids, int count, float *out, int out_len) {
+	_batch_write_positions(ids, count, out, out_len);
+}
+
+void SpxSpriteMgr::batch_update_physics(const float *buffer_data, int len) {
+	// Buffer format: [count] + count x [cmd, spriteIdLowBits, spriteIdHighBits, a, b, reserved0].
+	// Integer lanes are carried as raw float32 bits to preserve 32/64-bit ids and masks.
+	if (buffer_data == nullptr || len < 1) {
+		return;
+	}
+
+	int count = (int)buffer_data[0];
+	if (count <= 0) {
+		return;
+	}
+	int64_t required = 1 + (int64_t)count * SPX_PHYSICS_BATCH_FIELDS;
+	if (required > INT_MAX) {
+		print_error("batch_update_physics: count too large, would cause integer overflow.");
+		return;
+	}
+
+	if (len != required) {
+		print_error("batch_update_physics: buffer length is invalid.");
+		return;
+	}
+
+	int idx = 1;
+	for (int i = 0; i < count; i++) {
+		int cmd = (int)buffer_data[idx];
+		GdObj obj = read_gd_obj_lanes(&buffer_data[idx]);
+		SpxSprite *sprite = get_sprite(obj);
+		if (sprite != nullptr) {
+			float a = buffer_data[idx + 3];
+			float b = buffer_data[idx + 4];
+			switch (cmd) {
+				case SPX_PHYSICS_CMD_VELOCITY:
+					sprite->set_velocity(GdVec2(a, -b));
+					break;
+				case SPX_PHYSICS_CMD_GRAVITY:
+					sprite->set_gravity(a);
+					break;
+				case SPX_PHYSICS_CMD_MASS:
+					sprite->set_mass(a);
+					break;
+				case SPX_PHYSICS_CMD_MODE:
+					sprite->set_physics_mode((GdInt)(int32_t)read_u32_lane(a));
+					break;
+				case SPX_PHYSICS_CMD_USE_GRAVITY:
+					sprite->set_use_gravity(a != 0);
+					break;
+				case SPX_PHYSICS_CMD_GRAVITY_SCALE:
+					sprite->set_gravity_scale(a);
+					break;
+				case SPX_PHYSICS_CMD_DRAG:
+					sprite->set_drag(a);
+					break;
+				case SPX_PHYSICS_CMD_FRICTION:
+					sprite->set_friction(a);
+					break;
+				case SPX_PHYSICS_CMD_COLLISION_LAYER:
+					sprite->set_collision_layer((GdInt)read_u32_lane(a));
+					break;
+				case SPX_PHYSICS_CMD_COLLISION_MASK:
+					sprite->set_collision_mask((GdInt)read_u32_lane(a));
+					break;
+				case SPX_PHYSICS_CMD_TRIGGER_LAYER:
+					sprite->set_trigger_layer((GdInt)read_u32_lane(a));
+					break;
+				case SPX_PHYSICS_CMD_TRIGGER_MASK:
+					sprite->set_trigger_mask((GdInt)read_u32_lane(a));
+					break;
+				case SPX_PHYSICS_CMD_COLLISION_ENABLED:
+					sprite->set_collision_enabled(a != 0);
+					break;
+				case SPX_PHYSICS_CMD_TRIGGER_ENABLED:
+					sprite->set_trigger_enabled(a != 0);
+					break;
+				default:
+					break;
+			}
+		}
+		idx += SPX_PHYSICS_BATCH_FIELDS;
+	}
 }
 
 void SpxSpriteMgr::set_pixel_collision_sampling_step(GdInt step) {

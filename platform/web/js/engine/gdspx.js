@@ -502,6 +502,64 @@ gdspx_input_is_action_just_released(action) {
 	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
+gdspx_input_register_action(action) {
+	var _gdFuncPtr = Module._gdspx_input_register_action; 
+	var _retValue = AllocGdInt();
+	var _arg0 = ToGdString(action);
+	_gdFuncPtr(_arg0, _retValue);
+	FreeGdString(_arg0); 
+	var _finalRetValue = this._readGdIntLike(_retValue, this._getGdIntScratch());
+	FreeGdInt(_retValue); 
+	return _finalRetValue
+}
+gdspx_input_get_axis_id(neg_action_id_low,neg_action_id_high,pos_action_id_low,pos_action_id_high) {
+	var _gdFuncPtr = Module._gdspx_input_get_axis_id; 
+	var _retValue = AllocGdFloat();
+	var _arg0 = Module._gdspx_new_int(neg_action_id_high, neg_action_id_low);
+	var _arg1 = Module._gdspx_new_int(pos_action_id_high, pos_action_id_low);
+	_gdFuncPtr(_arg0, _arg1, _retValue);
+	FreeGdInt(_arg0); 
+	FreeGdInt(_arg1); 
+	var _finalRetValue = ToJsFloat(_retValue);
+	FreeGdFloat(_retValue); 
+	return _finalRetValue
+}
+gdspx_input_is_action_pressed_id(action_id_low,action_id_high) {
+	var _gdFuncPtr = Module._gdspx_input_is_action_pressed_id; 
+	var _retValue = AllocGdBool();
+	var _arg0 = Module._gdspx_new_int(action_id_high, action_id_low);
+	_gdFuncPtr(_arg0, _retValue);
+	FreeGdInt(_arg0); 
+	var _finalRetValue = ToJsBool(_retValue);
+	FreeGdBool(_retValue); 
+	return _finalRetValue
+}
+gdspx_input_is_action_just_pressed_id(action_id_low,action_id_high) {
+	var _gdFuncPtr = Module._gdspx_input_is_action_just_pressed_id; 
+	var _retValue = AllocGdBool();
+	var _arg0 = Module._gdspx_new_int(action_id_high, action_id_low);
+	_gdFuncPtr(_arg0, _retValue);
+	FreeGdInt(_arg0); 
+	var _finalRetValue = ToJsBool(_retValue);
+	FreeGdBool(_retValue); 
+	return _finalRetValue
+}
+gdspx_input_is_action_just_released_id(action_id_low,action_id_high) {
+	var _gdFuncPtr = Module._gdspx_input_is_action_just_released_id; 
+	var _retValue = AllocGdBool();
+	var _arg0 = Module._gdspx_new_int(action_id_high, action_id_low);
+	_gdFuncPtr(_arg0, _retValue);
+	FreeGdInt(_arg0); 
+	var _finalRetValue = ToJsBool(_retValue);
+	FreeGdBool(_retValue); 
+	return _finalRetValue
+}
+gdspx_input_write_snapshot(out) {
+	var _gdFuncPtr = Module._gdspx_input_write_snapshot; 
+	var _arg0 = RequireWasmFastArray(out, "gdspx_input_write_snapshot");
+	var _arg1 = out.count;
+	_gdFuncPtr(_arg0, _arg1);
+}
 gdspx_navigation_setup_path_finder_with_size(grid_size,cell_size,with_jump,with_debug) {
 	var _gdFuncPtr = Module._gdspx_navigation_setup_path_finder_with_size; 
 	
@@ -2630,25 +2688,21 @@ gdspx_sprite_get_pixel_collision_sampling_step() {
 }
 gdspx_sprite_batch_update_transforms(buffer) {
 	var _gdFuncPtr = Module._gdspx_sprite_batch_update_transforms; 
-	var _arg0 = CopyFastArrayToWasm(buffer);
+	var _arg0 = GetFastArrayWasmPtr(buffer);
 	var _arg1 = buffer.count;
 	_gdFuncPtr(_arg0, _arg1);
 }
 gdspx_sprite_batch_update_visuals(buffer) {
 	var _gdFuncPtr = Module._gdspx_sprite_batch_update_visuals; 
-	var _arg0 = CopyFastArrayToWasm(buffer);
+	var _arg0 = GetFastArrayWasmPtr(buffer);
 	var _arg1 = buffer.count;
 	_gdFuncPtr(_arg0, _arg1);
 }
-gdspx_sprite_batch_retrieve_positions(objs) {
-	var _gdFuncPtr = Module._gdspx_sprite_batch_retrieve_positions; 
-	var _retValue = AllocGdArray();
-	var _arg0 = ToGdArray(objs);
-	_gdFuncPtr(_arg0, _retValue);
-	FreeGdArray(_arg0); 
-	var _finalRetValue = ToJsArray(_retValue);
-	FreeGdArray(_retValue); 
-	return _finalRetValue
+gdspx_sprite_batch_update_physics(buffer) {
+	var _gdFuncPtr = Module._gdspx_sprite_batch_update_physics; 
+	var _arg0 = GetFastArrayWasmPtr(buffer);
+	var _arg1 = buffer.count;
+	_gdFuncPtr(_arg0, _arg1);
 }
 gdspx_tilemap_open_draw_tiles_with_size(tile_size_low,tile_size_high) {
 	var _gdFuncPtr = Module._gdspx_tilemap_open_draw_tiles_with_size; 
@@ -3285,4 +3339,12 @@ gdspx_ui_set_flip(obj_low,obj_high,horizontal,is_flip) {
 	FreeGdBool(_arg1); 
 	FreeGdBool(_arg2); 
 
+}
+gdspx_sprite_batch_retrieve_positions(objs) {
+	var _gdFuncPtr = Module._gdspx_sprite_batch_retrieve_positions; 
+	var _fastRetValue = TryArrayTransformFastPath(_gdFuncPtr, objs, 6, 2, 2);
+	if (_fastRetValue == null) {
+		throw new Error("gdspx_sprite_batch_retrieve_positions fast path unavailable");
+	}
+	return _fastRetValue
 }}

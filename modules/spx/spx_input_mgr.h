@@ -31,6 +31,9 @@
 #ifndef SPX_INPUT_MGR_H
 #define SPX_INPUT_MGR_H
 
+#include "core/string/string_name.h"
+#include "core/templates/hash_map.h"
+#include "core/templates/vector.h"
 #include "gdextension_spx_ext.h"
 #include "spx_base_mgr.h"
 #include "spx_input_proxy.h"
@@ -44,6 +47,8 @@ public:
 
 protected:
 	SpxInputProxy *input_proxy = nullptr;
+	Vector<StringName> action_names;
+	HashMap<StringName, GdInt> action_ids;
 
 public:
 	SPX_API GdVec2 get_global_mouse_pos();
@@ -54,6 +59,15 @@ public:
 	SPX_API GdBool is_action_pressed(GdString action);
 	SPX_API GdBool is_action_just_pressed(GdString action);
 	SPX_API GdBool is_action_just_released(GdString action);
+	SPX_API GdInt register_action(GdString action);
+	SPX_API GdFloat get_axis_id(GdInt neg_action_id, GdInt pos_action_id);
+	SPX_API GdBool is_action_pressed_id(GdInt action_id);
+	SPX_API GdBool is_action_just_pressed_id(GdInt action_id);
+	SPX_API GdBool is_action_just_released_id(GdInt action_id);
+	SPX_API void write_snapshot(float *out, int len);
+
+private:
+	const StringName *get_registered_action(GdInt action_id) const;
 };
 
 #endif // SPX_INPUT_MGR_H
