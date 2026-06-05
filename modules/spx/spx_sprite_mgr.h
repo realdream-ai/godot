@@ -39,12 +39,10 @@
 #include <functional>
 #include <unordered_set>
 
+typedef std::function<bool(GdColor, GdColor)> ColorCheckFunc;
+
 class SpxSprite;
 class ISortableSprite;
-
-typedef std::function<bool(GdColor, GdColor)> ColorCheckFunc;
-#include <functional>
-#include <unordered_set>
 
 class TriggerPair {
 public:

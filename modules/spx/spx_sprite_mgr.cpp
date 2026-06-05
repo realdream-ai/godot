@@ -39,6 +39,7 @@
 #include "scene/2d/physics/physics_body_2d.h"
 #include "scene/main/node.h"
 #include "scene/main/window.h"
+#include "scene/resources/material.h"
 #include "scene/resources/2d/circle_shape_2d.h"
 #include "scene/resources/packed_scene.h"
 
@@ -149,9 +150,51 @@ struct PixelCollisionQuery {
 	Rect2 local_rect;
 	Transform2D inverse_transform;
 	Vector2i image_size;
+	GdFloat collision_alpha_scale = 1.0f;
 	bool flip_h = false;
 	bool flip_v = false;
 };
+
+static _FORCE_INLINE_ GdFloat get_collision_alpha_scale(AnimatedSprite2D *p_anim2d) {
+	if (p_anim2d == nullptr) {
+		return 0.0f;
+	}
+
+	static const StringName alpha_amount_param("alpha_amount");
+	Ref<Material> base_material = p_anim2d->get_material();
+	Ref<ShaderMaterial> shader_material = base_material;
+	if (shader_material.is_valid() && shader_material->get_shader().is_valid()) {
+		const Variant alpha_amount = shader_material->get_shader_parameter(alpha_amount_param);
+		if (alpha_amount.get_type() != Variant::NIL) {
+			return CLAMP((GdFloat)(1.0 - (double)alpha_amount), (GdFloat)0.0f, (GdFloat)1.0f);
+		}
+	}
+
+	return 1.0f;
+}
+
+static _FORCE_INLINE_ bool resolve_collision_sprite(
+		SpxSprite *p_sprite,
+		AnimatedSprite2D *&r_anim2d,
+		GdFloat &r_collision_alpha_scale) {
+	if (p_sprite == nullptr || !p_sprite->is_visible_in_tree()) {
+		return false;
+	}
+
+	r_anim2d = p_sprite->get_anim2d();
+	if (r_anim2d == nullptr) {
+		return false;
+	}
+
+	r_collision_alpha_scale = get_collision_alpha_scale(r_anim2d);
+	return r_collision_alpha_scale > 0.0f;
+}
+
+static _FORCE_INLINE_ bool can_query_collision_sprite(SpxSprite *p_sprite) {
+	AnimatedSprite2D *anim2d = nullptr;
+	GdFloat collision_alpha_scale = 0.0f;
+	return resolve_collision_sprite(p_sprite, anim2d, collision_alpha_scale);
+}
 
 static _FORCE_INLINE_ Rect2i snap_rect_to_pixel_rect(const Rect2 &p_rect) {
 	const Vector2i begin(
@@ -179,7 +222,12 @@ static _FORCE_INLINE_ bool read_image_pixel(const Ref<Image> &p_image, const Vec
 	return true;
 }
 
-static _FORCE_INLINE_ bool build_pixel_collision_query(AnimatedSprite2D *p_anim2d, PixelCollisionQuery &r_query) {
+static _FORCE_INLINE_ bool build_pixel_collision_query(SpxSprite *p_sprite, PixelCollisionQuery &r_query) {
+	AnimatedSprite2D *p_anim2d = nullptr;
+	if (!resolve_collision_sprite(p_sprite, p_anim2d, r_query.collision_alpha_scale)) {
+		return false;
+	}
+
 	r_query.texture = get_current_frame_texture(p_anim2d);
 	if (r_query.texture.is_null()) {
 		return false;
@@ -225,7 +273,11 @@ static _FORCE_INLINE_ bool read_query_pixel(
 		const Vector2 &p_world_pos,
 		Color &r_color) {
 	const Vector2 local_pos = to_image_coord(p_query, p_world_pos);
-	return read_image_pixel(p_query.image, p_query.image_size, local_pos, r_color);
+	if (!read_image_pixel(p_query.image, p_query.image_size, local_pos, r_color)) {
+		return false;
+	}
+	r_color.a *= p_query.collision_alpha_scale;
+	return true;
 }
 
 void SpxSpriteMgr::on_awake() {
@@ -1059,6 +1111,9 @@ Rect2 SpxSpriteMgr::_get_sprite_aabb(AnimatedSprite2D *anim2d) {
 GdBool SpxSpriteMgr::check_collision_with_sprite(GdObj obj, GdObj obj_b, GdFloat alpha_threshold, GdBool use_pixel_perfect) {
 	SPX_REQUIRE_SPRITE_RETURN(false)
 	SPX_REQUIRE_TARGET_SPRITE_RETURN(obj_b, false)
+	if (!can_query_collision_sprite(sprite.get()) || !can_query_collision_sprite(sprite_target.get())) {
+		return false;
+	}
 
 	// If not using pixel-perfect collision, use simple collider2d collision detection
 	if (!use_pixel_perfect) {
@@ -1071,12 +1126,7 @@ GdBool SpxSpriteMgr::check_collision_with_sprite(GdObj obj, GdObj obj_b, GdFloat
 bool SpxSpriteMgr::_check_pixel_collision_between(SpxSprite *sprite_a, SpxSprite *sprite_b, GdFloat alpha_threshold) {
 	PixelCollisionQuery query_a;
 	PixelCollisionQuery query_b;
-	AnimatedSprite2D *anim_a = sprite_a->get_anim2d();
-	AnimatedSprite2D *anim_b = sprite_b->get_anim2d();
-	if (!anim_a || !anim_b) {
-		return false;
-	}
-	if (!build_pixel_collision_query(anim_a, query_a) || !build_pixel_collision_query(anim_b, query_b)) {
+	if (!build_pixel_collision_query(sprite_a, query_a) || !build_pixel_collision_query(sprite_b, query_b)) {
 		return false;
 	}
 
@@ -1138,12 +1188,8 @@ GdBool SpxSpriteMgr::check_collision_by_alpha(GdObj obj, GdFloat alpha_threshold
 GdBool SpxSpriteMgr::_check_collision(GdObj obj, ColorCheckFunc check_func) {
 	SPX_REQUIRE_SPRITE_RETURN(false) // Ensure sprite exists
 
-	AnimatedSprite2D *anim1 = sprite->get_anim2d();
-	if (!anim1) {
-		return false;
-	}
 	PixelCollisionQuery query1;
-	if (!build_pixel_collision_query(anim1, query1)) {
+	if (!build_pixel_collision_query(sprite.get(), query1)) {
 		return false;
 	}
 	if (!ensure_query_image(query1)) {
@@ -1153,16 +1199,12 @@ GdBool SpxSpriteMgr::_check_collision(GdObj obj, ColorCheckFunc check_func) {
 	// Iterate through all objects
 	for (const auto &item : id_objects) {
 		SpxSprite *sp2 = item.value;
-		if (sprite.get() == sp2) {
+		if (sprite.get() == sp2 || sp2 == nullptr) {
 			continue; // Skip itself
 		}
 
-		AnimatedSprite2D *anim2 = sp2->get_anim2d();
-		if (!anim2) {
-			continue;
-		}
 		PixelCollisionQuery query2;
-		if (!build_pixel_collision_query(anim2, query2)) {
+		if (!build_pixel_collision_query(sp2, query2)) {
 			continue;
 		}
 
