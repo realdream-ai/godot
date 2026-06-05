@@ -94,12 +94,11 @@ StringName SpxSpriteMgr::default_texture_anim;
 #define SPX_REQUIRE_TARGET_SPRITE_RETURN(TARGET, VALUE) \
 	SPX_TARGET_SPRITE_GUARD_RETURN(TARGET, __func__, VALUE)
 
-static _FORCE_INLINE_ GdFloat color_distance_squared(const GdColor &p_a, const GdColor &p_b) {
+static _FORCE_INLINE_ GdFloat color_rgb_distance_squared(const GdColor &p_a, const GdColor &p_b) {
 	const GdFloat dr = p_a.r - p_b.r;
 	const GdFloat dg = p_a.g - p_b.g;
 	const GdFloat db = p_a.b - p_b.b;
-	const GdFloat da = p_a.a - p_b.a;
-	return dr * dr + dg * dg + db * db + da * da;
+	return dr * dr + dg * dg + db * db;
 }
 
 static _FORCE_INLINE_ Ref<Texture2D> get_current_frame_texture(AnimatedSprite2D *p_anim2d) {
@@ -1159,10 +1158,10 @@ bool SpxSpriteMgr::_check_pixel_collision_between(SpxSprite *sprite_a, SpxSprite
 GdBool SpxSpriteMgr::check_collision_by_color(GdObj obj, GdColor color, GdFloat color_threshold, GdFloat alpha_threshold) {
 	const GdFloat threshold_sq = color_threshold * color_threshold;
 	return _check_collision(obj, [=](GdColor a, GdColor b) -> bool {
-		if (a.a <= alpha_threshold) {
+		if (a.a <= alpha_threshold || b.a <= alpha_threshold) {
 			return false;
 		}
-		return color_distance_squared(color, b) < threshold_sq;
+		return color_rgb_distance_squared(color, b) < threshold_sq;
 	});
 }
 
@@ -1172,10 +1171,10 @@ GdBool SpxSpriteMgr::check_collision_by_colors(GdObj obj, GdColor sprite_color, 
 		if (a.a <= alpha_threshold || b.a <= alpha_threshold) {
 			return false;
 		}
-		if (color_distance_squared(sprite_color, a) >= threshold_sq) {
+		if (color_rgb_distance_squared(sprite_color, a) >= threshold_sq) {
 			return false;
 		}
-		return color_distance_squared(target_color, b) < threshold_sq;
+		return color_rgb_distance_squared(target_color, b) < threshold_sq;
 	});
 }
 
