@@ -65,6 +65,7 @@ private:
 	void _destroy_pen_root();
 	Line2D *_create_new_line();
 	void _start_new_line();
+	void _append_current_point_if_needed(GdVec2 position);
 	Color _get_current_color() const;
 	void _stamp_texture(const Ref<Texture2D> &texture, GdVec2 position, GdFloat rotation_radians, GdVec2 scale);
 	Ref<Texture2D> _resolve_stamp_texture(const String &texture_path);

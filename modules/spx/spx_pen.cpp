@@ -88,6 +88,23 @@ void SpxPen::_start_new_line() {
 	}
 }
 
+void SpxPen::_append_current_point_if_needed(GdVec2 position) {
+	current_pen_pos = position;
+	if (!is_pen_down || current_line == nullptr) {
+		return;
+	}
+
+	if (current_line->get_point_count() > 0) {
+		Vector2 last_point = current_line->get_point_position(current_line->get_point_count() - 1);
+		float distance = last_point.distance_to(current_pen_pos);
+		if (distance >= min_draw_distance) {
+			current_line->add_point(current_pen_pos);
+		}
+	} else {
+		current_line->add_point(current_pen_pos);
+	}
+}
+
 Color SpxPen::_get_current_color() const {
 	Color final_color = pen_properties.color;
 	// Apply saturation and brightness
@@ -102,19 +119,7 @@ Color SpxPen::_get_current_color() const {
 
 void SpxPen::on_update(float delta) {
 	if (move_by_mouse) {
-		current_pen_pos = Input::get_singleton()->get_mouse_position();
-	}
-
-	if (is_pen_down && current_line) {
-		if (current_line->get_point_count() > 0) {
-			Vector2 last_point = current_line->get_point_position(current_line->get_point_count() - 1);
-			float distance = last_point.distance_to(current_pen_pos);
-			if (distance >= min_draw_distance) {
-				current_line->add_point(current_pen_pos);
-			}
-		} else {
-			current_line->add_point(current_pen_pos);
-		}
+		_append_current_point_if_needed(Input::get_singleton()->get_mouse_position());
 	}
 }
 
@@ -175,7 +180,7 @@ void SpxPen::stamp() {
 }
 
 void SpxPen::move_to(GdVec2 position) {
-	current_pen_pos = position;
+	_append_current_point_if_needed(position);
 }
 
 void SpxPen::on_down(GdBool p_move_by_mouse) {
