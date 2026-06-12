@@ -505,6 +505,17 @@ GdBool SpxSpriteMgr::check_collision(GdObj obj, GdObj target, GdBool is_src_trig
 GdBool SpxSpriteMgr::check_collision_with_point(GdObj obj, GdVec2 point, GdBool is_trigger) {
 	SPX_REQUIRE_SPRITE_RETURN(false)
 	point.y = -point.y;
+
+	if (!sprite->is_visible_in_tree()) {
+		return false;
+	}
+
+	PixelCollisionQuery query;
+	if (build_pixel_collision_query(sprite.get(), query, true, true) && ensure_query_image(query)) {
+		Color color;
+		return read_query_pixel(query, point, color) && color.a > 0.0f;
+	}
+
 	return sprite->check_collision_with_point(point, is_trigger);
 }
 
