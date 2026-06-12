@@ -136,6 +136,8 @@ void SpxPen::erase_all() {
 		return;
 	}
 
+	const bool was_pen_down = is_pen_down;
+
 	TypedArray<Node> children = pen_root->get_children();
 	for (int i = 0; i < children.size(); i++) {
 		Node *child = Object::cast_to<Node>(children[i]);
@@ -147,7 +149,10 @@ void SpxPen::erase_all() {
 		}
 	}
 	current_line = _create_new_line();
-	is_pen_down = false;
+	is_pen_down = was_pen_down;
+	if (is_pen_down && current_line != nullptr) {
+		current_line->add_point(current_pen_pos);
+	}
 }
 
 void SpxPen::_stamp_texture(const Ref<Texture2D> &texture, GdVec2 position, GdFloat rotation_radians, GdVec2 scale) {
