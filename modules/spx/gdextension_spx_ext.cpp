@@ -635,8 +635,8 @@ static void gdextension_spx_sprite_check_collision(GdObj obj, GdObj target, GdBo
 	*ret_val = spriteMgr->check_collision(obj, target, is_src_trigger, is_dst_trigger);
 }
 
-static void gdextension_spx_sprite_check_collision_with_point(GdObj obj, GdVec2 point, GdBool is_trigger, GdBool *ret_val) {
-	*ret_val = spriteMgr->check_collision_with_point(obj, point, is_trigger);
+static void gdextension_spx_sprite_check_collision_with_point(GdObj obj, GdVec2 point, GdBool is_click_query, GdBool *ret_val) {
+	*ret_val = spriteMgr->check_collision_with_point(obj, point, is_click_query);
 }
 
 static void gdextension_spx_sprite_set_debug_collision_visible(GdObj obj, GdBool visible) {

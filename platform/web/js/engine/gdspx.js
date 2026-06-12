@@ -1464,12 +1464,12 @@ gdspx_sprite_check_collision(obj_low,obj_high,target_low,target_high,is_src_trig
 	FreeGdBool(_retValue); 
 	return _finalRetValue
 }
-gdspx_sprite_check_collision_with_point(obj_low,obj_high,point,is_trigger) {
+gdspx_sprite_check_collision_with_point(obj_low,obj_high,point,is_click_query) {
 	var _gdFuncPtr = Module._gdspx_sprite_check_collision_with_point; 
 	var _retValue = AllocGdBool();
 	var _arg0 = Module._gdspx_new_obj(obj_high, obj_low);
 	var _arg1 = ToGdVec2(point);
-	var _arg2 = ToGdBool(is_trigger);
+	var _arg2 = ToGdBool(is_click_query);
 	_gdFuncPtr(_arg0, _arg1, _arg2, _retValue);
 	FreeGdObj(_arg0); 
 	FreeGdVec2(_arg1); 

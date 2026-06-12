@@ -656,8 +656,8 @@ void gdspx_sprite_check_collision(GdObj *obj, GdObj *target, GdBool *is_src_trig
 	*ret_val = spriteMgr->check_collision(*obj, *target, *is_src_trigger, *is_dst_trigger);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_sprite_check_collision_with_point(GdObj *obj, GdVec2 *point, GdBool *is_trigger, GdBool *ret_val) {
-	*ret_val = spriteMgr->check_collision_with_point(*obj, *point, *is_trigger);
+void gdspx_sprite_check_collision_with_point(GdObj *obj, GdVec2 *point, GdBool *is_click_query, GdBool *ret_val) {
+	*ret_val = spriteMgr->check_collision_with_point(*obj, *point, *is_click_query);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_sprite_set_debug_collision_visible(GdObj *obj, GdBool *visible) {
