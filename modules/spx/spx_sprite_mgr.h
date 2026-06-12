@@ -156,7 +156,7 @@ public:
 	SPX_API GdVec2 get_child_scale(GdObj obj, GdString path);
 
 	SPX_API GdBool check_collision(GdObj obj, GdObj target, GdBool is_src_trigger, GdBool is_dst_trigger);
-	SPX_API GdBool check_collision_with_point(GdObj obj, GdVec2 point, GdBool is_trigger);
+	SPX_API GdBool check_collision_with_point(GdObj obj, GdVec2 point, GdBool is_click_query);
 	SPX_API void set_debug_collision_visible(GdObj obj, GdBool visible);
 	SPX_API GdBool is_debug_collision_visible(GdObj obj);
 	SPX_API GdObj create_backdrop(GdString path);
