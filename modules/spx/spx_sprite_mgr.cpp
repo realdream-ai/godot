@@ -506,6 +506,10 @@ GdBool SpxSpriteMgr::check_collision_with_point(GdObj obj, GdVec2 point, GdBool 
 	SPX_REQUIRE_SPRITE_RETURN(false)
 	point.y = -point.y;
 
+	if (is_click_query && !sprite->is_visible_in_tree()) {
+		return false;
+	}
+
 	PixelCollisionQuery query;
 	// Scratch keeps point sensing and click picking distinct:
 	// - click queries respect visibility and ghost alpha
@@ -513,10 +517,6 @@ GdBool SpxSpriteMgr::check_collision_with_point(GdObj obj, GdVec2 point, GdBool 
 	if (build_pixel_collision_query(sprite.get(), query, is_click_query, is_click_query) && ensure_query_image(query)) {
 		Color color;
 		return read_query_pixel(query, point, color) && color.a > 0.0f;
-	}
-
-	if (is_click_query && !sprite->is_visible_in_tree()) {
-		return false;
 	}
 
 	// Keep point-query fallbacks aligned with the trigger footprint used by SPX's
