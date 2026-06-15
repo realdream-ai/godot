@@ -70,6 +70,9 @@ GdBool SpxInputMgr::get_mouse_state(GdInt mouse_id) {
 }
 GdBool SpxInputMgr::get_key(GdInt key) {
 	Input *input = Input::get_singleton();
+	if (key == KEY_ANY) {
+		return input->is_anything_pressed_except_mouse();
+	}
 	return input->is_key_pressed((Key)key) ||
 			input->is_key_label_pressed((Key)key);
 }
