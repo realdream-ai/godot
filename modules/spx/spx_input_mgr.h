@@ -67,6 +67,7 @@ public:
 	SPX_API void write_snapshot(float *out, int len);
 
 private:
+	static constexpr GdInt KEY_ANY = -1;
 	const StringName *get_registered_action(GdInt action_id) const;
 };
 
