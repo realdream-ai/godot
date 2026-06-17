@@ -219,6 +219,10 @@ void SpxEngine::on_update(float delta) {
 		callbacks.func_on_engine_update(delta);
 	}
 
+	if (pen) {
+		pen->flush_all();
+	}
+
 	if (is_spx_paused && !tree->is_paused()) {
 		if (Thread::is_main_thread()) {
 			tree->set_pause(true);

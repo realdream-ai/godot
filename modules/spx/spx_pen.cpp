@@ -294,6 +294,10 @@ void SpxPen::move_to(GdVec2 position) {
 	_append_current_point_if_needed(position);
 }
 
+void SpxPen::flush() {
+	_flush_canvas();
+}
+
 void SpxPen::on_down(GdBool p_move_by_mouse) {
 	move_by_mouse = p_move_by_mouse;
 	_draw_point(pen_properties.size, _get_current_color(), current_pen_pos);

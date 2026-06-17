@@ -46,6 +46,7 @@ public:
 	void on_reset(int reset_code) override;
 
 	SPX_API void destroy_all_pens();
+	void flush_all();
 	SPX_API GdObj create_pen();
 	SPX_API void destroy_pen(GdObj obj);
 	// Pen operation methods

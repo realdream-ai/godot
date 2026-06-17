@@ -71,6 +71,14 @@ void SpxPenMgr::destroy_all_pens() {
 	rw_lock.read_unlock();
 }
 
+void SpxPenMgr::flush_all() {
+	rw_lock.read_lock();
+	for (const auto &[id, pen] : id_objects) {
+		pen->flush();
+	}
+	rw_lock.read_unlock();
+}
+
 void SpxPenMgr::move_pen_to(GdObj obj, GdVec2 position) {
 	SPX_WITH_PEN_OR_RETURN(obj, pen->move_to(position))
 }
