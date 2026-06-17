@@ -31,10 +31,11 @@
 #ifndef SPX_PEN_H
 #define SPX_PEN_H
 
+#include "core/io/image.h"
 #include "gdextension_spx_ext.h"
-#include "scene/2d/line_2d.h"
 #include "scene/2d/node_2d.h"
 #include "scene/2d/sprite_2d.h"
+#include "scene/resources/image_texture.h"
 #include "spx_base_mgr.h"
 
 class SpxSprite;
@@ -43,7 +44,13 @@ private:
 	GdObj id;
 	Node *manager_root = nullptr;
 	Node2D *pen_root = nullptr;
-	Line2D *current_line = nullptr;
+	Sprite2D *canvas_sprite = nullptr;
+	Ref<Image> canvas_image;
+	Ref<ImageTexture> canvas_texture;
+	Size2i canvas_size;
+	bool canvas_dirty = false;
+	Vector2 last_draw_pos;
+	bool has_last_draw_pos = false;
 	bool is_pen_down = false;
 	float min_draw_distance = 1.0f;
 
@@ -63,7 +70,15 @@ private:
 
 private:
 	void _destroy_pen_root();
-	Line2D *_create_new_line();
+	void _ensure_canvas();
+	void _clear_canvas();
+	void _flush_canvas();
+	Point2i _to_canvas_pixel(GdVec2 position) const;
+	void _draw_brush_at(GdVec2 position, float size, Color color);
+	void _draw_line(GdVec2 from, GdVec2 to, float size, Color color);
+	Color _blend_pixel(Color src, Color dst) const;
+	GdVec2 _get_draw_position(GdVec2 position, float size) const;
+	void _draw_point(float size, Color color, GdVec2 position);
 	void _start_new_line();
 	void _append_current_point_if_needed(GdVec2 position);
 	Color _get_current_color() const;
@@ -84,6 +99,7 @@ public:
 	void on_up();
 	void stamp();
 	void move_to(GdVec2 position);
+	void flush();
 	void set_color_to(GdColor color);
 	void change_by(GdInt property, GdFloat amount);
 	void set_to(GdInt property, GdFloat value);
