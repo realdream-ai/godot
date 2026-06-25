@@ -184,7 +184,6 @@ GdVec2 SpxPen::_get_draw_position(GdVec2 position, float size) const {
 
 void SpxPen::_draw_point(float size, Color color, GdVec2 position) {
 	_draw_brush_at(_get_draw_position(position, size), size, color);
-	_flush_canvas();
 }
 
 void SpxPen::_start_new_line() {
@@ -229,7 +228,6 @@ void SpxPen::on_update(float delta) {
 	if (move_by_mouse) {
 		_append_current_point_if_needed(Input::get_singleton()->get_mouse_position());
 	}
-	_flush_canvas();
 }
 
 void SpxPen::on_reset(int reset_code) {
@@ -309,7 +307,6 @@ void SpxPen::on_down(GdBool p_move_by_mouse) {
 void SpxPen::on_up() {
 	is_pen_down = false;
 	has_last_draw_pos = false;
-	_flush_canvas();
 }
 
 void SpxPen::set_color_to(GdColor color) {
