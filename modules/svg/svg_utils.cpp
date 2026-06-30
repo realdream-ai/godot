@@ -36,6 +36,7 @@
 #include "thirdparty/lunasvg/include/lunasvg.h"
 
 #include <lunasvg.h>
+#include <cstdlib>
 #include <cstring>
 
 namespace {
@@ -66,9 +67,15 @@ static void _register_font_bytes_for_current_thread(const String &family, const 
 		return;
 	}
 
+	void *font_bytes = std::malloc(font_data.size());
+	if (font_bytes == nullptr) {
+		return;
+	}
+	::memcpy(font_bytes, font_data.ptr(), font_data.size());
+
 	CharString utf8_family = family.utf8();
 	const char *family_name = family.is_empty() ? "" : utf8_family.get_data();
-	lunasvg_add_font_face_from_data(family_name, false, false, font_data.ptr(), font_data.size(), nullptr, nullptr);
+	lunasvg_add_font_face_from_data(family_name, false, false, font_bytes, font_data.size(), std::free, font_bytes);
 }
 
 } // namespace

@@ -256,11 +256,15 @@ static glyph_t* plutovg_font_face_get_glyph(plutovg_font_face_t* face, plutovg_c
     unsigned int msb = (codepoint >> 8) & 0xFF;
     if(face->glyphs[msb] == NULL) {
         face->glyphs[msb] = calloc(GLYPH_CACHE_SIZE, sizeof(glyph_t*));
+        if(face->glyphs[msb] == NULL)
+            return NULL;
     }
 
     unsigned int lsb = codepoint & 0xFF;
     if(face->glyphs[msb][lsb] == NULL) {
         glyph_t* glyph = malloc(sizeof(glyph_t));
+        if(glyph == NULL)
+            return NULL;
         glyph->index = stbtt_FindGlyphIndex(&face->info, codepoint);
         glyph->nvertices = stbtt_GetGlyphShape(&face->info, glyph->index, &glyph->vertices);
         stbtt_GetGlyphHMetrics(&face->info, glyph->index, &glyph->advance_width, &glyph->left_side_bearing);
@@ -276,6 +280,13 @@ void plutovg_font_face_get_glyph_metrics(plutovg_font_face_t* face, float size, 
 {
     float scale = plutovg_font_face_get_scale(face, size);
     glyph_t* glyph = plutovg_font_face_get_glyph(face, codepoint);
+    if(glyph == NULL) {
+        if(advance_width) *advance_width = 0.f;
+        if(left_side_bearing) *left_side_bearing = 0.f;
+        if(extents)
+            extents->x = extents->y = extents->w = extents->h = 0.f;
+        return;
+    }
     if(advance_width) *advance_width = glyph->advance_width * scale;
     if(left_side_bearing) *left_side_bearing = glyph->left_side_bearing * scale;
     if(extents) {
@@ -284,6 +295,18 @@ void plutovg_font_face_get_glyph_metrics(plutovg_font_face_t* face, float size, 
         extents->w = (glyph->x2 - glyph->x1) * scale;
         extents->h = (glyph->y1 - glyph->y2) * -scale;
     }
+}
+
+int plutovg_font_face_get_glyph_svg(plutovg_font_face_t* face, plutovg_codepoint_t codepoint, const char** svg)
+{
+    if(svg)
+        *svg = NULL;
+    if(face == NULL || svg == NULL)
+        return 0;
+    glyph_t* glyph = plutovg_font_face_get_glyph(face, codepoint);
+    if(glyph == NULL)
+        return 0;
+    return stbtt_GetGlyphSVG(&face->info, glyph->index, svg);
 }
 
 static void glyph_traverse_func(void* closure, plutovg_path_command_t command, const plutovg_point_t* points, int npoints)
@@ -319,6 +342,8 @@ float plutovg_font_face_traverse_glyph_path(plutovg_font_face_t* face, float siz
     plutovg_point_t points[3];
     plutovg_point_t current_point = {0, 0};
     glyph_t* glyph = plutovg_font_face_get_glyph(face, codepoint);
+    if(glyph == NULL)
+        return 0.f;
     for(int i = 0; i < glyph->nvertices; i++) {
         switch(glyph->vertices[i].type) {
         case STBTT_vmove:

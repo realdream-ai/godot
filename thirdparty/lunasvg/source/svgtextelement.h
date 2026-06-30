@@ -4,6 +4,7 @@
 #include "svgelement.h"
 
 #include <optional>
+#include <unordered_set>
 
 namespace lunasvg {
 
@@ -35,6 +36,7 @@ using SVGTextPositionList = std::vector<SVGTextPosition>;
 struct SVGTextFragment {
     explicit SVGTextFragment(const SVGTextPositioningElement* element) : element(element) {}
     const SVGTextPositioningElement* element;
+    Font font;
     size_t offset = 0;
     size_t length = 0;
     float x = 0;
@@ -42,6 +44,7 @@ struct SVGTextFragment {
     float angle = 0;
     float width = 0;
     bool startsNewTextChunk = false;
+    bool isEmojiRun = false;
 };
 
 using SVGTextFragmentList = std::vector<SVGTextFragment>;
@@ -59,8 +62,8 @@ private:
     std::u32string& m_text;
     SVGTextFragmentList& m_fragments;
     SVGCharacterPositions m_characterPositions;
+    std::unordered_set<size_t> m_emojiPresentationOffsets;
     SVGTextPositionList m_textPositions;
-    size_t m_characterOffset = 0;
     float m_x = 0;
     float m_y = 0;
 };
