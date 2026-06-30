@@ -850,6 +850,18 @@ PLUTOVG_API void plutovg_font_face_get_metrics(const plutovg_font_face_t* face, 
 PLUTOVG_API void plutovg_font_face_get_glyph_metrics(plutovg_font_face_t* face, float size, plutovg_codepoint_t codepoint, float* advance_width, float* left_side_bearing, plutovg_rect_t* extents);
 
 /**
+ * @brief Retrieves embedded SVG glyph data for a specified codepoint when available.
+ *
+ * @param face A pointer to a `plutovg_font_face_t` object.
+ * @param codepoint The Unicode code point of the glyph.
+ * @param svg Pointer that receives the embedded SVG document owned by the font face.
+ * The returned pointer refers to the font face's internal storage, remains valid only for the
+ * lifetime of `face`, and must not be modified or freed by the caller.
+ * @return The SVG document length in bytes, or 0 if no embedded SVG glyph exists.
+ */
+PLUTOVG_API int plutovg_font_face_get_glyph_svg(plutovg_font_face_t* face, plutovg_codepoint_t codepoint, const char** svg);
+
+/**
  * @brief Retrieves the path of a glyph and its advance width.
  *
  * @param face A pointer to a `plutovg_font_face_t` object.

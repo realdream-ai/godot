@@ -1,10 +1,269 @@
 #include "svgtextelement.h"
 #include "svglayoutstate.h"
 #include "svgrenderstate.h"
+#include <lunasvg.h>
 
 #include <cassert>
+#include <cmath>
+#include <unordered_map>
 
 namespace lunasvg {
+
+namespace {
+
+constexpr std::string_view kSPXDefaultFontFamily = "SPX Default";
+constexpr std::string_view kSPXSymbolsFontFamily = "Symbols";
+constexpr std::string_view kSPXEmojiFontFamily = "Emoji";
+
+enum class TextRunKind : uint8_t {
+    Base,
+    DefaultFallback,
+    SymbolsFallback,
+    Emoji
+};
+
+static bool isWhitespaceCodepoint(uint32_t codepoint)
+{
+    switch(codepoint) {
+    case 0x0009:
+    case 0x000A:
+    case 0x000B:
+    case 0x000C:
+    case 0x000D:
+    case 0x0020:
+    case 0x0085:
+    case 0x00A0:
+    case 0x1680:
+    case 0x2028:
+    case 0x2029:
+    case 0x202F:
+    case 0x205F:
+    case 0x3000:
+        return true;
+    default:
+        break;
+    }
+
+    return (codepoint >= 0x2000 && codepoint <= 0x200A);
+}
+
+struct ColorEmojiGlyphInfo {
+    const char* svgData = nullptr;
+    size_t svgLength = 0;
+    Rect dstRect;
+};
+
+struct ColorEmojiBitmapCacheKey {
+    const plutovg_font_face_t* face = nullptr;
+    uint32_t codepoint = 0;
+
+    bool operator==(const ColorEmojiBitmapCacheKey& other) const
+    {
+        return face == other.face && codepoint == other.codepoint;
+    }
+};
+
+struct ColorEmojiBitmapCacheKeyHash {
+    size_t operator()(const ColorEmojiBitmapCacheKey& key) const
+    {
+        auto faceHash = std::hash<const void*>{}(key.face);
+        auto codeHash = std::hash<uint32_t>{}(key.codepoint);
+        return faceHash ^ (codeHash + 0x9e3779b9 + (faceHash << 6) + (faceHash >> 2));
+    }
+};
+
+static bool isEmojiCandidateCodepoint(uint32_t codepoint)
+{
+    if(codepoint == 0x00A9 || codepoint == 0x00AE || codepoint == 0x203C || codepoint == 0x2049 ||
+        codepoint == 0x2122 || codepoint == 0x2139 || codepoint == 0x3030 || codepoint == 0x303D ||
+        codepoint == 0x3297 || codepoint == 0x3299) {
+        return true;
+    }
+
+    return (codepoint >= 0x2194 && codepoint <= 0x21AA) ||
+        (codepoint >= 0x231A && codepoint <= 0x27BF) ||
+        (codepoint >= 0x2934 && codepoint <= 0x2935) ||
+        (codepoint >= 0x2B05 && codepoint <= 0x2B55) ||
+        (codepoint >= 0x1F000 && codepoint <= 0x1FAFF) ||
+        (codepoint >= 0x1FC00 && codepoint <= 0x1FFFD);
+}
+
+static bool isEmojiFormattingCodepoint(uint32_t codepoint)
+{
+    if(codepoint == 0x200D || codepoint == 0x20E3 || codepoint == 0xFE0E || codepoint == 0xFE0F)
+        return true;
+    if(codepoint >= 0xE0020 && codepoint <= 0xE007F)
+        return true;
+    return codepoint >= 0x1F3FB && codepoint <= 0x1F3FF;
+}
+
+static bool promotesEmojiPresentation(uint32_t codepoint)
+{
+    return codepoint != 0xFE0E && isEmojiFormattingCodepoint(codepoint);
+}
+
+static bool isDefaultEmojiPresentationCodepoint(uint32_t codepoint)
+{
+    return (codepoint >= 0x231A && codepoint <= 0x231B) ||
+        (codepoint >= 0x23E9 && codepoint <= 0x23EC) ||
+        codepoint == 0x23F0 ||
+        codepoint == 0x23F3 ||
+        (codepoint >= 0x25FD && codepoint <= 0x25FE) ||
+        (codepoint >= 0x2614 && codepoint <= 0x2615) ||
+        (codepoint >= 0x2648 && codepoint <= 0x2653) ||
+        codepoint == 0x267F ||
+        codepoint == 0x2693 ||
+        codepoint == 0x26A1 ||
+        (codepoint >= 0x26AA && codepoint <= 0x26AB) ||
+        (codepoint >= 0x26BD && codepoint <= 0x26BE) ||
+        (codepoint >= 0x26C4 && codepoint <= 0x26C5) ||
+        codepoint == 0x26CE ||
+        codepoint == 0x26D4 ||
+        codepoint == 0x26EA ||
+        (codepoint >= 0x26F2 && codepoint <= 0x26F3) ||
+        codepoint == 0x26F5 ||
+        codepoint == 0x26FA ||
+        codepoint == 0x26FD ||
+        codepoint == 0x2705 ||
+        (codepoint >= 0x270A && codepoint <= 0x270B) ||
+        codepoint == 0x2728 ||
+        codepoint == 0x274C ||
+        codepoint == 0x274E ||
+        (codepoint >= 0x2753 && codepoint <= 0x2755) ||
+        codepoint == 0x2757 ||
+        (codepoint >= 0x2795 && codepoint <= 0x2797) ||
+        codepoint == 0x27B0 ||
+        codepoint == 0x27BF ||
+        (codepoint >= 0x2B1B && codepoint <= 0x2B1C) ||
+        codepoint == 0x2B50 ||
+        codepoint == 0x2B55;
+}
+
+static bool isSymbolsFallbackCodepoint(uint32_t codepoint)
+{
+    return (codepoint >= 0x2190 && codepoint <= 0x21FF) ||
+        (codepoint >= 0x2300 && codepoint <= 0x23FF) ||
+        (codepoint >= 0x2460 && codepoint <= 0x27BF) ||
+        (codepoint >= 0x2900 && codepoint <= 0x2BFF);
+}
+
+static bool isDefaultFallbackCodepoint(uint32_t codepoint)
+{
+    if(codepoint < 0x80 || isEmojiCandidateCodepoint(codepoint))
+        return false;
+    if(isWhitespaceCodepoint(codepoint))
+        return false;
+
+    return (codepoint >= 0x3000 && codepoint <= 0x303F) ||
+        (codepoint >= 0x3040 && codepoint <= 0x30FF) ||
+        (codepoint >= 0x3100 && codepoint <= 0x312F) ||
+        (codepoint >= 0x31A0 && codepoint <= 0x31BF) ||
+        (codepoint >= 0x31C0 && codepoint <= 0x31EF) ||
+        (codepoint >= 0x3200 && codepoint <= 0x33FF) ||
+        (codepoint >= 0x3400 && codepoint <= 0x4DBF) ||
+        (codepoint >= 0x4E00 && codepoint <= 0x9FFF) ||
+        (codepoint >= 0xA960 && codepoint <= 0xA97F) ||
+        (codepoint >= 0xAC00 && codepoint <= 0xD7AF) ||
+        (codepoint >= 0xD7B0 && codepoint <= 0xD7FF) ||
+        (codepoint >= 0xF900 && codepoint <= 0xFAFF) ||
+        (codepoint >= 0xFE30 && codepoint <= 0xFE6F) ||
+        (codepoint >= 0xFF00 && codepoint <= 0xFFEF) ||
+        (codepoint >= 0x20000 && codepoint <= 0x323AF);
+}
+
+static TextRunKind classifyTextRunKind(uint32_t codepoint, TextRunKind previous, bool emojiPresentation)
+{
+    if(emojiPresentation || isDefaultEmojiPresentationCodepoint(codepoint))
+        return TextRunKind::Emoji;
+    if(isSymbolsFallbackCodepoint(codepoint))
+        return TextRunKind::SymbolsFallback;
+    if(isEmojiCandidateCodepoint(codepoint))
+        return TextRunKind::Emoji;
+    if(isDefaultFallbackCodepoint(codepoint))
+        return TextRunKind::DefaultFallback;
+    if(isWhitespaceCodepoint(codepoint))
+        return previous;
+    return TextRunKind::Base;
+}
+
+static Font resolveFragmentFont(const SVGTextPositioningElement* element, TextRunKind kind)
+{
+    if(kind == TextRunKind::Base)
+        return element->font();
+
+    const auto family = kind == TextRunKind::Emoji
+        ? kSPXEmojiFontFamily
+        : kind == TextRunKind::SymbolsFallback ? kSPXSymbolsFontFamily : kSPXDefaultFontFamily;
+    auto face = fontFaceCache()->getFontFace(family, false, false);
+    if(face.isNull())
+        return element->font();
+    return Font(face, element->font().size());
+}
+
+static bool tryResolveColorEmojiGlyph(const Font& font, uint32_t codepoint, const Point& origin, ColorEmojiGlyphInfo& glyph)
+{
+    auto face = font.face().get();
+    if(face == nullptr)
+        return false;
+
+    auto svgLength = plutovg_font_face_get_glyph_svg(face, codepoint, &glyph.svgData);
+    if(svgLength <= 0 || glyph.svgData == nullptr)
+        return false;
+
+    plutovg_rect_t glyphExtents = {0};
+    plutovg_font_face_get_glyph_metrics(face, font.size(), codepoint, nullptr, nullptr, &glyphExtents);
+    glyph.svgLength = static_cast<size_t>(svgLength);
+    glyph.dstRect = Rect(origin.x + glyphExtents.x, origin.y + glyphExtents.y, glyphExtents.w, glyphExtents.h);
+    return !glyph.dstRect.isEmpty();
+}
+
+static const Bitmap* getCachedColorEmojiBitmap(const Font& font, uint32_t codepoint, std::string_view svgDocument)
+{
+    auto face = font.face().get();
+    if(face == nullptr || svgDocument.empty())
+        return nullptr;
+
+    // Cache rasterized SVG emoji glyphs per thread to avoid reparsing the
+    // embedded SVG document on every frame.
+    thread_local std::unordered_map<ColorEmojiBitmapCacheKey, Bitmap, ColorEmojiBitmapCacheKeyHash> bitmapCache;
+    ColorEmojiBitmapCacheKey key{face, codepoint};
+    auto it = bitmapCache.find(key);
+    if(it != bitmapCache.end())
+        return it->second.isNull() ? nullptr : &it->second;
+
+    auto document = Document::loadFromData(svgDocument.data(), svgDocument.size());
+    if(!document)
+        return nullptr;
+    auto bounds = Rect(document->boundingBox());
+    if(bounds.isEmpty())
+        return nullptr;
+
+    auto bitmapWidth = std::max(1, static_cast<int>(std::ceil(bounds.w)));
+    auto bitmapHeight = std::max(1, static_cast<int>(std::ceil(bounds.h)));
+    Bitmap bitmap(bitmapWidth, bitmapHeight);
+    bitmap.clear(0x00000000);
+    document->render(bitmap, Matrix::translated(-bounds.x, -bounds.y));
+    return &bitmapCache.emplace(key, std::move(bitmap)).first->second;
+}
+
+static bool tryRenderColorEmojiGlyph(std::u32string_view text, const Font& font, const Point& origin, const Transform& transform, SVGRenderState& state)
+{
+    if(text.size() != 1)
+        return false;
+
+    ColorEmojiGlyphInfo glyph;
+    if(!tryResolveColorEmojiGlyph(font, text.front(), origin, glyph))
+        return false;
+
+    auto bitmap = getCachedColorEmojiBitmap(font, text.front(), std::string_view(glyph.svgData, glyph.svgLength));
+    if(bitmap == nullptr)
+        return false;
+
+    state->drawImage(*bitmap, glyph.dstRect, Rect(0, 0, bitmap->width(), bitmap->height()), transform);
+    return true;
+}
+
+} // namespace
 
 inline const SVGTextNode* toSVGTextNode(const SVGNode* node)
 {
@@ -149,11 +408,16 @@ void SVGTextFragmentsBuilder::build(const SVGTextElement* textElement)
             continue;
         auto element = toSVGTextPositioningElement(textPosition.node->parent());
         SVGTextFragment fragment(element);
-        auto recordTextFragment = [&](auto startOffset, auto endOffset) {
+        auto currentRunKind = TextRunKind::Base;
+        auto recordTextFragment = [&](auto startOffset, auto endOffset, TextRunKind runKind) {
+            if(startOffset == endOffset)
+                return;
             auto text = wholeText.substr(startOffset, endOffset - startOffset);
             fragment.offset = startOffset;
             fragment.length = endOffset - startOffset;
-            fragment.width = element->font().measureText(text);
+            fragment.font = resolveFragmentFont(element, runKind);
+            fragment.isEmojiRun = runKind == TextRunKind::Emoji;
+            fragment.width = fragment.font.measureText(text);
             m_fragments.push_back(fragment);
             m_x += fragment.width;
         };
@@ -164,18 +428,21 @@ void SVGTextFragmentsBuilder::build(const SVGTextElement* textElement)
         auto didStartTextFragment = false;
         auto lastAngle = 0.f;
         while(textOffset < textPosition.endOffset) {
+            auto hasEmojiPresentation = m_emojiPresentationOffsets.find(textOffset) != m_emojiPresentationOffsets.end();
+            auto runKind = classifyTextRunKind(m_text[textOffset], currentRunKind, hasEmojiPresentation);
             SVGCharacterPosition characterPosition;
-            if(m_characterPositions.count(m_characterOffset) > 0) {
-                characterPosition = m_characterPositions.at(m_characterOffset);
+            auto positionIt = m_characterPositions.find(textOffset);
+            if(positionIt != m_characterPositions.end()) {
+                characterPosition = positionIt->second;
             }
 
             auto angle = characterPosition.rotate.value_or(0);
             auto dx = characterPosition.dx.value_or(0);
             auto dy = characterPosition.dy.value_or(0);
 
-            auto shouldStartNewFragment = characterPosition.x || characterPosition.y || dx || dy || angle || angle != lastAngle;
+            auto shouldStartNewFragment = characterPosition.x || characterPosition.y || dx || dy || angle || angle != lastAngle || runKind != currentRunKind || runKind == TextRunKind::Emoji;
             if(shouldStartNewFragment && didStartTextFragment) {
-                recordTextFragment(startOffset, textOffset);
+                recordTextFragment(startOffset, textOffset, currentRunKind);
                 startOffset = textOffset;
             }
 
@@ -188,14 +455,14 @@ void SVGTextFragmentsBuilder::build(const SVGTextElement* textElement)
                 fragment.angle = angle;
                 fragment.startsNewTextChunk = startsNewTextChunk;
                 didStartTextFragment = true;
+                currentRunKind = runKind;
             }
 
             lastAngle = angle;
             ++textOffset;
-            ++m_characterOffset;
         }
 
-        recordTextFragment(startOffset, textOffset);
+        recordTextFragment(startOffset, textOffset, currentRunKind);
     }
 
     auto handleTextChunk = [](auto begin, auto end) {
@@ -250,6 +517,11 @@ void SVGTextFragmentsBuilder::handleText(const SVGTextNode* node)
     plutovg_text_iterator_init(&it, text.data(), text.length(), PLUTOVG_TEXT_ENCODING_UTF8);
     while(plutovg_text_iterator_has_next(&it)) {
         auto currentCharacter = plutovg_text_iterator_next(&it);
+        if(isEmojiFormattingCodepoint(currentCharacter)) {
+            if(promotesEmojiPresentation(currentCharacter) && !m_text.empty())
+                m_emojiPresentationOffsets.insert(m_text.length() - 1);
+            continue;
+        }
         if(currentCharacter == '\t' || currentCharacter == '\n' || currentCharacter == '\r')
             currentCharacter = ' ';
         if(currentCharacter == ' ' && lastCharacter == ' ' && element->white_space() == WhiteSpace::Default)
@@ -412,13 +684,15 @@ void SVGTextElement::render(SVGRenderState& state) const
     std::u32string_view wholeText(m_text);
     for(const auto& fragment : m_fragments) {
         auto transform = newState.currentTransform() * Transform::rotated(fragment.angle, fragment.x, fragment.y);
-        auto text = wholeText.substr(fragment.offset, fragment.length);
         auto origin = Point(fragment.x, fragment.y);
+        auto text = wholeText.substr(fragment.offset, fragment.length);
 
-        const auto& font = fragment.element->font();
+        const auto& font = fragment.font;
         if(newState.mode() == SVGRenderMode::Clipping) {
             newState->fillText(text, font, origin, transform);
         } else {
+            if(fragment.isEmojiRun && tryRenderColorEmojiGlyph(text, font, origin, transform, newState))
+                continue;
             const auto& fill = fragment.element->fill();
             const auto& stroke = fragment.element->stroke();
             auto stroke_width = fragment.element->stroke_width();
@@ -436,11 +710,19 @@ void SVGTextElement::render(SVGRenderState& state) const
 Rect SVGTextElement::boundingBox(bool includeStroke) const
 {
     auto boundingBox = Rect::Invalid;
+    std::u32string_view wholeText(m_text);
     for(const auto& fragment : m_fragments) {
-        const auto& font = fragment.element->font();
+        const auto& font = fragment.font;
         const auto& stroke = fragment.element->stroke();
         auto fragmentTranform = Transform::rotated(fragment.angle, fragment.x, fragment.y);
+        auto text = wholeText.substr(fragment.offset, fragment.length);
+        auto origin = Point(fragment.x, fragment.y);
         auto fragmentRect = Rect(fragment.x, fragment.y - font.ascent(), fragment.width, fragment.element->font_size());
+        if(fragment.isEmojiRun && text.size() == 1) {
+            ColorEmojiGlyphInfo glyph;
+            if(tryResolveColorEmojiGlyph(font, text.front(), origin, glyph))
+                fragmentRect = glyph.dstRect;
+        }
         if(includeStroke && stroke.isRenderable())
             fragmentRect.inflate(fragment.element->stroke_width() / 2.f);
         boundingBox.unite(fragmentTranform.mapRect(fragmentRect));
