@@ -297,6 +297,14 @@ void plutovg_font_face_get_glyph_metrics(plutovg_font_face_t* face, float size, 
     }
 }
 
+bool plutovg_font_face_has_glyph(plutovg_font_face_t* face, plutovg_codepoint_t codepoint)
+{
+    if(face == NULL)
+        return false;
+    glyph_t* glyph = plutovg_font_face_get_glyph(face, codepoint);
+    return glyph != NULL && glyph->index != 0;
+}
+
 int plutovg_font_face_get_glyph_svg(plutovg_font_face_t* face, plutovg_codepoint_t codepoint, const char** svg)
 {
     if(svg)
