@@ -12,13 +12,11 @@ namespace lunasvg {
 namespace {
 
 constexpr std::string_view kSPXDefaultFontFamily = "SPX Default";
-constexpr std::string_view kSPXSymbolsFontFamily = "Symbols";
 constexpr std::string_view kSPXEmojiFontFamily = "Emoji";
 
 enum class TextRunKind : uint8_t {
     Base,
     DefaultFallback,
-    SymbolsFallback,
     Emoji
 };
 
@@ -139,7 +137,7 @@ static bool isDefaultEmojiPresentationCodepoint(uint32_t codepoint)
         codepoint == 0x2B55;
 }
 
-static bool isSymbolsFallbackCodepoint(uint32_t codepoint)
+static bool isSymbolCodepoint(uint32_t codepoint)
 {
     return (codepoint >= 0x2190 && codepoint <= 0x21FF) ||
         (codepoint >= 0x2300 && codepoint <= 0x23FF) ||
@@ -147,7 +145,7 @@ static bool isSymbolsFallbackCodepoint(uint32_t codepoint)
         (codepoint >= 0x2900 && codepoint <= 0x2BFF);
 }
 
-static bool isDefaultFallbackCodepoint(uint32_t codepoint)
+static bool isDefaultTextFallbackCodepoint(uint32_t codepoint)
 {
     if(codepoint < 0x80 || isEmojiCandidateCodepoint(codepoint))
         return false;
@@ -171,18 +169,37 @@ static bool isDefaultFallbackCodepoint(uint32_t codepoint)
         (codepoint >= 0x20000 && codepoint <= 0x323AF);
 }
 
+static FontFace lookupFallbackFace(std::string_view family)
+{
+    return fontFaceCache()->getFontFace(family, false, false);
+}
+
+static bool fontFaceHasGlyph(const FontFace& face, uint32_t codepoint)
+{
+    return !face.isNull() && plutovg_font_face_has_glyph(face.get(), codepoint);
+}
+
 static TextRunKind classifyTextRunKind(uint32_t codepoint, TextRunKind previous, bool emojiPresentation)
 {
-    if(emojiPresentation || isDefaultEmojiPresentationCodepoint(codepoint))
-        return TextRunKind::Emoji;
-    if(isSymbolsFallbackCodepoint(codepoint))
-        return TextRunKind::SymbolsFallback;
-    if(isEmojiCandidateCodepoint(codepoint))
-        return TextRunKind::Emoji;
-    if(isDefaultFallbackCodepoint(codepoint))
-        return TextRunKind::DefaultFallback;
     if(isWhitespaceCodepoint(codepoint))
         return previous;
+
+    auto defaultFace = lookupFallbackFace(kSPXDefaultFontFamily);
+    auto emojiFace = lookupFallbackFace(kSPXEmojiFontFamily);
+    auto prefersEmoji = emojiPresentation || isDefaultEmojiPresentationCodepoint(codepoint) || isEmojiCandidateCodepoint(codepoint);
+    if(prefersEmoji) {
+        if(fontFaceHasGlyph(emojiFace, codepoint))
+            return TextRunKind::Emoji;
+        if(fontFaceHasGlyph(defaultFace, codepoint))
+            return TextRunKind::DefaultFallback;
+    }
+    if(isSymbolCodepoint(codepoint) || isDefaultTextFallbackCodepoint(codepoint)) {
+        if(fontFaceHasGlyph(defaultFace, codepoint))
+            return TextRunKind::DefaultFallback;
+        if(fontFaceHasGlyph(emojiFace, codepoint))
+            return TextRunKind::Emoji;
+    }
+
     return TextRunKind::Base;
 }
 
@@ -191,10 +208,8 @@ static Font resolveFragmentFont(const SVGTextPositioningElement* element, TextRu
     if(kind == TextRunKind::Base)
         return element->font();
 
-    const auto family = kind == TextRunKind::Emoji
-        ? kSPXEmojiFontFamily
-        : kind == TextRunKind::SymbolsFallback ? kSPXSymbolsFontFamily : kSPXDefaultFontFamily;
-    auto face = fontFaceCache()->getFontFace(family, false, false);
+    const auto family = kind == TextRunKind::Emoji ? kSPXEmojiFontFamily : kSPXDefaultFontFamily;
+    auto face = lookupFallbackFace(family);
     if(face.isNull())
         return element->font();
     return Font(face, element->font().size());
