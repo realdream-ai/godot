@@ -36,6 +36,7 @@
 
 #include <lunasvg.h>
 
+#include <cstring>
 #include <iostream>
 
 HashMap<Color, Color> ImageLoaderSVG::forced_color_map = HashMap<Color, Color>();
@@ -98,21 +99,16 @@ Error ImageLoaderSVG::create_image_from_utf8_buffer(Ref<Image> p_image, const ui
 	height *= p_scale;
 
 	auto bitmap = document->renderToBitmap(width, height, 0x00000000);
+	bitmap.convertToRGBA();
 
 	Vector<uint8_t> result;
 	result.resize(width * height * 4);
 
-	uint32_t *buffer = (uint32_t *)bitmap.data();
-
+	const uint8_t *buffer = bitmap.data();
+	const int stride = bitmap.stride();
+	uint8_t *dst = result.ptrw();
 	for (uint32_t y = 0; y < height; y++) {
-		for (uint32_t x = 0; x < width; x++) {
-			uint32_t n = buffer[y * width + x];
-			const size_t offset = sizeof(uint32_t) * width * y + sizeof(uint32_t) * x;
-			result.write[offset + 0] = (n >> 16) & 0xff;
-			result.write[offset + 1] = (n >> 8) & 0xff;
-			result.write[offset + 2] = n & 0xff;
-			result.write[offset + 3] = (n >> 24) & 0xff;
-		}
+		memcpy(dst + (width * 4 * y), buffer + (stride * y), width * 4);
 	}
 
 	p_image->set_data(width, height, false, Image::FORMAT_RGBA8, result);
