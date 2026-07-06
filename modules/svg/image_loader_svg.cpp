@@ -37,7 +37,6 @@
 #include <lunasvg.h>
 
 #include <cstring>
-#include <iostream>
 
 HashMap<Color, Color> ImageLoaderSVG::forced_color_map = HashMap<Color, Color>();
 
@@ -83,6 +82,7 @@ Ref<Image> ImageLoaderSVG::load_mem_svg(const uint8_t *p_svg, int p_size, float 
 
 Error ImageLoaderSVG::create_image_from_utf8_buffer(Ref<Image> p_image, const uint8_t *p_buffer, int p_buffer_size, float p_scale, bool p_upsample) {
 	ERR_FAIL_COND_V_MSG(Math::is_zero_approx(p_scale), ERR_INVALID_PARAMETER, "ImageLoaderSVG: Can't load SVG with a scale of 0.");
+	ERR_FAIL_COND_V_MSG(p_scale < 0.0f, ERR_INVALID_PARAMETER, "ImageLoaderSVG: Can't load SVG with a negative scale.");
 
 	SVGUtils::ensure_font_faces_registered();
 
@@ -90,28 +90,52 @@ Error ImageLoaderSVG::create_image_from_utf8_buffer(Ref<Image> p_image, const ui
 	if (document == nullptr) {
 		return ERR_INVALID_DATA;
 	}
-	uint32_t width = document->width(), height = document->height();
+
+	uint32_t width = document->width();
+	uint32_t height = document->height();
 	// check the invalid svg file
-	if(width ==0 || height ==0) {
+	if (width == 0 || height == 0) {
 		return ERR_INVALID_DATA;
 	}
-	width *= p_scale;
-	height *= p_scale;
 
-	auto bitmap = document->renderToBitmap(width, height, 0x00000000);
+	const double scaled_width = (double)width * p_scale;
+	const double scaled_height = (double)height * p_scale;
+	ERR_FAIL_COND_V_MSG(scaled_width > Image::MAX_WIDTH || scaled_height > Image::MAX_HEIGHT, ERR_INVALID_DATA, "ImageLoaderSVG: SVG dimensions are too large.");
+
+	const uint32_t requested_width = scaled_width;
+	const uint32_t requested_height = scaled_height;
+	ERR_FAIL_COND_V_MSG(requested_width == 0 || requested_height == 0, ERR_INVALID_DATA, "ImageLoaderSVG: SVG dimensions became empty after scaling.");
+
+	const uint64_t requested_pixel_count = (uint64_t)requested_width * requested_height;
+	ERR_FAIL_COND_V_MSG(requested_pixel_count > Image::MAX_PIXELS, ERR_INVALID_DATA, "ImageLoaderSVG: SVG rasterized image is too large.");
+
+	auto bitmap = document->renderToBitmap(requested_width, requested_height, 0x00000000);
+	ERR_FAIL_COND_V_MSG(bitmap.isNull(), ERR_INVALID_DATA, "ImageLoaderSVG: Failed to rasterize SVG.");
 	bitmap.convertToRGBA();
 
+	const int bitmap_width = bitmap.width();
+	const int bitmap_height = bitmap.height();
+	ERR_FAIL_COND_V_MSG(bitmap_width <= 0 || bitmap_height <= 0, ERR_INVALID_DATA, "ImageLoaderSVG: SVG rasterization returned an empty bitmap.");
+
+	const uint64_t bitmap_pixel_count = (uint64_t)bitmap_width * bitmap_height;
+	ERR_FAIL_COND_V_MSG(bitmap_pixel_count > Image::MAX_PIXELS, ERR_INVALID_DATA, "ImageLoaderSVG: SVG rasterized image is too large.");
+
 	Vector<uint8_t> result;
-	result.resize(width * height * 4);
+	result.resize((int64_t)bitmap_pixel_count * 4);
 
 	const uint8_t *buffer = bitmap.data();
+	ERR_FAIL_COND_V_MSG(buffer == nullptr, ERR_INVALID_DATA, "ImageLoaderSVG: SVG rasterization returned no pixel data.");
+
 	const int stride = bitmap.stride();
+	const uint64_t row_bytes = (uint64_t)bitmap_width * 4;
+	ERR_FAIL_COND_V_MSG(stride < (int)row_bytes, ERR_INVALID_DATA, "ImageLoaderSVG: SVG rasterized bitmap stride is invalid.");
+
 	uint8_t *dst = result.ptrw();
-	for (uint32_t y = 0; y < height; y++) {
-		memcpy(dst + (width * 4 * y), buffer + (stride * y), width * 4);
+	for (int y = 0; y < bitmap_height; y++) {
+		memcpy(dst + (row_bytes * y), buffer + ((uint64_t)stride * y), row_bytes);
 	}
 
-	p_image->set_data(width, height, false, Image::FORMAT_RGBA8, result);
+	p_image->set_data(bitmap_width, bitmap_height, false, Image::FORMAT_RGBA8, result);
 
 	return OK;
 }

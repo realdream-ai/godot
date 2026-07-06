@@ -38,6 +38,10 @@
 
 #include "modules/modules_enabled.gen.h"
 
+#ifdef MODULE_SVG_ENABLED
+#include "modules/svg/image_loader_svg.h"
+#endif
+
 #include "thirdparty/doctest/doctest.h"
 
 namespace TestImage {
@@ -184,6 +188,30 @@ TEST_CASE("[Image] Basic getters") {
 	Ref<Image> image_get_rect = image->get_region(Rect2i(0, 0, 2, 1));
 	CHECK(image_get_rect->get_size() == Vector2(2, 1));
 }
+
+#ifdef MODULE_SVG_ENABLED
+TEST_CASE("[Image] SVG loading keeps unpremultiplied RGBA data") {
+	Ref<Image> image = memnew(Image());
+	const String svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"2\" height=\"3\"><rect width=\"2\" height=\"3\" fill=\"#ff000080\"/></svg>";
+
+	CHECK(ImageLoaderSVG::create_image_from_string(image, svg, 2.0f, false, HashMap<Color, Color>()) == OK);
+	CHECK(image->get_width() == 4);
+	CHECK(image->get_height() == 6);
+
+	const Color pixel = image->get_pixel(0, 0);
+	CHECK(pixel.r > 0.95f);
+	CHECK(pixel.g < 0.05f);
+	CHECK(pixel.b < 0.05f);
+	CHECK(pixel.a == doctest::Approx(0.5f).epsilon(0.05f));
+}
+
+TEST_CASE("[Image] SVG loading rejects oversized rasterization") {
+	Ref<Image> image = memnew(Image());
+	const String svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20000\" height=\"20000\"><rect width=\"20000\" height=\"20000\" fill=\"#000\"/></svg>";
+
+	CHECK(ImageLoaderSVG::create_image_from_string(image, svg, 1.0f, false, HashMap<Color, Color>()) == ERR_INVALID_DATA);
+}
+#endif
 
 TEST_CASE("[Image] Resizing") {
 	Ref<Image> image = memnew(Image(8, 8, false, Image::FORMAT_RGBA8));

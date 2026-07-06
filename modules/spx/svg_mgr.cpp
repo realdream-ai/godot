@@ -212,10 +212,11 @@ int SvgManager::calculate_svg_scale(float required_scale) {
 		return 1;
 	}
 
-	// Match Scratch's SVG MIP rule: choose the smallest power-of-two scale
-	// whose rasterized texture is not smaller than the requested render scale.
+	// Match Scratch's SVG MIP rule, but clamp to the largest SVG raster scale
+	// we allow to cache. Larger render scales stay pinned at this ceiling.
+	const int max_svg_scale = 1024;
 	int target_scale = 1;
-	while ((float)target_scale < scale && target_scale < 1024) {
+	while ((float)target_scale < scale && target_scale < max_svg_scale) {
 		target_scale <<= 1;
 	}
 	return target_scale;
