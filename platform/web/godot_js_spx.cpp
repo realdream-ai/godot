@@ -552,6 +552,10 @@ void gdspx_res_has_file(GdString *p_path, GdBool *ret_val) {
 	*ret_val = resMgr->has_file(*p_path);
 }
 EMSCRIPTEN_KEEPALIVE
+void gdspx_res_list_directories(GdString *p_path, GdString *ret_val) {
+	*ret_val = resMgr->list_directories(*p_path);
+}
+EMSCRIPTEN_KEEPALIVE
 void gdspx_res_reload_texture(GdString *path) {
 	 resMgr->reload_texture(*path);
 }
@@ -564,8 +568,12 @@ void gdspx_res_set_default_font(GdString *font_path) {
 	 resMgr->set_default_font(*font_path);
 }
 EMSCRIPTEN_KEEPALIVE
-void gdspx_res_register_svg_font_face(GdString *font_path, GdString *family) {
-	 resMgr->register_svg_font_face(*font_path, *family);
+void gdspx_res_register_font_face(GdString *font_path, GdString *family) {
+	 resMgr->register_font_face(*font_path, *family);
+}
+EMSCRIPTEN_KEEPALIVE
+void gdspx_res_set_font_preferences(GdArray *preferences) {
+	 resMgr->set_font_preferences(*preferences);
 }
 EMSCRIPTEN_KEEPALIVE
 void gdspx_scene_change_scene_to_file(GdString *path) {

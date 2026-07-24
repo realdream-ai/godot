@@ -40,6 +40,14 @@
 
 #ifdef MODULE_SVG_ENABLED
 #include "modules/svg/image_loader_svg.h"
+#include "modules/svg/svg_utils.h"
+#include "thirdparty/lunasvg/include/lunasvg.h"
+#include "thirdparty/lunasvg/source/embedded_cnfont.h"
+#include <thread>
+
+namespace lunasvg {
+bool fontPreferencesConfigured();
+}
 #endif
 
 #include "thirdparty/doctest/doctest.h"
@@ -210,6 +218,220 @@ TEST_CASE("[Image] SVG loading rejects oversized rasterization") {
 	const String svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20000\" height=\"20000\"><rect width=\"20000\" height=\"20000\" fill=\"#000\"/></svg>";
 
 	CHECK(ImageLoaderSVG::create_image_from_string(image, svg, 1.0f, false, HashMap<Color, Color>()) == ERR_INVALID_DATA);
+}
+
+struct LunaSVGTextConfigurationReset {
+	~LunaSVGTextConfigurationReset() {
+		lunasvg_set_grapheme_break_func(nullptr, nullptr);
+		lunasvg_set_font_preferences(nullptr, 0);
+	}
+};
+
+struct SVGUtilsFontRegistryReset {
+	SVGUtilsFontRegistryReset() {
+		reset();
+	}
+
+	~SVGUtilsFontRegistryReset() {
+		reset();
+		lunasvg_set_grapheme_break_func(nullptr, nullptr);
+	}
+
+private:
+	void reset() {
+		SVGUtils::reset_font_registry();
+		SVGUtils::ensure_font_faces_registered();
+	}
+};
+
+static void luna_set_strict_empty_font_preferences() {
+	const char *empty_preferences = nullptr;
+	lunasvg_set_font_preferences(&empty_preferences, 0);
+}
+
+static void luna_set_font_preferences(const char *family) {
+	const char *preferences[] = { family };
+	lunasvg_set_font_preferences(preferences, 1);
+}
+
+TEST_CASE("[Image] SVGUtils preserves explicitly empty font preferences") {
+	SVGUtilsFontRegistryReset reset;
+	Vector<String> preferences;
+	SVGUtils::set_font_preferences(preferences);
+	SVGUtils::ensure_font_faces_registered();
+
+	CHECK(lunasvg::fontPreferencesConfigured());
+}
+
+static size_t codepoint_grapheme_breaks(const uint32_t *, size_t length, size_t *breaks, size_t capacity, void *) {
+	const size_t count = MIN(length, capacity);
+	for (size_t i = 0; i < count; i++) {
+		breaks[i] = i + 1;
+	}
+	return count;
+}
+
+TEST_CASE("[Image] LunaSVG clears font faces on the current thread") {
+	bool added = false;
+	int destroy_calls_before_clear = -1;
+	int destroy_calls_after_clear = -1;
+	std::thread worker([&]() {
+		int destroy_calls = 0;
+		auto destroy = +[](void *closure) {
+			(*static_cast<int *>(closure))++;
+		};
+		added = lunasvg_add_font_face_from_data("reset probe", false, false,
+				lunasvg::embedded_cnfont_data, lunasvg::embedded_cnfont_size, destroy, &destroy_calls);
+		destroy_calls_before_clear = destroy_calls;
+		lunasvg_clear_font_faces();
+		destroy_calls_after_clear = destroy_calls;
+	});
+	worker.join();
+
+	CHECK(added);
+	CHECK(destroy_calls_before_clear == 0);
+	CHECK(destroy_calls_after_clear == 1);
+}
+
+TEST_CASE("[Image] SVG fallback keeps an extended grapheme cluster atomic") {
+	LunaSVGTextConfigurationReset reset;
+	struct GraphemeProbe {
+		uint32_t text[8] = {};
+		size_t length = 0;
+		int calls = 0;
+	};
+	GraphemeProbe probe;
+	auto callback = +[](const uint32_t *text, size_t length, size_t *breaks, size_t capacity, void *closure) -> size_t {
+		GraphemeProbe *probe = static_cast<GraphemeProbe *>(closure);
+		probe->calls++;
+		probe->length = length < 8 ? length : 8;
+		for (size_t i = 0; i < probe->length; i++) {
+			probe->text[i] = text[i];
+		}
+		if (capacity < 2) {
+			return 0;
+		}
+		breaks[0] = 4;
+		breaks[1] = length;
+		return 2;
+	};
+
+	luna_set_strict_empty_font_preferences();
+	lunasvg_set_grapheme_break_func(callback, &probe);
+	const char svg[] = "<svg xmlns=\"http://www.w3.org/2000/svg\"><text x=\"0\" y=\"20\" font-size=\"20\">&#x2764;&#xFE0F;&#x200D;&#x1F525;A</text></svg>";
+	auto document = lunasvg::Document::loadFromData(svg, sizeof(svg) - 1);
+
+	CHECK(document != nullptr);
+	lunasvg::Box bounds;
+	if (document != nullptr) {
+		bounds = document->boundingBox();
+	}
+	CHECK(probe.calls == 1);
+	CHECK(probe.length == 5);
+	CHECK(probe.text[0] == 0x2764);
+	CHECK(probe.text[1] == 0xFE0F);
+	CHECK(probe.text[2] == 0x200D);
+	CHECK(probe.text[3] == 0x1F525);
+	CHECK(probe.text[4] == 0x41);
+	if (document != nullptr) {
+		CHECK(bounds.w > 20.0f);
+		CHECK(bounds.w < 25.0f);
+	}
+}
+
+TEST_CASE("[Image] SVG fallback segments common clusters without a callback") {
+	LunaSVGTextConfigurationReset reset;
+	luna_set_strict_empty_font_preferences();
+	lunasvg_set_grapheme_break_func(nullptr, nullptr);
+	const char svg[] = "<svg xmlns=\"http://www.w3.org/2000/svg\"><text x=\"0\" y=\"20\" font-size=\"20\">A&#x0301;B</text></svg>";
+	auto document = lunasvg::Document::loadFromData(svg, sizeof(svg) - 1);
+
+	CHECK(document != nullptr);
+	if (document != nullptr) {
+		const lunasvg::Box bounds = document->boundingBox();
+		CHECK(bounds.w > 20.0f);
+		CHECK(bounds.w < 25.0f);
+	}
+}
+
+TEST_CASE("[Image] LunaSVG renders embedded SVG glyphs for arbitrary family names") {
+	LunaSVGTextConfigurationReset reset;
+	const String font_path = TestUtils::get_data_path("fonts/twitter_color_emoji/TwitterColorEmoji-SVGinOT.ttf");
+	CHECK(lunasvg_add_font_face_from_file("Heart Emoji Test", false, false, font_path.utf8().get_data()));
+	luna_set_font_preferences("Heart Emoji Test");
+
+	const char svg[] = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"64\" height=\"64\"><text x=\"4\" y=\"52\" font-size=\"48\">&#x2764;&#xFE0F;</text></svg>";
+	auto document = lunasvg::Document::loadFromData(svg, sizeof(svg) - 1);
+	REQUIRE(document != nullptr);
+
+	auto bitmap = document->renderToBitmap(64, 64);
+	REQUIRE(!bitmap.isNull());
+	bitmap.convertToRGBA();
+	int red_pixels = 0;
+	for (int y = 0; y < bitmap.height(); y++) {
+		const uint8_t *row = bitmap.data() + y * bitmap.stride();
+		for (int x = 0; x < bitmap.width(); x++) {
+			const uint8_t *pixel = row + x * 4;
+			if (pixel[0] > 150 && pixel[1] < 100 && pixel[2] < 120 && pixel[3] > 100) {
+				red_pixels++;
+			}
+		}
+	}
+	CHECK(red_pixels > 100);
+}
+
+TEST_CASE("[Image] LunaSVG shapes combining-mark clusters before fallback") {
+	LunaSVGTextConfigurationReset reset;
+	lunasvg_set_grapheme_break_func(codepoint_grapheme_breaks, nullptr);
+	const String font_path = TestUtils::get_data_path("fonts/noto_sans_clusters/NotoSans-Medium.ttf");
+	CHECK(lunasvg_add_font_face_from_file("Cluster Composition Test", false, false, font_path.utf8().get_data()));
+	luna_set_font_preferences("Cluster Composition Test");
+
+	const char decomposed_svg[] = "<svg xmlns=\"http://www.w3.org/2000/svg\"><text x=\"0\" y=\"40\" font-size=\"32\">Cafe&#x301;</text></svg>";
+	const char composed_svg[] = "<svg xmlns=\"http://www.w3.org/2000/svg\"><text x=\"0\" y=\"40\" font-size=\"32\">Caf&#xE9;</text></svg>";
+	auto decomposed = lunasvg::Document::loadFromData(decomposed_svg, sizeof(decomposed_svg) - 1);
+	auto composed = lunasvg::Document::loadFromData(composed_svg, sizeof(composed_svg) - 1);
+	REQUIRE(decomposed != nullptr);
+	REQUIRE(composed != nullptr);
+
+	const auto decomposed_bounds = decomposed->boundingBox();
+	const auto composed_bounds = composed->boundingBox();
+	CHECK(decomposed_bounds.x == doctest::Approx(composed_bounds.x));
+	CHECK(decomposed_bounds.y == doctest::Approx(composed_bounds.y));
+	CHECK(decomposed_bounds.w == doctest::Approx(composed_bounds.w));
+	CHECK(decomposed_bounds.h == doctest::Approx(composed_bounds.h));
+}
+
+TEST_CASE("[Image] LunaSVG renders an emoji ZWJ sequence as one shaped SVG glyph") {
+	LunaSVGTextConfigurationReset reset;
+	lunasvg_set_grapheme_break_func(codepoint_grapheme_breaks, nullptr);
+	const String font_path = TestUtils::get_data_path("fonts/twitter_color_emoji/TwitterColorEmoji-SVGinOT.ttf");
+	CHECK(lunasvg_add_font_face_from_file("Emoji Cluster Test", false, false, font_path.utf8().get_data()));
+	luna_set_font_preferences("Emoji Cluster Test");
+
+	const char svg[] = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"64\" height=\"64\"><text x=\"4\" y=\"52\" font-size=\"48\">&#x1F469;&#x200D;&#x1F4BB;</text></svg>";
+	auto document = lunasvg::Document::loadFromData(svg, sizeof(svg) - 1);
+	REQUIRE(document != nullptr);
+	const auto bounds = document->boundingBox();
+	CHECK(bounds.w > 40.0f);
+	CHECK(bounds.w < 55.0f);
+
+	auto bitmap = document->renderToBitmap(64, 64);
+	REQUIRE(!bitmap.isNull());
+	bitmap.convertToRGBA();
+	int colored_pixels = 0;
+	for (int y = 0; y < bitmap.height(); y++) {
+		const uint8_t *row = bitmap.data() + y * bitmap.stride();
+		for (int x = 0; x < bitmap.width(); x++) {
+			const uint8_t *pixel = row + x * 4;
+			const int max_channel = MAX(pixel[0], MAX(pixel[1], pixel[2]));
+			const int min_channel = MIN(pixel[0], MIN(pixel[1], pixel[2]));
+			if (pixel[3] > 100 && max_channel - min_channel > 40) {
+				colored_pixels++;
+			}
+		}
+	}
+	CHECK(colored_pixels > 100);
 }
 #endif
 

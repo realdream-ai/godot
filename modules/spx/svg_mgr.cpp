@@ -184,9 +184,11 @@ void SvgManager::destroy() {
 	singleton = nullptr;
 }
 
-void SvgManager::reset(bool p_clear_image_cache) {
-	if (p_clear_image_cache) {
+void SvgManager::reset(bool p_clear_project_caches) {
+	if (p_clear_project_caches) {
 		svg_image_cache.clear();
+		svg_image_raw_size_cache.clear();
+		is_svg_animation_registry.clear();
 	}
 	svg_animation_cache.clear();
 }

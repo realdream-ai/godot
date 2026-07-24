@@ -69,6 +69,8 @@ public:
 private:
 	HashMap<String, Ref<Texture2D>> cached_texture;
 	HashMap<String, Ref<AudioStream>> cached_audio;
+	HashMap<String, Ref<FontFile>> display_fonts;
+	Ref<FontFile> display_default_font;
 	bool is_load_direct;
 	String game_data_root = "res://";
 	Ref<SpriteFrames> anim_frames;
@@ -109,10 +111,12 @@ public:
 	SPX_API GdVec2 get_image_size(GdString p_path);
 	SPX_API GdString read_all_text(GdString p_path);
 	SPX_API GdBool has_file(GdString p_path);
+	SPX_API GdString list_directories(GdString p_path);
 	SPX_API void reload_texture(GdString path);
 	SPX_API void free_str(GdString str);
 	SPX_API void set_default_font(GdString font_path);
-	SPX_API void register_svg_font_face(GdString font_path, GdString family);
+	SPX_API void register_font_face(GdString font_path, GdString family);
+	SPX_API void set_font_preferences(GdArray preferences);
 };
 
 #endif // SPX_RES_MGR_H

@@ -387,7 +387,7 @@ void SpxEngine::_do_reset(int reset_code) {
 
 	_notify_managers_reset(reset_code);
 
-	SvgManager::get_singleton()->reset(false);
+	SvgManager::get_singleton()->reset(true);
 
 	if (should_delay_runtime_reset) {
 		_invoke_runtime_reset_delayed(reset_code);

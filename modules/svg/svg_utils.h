@@ -37,6 +37,8 @@ class SVGUtils {
 public:
 	static void set_default_font(const void *font_data, int length);
 	static void add_font_face(const String &family, const void *font_data, int length);
+	static void set_font_preferences(const Vector<String> &preferences);
+	static void reset_font_registry();
 	static void ensure_font_faces_registered();
 };
 

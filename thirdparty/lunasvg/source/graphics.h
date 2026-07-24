@@ -10,6 +10,7 @@
 #include <vector>
 #include <array>
 #include <string>
+#include <string_view>
 #include <map>
 
 namespace lunasvg {
@@ -350,6 +351,7 @@ public:
     void addEllipse(const Point& center, const Size& radii);
     void addRoundRect(const Rect& rect, const Size& radii);
     void addRect(const Rect& rect);
+    void addGlyph(plutovg_font_face_t* face, float size, float x, float y, unsigned int glyphIndex);
 
     void reset();
 
@@ -421,6 +423,7 @@ class FontFaceCache {
 public:
     bool addFontFace(const std::string& family, bool bold, bool italic, const FontFace& face);
     FontFace getFontFace(const std::string_view& family, bool bold, bool italic);
+    void clear();
 
 private:
     FontFaceCache();
@@ -430,6 +433,13 @@ private:
 };
 
 FontFaceCache* fontFaceCache();
+
+using FontFamilyList = std::vector<std::string>;
+
+FontFamilyList parseFontFamilyList(std::string_view input);
+void setFontPreferences(bool configured, FontFamilyList preferences);
+bool fontPreferencesConfigured();
+const FontFamilyList& fontPreferences();
 
 class Font {
 public:
