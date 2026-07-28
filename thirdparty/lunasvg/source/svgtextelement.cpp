@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <memory>
 #include <unordered_map>
 #include <utility>
 
@@ -13,18 +14,34 @@
 #include <hb-ot.h>
 #include <hb.h>
 #endif
+#ifdef LUNASVG_ENABLE_ICU_BIDI
+#include <unicode/ubidi.h>
+#endif
 
 namespace lunasvg {
 
 static thread_local GraphemeBreakFunction graphemeBreakFunction = nullptr;
 static thread_local void *graphemeBreakClosure = nullptr;
+static thread_local ShapingObserverFunction shapingObserverFunction = nullptr;
+static thread_local void *shapingObserverClosure = nullptr;
 
 void setGraphemeBreakFunction(GraphemeBreakFunction callback, void *closure) {
 	graphemeBreakFunction = callback;
 	graphemeBreakClosure = closure;
 }
 
+void setShapingObserverFunction(ShapingObserverFunction callback, void *closure) {
+	shapingObserverFunction = callback;
+	shapingObserverClosure = closure;
+}
+
 namespace {
+
+struct GraphemeCluster {
+	size_t start = 0;
+	size_t end = 0;
+	bool isWhitespace = false;
+};
 
 static bool isWhitespaceCodepoint(uint32_t codepoint) {
 	switch (codepoint) {
@@ -100,6 +117,83 @@ static bool isGraphemeExtend(uint32_t codepoint) {
 			(codepoint >= 0x1F3FB && codepoint <= 0x1F3FF) || (codepoint >= 0xE0020 && codepoint <= 0xE007F);
 }
 
+static bool isIndicVirama(uint32_t codepoint) {
+	switch (codepoint) {
+		case 0x094D: // Devanagari
+		case 0x09CD: // Bengali
+		case 0x0A4D: // Gurmukhi
+		case 0x0ACD: // Gujarati
+		case 0x0B4D: // Oriya
+		case 0x0BCD: // Tamil
+		case 0x0C4D: // Telugu
+		case 0x0CCD: // Kannada
+		case 0x0D3B: // Malayalam vertical bar virama
+		case 0x0D3C: // Malayalam circular virama
+		case 0x0D4D: // Malayalam
+		case 0x0DCA: // Sinhala
+		case 0x1039: // Myanmar
+		case 0x103A:
+		case 0x1714: // Tagalog
+		case 0x1734: // Hanunoo
+		case 0x17D2: // Khmer
+		case 0x1A60: // Tai Tham
+		case 0x1B44: // Balinese
+		case 0x1BAA: // Sundanese
+		case 0xA806: // Syloti Nagri
+		case 0xA8C4: // Saurashtra
+		case 0xA953: // Rejang
+		case 0xAAF6: // Meetei Mayek
+			return true;
+		default:
+			return false;
+	}
+}
+
+static bool isGraphemeControl(uint32_t codepoint) {
+	return codepoint == 0x000D || codepoint == 0x000A || codepoint == 0x2028 || codepoint == 0x2029 ||
+			codepoint <= 0x001F || (codepoint >= 0x007F && codepoint <= 0x009F);
+}
+
+static bool isGraphemePrepend(uint32_t codepoint) {
+	return (codepoint >= 0x0600 && codepoint <= 0x0605) || codepoint == 0x06DD || codepoint == 0x070F ||
+			codepoint == 0x08E2 || codepoint == 0x0D4E || codepoint == 0x110BD || codepoint == 0x110CD ||
+			(codepoint >= 0x111C2 && codepoint <= 0x111C3) || (codepoint >= 0x1193F && codepoint <= 0x1193F) ||
+			codepoint == 0x11941 || codepoint == 0x11A3A || (codepoint >= 0x11A84 && codepoint <= 0x11A89) ||
+			codepoint == 0x11D46;
+}
+
+enum class HangulSyllableType : uint8_t {
+	None,
+	L,
+	V,
+	T,
+	LV,
+	LVT,
+};
+
+static HangulSyllableType hangulSyllableType(uint32_t codepoint) {
+	if ((codepoint >= 0x1100 && codepoint <= 0x115F) || (codepoint >= 0xA960 && codepoint <= 0xA97C)) {
+		return HangulSyllableType::L;
+	}
+	if ((codepoint >= 0x1160 && codepoint <= 0x11A7) || (codepoint >= 0xD7B0 && codepoint <= 0xD7C6)) {
+		return HangulSyllableType::V;
+	}
+	if ((codepoint >= 0x11A8 && codepoint <= 0x11FF) || (codepoint >= 0xD7CB && codepoint <= 0xD7FB)) {
+		return HangulSyllableType::T;
+	}
+	if (codepoint >= 0xAC00 && codepoint <= 0xD7A3) {
+		return (codepoint - 0xAC00) % 28 == 0 ? HangulSyllableType::LV : HangulSyllableType::LVT;
+	}
+	return HangulSyllableType::None;
+}
+
+static bool isExtendedPictographic(uint32_t codepoint) {
+	return (codepoint >= 0x1F000 && codepoint <= 0x1FAFF) || (codepoint >= 0x2600 && codepoint <= 0x27BF) ||
+			codepoint == 0x00A9 || codepoint == 0x00AE || codepoint == 0x203C || codepoint == 0x2049 ||
+			codepoint == 0x2122 || codepoint == 0x2139 || codepoint == 0x3030 || codepoint == 0x303D ||
+			codepoint == 0x3297 || codepoint == 0x3299;
+}
+
 static bool isRegionalIndicator(uint32_t codepoint) {
 	return codepoint >= 0x1F1E6 && codepoint <= 0x1F1FF;
 }
@@ -113,9 +207,34 @@ static std::vector<size_t> fallbackGraphemeBreaks(std::u32string_view text) {
 		bool shouldBreak = true;
 		if (previous == '\r' && current == '\n') {
 			shouldBreak = false;
-		} else if (current == 0x200D || previous == 0x200D || isGraphemeExtend(current)) {
+		} else if (isGraphemeControl(previous) || isGraphemeControl(current)) {
+			shouldBreak = true;
+		} else if (isGraphemePrepend(previous) || current == 0x200D || isGraphemeExtend(current) || isIndicVirama(current)) {
 			shouldBreak = false;
-		} else if (isRegionalIndicator(previous) && isRegionalIndicator(current)) {
+		} else {
+			const auto previousHangul = hangulSyllableType(previous);
+			const auto currentHangul = hangulSyllableType(current);
+			if (previousHangul == HangulSyllableType::L &&
+					(currentHangul == HangulSyllableType::L || currentHangul == HangulSyllableType::V || currentHangul == HangulSyllableType::LV || currentHangul == HangulSyllableType::LVT)) {
+				shouldBreak = false;
+			} else if ((previousHangul == HangulSyllableType::LV || previousHangul == HangulSyllableType::V) &&
+					(currentHangul == HangulSyllableType::V || currentHangul == HangulSyllableType::T)) {
+				shouldBreak = false;
+			} else if ((previousHangul == HangulSyllableType::LVT || previousHangul == HangulSyllableType::T) && currentHangul == HangulSyllableType::T) {
+				shouldBreak = false;
+			} else if (isIndicVirama(previous)) {
+				// This is a conservative fallback for conjunct-forming scripts. The
+				// host grapheme callback remains authoritative when available.
+				shouldBreak = false;
+			} else if (previous == 0x200D && isExtendedPictographic(current)) {
+				size_t lookbehind = i - 1;
+				while (lookbehind > 0 && isGraphemeExtend(text[lookbehind - 1])) {
+					--lookbehind;
+				}
+				shouldBreak = lookbehind == 0 || !isExtendedPictographic(text[lookbehind - 1]);
+			}
+		}
+		if (isRegionalIndicator(previous) && isRegionalIndicator(current)) {
 			shouldBreak = regionalIndicatorCount % 2 == 0;
 		}
 
@@ -152,19 +271,20 @@ static std::vector<size_t> graphemeBreaks(std::u32string_view text) {
 	size_t previous = 0;
 	for (size_t i = 0; i < count; ++i) {
 		auto current = rawBreaks[i];
-		// A TextServer can advertise break-iterator support while its runtime
-		// support data is unavailable. In that state Godot reports every code
-		// point as a character break. Treat the local segmenter as the minimum
-		// atomicity guarantee: a richer callback may merge its clusters, but it
-		// must not split combining marks, variation selectors, or ZWJ sequences.
-		if (current > previous && current <= text.size() &&
-				std::binary_search(fallbackBreaks.begin(), fallbackBreaks.end(), current)) {
-			breaks.push_back(current);
-			previous = current;
+		if (current <= previous || current > text.size()) {
+			return fallbackBreaks;
 		}
+		// Some host text servers report codepoint boundaries when a full Unicode
+		// break iterator is unavailable. Never let those boundaries split a
+		// cluster which the local UAX #29 subset knows must stay atomic (for
+		// example combining marks, variation selectors, and emoji ZWJ sequences).
+		if (std::binary_search(fallbackBreaks.begin(), fallbackBreaks.end(), current)) {
+			breaks.push_back(current);
+		}
+		previous = current;
 	}
-	if (breaks.empty() || breaks.back() != text.size()) {
-		breaks.push_back(text.size());
+	if (previous != text.size() || breaks.empty() || breaks.back() != text.size()) {
+		return fallbackBreaks;
 	}
 	return breaks;
 }
@@ -212,19 +332,20 @@ static bool fontFaceSupportsClusterWithoutShaping(const FontFace &face, const Te
 	return true;
 }
 
-struct ShapedCluster {
+struct ShapedRun {
 	std::vector<SVGShapedGlyph> glyphs;
+	std::vector<bool> supportedClusters;
 	float width = 0;
-	bool supported = false;
 };
 
 #ifdef LUNASVG_ENABLE_HARFBUZZ
 class HarfBuzzFont {
 public:
-	explicit HarfBuzzFont(const FontFace &fontFace) {
+	explicit HarfBuzzFont(const FontFace &fontFace) :
+			m_fontFace(fontFace) {
 		unsigned int dataLength = 0;
 		int ttcIndex = 0;
-		auto data = plutovg_font_face_get_data(fontFace.get(), &dataLength, &ttcIndex);
+		auto data = plutovg_font_face_get_data(m_fontFace.get(), &dataLength, &ttcIndex);
 		if (data == nullptr || dataLength == 0) {
 			return;
 		}
@@ -258,6 +379,7 @@ public:
 	HarfBuzzFont(const HarfBuzzFont &) = delete;
 	HarfBuzzFont &operator=(const HarfBuzzFont &) = delete;
 	HarfBuzzFont(HarfBuzzFont &&other) noexcept :
+			m_fontFace(std::move(other.m_fontFace)),
 			m_blob(std::exchange(other.m_blob, nullptr)),
 			m_face(std::exchange(other.m_face, nullptr)),
 			m_font(std::exchange(other.m_font, nullptr)),
@@ -270,6 +392,9 @@ public:
 	unsigned int upem() const { return m_upem; }
 
 private:
+	// Keep the backing bytes alive for as long as a cached hb_blob references
+	// them. The LunaSVG face registry itself can be reset independently.
+	FontFace m_fontFace;
 	hb_blob_t *m_blob = nullptr;
 	hb_face_t *m_face = nullptr;
 	hb_font_t *m_font = nullptr;
@@ -277,20 +402,41 @@ private:
 	unsigned int m_upem = 0;
 };
 
-static ShapedCluster shapeCluster(const HarfBuzzFont &font, float fontSize, const TextCluster &cluster) {
-	ShapedCluster result;
+using HarfBuzzFontCache = std::unordered_map<const plutovg_font_face_t *, std::unique_ptr<HarfBuzzFont>>;
+
+static HarfBuzzFontCache &harfBuzzFontCache() {
+	static thread_local HarfBuzzFontCache cache;
+	return cache;
+}
+
+static const HarfBuzzFont &harfBuzzFontForFace(const FontFace &face) {
+	auto &cache = harfBuzzFontCache();
+	auto key = face.get();
+	auto it = cache.find(key);
+	if (it == cache.end()) {
+		it = cache.emplace(key, std::make_unique<HarfBuzzFont>(face)).first;
+	}
+	return *it->second;
+}
+
+static ShapedRun shapeRun(const HarfBuzzFont &font, float fontSize, std::u32string_view text,
+		size_t start, size_t end, const std::vector<GraphemeCluster> &clusters,
+		size_t firstCluster, size_t clusterCount, hb_direction_t direction, hb_script_t script, hb_language_t language) {
+	ShapedRun result;
 	if (!font.isValid()) {
 		return result;
 	}
 
 	auto buffer = font.buffer();
 	hb_buffer_reset(buffer);
-	hb_buffer_set_direction(buffer, HB_DIRECTION_LTR);
 	hb_buffer_set_cluster_level(buffer, HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES);
 	hb_buffer_set_flags(buffer, HB_BUFFER_FLAG_REMOVE_DEFAULT_IGNORABLES);
-	hb_buffer_add_utf32(buffer, reinterpret_cast<const uint32_t *>(cluster.text.data()),
-			static_cast<int>(cluster.text.size()), 0, static_cast<int>(cluster.text.size()));
-	hb_buffer_guess_segment_properties(buffer);
+	hb_buffer_add_utf32(buffer, reinterpret_cast<const uint32_t *>(text.data()), static_cast<int>(text.size()),
+			static_cast<unsigned int>(start), static_cast<int>(end - start));
+	// The run planner resolves these properties once for every fallback face.
+	hb_buffer_set_direction(buffer, direction);
+	hb_buffer_set_script(buffer, script);
+	hb_buffer_set_language(buffer, language);
 	hb_shape(font.font(), buffer, nullptr, 0);
 
 	unsigned int glyphCount = 0;
@@ -299,34 +445,346 @@ static ShapedCluster shapeCluster(const HarfBuzzFont &font, float fontSize, cons
 	const auto scale = fontSize / static_cast<float>(font.upem());
 	float penX = 0;
 	float penY = 0;
-	result.supported = cluster.isWhitespace || glyphCount > 0;
+	result.supportedClusters.assign(clusterCount, true);
+	if (glyphCount == 0) {
+		for (size_t i = 0; i < clusterCount; ++i) {
+			result.supportedClusters[i] = clusters[firstCluster + i].isWhitespace;
+		}
+	}
 	result.glyphs.reserve(glyphCount);
 	for (unsigned int i = 0; i < glyphCount; ++i) {
-		if (infos[i].codepoint == 0 && !cluster.isWhitespace) {
-			result.supported = false;
+		const auto clusterOffset = static_cast<size_t>(infos[i].cluster);
+		if (infos[i].codepoint == 0) {
+			for (size_t j = 0; j < clusterCount; ++j) {
+				const auto &cluster = clusters[firstCluster + j];
+				if (clusterOffset >= cluster.start && clusterOffset < cluster.end) {
+					if (!cluster.isWhitespace) {
+						result.supportedClusters[j] = false;
+					}
+					break;
+				}
+			}
 		}
 		result.glyphs.push_back({ infos[i].codepoint, penX + positions[i].x_offset * scale,
-				penY + positions[i].y_offset * scale });
+				penY + positions[i].y_offset * scale, clusterOffset });
 		penX += positions[i].x_advance * scale;
 		penY += positions[i].y_advance * scale;
 	}
-	result.width = penX;
+	if (penX < 0) {
+		for (auto &glyph : result.glyphs) {
+			glyph.x -= penX;
+		}
+	}
+	result.width = std::abs(penX);
+	if (shapingObserverFunction != nullptr) {
+		std::vector<uint32_t> glyphIndices;
+		std::vector<size_t> glyphClusters;
+		std::vector<float> xPositions;
+		std::vector<float> yPositions;
+		glyphIndices.reserve(result.glyphs.size());
+		glyphClusters.reserve(result.glyphs.size());
+		xPositions.reserve(result.glyphs.size());
+		yPositions.reserve(result.glyphs.size());
+		for (const auto &glyph : result.glyphs) {
+			glyphIndices.push_back(glyph.index);
+			glyphClusters.push_back(glyph.cluster);
+			xPositions.push_back(glyph.x);
+			yPositions.push_back(glyph.y);
+		}
+		shapingObserverFunction(start, end, HB_DIRECTION_IS_BACKWARD(direction), static_cast<uint32_t>(script),
+				glyphIndices.data(), glyphClusters.data(), xPositions.data(), yPositions.data(), glyphClusters.size(), result.width,
+				shapingObserverClosure);
+	}
 
 	return result;
 }
+
+struct ShapingRunPlan {
+	size_t firstCluster = 0;
+	size_t clusterCount = 0;
+	hb_script_t script = HB_SCRIPT_UNKNOWN;
+	hb_direction_t direction = HB_DIRECTION_LTR;
+	uint8_t bidiLevel = 0;
+};
+
+static bool isWeakScript(hb_script_t script) {
+	return script == HB_SCRIPT_COMMON || script == HB_SCRIPT_INHERITED || script == HB_SCRIPT_UNKNOWN;
+}
+
+static std::vector<hb_script_t> resolvedClusterScripts(std::u32string_view text,
+		const std::vector<GraphemeCluster> &clusters) {
+	auto unicode = hb_unicode_funcs_get_default();
+	std::vector<hb_script_t> scripts(clusters.size(), HB_SCRIPT_UNKNOWN);
+	for (size_t i = 0; i < clusters.size(); ++i) {
+		for (size_t offset = clusters[i].start; offset < clusters[i].end; ++offset) {
+			auto script = hb_unicode_script(unicode, text[offset]);
+			if (!isWeakScript(script)) {
+				scripts[i] = script;
+				break;
+			}
+		}
+	}
+
+	// Common and inherited clusters stay with an adjacent strong script. This
+	// keeps punctuation and combining clusters in the same shaping context.
+	hb_script_t previous = HB_SCRIPT_UNKNOWN;
+	for (size_t i = 0; i < scripts.size(); ++i) {
+		if (!isWeakScript(scripts[i])) {
+			previous = scripts[i];
+		} else if (!isWeakScript(previous)) {
+			scripts[i] = previous;
+		}
+	}
+	hb_script_t next = HB_SCRIPT_UNKNOWN;
+	for (size_t i = scripts.size(); i-- > 0;) {
+		if (!isWeakScript(scripts[i])) {
+			next = scripts[i];
+		} else if (!isWeakScript(next)) {
+			scripts[i] = next;
+		}
+	}
+	return scripts;
+}
+
+enum class ClusterDirection : uint8_t {
+	Neutral,
+	LeftToRight,
+	RightToLeft,
+	Number,
+};
+
+static bool isNumberCodepoint(uint32_t codepoint) {
+	return (codepoint >= U'0' && codepoint <= U'9') || (codepoint >= 0x0660 && codepoint <= 0x0669) ||
+			(codepoint >= 0x06F0 && codepoint <= 0x06F9);
+}
+
+static ClusterDirection directionForCluster(std::u32string_view text, const GraphemeCluster &cluster, hb_script_t script) {
+	for (size_t offset = cluster.start; offset < cluster.end; ++offset) {
+		if (isNumberCodepoint(text[offset])) {
+			return ClusterDirection::Number;
+		}
+	}
+	const auto scriptDirection = hb_script_get_horizontal_direction(script);
+	if (scriptDirection == HB_DIRECTION_RTL) {
+		return ClusterDirection::RightToLeft;
+	}
+	if (scriptDirection == HB_DIRECTION_LTR && !isWeakScript(script)) {
+		return ClusterDirection::LeftToRight;
+	}
+	return ClusterDirection::Neutral;
+}
+
+static ClusterDirection resolvedNeutralDirection(const std::vector<ClusterDirection> &directions, size_t index,
+		ClusterDirection baseDirection) {
+	auto normalize = [](ClusterDirection direction) {
+		return direction == ClusterDirection::Number ? ClusterDirection::LeftToRight : direction;
+	};
+	auto previous = baseDirection;
+	for (size_t i = index; i-- > 0;) {
+		if (directions[i] != ClusterDirection::Neutral) {
+			previous = normalize(directions[i]);
+			break;
+		}
+	}
+	auto next = baseDirection;
+	for (size_t i = index + 1; i < directions.size(); ++i) {
+		if (directions[i] != ClusterDirection::Neutral) {
+			next = normalize(directions[i]);
+			break;
+		}
+	}
+	return previous == next ? previous : baseDirection;
+}
+
+static std::vector<ShapingRunPlan> fallbackShapingRuns(std::u32string_view text,
+		const std::vector<GraphemeCluster> &clusters, Direction paragraphDirection) {
+	std::vector<ShapingRunPlan> runs;
+	if (clusters.empty()) {
+		return runs;
+	}
+
+	auto scripts = resolvedClusterScripts(text, clusters);
+
+	const bool baseRightToLeft = paragraphDirection == Direction::Rtl;
+	const auto baseDirection = baseRightToLeft ? ClusterDirection::RightToLeft : ClusterDirection::LeftToRight;
+	std::vector<ClusterDirection> directions(clusters.size(), ClusterDirection::Neutral);
+	for (size_t i = 0; i < clusters.size(); ++i) {
+		directions[i] = directionForCluster(text, clusters[i], scripts[i]);
+	}
+
+	for (size_t i = 0; i < directions.size(); ++i) {
+		if (directions[i] == ClusterDirection::Neutral) {
+			directions[i] = resolvedNeutralDirection(directions, i, baseDirection);
+		}
+	}
+
+	std::vector<uint8_t> levels(clusters.size(), baseRightToLeft ? 1 : 0);
+	auto precedingStrong = baseDirection;
+	for (size_t i = 0; i < directions.size(); ++i) {
+		switch (directions[i]) {
+			case ClusterDirection::RightToLeft:
+				levels[i] = 1;
+				precedingStrong = ClusterDirection::RightToLeft;
+				break;
+			case ClusterDirection::LeftToRight:
+				levels[i] = baseRightToLeft ? 2 : 0;
+				precedingStrong = ClusterDirection::LeftToRight;
+				break;
+			case ClusterDirection::Number:
+				levels[i] = (baseRightToLeft || precedingStrong == ClusterDirection::RightToLeft) ? 2 : 0;
+				break;
+			case ClusterDirection::Neutral:
+				break;
+		}
+	}
+
+	size_t first = 0;
+	for (size_t i = 1; i <= scripts.size(); ++i) {
+		if (i == scripts.size() || scripts[i] != scripts[first] || levels[i] != levels[first]) {
+			runs.push_back({ first, i - first, scripts[first],
+					(levels[first] & 1) != 0 ? HB_DIRECTION_RTL : HB_DIRECTION_LTR, levels[first] });
+			first = i;
+		}
+	}
+
+	uint8_t maximumLevel = 0;
+	uint8_t minimumOddLevel = UINT8_MAX;
+	for (const auto &run : runs) {
+		maximumLevel = std::max(maximumLevel, run.bidiLevel);
+		if ((run.bidiLevel & 1) != 0) {
+			minimumOddLevel = std::min(minimumOddLevel, run.bidiLevel);
+		}
+	}
+	if (minimumOddLevel != UINT8_MAX) {
+		for (int level = maximumLevel; level >= minimumOddLevel; --level) {
+			size_t runStart = 0;
+			while (runStart < runs.size()) {
+				while (runStart < runs.size() && runs[runStart].bidiLevel < level) {
+					++runStart;
+				}
+				size_t runEnd = runStart;
+				while (runEnd < runs.size() && runs[runEnd].bidiLevel >= level) {
+					++runEnd;
+				}
+				std::reverse(runs.begin() + runStart, runs.begin() + runEnd);
+				runStart = runEnd;
+			}
+		}
+	}
+	return runs;
+}
+
+#ifdef LUNASVG_ENABLE_ICU_BIDI
+static std::vector<ShapingRunPlan> shapingRuns(std::u32string_view text,
+		const std::vector<GraphemeCluster> &clusters, Direction paragraphDirection) {
+	if (clusters.empty()) {
+		return {};
+	}
+
+	std::vector<UChar> utf16;
+	utf16.reserve(text.size());
+	std::vector<int32_t> utf16Offsets(text.size() + 1, 0);
+	for (size_t i = 0; i < text.size(); ++i) {
+		utf16Offsets[i] = static_cast<int32_t>(utf16.size());
+		auto codepoint = static_cast<uint32_t>(text[i]);
+		if (codepoint <= 0xFFFF) {
+			utf16.push_back(static_cast<UChar>(codepoint));
+		} else {
+			codepoint -= 0x10000;
+			utf16.push_back(static_cast<UChar>(0xD800 + (codepoint >> 10)));
+			utf16.push_back(static_cast<UChar>(0xDC00 + (codepoint & 0x3FF)));
+		}
+	}
+	utf16Offsets[text.size()] = static_cast<int32_t>(utf16.size());
+
+	UErrorCode error = U_ZERO_ERROR;
+	UBiDi *bidi = ubidi_openSized(static_cast<int32_t>(utf16.size()), 0, &error);
+	if (U_FAILURE(error) || bidi == nullptr) {
+		if (bidi != nullptr) {
+			ubidi_close(bidi);
+		}
+		return fallbackShapingRuns(text, clusters, paragraphDirection);
+	}
+	ubidi_setPara(bidi, utf16.data(), static_cast<int32_t>(utf16.size()),
+			paragraphDirection == Direction::Rtl ? UBIDI_RTL : UBIDI_LTR, nullptr, &error);
+	if (U_FAILURE(error)) {
+		ubidi_close(bidi);
+		return fallbackShapingRuns(text, clusters, paragraphDirection);
+	}
+
+	const auto scripts = resolvedClusterScripts(text, clusters);
+	const auto runCount = ubidi_countRuns(bidi, &error);
+	if (U_FAILURE(error)) {
+		ubidi_close(bidi);
+		return fallbackShapingRuns(text, clusters, paragraphDirection);
+	}
+
+	std::vector<ShapingRunPlan> runs;
+	for (int32_t runIndex = 0; runIndex < runCount; ++runIndex) {
+		int32_t logicalStart16 = 0;
+		int32_t logicalLength16 = 0;
+		const auto bidiDirection = ubidi_getVisualRun(bidi, runIndex, &logicalStart16, &logicalLength16);
+		const auto logicalEnd16 = logicalStart16 + logicalLength16;
+		auto startIt = std::lower_bound(utf16Offsets.begin(), utf16Offsets.end(), logicalStart16);
+		auto endIt = std::lower_bound(utf16Offsets.begin(), utf16Offsets.end(), logicalEnd16);
+		if (startIt == utf16Offsets.end() || endIt == utf16Offsets.end() || *startIt != logicalStart16 || *endIt != logicalEnd16) {
+			ubidi_close(bidi);
+			return fallbackShapingRuns(text, clusters, paragraphDirection);
+		}
+		const auto logicalStart = static_cast<size_t>(startIt - utf16Offsets.begin());
+		const auto logicalEnd = static_cast<size_t>(endIt - utf16Offsets.begin());
+
+		size_t firstCluster = 0;
+		while (firstCluster < clusters.size() && clusters[firstCluster].end <= logicalStart) {
+			++firstCluster;
+		}
+		size_t endCluster = firstCluster;
+		while (endCluster < clusters.size() && clusters[endCluster].start < logicalEnd) {
+			++endCluster;
+		}
+		if (firstCluster == endCluster || clusters[firstCluster].start < logicalStart || clusters[endCluster - 1].end > logicalEnd) {
+			ubidi_close(bidi);
+			return fallbackShapingRuns(text, clusters, paragraphDirection);
+		}
+
+		std::vector<ShapingRunPlan> scriptRuns;
+		size_t scriptStart = firstCluster;
+		for (size_t i = firstCluster + 1; i <= endCluster; ++i) {
+			if (i == endCluster || scripts[i] != scripts[scriptStart]) {
+				scriptRuns.push_back({ scriptStart, i - scriptStart, scripts[scriptStart],
+						bidiDirection == UBIDI_RTL ? HB_DIRECTION_RTL : HB_DIRECTION_LTR, 0 });
+				scriptStart = i;
+			}
+		}
+		if (bidiDirection == UBIDI_RTL) {
+			std::reverse(scriptRuns.begin(), scriptRuns.end());
+		}
+		runs.insert(runs.end(), scriptRuns.begin(), scriptRuns.end());
+	}
+	ubidi_close(bidi);
+	return runs;
+}
+#else
+static std::vector<ShapingRunPlan> shapingRuns(std::u32string_view text,
+		const std::vector<GraphemeCluster> &clusters, Direction paragraphDirection) {
+	return fallbackShapingRuns(text, clusters, paragraphDirection);
+}
+#endif
 #endif
 
 struct FontCandidate {
 	explicit FontCandidate(FontFace fontFace) :
 			face(std::move(fontFace))
 #ifdef LUNASVG_ENABLE_HARFBUZZ
-			, shapingFont(face)
+			,
+			shapingFont(&harfBuzzFontForFace(face))
 #endif
-	{}
+	{
+	}
 
 	FontFace face;
 #ifdef LUNASVG_ENABLE_HARFBUZZ
-	HarfBuzzFont shapingFont;
+	const HarfBuzzFont *shapingFont = nullptr;
 #endif
 };
 
@@ -349,48 +807,6 @@ static std::vector<FontCandidate> resolveFontCandidates(const SVGTextPositioning
 		candidates.emplace_back(element->font().face());
 	}
 	return candidates;
-}
-
-static bool fontFaceHasEmbeddedSVGGlyph(const FontFace &face, const std::vector<SVGShapedGlyph> &glyphs) {
-	if (face.isNull() || glyphs.size() != 1) {
-		return false;
-	}
-	const char *svgData = nullptr;
-	return plutovg_font_face_get_glyph_index_svg(face.get(), glyphs.front().index, &svgData) > 0 && svgData != nullptr;
-}
-
-struct SelectedClusterFont {
-	Font font;
-	std::vector<SVGShapedGlyph> glyphs;
-	float width = 0;
-	bool hasEmbeddedSVGGlyph = false;
-	bool isMissingGlyph = false;
-};
-
-static SelectedClusterFont selectClusterFont(const SVGTextPositioningElement *element,
-		const std::vector<FontCandidate> &candidates, const TextCluster &cluster) {
-	const auto fontSize = element->font().size();
-	for (const auto &candidate : candidates) {
-#ifdef LUNASVG_ENABLE_HARFBUZZ
-		auto shaped = shapeCluster(candidate.shapingFont, fontSize, cluster);
-		if (shaped.supported) {
-			auto hasEmbeddedSVG = fontFaceHasEmbeddedSVGGlyph(candidate.face, shaped.glyphs);
-			return { Font(candidate.face, fontSize), std::move(shaped.glyphs), shaped.width, hasEmbeddedSVG, false };
-		}
-#else
-		if (fontFaceSupportsClusterWithoutShaping(candidate.face, cluster)) {
-			auto font = Font(candidate.face, fontSize);
-			return { font, {}, font.measureText(cluster.drawableText), false, false };
-		}
-#endif
-	}
-	Font missingFont;
-	if (!candidates.empty()) {
-		missingFont = Font(candidates.front().face, fontSize);
-	} else {
-		missingFont = Font(FontFace(), fontSize);
-	}
-	return { missingFont, {}, 0, false, !cluster.isWhitespace };
 }
 
 static bool tryResolveEmbeddedSVGGlyph(const Font &font, uint32_t glyphIndex, const Point &origin, EmbeddedSVGGlyphInfo &glyph) {
@@ -445,13 +861,9 @@ static const Bitmap *getCachedEmbeddedSVGGlyphBitmap(const Font &font, uint32_t 
 	return &bitmapCache.emplace(key, std::move(bitmap)).first->second;
 }
 
-static bool tryRenderEmbeddedSVGGlyph(const SVGTextFragment &fragment, const Transform &transform, SVGRenderState &state) {
-	if (fragment.glyphs.size() != 1) {
-		return false;
-	}
-
+static bool tryRenderEmbeddedSVGGlyph(const SVGTextFragment &fragment, const SVGShapedGlyph &shapedGlyph,
+		const Transform &transform, SVGRenderState &state) {
 	const auto &font = fragment.font;
-	const auto &shapedGlyph = fragment.glyphs.front();
 	auto origin = Point(fragment.x + shapedGlyph.x, fragment.y - shapedGlyph.y);
 	EmbeddedSVGGlyphInfo glyph;
 	if (!tryResolveEmbeddedSVGGlyph(font, shapedGlyph.index, origin, glyph)) {
@@ -465,6 +877,16 @@ static bool tryRenderEmbeddedSVGGlyph(const SVGTextFragment &fragment, const Tra
 
 	state->drawImage(*bitmap, glyph.dstRect, Rect(0, 0, bitmap->width(), bitmap->height()), transform);
 	return true;
+}
+
+static Path shapedGlyphPath(const SVGTextFragment &fragment, const SVGShapedGlyph &glyph) {
+	Path path;
+	auto face = fragment.font.face().get();
+	if (face == nullptr) {
+		return path;
+	}
+	path.addGlyph(face, fragment.font.size(), fragment.x + glyph.x, fragment.y - glyph.y, glyph.index);
+	return path;
 }
 
 static Path shapedGlyphPath(const SVGTextFragment &fragment) {
@@ -486,6 +908,12 @@ static Rect shapedGlyphBounds(const SVGTextFragment &fragment) {
 		return Rect::Empty;
 	}
 	for (const auto &glyph : fragment.glyphs) {
+		EmbeddedSVGGlyphInfo embeddedGlyph;
+		auto origin = Point(fragment.x + glyph.x, fragment.y - glyph.y);
+		if (tryResolveEmbeddedSVGGlyph(fragment.font, glyph.index, origin, embeddedGlyph)) {
+			bounds.unite(embeddedGlyph.dstRect);
+			continue;
+		}
 		plutovg_rect_t extents = { 0 };
 		plutovg_font_face_get_glyph_index_metrics(face, fragment.font.size(), glyph.index, nullptr, nullptr, &extents);
 		bounds.unite(Rect(fragment.x + glyph.x + extents.x, fragment.y - glyph.y + extents.y, extents.w, extents.h));
@@ -516,6 +944,9 @@ static Path missingGlyphPath(const SVGTextFragment &fragment) {
 
 void clearTextCaches() {
 	embeddedSVGGlyphBitmapCache().clear();
+#ifdef LUNASVG_ENABLE_HARFBUZZ
+	harfBuzzFontCache().clear();
+#endif
 }
 
 inline const SVGTextNode *toSVGTextNode(const SVGNode *node) {
@@ -688,11 +1119,19 @@ void SVGTextFragmentsBuilder::buildTextNodeFragments(const SVGTextPosition &text
 	auto baselineOffset = calculateBaselineOffset(element);
 	auto nodeText = wholeText.substr(textPosition.startOffset, textPosition.endOffset - textPosition.startOffset);
 	auto clusterBreaks = graphemeBreaks(nodeText);
+	std::vector<GraphemeCluster> clusters;
+	clusters.reserve(clusterBreaks.size());
 	size_t localStartOffset = 0;
 	for (auto localEndOffset : clusterBreaks) {
-		const auto startOffset = textPosition.startOffset + localStartOffset;
-		const auto endOffset = textPosition.startOffset + localEndOffset;
-		const TextCluster cluster(wholeText.substr(startOffset, endOffset - startOffset));
+		clusters.push_back({ localStartOffset, localEndOffset,
+				isWhitespaceCluster(nodeText.substr(localStartOffset, localEndOffset - localStartOffset)) });
+		localStartOffset = localEndOffset;
+	}
+
+	auto appendFragment = [&](size_t localStart, size_t localEnd, Font font,
+								  std::vector<SVGShapedGlyph> glyphs, float width, bool missing, bool whitespace) {
+		const auto startOffset = textPosition.startOffset + localStart;
+		const auto endOffset = textPosition.startOffset + localEnd;
 		SVGCharacterPosition characterPosition;
 		auto positionIt = m_characterPositions.find(startOffset);
 		if (positionIt != m_characterPositions.end()) {
@@ -706,31 +1145,144 @@ void SVGTextFragmentsBuilder::buildTextNodeFragments(const SVGTextPosition &text
 		m_x = dx + characterPosition.x.value_or(m_x);
 		m_y = dy + characterPosition.y.value_or(m_y);
 
-		auto selection = selectClusterFont(element, candidates, cluster);
 		SVGTextFragment fragment(element);
 		fragment.offset = startOffset;
 		fragment.length = endOffset - startOffset;
-		fragment.font = selection.font;
-		fragment.glyphs = std::move(selection.glyphs);
+		fragment.font = std::move(font);
+		for (auto &glyph : glyphs) {
+			glyph.cluster += textPosition.startOffset;
+		}
+		fragment.glyphs = std::move(glyphs);
 		fragment.x = m_x;
 		fragment.y = m_y - baselineOffset;
 		fragment.angle = angle;
 		fragment.startsNewTextChunk =
 				(characterPosition.x || characterPosition.y) && startOffset == textPosition.startOffset;
-		fragment.hasEmbeddedSVGGlyph = selection.hasEmbeddedSVGGlyph;
-		fragment.isMissingGlyph = selection.isMissingGlyph;
-		fragment.isWhitespace = cluster.isWhitespace;
+		fragment.isMissingGlyph = missing;
+		fragment.isWhitespace = whitespace;
 		if (fragment.isMissingGlyph) {
 			fragment.width = std::max(1.f, element->font_size() * 0.6f);
 		} else if (fragment.font.isNull()) {
 			fragment.width = fragment.isWhitespace ? std::max(1.f, element->font_size() * 0.33f) : 0.f;
 		} else {
-			fragment.width = selection.width;
+			fragment.width = width;
 		}
 		m_fragments.push_back(std::move(fragment));
-		m_x += fragment.width;
-		localStartOffset = localEndOffset;
+		m_x += m_fragments.back().width;
+	};
+
+#ifdef LUNASVG_ENABLE_HARFBUZZ
+	const auto language = hb_language_from_string(element->language().c_str(), -1);
+	const auto fontSize = element->font().size();
+	for (const auto &shapingRun : shapingRuns(nodeText, clusters, element->direction())) {
+		const auto runEndCluster = shapingRun.firstCluster + shapingRun.clusterCount;
+		const auto runStart = clusters[shapingRun.firstCluster].start;
+		const auto runEnd = clusters[runEndCluster - 1].end;
+		std::vector<int> selected(shapingRun.clusterCount, -1);
+
+		// Shape the complete bidi/script run with every candidate only to decide
+		// fallback at grapheme granularity. A .notdef marks the owning grapheme
+		// cluster as unsupported; successful neighboring clusters keep context.
+		for (size_t candidateIndex = 0; candidateIndex < candidates.size(); ++candidateIndex) {
+			auto probe = shapeRun(*candidates[candidateIndex].shapingFont, fontSize, nodeText, runStart, runEnd,
+					clusters, shapingRun.firstCluster, shapingRun.clusterCount, shapingRun.direction, shapingRun.script, language);
+			if (probe.supportedClusters.size() != shapingRun.clusterCount) {
+				continue;
+			}
+			bool allSelected = true;
+			for (size_t i = 0; i < shapingRun.clusterCount; ++i) {
+				if (selected[i] < 0 && probe.supportedClusters[i]) {
+					selected[i] = static_cast<int>(candidateIndex);
+				}
+				allSelected = allSelected && selected[i] >= 0;
+			}
+			if (allSelected) {
+				break;
+			}
+		}
+
+		struct SelectedFontGroup {
+			size_t begin = 0;
+			size_t end = 0;
+			int candidateIndex = -1;
+		};
+		std::vector<SelectedFontGroup> groups;
+		size_t group = 0;
+		while (group < shapingRun.clusterCount) {
+			const auto candidateIndex = selected[group];
+			size_t groupEnd = group + 1;
+			while (groupEnd < shapingRun.clusterCount && selected[groupEnd] == candidateIndex) {
+				const auto absoluteStart = textPosition.startOffset + clusters[shapingRun.firstCluster + groupEnd].start;
+				// Per-character SVG positioning is itself a shaping boundary.
+				if (m_characterPositions.find(absoluteStart) != m_characterPositions.end()) {
+					break;
+				}
+				++groupEnd;
+			}
+			groups.push_back({ group, groupEnd, candidateIndex });
+			group = groupEnd;
+		}
+
+		auto emitGroup = [&](const SelectedFontGroup &selectedGroup) {
+			const auto candidateIndex = selectedGroup.candidateIndex;
+			const auto firstCluster = shapingRun.firstCluster + selectedGroup.begin;
+			const auto groupClusterCount = selectedGroup.end - selectedGroup.begin;
+			const auto start = clusters[firstCluster].start;
+			const auto end = clusters[firstCluster + groupClusterCount - 1].end;
+			bool whitespace = true;
+			for (size_t i = 0; i < groupClusterCount; ++i) {
+				whitespace = whitespace && clusters[firstCluster + i].isWhitespace;
+			}
+
+			if (candidateIndex >= 0) {
+				auto shaped = shapeRun(*candidates[candidateIndex].shapingFont, fontSize, nodeText, start, end,
+						clusters, firstCluster, groupClusterCount, shapingRun.direction, shapingRun.script, language);
+				appendFragment(start, end, Font(candidates[candidateIndex].face, fontSize),
+						std::move(shaped.glyphs), shaped.width, false, whitespace);
+			} else {
+				// Missing-glyph boxes remain one per grapheme cluster.
+				for (size_t visualIndex = 0; visualIndex < groupClusterCount; ++visualIndex) {
+					const auto logicalIndex = shapingRun.direction == HB_DIRECTION_RTL ? groupClusterCount - visualIndex - 1 : visualIndex;
+					const auto &cluster = clusters[firstCluster + logicalIndex];
+					Font missingFont = candidates.empty() ? Font(FontFace(), fontSize) : Font(candidates.front().face, fontSize);
+					appendFragment(cluster.start, cluster.end, std::move(missingFont), {}, 0,
+							!cluster.isWhitespace, cluster.isWhitespace);
+				}
+			}
+		};
+
+		if (shapingRun.direction == HB_DIRECTION_RTL) {
+			for (auto it = groups.rbegin(); it != groups.rend(); ++it) {
+				emitGroup(*it);
+			}
+		} else {
+			for (const auto &selectedGroup : groups) {
+				emitGroup(selectedGroup);
+			}
+		}
 	}
+#else
+	for (const auto &clusterRange : clusters) {
+		const TextCluster cluster(nodeText.substr(clusterRange.start, clusterRange.end - clusterRange.start));
+		bool selected = false;
+		for (const auto &candidate : candidates) {
+			if (fontFaceSupportsClusterWithoutShaping(candidate.face, cluster)) {
+				auto font = Font(candidate.face, element->font().size());
+				auto width = font.measureText(cluster.drawableText);
+				appendFragment(clusterRange.start, clusterRange.end, std::move(font), {}, width, false,
+						cluster.isWhitespace);
+				selected = true;
+				break;
+			}
+		}
+		if (!selected) {
+			auto fontSize = element->font().size();
+			Font missingFont = candidates.empty() ? Font(FontFace(), fontSize) : Font(candidates.front().face, fontSize);
+			appendFragment(clusterRange.start, clusterRange.end, std::move(missingFont), {}, 0,
+					!cluster.isWhitespace, cluster.isWhitespace);
+		}
+	}
+#endif
 }
 
 void SVGTextFragmentsBuilder::adjustTextAnchors() {
@@ -866,6 +1418,13 @@ SVGTextPositioningElement::SVGTextPositioningElement(Document *document, Element
 void SVGTextPositioningElement::layoutElement(const SVGLayoutState &state) {
 	m_font = state.font();
 	m_font_family = state.font_family();
+	m_language = "und";
+	for (const SVGElement *element = this; element != nullptr; element = element->parent()) {
+		if (element->hasAttribute(PropertyID::Lang) && !element->getAttribute(PropertyID::Lang).empty()) {
+			m_language = element->getAttribute(PropertyID::Lang);
+			break;
+		}
+	}
 	m_font_bold = state.font_weight() == FontWeight::Bold;
 	m_font_italic = state.font_style() == FontStyle::Italic;
 	m_fill = getPaintServer(state.fill(), state.fill_opacity());
@@ -963,22 +1522,29 @@ void SVGTextElement::render(SVGRenderState &state) const {
 				}
 				continue;
 			}
-			if (fragment.hasEmbeddedSVGGlyph && tryRenderEmbeddedSVGGlyph(fragment, transform, newState)) {
+			if (fragment.glyphs.empty()) {
+				if (fill.applyPaint(newState)) {
+					newState->fillText(text, fragment.font, Point(fragment.x, fragment.y), transform);
+				}
+				if (stroke.applyPaint(newState)) {
+					newState->strokeText(text, stroke_width, fragment.font, Point(fragment.x, fragment.y), transform);
+				}
 				continue;
 			}
-			auto shapedPath = fragment.glyphs.empty() ? Path() : shapedGlyphPath(fragment);
-			if (fill.applyPaint(newState)) {
-				if (fragment.glyphs.empty()) {
-					newState->fillText(text, fragment.font, Point(fragment.x, fragment.y), transform);
-				} else {
-					newState->fillPath(shapedPath, FillRule::NonZero, transform);
+
+			// A shaped font run can mix outline glyphs and multiple SVG-in-OT
+			// glyphs. Decide per glyph so fallback-run coalescing never strips
+			// color from adjacent emoji.
+			for (const auto &glyph : fragment.glyphs) {
+				if (tryRenderEmbeddedSVGGlyph(fragment, glyph, transform, newState)) {
+					continue;
 				}
-			}
-			if (stroke.applyPaint(newState)) {
-				if (fragment.glyphs.empty()) {
-					newState->strokeText(text, stroke_width, fragment.font, Point(fragment.x, fragment.y), transform);
-				} else {
-					newState->strokePath(shapedPath, StrokeData(stroke_width), transform);
+				auto path = shapedGlyphPath(fragment, glyph);
+				if (fill.applyPaint(newState)) {
+					newState->fillPath(path, FillRule::NonZero, transform);
+				}
+				if (stroke.applyPaint(newState)) {
+					newState->strokePath(path, StrokeData(stroke_width), transform);
 				}
 			}
 		}
@@ -997,18 +1563,10 @@ Rect SVGTextElement::boundingBox(bool includeStroke) const {
 		const auto &stroke = fragment.element->stroke();
 		auto fragmentTranform = Transform::rotated(fragment.angle, fragment.x, fragment.y);
 		auto fragmentRect = fragment.isMissingGlyph ? missingGlyphRect(fragment)
-											: (fragment.glyphs.empty()
-														  ? Rect(fragment.x, fragment.y - font.ascent(), fragment.width,
-																	fragment.element->font_size())
-														  : shapedGlyphBounds(fragment));
-		if (!fragment.isMissingGlyph && fragment.hasEmbeddedSVGGlyph && fragment.glyphs.size() == 1) {
-			EmbeddedSVGGlyphInfo glyph;
-			const auto &shapedGlyph = fragment.glyphs.front();
-			auto origin = Point(fragment.x + shapedGlyph.x, fragment.y - shapedGlyph.y);
-			if (tryResolveEmbeddedSVGGlyph(font, shapedGlyph.index, origin, glyph)) {
-				fragmentRect = glyph.dstRect;
-			}
-		}
+													: (fragment.glyphs.empty()
+																	  ? Rect(fragment.x, fragment.y - font.ascent(), fragment.width,
+																				fragment.element->font_size())
+																	  : shapedGlyphBounds(fragment));
 		if (includeStroke && stroke.isRenderable()) {
 			fragmentRect.inflate(fragment.element->stroke_width() / 2.f);
 		}

@@ -32,14 +32,32 @@
 #define SVG_UTILS_H
 
 #include "core/string/ustring.h"
+#include "core/templates/vector.h"
+
+struct SVGProjectFontFace {
+	String family;
+	Vector<uint8_t> data;
+};
 
 class SVGUtils {
 public:
+	// Validates the same font bytes LunaSVG will consume without changing the
+	// current thread's face cache or the process-wide project font registry.
+	static bool is_font_data_valid(const Vector<uint8_t> &font_data);
+	// Atomically replaces the complete project font snapshot. Rendering threads
+	// see either the previous generation or this complete generation; they never
+	// observe individual faces being registered.
+	static void apply_font_registry(const Vector<uint8_t> &default_font_data, const Vector<SVGProjectFontFace> &named_font_faces, const Vector<String> &preferences);
+	// Exposes the currently published project-font generation for diagnostics
+	// and transaction tests.
+	static uint64_t get_font_registry_generation();
 	static void set_default_font(const void *font_data, int length);
 	static void add_font_face(const String &family, const void *font_data, int length);
 	static void set_font_preferences(const Vector<String> &preferences);
 	static void reset_font_registry();
-	static void ensure_font_faces_registered();
+	// Returns false when the complete thread-local snapshot could not be
+	// installed. Callers must not render with a partial font generation.
+	static bool ensure_font_faces_registered();
 };
 
 #endif // SVG_UTILS_H

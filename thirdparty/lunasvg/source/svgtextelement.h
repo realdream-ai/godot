@@ -8,8 +8,12 @@
 namespace lunasvg {
 
 using GraphemeBreakFunction = size_t (*)(const uint32_t *text, size_t length, size_t *breaks, size_t capacity, void *closure);
+using ShapingObserverFunction = void (*)(size_t start, size_t end, bool rightToLeft,
+		uint32_t script, const uint32_t *glyphIndices, const size_t *clusters,
+		const float *xPositions, const float *yPositions, size_t glyphCount, float width, void *closure);
 
 void setGraphemeBreakFunction(GraphemeBreakFunction callback, void *closure);
+void setShapingObserverFunction(ShapingObserverFunction callback, void *closure);
 void clearTextCaches();
 
 class SVGTextPositioningElement;
@@ -40,6 +44,7 @@ struct SVGShapedGlyph {
 	uint32_t index = 0;
 	float x = 0;
 	float y = 0;
+	size_t cluster = 0;
 };
 
 struct SVGTextFragment {
@@ -55,7 +60,6 @@ struct SVGTextFragment {
 	float width = 0;
 	std::vector<SVGShapedGlyph> glyphs;
 	bool startsNewTextChunk = false;
-	bool hasEmbeddedSVGGlyph = false;
 	bool isMissingGlyph = false;
 	bool isWhitespace = false;
 };
@@ -96,6 +100,7 @@ public:
 
 	const Font &font() const { return m_font; }
 	const std::string &font_family() const { return m_font_family; }
+	const std::string &language() const { return m_language; }
 	bool font_bold() const { return m_font_bold; }
 	bool font_italic() const { return m_font_italic; }
 	const SVGPaintServer &fill() const { return m_fill; }
@@ -121,6 +126,7 @@ private:
 
 	Font m_font;
 	std::string m_font_family;
+	std::string m_language = "und";
 	bool m_font_bold = false;
 	bool m_font_italic = false;
 	SVGPaintServer m_fill;

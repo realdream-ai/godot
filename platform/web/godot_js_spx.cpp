@@ -564,6 +564,10 @@ void gdspx_res_free_str(GdString *str) {
 	 resMgr->free_str(*str);
 }
 EMSCRIPTEN_KEEPALIVE
+void gdspx_res_apply_project_fonts(GdString *default_font_path, GdArray *font_paths, GdArray *font_families, GdArray *preferences, GdString *ret_val) {
+	*ret_val = resMgr->apply_project_fonts(*default_font_path, *font_paths, *font_families, *preferences);
+}
+EMSCRIPTEN_KEEPALIVE
 void gdspx_res_set_default_font(GdString *font_path) {
 	 resMgr->set_default_font(*font_path);
 }

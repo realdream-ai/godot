@@ -36,6 +36,7 @@
 #include "core/io/image_loader.h"
 #include "core/io/json.h"
 #include "core/math/vector2.h"
+#include "core/os/thread.h"
 #include "modules/minimp3/audio_stream_mp3.h"
 #include "modules/modules_enabled.gen.h"
 #include "scene/2d/audio_stream_player_2d.h"
@@ -62,14 +63,22 @@
 #include "modules/svg/svg_utils.h"
 #endif
 
-static bool _load_font_data_from_path(const String &p_path, const String &p_engine_path, Vector<uint8_t> &r_font_data) {
+static bool _font_load_failed(const String &p_message, String *r_error) {
+	if (r_error != nullptr) {
+		*r_error = p_message;
+	} else {
+		ERR_PRINT(p_message);
+	}
+	return false;
+}
+
+static bool _load_font_data_from_path(const String &p_path, const String &p_engine_path, Vector<uint8_t> &r_font_data, String *r_error = nullptr) {
 	if (ResourceLoader::exists(p_path, "FontFile")) {
 		Ref<FontFile> imported_font = ResourceLoader::load(p_path, "FontFile");
 		if (!imported_font.is_null()) {
 			r_font_data = imported_font->get_data();
 			if (r_font_data.is_empty()) {
-				ERR_PRINT("Loaded font resource has no data: " + p_path);
-				return false;
+				return _font_load_failed("Loaded font resource has no data: " + p_path, r_error);
 			}
 			return true;
 		}
@@ -77,26 +86,22 @@ static bool _load_font_data_from_path(const String &p_path, const String &p_engi
 
 	Ref<FileAccess> file = FileAccess::open(p_engine_path, FileAccess::READ);
 	if (file.is_null()) {
-		ERR_PRINT("Can not open font file: " + p_path + " engine_path= " + p_engine_path);
-		return false;
+		return _font_load_failed("Can not open font file: " + p_path + " engine_path= " + p_engine_path, r_error);
 	}
 
 	uint64_t font_size = file->get_length();
 	if (font_size == 0) {
-		ERR_PRINT("Font file is empty: " + p_path + " engine_path= " + p_engine_path);
-		return false;
+		return _font_load_failed("Font file is empty: " + p_path + " engine_path= " + p_engine_path, r_error);
 	}
 	if (font_size > uint64_t(std::numeric_limits<int>::max())) {
-		ERR_PRINT("Font file is too large: " + p_path + " engine_path= " + p_engine_path);
-		return false;
+		return _font_load_failed("Font file is too large: " + p_path + " engine_path= " + p_engine_path, r_error);
 	}
 
 	r_font_data.resize((int)font_size);
 	uint64_t read_bytes = file->get_buffer(r_font_data.ptrw(), font_size);
 	if (read_bytes != font_size) {
-		ERR_PRINT("Can not read full font file: " + p_path + " engine_path= " + p_engine_path);
 		r_font_data.resize(0);
-		return false;
+		return _font_load_failed("Can not read full font file: " + p_path + " engine_path= " + p_engine_path, r_error);
 	}
 	return true;
 }
@@ -104,8 +109,8 @@ static bool _load_font_data_from_path(const String &p_path, const String &p_engi
 static Ref<FontFile> _create_display_font(const Vector<uint8_t> &p_font_data) {
 	Ref<FontFile> font;
 	font.instantiate();
-	font->set_font_style(0);
 	font->set_data(p_font_data);
+	font->set_font_style(0);
 	font->set_antialiasing(TextServer::FONT_ANTIALIASING_GRAY);
 	font->set_force_autohinter(false);
 	font->set_hinting(TextServer::HINTING_LIGHT);
@@ -128,21 +133,75 @@ static String _ascii_fold_font_family(const String &p_family) {
 	return folded;
 }
 
+static bool _strings_from_array(GdArray p_values, const String &p_name, Vector<String> &r_values, String &r_error) {
+	r_values.clear();
+	if (p_values == nullptr) {
+		r_error = p_name + " must be a GdArray of strings.";
+		return false;
+	}
+	if (p_values->type != GD_ARRAY_TYPE_STRING) {
+		r_error = p_name + " must contain strings.";
+		return false;
+	}
+	if (p_values->size < 0 || (p_values->size > 0 && p_values->data == nullptr)) {
+		r_error = p_name + " has an invalid array payload.";
+		return false;
+	}
+	r_values.resize(p_values->size);
+	for (int64_t i = 0; i < p_values->size; i++) {
+		auto value = SpxBaseMgr::get_array<GdString>(p_values, i);
+		if (value == nullptr || *value == nullptr) {
+			r_values.clear();
+			r_error = p_name + " contains an invalid string at index " + itos(i) + ".";
+			return false;
+		}
+		r_values.write[i] = SpxStr(*value);
+	}
+	return true;
+}
+
 static Vector<String> _font_preferences_from_array(GdArray p_preferences) {
-	if (p_preferences == nullptr || p_preferences->type != GD_ARRAY_TYPE_STRING) {
-		ERR_PRINT("Font preferences must be a GdArray of strings.");
+	// The legacy native bridge encodes an empty []string as nullptr. Keep that
+	// representation working until all callers move to apply_project_fonts.
+	if (p_preferences == nullptr) {
 		return Vector<String>();
 	}
 	Vector<String> families;
-	for (int64_t i = 0; i < p_preferences->size; i++) {
-		auto preference = SpxBaseMgr::get_array<GdString>(p_preferences, i);
-		if (preference == nullptr) {
-			ERR_PRINT("Font preferences contain an invalid string.");
-			return Vector<String>();
-		}
-		families.push_back(SpxStr(*preference));
+	String error;
+	if (!_strings_from_array(p_preferences, "Font preferences", families, error)) {
+		ERR_PRINT(error);
+		families.clear();
 	}
 	return families;
+}
+
+static Ref<Font> _build_display_font_chain(const HashMap<String, Ref<FontFile>> &p_fonts, const Vector<String> &p_preferences) {
+	Ref<Font> primary;
+	TypedArray<Font> fallbacks;
+	for (const String &family : p_preferences) {
+		const Ref<FontFile> *font = p_fonts.getptr(_ascii_fold_font_family(family));
+		if (font == nullptr || font->is_null()) {
+			continue;
+		}
+		if (primary.is_null()) {
+			primary = *font;
+		} else {
+			fallbacks.push_back(*font);
+		}
+	}
+
+	if (primary.is_valid()) {
+		Ref<FontVariation> composite;
+		composite.instantiate();
+		composite->set_base_font(primary);
+		composite->set_fallbacks(fallbacks);
+		return composite;
+	}
+
+	Ref<FontFile> empty_font;
+	empty_font.instantiate();
+	empty_font->set_allow_system_fallback(false);
+	return empty_font;
 }
 
 void SpxResMgr::on_awake() {
@@ -168,7 +227,10 @@ bool SpxResMgr::is_dynamic_anim_mode() const {
 
 String SpxResMgr::_to_engine_path(const String &p_path) {
 	String path = p_path;
-	if (!path.begins_with(platformMgr->_get_persistant_data_dir()) && game_data_root != "res://") {
+	SpxEngine *engine = SpxEngine::get_singleton();
+	SpxPlatformMgr *platform = engine != nullptr ? engine->get_platform() : nullptr;
+	if (game_data_root != "res://" &&
+			(platform == nullptr || !path.begins_with(platform->_get_persistant_data_dir()))) {
 		if (path.begins_with("../")) {
 			path = path.substr(3, -1);
 		}
@@ -594,6 +656,127 @@ GdString SpxResMgr::list_directories(GdString p_path) {
 	return SpxReturnStr(JSON::stringify(directories));
 }
 
+GdString SpxResMgr::apply_project_fonts(GdString default_font_path, GdArray font_paths, GdArray font_families, GdArray preferences) {
+	auto fail = [](const String &p_error) -> GdString {
+		return SpxReturnStr(p_error);
+	};
+	if (!Thread::is_main_thread()) {
+		return fail("Project fonts must be applied on the engine main thread.");
+	}
+
+	if (default_font_path == nullptr) {
+		return fail("Default font path must be a string.");
+	}
+	const String default_path = SpxStr(default_font_path);
+	if (default_path.is_empty()) {
+		return fail("Default font path must not be empty.");
+	}
+
+	String error;
+	Vector<String> paths;
+	Vector<String> families;
+	Vector<String> preference_values;
+	if (!_strings_from_array(font_paths, "Font paths", paths, error)) {
+		return fail(error);
+	}
+	if (!_strings_from_array(font_families, "Font families", families, error)) {
+		return fail(error);
+	}
+	if (!_strings_from_array(preferences, "Font preferences", preference_values, error)) {
+		return fail(error);
+	}
+	if (paths.size() != families.size()) {
+		return fail("Font paths and font families must have the same length.");
+	}
+
+	HashMap<String, String> available_families;
+	available_families.insert("default", "default");
+	for (int i = 0; i < families.size(); i++) {
+		if (paths[i].is_empty()) {
+			return fail("Font path at index " + itos(i) + " must not be empty.");
+		}
+		if (families[i].is_empty()) {
+			return fail("Font family at index " + itos(i) + " must not be empty.");
+		}
+		const String folded_family = _ascii_fold_font_family(families[i]);
+		if (folded_family == "default") {
+			return fail("Font family at index " + itos(i) + " uses the reserved name default.");
+		}
+		if (available_families.has(folded_family)) {
+			return fail("Font family " + families[i] + " is duplicated after ASCII case folding.");
+		}
+		available_families.insert(folded_family, families[i]);
+	}
+
+	HashMap<String, bool> seen_preferences;
+	for (int i = 0; i < preference_values.size(); i++) {
+		if (preference_values[i].is_empty()) {
+			return fail("Font preference at index " + itos(i) + " must not be empty.");
+		}
+		const String folded_preference = _ascii_fold_font_family(preference_values[i]);
+		if (!available_families.has(folded_preference)) {
+			return fail("Font preference " + preference_values[i] + " is not an available font family.");
+		}
+		if (seen_preferences.has(folded_preference)) {
+			return fail("Font preference " + preference_values[i] + " is duplicated after ASCII case folding.");
+		}
+		seen_preferences.insert(folded_preference, true);
+	}
+
+	Vector<uint8_t> default_font_data;
+	if (!_load_font_data_from_path(default_path, _to_engine_path(default_path), default_font_data, &error)) {
+		return fail(error);
+	}
+	Ref<FontFile> prepared_default_font = _create_display_font(default_font_data);
+	if (prepared_default_font.is_null() || prepared_default_font->get_face_count() <= 0) {
+		return fail("Default font file is not a supported font: " + default_path);
+	}
+#ifdef MODULE_SVG_ENABLED
+	if (!SVGUtils::is_font_data_valid(default_font_data)) {
+		return fail("Default font file is not supported by LunaSVG: " + default_path);
+	}
+#endif
+
+	HashMap<String, Ref<FontFile>> prepared_display_fonts;
+	prepared_display_fonts.insert("default", prepared_default_font);
+#ifdef MODULE_SVG_ENABLED
+	Vector<SVGProjectFontFace> prepared_svg_faces;
+	prepared_svg_faces.resize(families.size());
+#endif
+	for (int i = 0; i < families.size(); i++) {
+		Vector<uint8_t> font_data;
+		if (!_load_font_data_from_path(paths[i], _to_engine_path(paths[i]), font_data, &error)) {
+			return fail(error);
+		}
+		Ref<FontFile> display_font = _create_display_font(font_data);
+		if (display_font.is_null() || display_font->get_face_count() <= 0) {
+			return fail("Project font file is not a supported font: " + paths[i]);
+		}
+#ifdef MODULE_SVG_ENABLED
+		if (!SVGUtils::is_font_data_valid(font_data)) {
+			return fail("Project font file is not supported by LunaSVG: " + paths[i]);
+		}
+		prepared_svg_faces.write[i].family = families[i];
+		prepared_svg_faces.write[i].data = font_data;
+#endif
+		prepared_display_fonts.insert(_ascii_fold_font_family(families[i]), display_font);
+	}
+
+	// Everything that can fail has completed. From here on, publish one complete
+	// generation to each consumer and invalidate pixels rendered by the previous
+	// generation.
+	Ref<Font> prepared_theme_font = _build_display_font_chain(prepared_display_fonts, preference_values);
+#ifdef MODULE_SVG_ENABLED
+	SVGUtils::apply_font_registry(default_font_data, prepared_svg_faces, preference_values);
+#endif
+	display_fonts = prepared_display_fonts;
+	display_default_font = prepared_default_font;
+	ThemeDB::get_singleton()->set_default_font(prepared_theme_font);
+	SvgManager::get_singleton()->reset(true);
+
+	return fail(String());
+}
+
 void SpxResMgr::set_default_font(GdString font_path) {
 	String path = SpxStr(font_path);
 	if (path.is_empty()) {
@@ -605,6 +788,17 @@ void SpxResMgr::set_default_font(GdString font_path) {
 	if (!_load_font_data_from_path(path, engine_path, font_data)) {
 		return;
 	}
+	Ref<FontFile> font = _create_display_font(font_data);
+	if (font.is_null() || font->get_face_count() <= 0) {
+		ERR_PRINT("Default font file is not a supported font: " + path);
+		return;
+	}
+#ifdef MODULE_SVG_ENABLED
+	if (!SVGUtils::is_font_data_valid(font_data)) {
+		ERR_PRINT("Default font file is not supported by LunaSVG: " + path);
+		return;
+	}
+#endif
 
 	// update svg
 #ifdef MODULE_SVG_ENABLED
@@ -617,7 +811,7 @@ void SpxResMgr::set_default_font(GdString font_path) {
 	// Start a new project font configuration. Named faces are registered after
 	// this call and set_font_preferences commits the ordered fallback chain.
 	display_fonts.clear();
-	display_default_font = _create_display_font(font_data);
+	display_default_font = font;
 	display_fonts.insert("default", display_default_font);
 	ThemeDB::get_singleton()->set_default_font(display_default_font);
 }
@@ -640,11 +834,22 @@ void SpxResMgr::register_font_face(GdString font_path, GdString family) {
 	if (!_load_font_data_from_path(path, engine_path, font_data)) {
 		return;
 	}
+	Ref<FontFile> font = _create_display_font(font_data);
+	if (font.is_null() || font->get_face_count() <= 0) {
+		ERR_PRINT("Project font file is not a supported font: " + path);
+		return;
+	}
+#ifdef MODULE_SVG_ENABLED
+	if (!SVGUtils::is_font_data_valid(font_data)) {
+		ERR_PRINT("Project font file is not supported by LunaSVG: " + path);
+		return;
+	}
+#endif
 
 #ifdef MODULE_SVG_ENABLED
 	SVGUtils::add_font_face(svg_family, font_data.ptrw(), (int)font_data.size());
 #endif
-	display_fonts.insert(_ascii_fold_font_family(svg_family), _create_display_font(font_data));
+	display_fonts.insert(_ascii_fold_font_family(svg_family), font);
 }
 
 void SpxResMgr::set_font_preferences(GdArray preferences) {
@@ -652,36 +857,7 @@ void SpxResMgr::set_font_preferences(GdArray preferences) {
 #ifdef MODULE_SVG_ENABLED
 	SVGUtils::set_font_preferences(values);
 #endif
-	Ref<Font> primary;
-	TypedArray<Font> fallbacks;
-	for (const String &family : values) {
-		String name = _ascii_fold_font_family(family);
-		const Ref<FontFile> *font = display_fonts.getptr(name);
-		if (font == nullptr || font->is_null()) {
-			continue;
-		}
-		if (primary.is_null()) {
-			primary = *font;
-		} else {
-			fallbacks.push_back(*font);
-		}
-	}
-
-	if (primary.is_valid()) {
-		Ref<FontVariation> composite;
-		composite.instantiate();
-		composite->set_base_font(primary);
-		composite->set_fallbacks(fallbacks);
-		ThemeDB::get_singleton()->set_default_font(composite);
-		return;
-	}
-
-	// An explicitly empty or entirely unavailable preference list must not
-	// silently use a system font.
-	Ref<FontFile> empty_font;
-	empty_font.instantiate();
-	empty_font->set_allow_system_fallback(false);
-	ThemeDB::get_singleton()->set_default_font(empty_font);
+	ThemeDB::get_singleton()->set_default_font(_build_display_font_chain(display_fonts, values));
 }
 
 Vector2 SpxResMgr::get_animation_frame_offset(String anim_key, int frame_index) {

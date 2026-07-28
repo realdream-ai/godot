@@ -1210,6 +1210,22 @@ gdspx_res_free_str(str) {
 	FreeGdString(_arg0);
 
 }
+gdspx_res_apply_project_fonts(default_font_path,font_paths,font_families,preferences) {
+	var _gdFuncPtr = Module._gdspx_res_apply_project_fonts;
+	var _retValue = AllocGdString();
+	var _arg0 = ToGdString(default_font_path);
+	var _arg1 = ToGdArray(font_paths);
+	var _arg2 = ToGdArray(font_families);
+	var _arg3 = ToGdArray(preferences);
+	_gdFuncPtr(_arg0, _arg1, _arg2, _arg3, _retValue);
+	FreeGdString(_arg0);
+	FreeGdArray(_arg1);
+	FreeGdArray(_arg2);
+	FreeGdArray(_arg3);
+	var _finalRetValue = ToJsString(_retValue);
+	FreeGdString(_retValue);
+	return _finalRetValue
+}
 gdspx_res_set_default_font(font_path) {
 	var _gdFuncPtr = Module._gdspx_res_set_default_font;
 

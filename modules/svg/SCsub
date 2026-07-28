@@ -77,6 +77,12 @@ env_svg.Append(CPPDEFINES=["THORVG_FILE_IO_SUPPORT"])
 # ----------- Luna ----------------
 thirdparty_dir2 = "#thirdparty/lunasvg/"
 thirdparty_obj2 = []
+
+# LunaSVG's shaping tests exercise internal headers from tests/test_main.cpp,
+# outside this module's cloned environment.
+if env["tests"]:
+    env.Prepend(CPPPATH=[thirdparty_dir2 + "include"])
+
 thirdparty_sources2 = [
     "source/graphics.cpp",
     "source/lunasvg.cpp",
@@ -108,11 +114,23 @@ thirdparty_sources2 = [thirdparty_dir2 + file for file in thirdparty_sources2]
 
 env_svg.Prepend(CPPPATH=[thirdparty_dir2 + "include"])
 
-# LunaSVG shapes complete grapheme clusters before choosing a fallback face.
-# Reuse the HarfBuzz library already built by TextServerAdvanced.
-if "text_server_adv" in env.module_list and env["builtin_harfbuzz"]:
-    env_svg.Prepend(CPPPATH=["#thirdparty/harfbuzz/src"])
-    env_svg.Append(CPPDEFINES=["LUNASVG_ENABLE_HARFBUZZ"])
+# LunaSVG uses the same HarfBuzz and ICU implementations as
+# TextServerAdvanced for shaping and Unicode bidi itemization. SPX builds keep
+# these as a single capability: silently falling back to per-codepoint layout
+# would make Native and Web render different project text.
+if "text_server_adv" in env.module_list:
+    if env["builtin_harfbuzz"]:
+        env_svg.Prepend(CPPPATH=["#thirdparty/harfbuzz/src"])
+    if env["builtin_icu4c"]:
+        env_svg.Prepend(CPPPATH=["#thirdparty/icu4c/common/", "#thirdparty/icu4c/i18n/"])
+        env_svg.Append(
+            CXXFLAGS=[
+                "-DU_STATIC_IMPLEMENTATION",
+                "-DU_HAVE_LIB_SUFFIX=1",
+                "-DU_LIB_SUFFIX_C_NAME=_godot",
+            ]
+        )
+    env_svg.Append(CPPDEFINES=["LUNASVG_ENABLE_HARFBUZZ", "LUNASVG_ENABLE_ICU_BIDI"])
 
 # Enable lunasvg static object linking.
 env_svg.Append(CPPDEFINES=["PLUTOVG_BUILD", "PLUTOVG_BUILD_STATIC", "LUNASVG_BUILD", "LUNASVG_BUILD_STATIC"])

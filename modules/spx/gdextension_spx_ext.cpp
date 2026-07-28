@@ -543,6 +543,10 @@ static void gdextension_spx_res_free_str(GdString str) {
 	resMgr->free_str(str);
 }
 
+static void gdextension_spx_res_apply_project_fonts(GdString default_font_path, GdArray font_paths, GdArray font_families, GdArray preferences, GdString *ret_val) {
+	*ret_val = resMgr->apply_project_fonts(default_font_path, font_paths, font_families, preferences);
+}
+
 static void gdextension_spx_res_set_default_font(GdString font_path) {
 	resMgr->set_default_font(font_path);
 }
@@ -1530,6 +1534,7 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_list_directories);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_reload_texture);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_free_str);
+	REGISTER_SPX_INTERFACE_FUNC(spx_res_apply_project_fonts);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_set_default_font);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_register_font_face);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_set_font_preferences);

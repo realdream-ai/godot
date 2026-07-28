@@ -346,7 +346,25 @@ int plutovg_font_face_get_glyph_index_svg(plutovg_font_face_t* face, unsigned in
     glyph_t* glyph = plutovg_font_face_get_glyph_index(face, glyph_index);
     if(glyph == NULL)
         return 0;
-    return stbtt_GetGlyphSVG(&face->info, glyph->index, svg);
+    int length = stbtt_GetGlyphSVG(&face->info, glyph->index, svg);
+    if(length <= 0 || *svg == NULL)
+        return 0;
+
+    /*
+     * stb_truetype can return an unchecked SVG document offset for glyphs
+     * which are outside every SVG table range. Never expose that pointer to
+     * the XML parser: both the document start and its complete byte range must
+     * belong to the immutable font blob owned by this face.
+     */
+    const uintptr_t font_start = (uintptr_t)face->data;
+    const uintptr_t font_end = font_start + face->length;
+    const uintptr_t svg_start = (uintptr_t)*svg;
+    if(font_end < font_start || svg_start < font_start || svg_start >= font_end ||
+            (size_t)length > (size_t)(font_end - svg_start)) {
+        *svg = NULL;
+        return 0;
+    }
+    return length;
 }
 
 static void glyph_traverse_func(void* closure, plutovg_path_command_t command, const plutovg_point_t* points, int npoints)
