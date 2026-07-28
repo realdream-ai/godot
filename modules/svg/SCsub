@@ -108,6 +108,12 @@ thirdparty_sources2 = [thirdparty_dir2 + file for file in thirdparty_sources2]
 
 env_svg.Prepend(CPPPATH=[thirdparty_dir2 + "include"])
 
+# LunaSVG shapes complete grapheme clusters before choosing a fallback face.
+# Reuse the HarfBuzz library already built by TextServerAdvanced.
+if "text_server_adv" in env.module_list and env["builtin_harfbuzz"]:
+    env_svg.Prepend(CPPPATH=["#thirdparty/harfbuzz/src"])
+    env_svg.Append(CPPDEFINES=["LUNASVG_ENABLE_HARFBUZZ"])
+
 # Enable lunasvg static object linking.
 env_svg.Append(CPPDEFINES=["PLUTOVG_BUILD", "PLUTOVG_BUILD_STATIC", "LUNASVG_BUILD", "LUNASVG_BUILD_STATIC"])
 

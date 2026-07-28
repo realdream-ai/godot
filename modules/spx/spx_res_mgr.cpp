@@ -30,6 +30,7 @@
 
 #include "spx_res_mgr.h"
 
+#include "core/io/dir_access.h"
 #include "core/io/file_access.h"
 #include "core/io/image.h"
 #include "core/io/image_loader.h"
@@ -62,14 +63,16 @@
 #endif
 
 static bool _load_font_data_from_path(const String &p_path, const String &p_engine_path, Vector<uint8_t> &r_font_data) {
-	Ref<FontFile> raw_font = ResourceLoader::load(p_path);
-	if (!raw_font.is_null()) {
-		r_font_data = raw_font->get_data();
-		if (r_font_data.is_empty()) {
-			ERR_PRINT("Loaded font resource has no data: " + p_path);
-			return false;
+	if (ResourceLoader::exists(p_path, "FontFile")) {
+		Ref<FontFile> imported_font = ResourceLoader::load(p_path, "FontFile");
+		if (!imported_font.is_null()) {
+			r_font_data = imported_font->get_data();
+			if (r_font_data.is_empty()) {
+				ERR_PRINT("Loaded font resource has no data: " + p_path);
+				return false;
+			}
+			return true;
 		}
-		return true;
 	}
 
 	Ref<FileAccess> file = FileAccess::open(p_engine_path, FileAccess::READ);
@@ -98,6 +101,50 @@ static bool _load_font_data_from_path(const String &p_path, const String &p_engi
 	return true;
 }
 
+static Ref<FontFile> _create_display_font(const Vector<uint8_t> &p_font_data) {
+	Ref<FontFile> font;
+	font.instantiate();
+	font->set_font_style(0);
+	font->set_data(p_font_data);
+	font->set_antialiasing(TextServer::FONT_ANTIALIASING_GRAY);
+	font->set_force_autohinter(false);
+	font->set_hinting(TextServer::HINTING_LIGHT);
+	font->set_subpixel_positioning(TextServer::SUBPIXEL_POSITIONING_AUTO);
+	font->set_multichannel_signed_distance_field(false);
+	font->set_generate_mipmaps(false);
+	font->set_fixed_size(0);
+	font->set_allow_system_fallback(false);
+	return font;
+}
+
+static String _ascii_fold_font_family(const String &p_family) {
+	String folded = p_family;
+	for (int i = 0; i < folded.length(); i++) {
+		char32_t character = folded[i];
+		if (character >= U'A' && character <= U'Z') {
+			folded[i] = character + (U'a' - U'A');
+		}
+	}
+	return folded;
+}
+
+static Vector<String> _font_preferences_from_array(GdArray p_preferences) {
+	if (p_preferences == nullptr || p_preferences->type != GD_ARRAY_TYPE_STRING) {
+		ERR_PRINT("Font preferences must be a GdArray of strings.");
+		return Vector<String>();
+	}
+	Vector<String> families;
+	for (int64_t i = 0; i < p_preferences->size; i++) {
+		auto preference = SpxBaseMgr::get_array<GdString>(p_preferences, i);
+		if (preference == nullptr) {
+			ERR_PRINT("Font preferences contain an invalid string.");
+			return Vector<String>();
+		}
+		families.push_back(SpxStr(*preference));
+	}
+	return families;
+}
+
 void SpxResMgr::on_awake() {
 	SpxBaseMgr::on_awake();
 	is_load_direct = true;
@@ -107,6 +154,12 @@ void SpxResMgr::on_awake() {
 void SpxResMgr::on_reset(int reset_code) {
 	animation_frame_offsets.clear();
 	anim_frames->clear_all();
+	display_fonts.clear();
+	display_default_font.unref();
+	ThemeDB::get_singleton()->set_default_font(Ref<Font>());
+#ifdef MODULE_SVG_ENABLED
+	SVGUtils::reset_font_registry();
+#endif
 }
 
 bool SpxResMgr::is_dynamic_anim_mode() const {
@@ -534,6 +587,13 @@ GdBool SpxResMgr::has_file(GdString p_path) {
 	return !file.is_null();
 }
 
+GdString SpxResMgr::list_directories(GdString p_path) {
+	String path = SpxStr(p_path);
+	path = _to_engine_path(path);
+	PackedStringArray directories = DirAccess::get_directories_at(path);
+	return SpxReturnStr(JSON::stringify(directories));
+}
+
 void SpxResMgr::set_default_font(GdString font_path) {
 	String path = SpxStr(font_path);
 	if (path.is_empty()) {
@@ -548,27 +608,21 @@ void SpxResMgr::set_default_font(GdString font_path) {
 
 	// update svg
 #ifdef MODULE_SVG_ENABLED
+	// Setting the default font begins a complete project font transaction.
+	// Drop any faces left by an earlier bootstrap before registering this one.
+	SVGUtils::reset_font_registry();
 	SVGUtils::set_default_font(font_data.ptrw(), (int)font_data.size());
 #endif
 
-	// update theme
-	Ref<FontFile> font;
-	font.instantiate();
-	font->set_font_style(0);
-	font->set_data(font_data);
-	font->set_antialiasing(TextServer::FONT_ANTIALIASING_GRAY);
-	font->set_force_autohinter(false);
-	font->set_hinting(TextServer::HINTING_LIGHT);
-	font->set_subpixel_positioning(TextServer::SUBPIXEL_POSITIONING_AUTO);
-	font->set_multichannel_signed_distance_field(false);
-	font->set_generate_mipmaps(false);
-	font->set_fixed_size(0);
-	font->set_allow_system_fallback(true);
-	ThemeDB::get_singleton()->set_default_font(font);
+	// Start a new project font configuration. Named faces are registered after
+	// this call and set_font_preferences commits the ordered fallback chain.
+	display_fonts.clear();
+	display_default_font = _create_display_font(font_data);
+	display_fonts.insert("default", display_default_font);
+	ThemeDB::get_singleton()->set_default_font(display_default_font);
 }
 
-void SpxResMgr::register_svg_font_face(GdString font_path, GdString family) {
-#ifdef MODULE_SVG_ENABLED
+void SpxResMgr::register_font_face(GdString font_path, GdString family) {
 	String path = SpxStr(font_path);
 	if (path.is_empty()) {
 		ERR_PRINT("Can not open empty font path.");
@@ -587,11 +641,47 @@ void SpxResMgr::register_svg_font_face(GdString font_path, GdString family) {
 		return;
 	}
 
+#ifdef MODULE_SVG_ENABLED
 	SVGUtils::add_font_face(svg_family, font_data.ptrw(), (int)font_data.size());
-#else
-	(void)font_path;
-	(void)family;
 #endif
+	display_fonts.insert(_ascii_fold_font_family(svg_family), _create_display_font(font_data));
+}
+
+void SpxResMgr::set_font_preferences(GdArray preferences) {
+	Vector<String> values = _font_preferences_from_array(preferences);
+#ifdef MODULE_SVG_ENABLED
+	SVGUtils::set_font_preferences(values);
+#endif
+	Ref<Font> primary;
+	TypedArray<Font> fallbacks;
+	for (const String &family : values) {
+		String name = _ascii_fold_font_family(family);
+		const Ref<FontFile> *font = display_fonts.getptr(name);
+		if (font == nullptr || font->is_null()) {
+			continue;
+		}
+		if (primary.is_null()) {
+			primary = *font;
+		} else {
+			fallbacks.push_back(*font);
+		}
+	}
+
+	if (primary.is_valid()) {
+		Ref<FontVariation> composite;
+		composite.instantiate();
+		composite->set_base_font(primary);
+		composite->set_fallbacks(fallbacks);
+		ThemeDB::get_singleton()->set_default_font(composite);
+		return;
+	}
+
+	// An explicitly empty or entirely unavailable preference list must not
+	// silently use a system font.
+	Ref<FontFile> empty_font;
+	empty_font.instantiate();
+	empty_font->set_allow_system_fallback(false);
+	ThemeDB::get_singleton()->set_default_font(empty_font);
 }
 
 Vector2 SpxResMgr::get_animation_frame_offset(String anim_key, int frame_index) {

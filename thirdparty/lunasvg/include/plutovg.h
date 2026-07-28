@@ -826,6 +826,14 @@ PLUTOVG_API void plutovg_font_face_destroy(plutovg_font_face_t* face);
 PLUTOVG_API int plutovg_font_face_get_reference_count(const plutovg_font_face_t* face);
 
 /**
+ * @brief Retrieves the immutable font data backing a font face.
+ *
+ * The returned data remains valid for the lifetime of `face` and must not be
+ * modified or freed by the caller.
+ */
+PLUTOVG_API const void* plutovg_font_face_get_data(const plutovg_font_face_t* face, unsigned int* length, int* ttcindex);
+
+/**
  * @brief Retrieves metrics for a font face at a specified size.
  *
  * @param face A pointer to a `plutovg_font_face_t` object.
@@ -850,6 +858,11 @@ PLUTOVG_API void plutovg_font_face_get_metrics(const plutovg_font_face_t* face, 
 PLUTOVG_API void plutovg_font_face_get_glyph_metrics(plutovg_font_face_t* face, float size, plutovg_codepoint_t codepoint, float* advance_width, float* left_side_bearing, plutovg_rect_t* extents);
 
 /**
+ * @brief Retrieves metrics for a glyph selected by font glyph index.
+ */
+PLUTOVG_API void plutovg_font_face_get_glyph_index_metrics(plutovg_font_face_t* face, float size, unsigned int glyph_index, float* advance_width, float* left_side_bearing, plutovg_rect_t* extents);
+
+/**
  * @brief Returns whether a font face contains a glyph for the specified codepoint.
  *
  * @param face A pointer to a `plutovg_font_face_t` object.
@@ -871,6 +884,11 @@ PLUTOVG_API bool plutovg_font_face_has_glyph(plutovg_font_face_t* face, plutovg_
 PLUTOVG_API int plutovg_font_face_get_glyph_svg(plutovg_font_face_t* face, plutovg_codepoint_t codepoint, const char** svg);
 
 /**
+ * @brief Retrieves embedded SVG data for a glyph selected by font glyph index.
+ */
+PLUTOVG_API int plutovg_font_face_get_glyph_index_svg(plutovg_font_face_t* face, unsigned int glyph_index, const char** svg);
+
+/**
  * @brief Retrieves the path of a glyph and its advance width.
  *
  * @param face A pointer to a `plutovg_font_face_t` object.
@@ -882,6 +900,11 @@ PLUTOVG_API int plutovg_font_face_get_glyph_svg(plutovg_font_face_t* face, pluto
  * @return The advance width of the glyph.
  */
 PLUTOVG_API float plutovg_font_face_get_glyph_path(plutovg_font_face_t* face, float size, float x, float y, plutovg_codepoint_t codepoint, plutovg_path_t* path);
+
+/**
+ * @brief Appends the path of a glyph selected by font glyph index.
+ */
+PLUTOVG_API float plutovg_font_face_get_glyph_index_path(plutovg_font_face_t* face, float size, float x, float y, unsigned int glyph_index, plutovg_path_t* path);
 
 /**
  * @brief Traverses the path of a glyph and calls a callback for each path element.

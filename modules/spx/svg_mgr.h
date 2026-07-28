@@ -35,7 +35,7 @@ public:
 	int calculate_svg_scale(float required_scale);
 
 	void destroy();
-	void reset(bool p_clear_image_cache = true);
+	void reset(bool p_clear_project_caches = true);
 	void update_caches(const Vector<String> &files);
 
 private:

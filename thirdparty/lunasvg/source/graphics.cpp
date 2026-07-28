@@ -329,6 +329,11 @@ PathIterator::PathIterator(const Path& path)
 {
 }
 
+void Path::addGlyph(plutovg_font_face_t* face, float size, float x, float y, unsigned int glyphIndex)
+{
+    plutovg_font_face_get_glyph_index_path(face, size, x, y, glyphIndex, ensure());
+}
+
 PathCommand PathIterator::currentSegment(std::array<Point, 3>& points) const
 {
     auto command = m_elements[m_index].header.command;
@@ -358,6 +363,16 @@ void PathIterator::next()
 }
 
 const std::string emptyString;
+
+static std::string foldFontFamily(std::string_view family)
+{
+    std::string foldedFamily(family);
+    for(auto& ch : foldedFamily) {
+        if(ch >= 'A' && ch <= 'Z')
+            ch += 'a' - 'A';
+    }
+    return foldedFamily;
+}
 
 FontFace::FontFace(plutovg_font_face_t* face)
     : m_face(face)
@@ -413,14 +428,27 @@ plutovg_font_face_t* FontFace::release()
 
 bool FontFaceCache::addFontFace(const std::string& family, bool bold, bool italic, const FontFace& face)
 {
-    if(!face.isNull())
-        m_table[family].emplace_back(bold, italic, face);
+    if(face.isNull())
+        return false;
+
+    auto foldedFamily = foldFontFamily(family);
+    auto& entries = m_table[foldedFamily];
+    for(auto& entry : entries) {
+        if(std::get<0>(entry) == bold && std::get<1>(entry) == italic) {
+            entry = FontFaceEntry(bold, italic, face);
+            return true;
+        }
+    }
+    entries.emplace_back(bold, italic, face);
     return !face.isNull();
 }
 
 FontFace FontFaceCache::getFontFace(const std::string_view& family, bool bold, bool italic)
 {
-    auto it = m_table.find(family);
+    auto foldedFamily = foldFontFamily(family);
+    auto it = m_table.find(foldedFamily);
+    if(it == m_table.end() && foldedFamily == "default")
+        it = m_table.find(emptyString);
     if(it == m_table.end()) {
         return FontFace();
     }
@@ -441,6 +469,11 @@ FontFace FontFaceCache::getFontFace(const std::string_view& family, bool bold, b
     }
 
     return std::get<2>(entry);
+}
+
+void FontFaceCache::clear()
+{
+    m_table.clear();
 }
 
 FontFaceCache::FontFaceCache()
@@ -499,6 +532,192 @@ FontFaceCache* fontFaceCache()
 {
     thread_local FontFaceCache cache;
     return &cache;
+}
+
+static bool isCSSWhitespace(char character)
+{
+	return character == ' ' || character == '\t' || character == '\n' || character == '\r' || character == '\f';
+}
+
+static bool parseCSSString(std::string_view value, std::string &output)
+{
+	if(value.size() < 2 || (value.front() != '\'' && value.front() != '"'))
+		return false;
+	const char quote = value.front();
+	output.clear();
+	for(size_t index = 1; index < value.size(); ) {
+		const char character = value[index];
+		if(character == quote) {
+			index++;
+			while(index < value.size() && isCSSWhitespace(value[index]))
+				index++;
+			return index == value.size();
+		}
+		if(character == '\\')
+			return false;
+		if(character == '\n' || character == '\r' || character == '\f')
+			return false;
+		output.push_back(character);
+		index++;
+	}
+	return false;
+}
+
+static bool parseCSSCustomIdentifier(std::string_view value, std::string &output)
+{
+	auto isNameStart = [](unsigned char character) {
+		return (character >= 'A' && character <= 'Z') || (character >= 'a' && character <= 'z') || character == '_' || character >= 0x80;
+	};
+	auto isNameCharacter = [&isNameStart](unsigned char character) {
+		return isNameStart(character) || (character >= '0' && character <= '9') || character == '-';
+	};
+	if(value.empty())
+		return false;
+
+	output.clear();
+	size_t index = 0;
+	if(value[index] == '-') {
+		output.push_back(value[index++]);
+		if(index == value.size())
+			return false;
+		if(value[index] == '-')
+			output.push_back(value[index++]);
+	}
+	if(index == value.size())
+		return false;
+	if(isNameStart(static_cast<unsigned char>(value[index]))) {
+		output.push_back(value[index++]);
+	} else {
+		return false;
+	}
+	for(; index < value.size(); ) {
+		if(isNameCharacter(static_cast<unsigned char>(value[index]))) {
+			output.push_back(value[index++]);
+		} else {
+			return false;
+		}
+	}
+	return true;
+}
+
+struct CSSFontFamilyToken {
+	std::string name;
+	bool quoted = false;
+};
+
+static bool isCSSFontFamilyKeyword(std::string_view value)
+{
+	static constexpr std::string_view keywords[] = {
+		"default", "serif", "sans-serif", "cursive", "fantasy", "monospace",
+		"system-ui", "emoji", "math", "fangsong", "ui-serif", "ui-sans-serif",
+		"ui-monospace", "ui-rounded", "caption", "icon", "menu", "message-box",
+		"small-caption", "status-bar", "inherit", "initial", "unset", "revert", "revert-layer",
+	};
+	for(const auto keyword : keywords) {
+		if(value.size() != keyword.size())
+			continue;
+		bool equal = true;
+		for(size_t i = 0; i < value.size(); i++) {
+			auto character = value[i];
+			if(character >= 'A' && character <= 'Z')
+				character += 'a' - 'A';
+			if(character != keyword[i]) {
+				equal = false;
+				break;
+			}
+		}
+		if(equal)
+			return true;
+	}
+	return false;
+}
+
+static std::vector<CSSFontFamilyToken> parseCSSFontFamilyTokens(std::string_view input)
+{
+	std::vector<CSSFontFamilyToken> tokens;
+	while(true) {
+		auto comma = std::string_view::npos;
+		char quote = 0;
+		bool escaped = false;
+		for(size_t i = 0; i < input.size(); i++) {
+			const char character = input[i];
+			if(escaped) {
+				escaped = false;
+				continue;
+			}
+			if(character == '\\') {
+				escaped = true;
+				continue;
+			}
+			if(quote != 0) {
+				if(character == quote)
+					quote = 0;
+				continue;
+			}
+			if(character == '\'' || character == '"') {
+				quote = character;
+				continue;
+			}
+			if(character == ',') {
+				comma = i;
+				break;
+			}
+		}
+		auto family = input.substr(0, comma);
+		input = comma == std::string_view::npos ? std::string_view() : input.substr(comma + 1);
+
+		while(!family.empty() && isCSSWhitespace(family.front()))
+			family.remove_prefix(1);
+		while(!family.empty() && isCSSWhitespace(family.back()))
+			family.remove_suffix(1);
+
+		const bool quoted = !family.empty() && (family.front() == '\'' || family.front() == '"');
+		std::string name;
+		const bool valid = quoted ? parseCSSString(family, name) : parseCSSCustomIdentifier(family, name);
+		if(valid && !name.empty())
+			tokens.push_back({ std::move(name), quoted });
+		if(comma == std::string_view::npos)
+			return tokens;
+	}
+}
+
+FontFamilyList parseFontFamilyList(std::string_view input)
+{
+	FontFamilyList families;
+	for(auto &token : parseCSSFontFamilyTokens(input)) {
+		// Generic and system keywords belong to the SVG/browser fallback model.
+		// A same-named project family is selectable only through a quoted token.
+		if(token.quoted || !isCSSFontFamilyKeyword(token.name))
+			families.push_back(std::move(token.name));
+	}
+	return families;
+}
+
+static auto& fontPreferenceState()
+{
+    struct State {
+        bool configured = false;
+        FontFamilyList families;
+    };
+    static thread_local State state;
+    return state;
+}
+
+void setFontPreferences(bool configured, FontFamilyList preferences)
+{
+    auto& state = fontPreferenceState();
+    state.configured = configured;
+    state.families = std::move(preferences);
+}
+
+bool fontPreferencesConfigured()
+{
+    return fontPreferenceState().configured;
+}
+
+const FontFamilyList& fontPreferences()
+{
+    return fontPreferenceState().families;
 }
 
 Font::Font(const FontFace& face, float size)

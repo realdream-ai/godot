@@ -503,25 +503,14 @@ Font SVGLayoutState::font() const
     auto italic = m_font_style == FontStyle::Italic;
 
     FontFace face;
-    std::string_view input(m_font_family);
-    while(!input.empty() && face.isNull()) {
-        auto family = input.substr(0, input.find(','));
-        input.remove_prefix(family.length());
-        if(!input.empty() && input.front() == ',')
-            input.remove_prefix(1);
-        stripLeadingAndTrailingSpaces(family);
-        if(!family.empty() && (family.front() == '\'' || family.front() == '"')) {
-            auto quote = family.front();
-            family.remove_prefix(1);
-            if(!family.empty() && family.back() == quote)
-                family.remove_suffix(1);
-            stripLeadingAndTrailingSpaces(family);
-        }
-
+    const auto families = m_font_family.empty() ? fontPreferences() : parseFontFamilyList(m_font_family);
+    for(const auto& family : families) {
         face = fontFaceCache()->getFontFace(family, bold, italic);
+        if(!face.isNull())
+            break;
     }
 
-    if(face.isNull())
+    if(face.isNull() && !fontPreferencesConfigured())
         face = fontFaceCache()->getFontFace(emptyString, bold, italic);
     return Font(face, m_font_size);
 }

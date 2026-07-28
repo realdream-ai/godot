@@ -531,6 +531,10 @@ static void gdextension_spx_res_has_file(GdString p_path, GdBool *ret_val) {
 	*ret_val = resMgr->has_file(p_path);
 }
 
+static void gdextension_spx_res_list_directories(GdString p_path, GdString *ret_val) {
+	*ret_val = resMgr->list_directories(p_path);
+}
+
 static void gdextension_spx_res_reload_texture(GdString path) {
 	resMgr->reload_texture(path);
 }
@@ -543,8 +547,12 @@ static void gdextension_spx_res_set_default_font(GdString font_path) {
 	resMgr->set_default_font(font_path);
 }
 
-static void gdextension_spx_res_register_svg_font_face(GdString font_path, GdString family) {
-	resMgr->register_svg_font_face(font_path, family);
+static void gdextension_spx_res_register_font_face(GdString font_path, GdString family) {
+	resMgr->register_font_face(font_path, family);
+}
+
+static void gdextension_spx_res_set_font_preferences(GdArray preferences) {
+	resMgr->set_font_preferences(preferences);
 }
 
 static void gdextension_spx_scene_change_scene_to_file(GdString path) {
@@ -1519,10 +1527,12 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_get_image_size);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_read_all_text);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_has_file);
+	REGISTER_SPX_INTERFACE_FUNC(spx_res_list_directories);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_reload_texture);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_free_str);
 	REGISTER_SPX_INTERFACE_FUNC(spx_res_set_default_font);
-	REGISTER_SPX_INTERFACE_FUNC(spx_res_register_svg_font_face);
+	REGISTER_SPX_INTERFACE_FUNC(spx_res_register_font_face);
+	REGISTER_SPX_INTERFACE_FUNC(spx_res_set_font_preferences);
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_change_scene_to_file);
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_destroy_all_sprites);
 	REGISTER_SPX_INTERFACE_FUNC(spx_scene_reload_current_scene);

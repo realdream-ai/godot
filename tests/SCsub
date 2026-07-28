@@ -7,6 +7,9 @@ env.tests_sources = []
 
 env_tests = env.Clone()
 
+if "svg" in env.module_list:
+    env_tests.Append(CPPDEFINES=["LUNASVG_BUILD_STATIC"])
+
 # We must disable the THREAD_LOCAL entirely in doctest to prevent crashes on debugging
 # Since we link with /MT thread_local is always expired when the header is used
 # So the debugger crashes the engine and it causes weird errors

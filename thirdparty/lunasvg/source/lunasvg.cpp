@@ -1,6 +1,7 @@
 #include "lunasvg.h"
 #include "svgelement.h"
 #include "svgrenderstate.h"
+#include "svgtextelement.h"
 
 #include <cstring>
 #include <fstream>
@@ -24,6 +25,30 @@ bool lunasvg_add_font_face_from_file(const char* family, bool bold, bool italic,
 bool lunasvg_add_font_face_from_data(const char* family, bool bold, bool italic, const void* data, size_t length, lunasvg_destroy_func_t destroy_func, void* closure)
 {
     return lunasvg::fontFaceCache()->addFontFace(family, bold, italic, lunasvg::FontFace(data, length, destroy_func, closure));
+}
+
+void lunasvg_clear_font_faces()
+{
+    lunasvg::fontFaceCache()->clear();
+    lunasvg::clearTextCaches();
+}
+
+void lunasvg_set_font_preferences(const char* const* preferences, size_t count)
+{
+    lunasvg::FontFamilyList families;
+    if(preferences) {
+        families.reserve(count);
+        for(size_t i = 0; i < count; i++) {
+            if(preferences[i])
+                families.emplace_back(preferences[i]);
+        }
+    }
+    lunasvg::setFontPreferences(preferences != nullptr, std::move(families));
+}
+
+void lunasvg_set_grapheme_break_func(lunasvg_grapheme_break_func_t callback, void* closure)
+{
+    lunasvg::setGraphemeBreakFunction(callback, closure);
 }
 
 namespace lunasvg {

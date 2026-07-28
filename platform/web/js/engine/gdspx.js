@@ -1184,6 +1184,16 @@ gdspx_res_has_file(p_path) {
 	FreeGdBool(_retValue);
 	return _finalRetValue
 }
+gdspx_res_list_directories(p_path) {
+	var _gdFuncPtr = Module._gdspx_res_list_directories;
+	var _retValue = AllocGdString();
+	var _arg0 = ToGdString(p_path);
+	_gdFuncPtr(_arg0, _retValue);
+	FreeGdString(_arg0);
+	var _finalRetValue = ToJsString(_retValue);
+	FreeGdString(_retValue);
+	return _finalRetValue
+}
 gdspx_res_reload_texture(path) {
 	var _gdFuncPtr = Module._gdspx_res_reload_texture;
 
@@ -1208,14 +1218,22 @@ gdspx_res_set_default_font(font_path) {
 	FreeGdString(_arg0);
 
 }
-gdspx_res_register_svg_font_face(font_path,family) {
-	var _gdFuncPtr = Module._gdspx_res_register_svg_font_face;
+gdspx_res_register_font_face(font_path,family) {
+	var _gdFuncPtr = Module._gdspx_res_register_font_face;
 
 	var _arg0 = ToGdString(font_path);
 	var _arg1 = ToGdString(family);
 	_gdFuncPtr(_arg0, _arg1);
 	FreeGdString(_arg0);
 	FreeGdString(_arg1);
+
+}
+gdspx_res_set_font_preferences(preferences) {
+	var _gdFuncPtr = Module._gdspx_res_set_font_preferences;
+
+	var _arg0 = ToGdArray(preferences);
+	_gdFuncPtr(_arg0);
+	FreeGdArray(_arg0);
 
 }
 gdspx_scene_change_scene_to_file(path) {

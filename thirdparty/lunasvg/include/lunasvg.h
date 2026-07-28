@@ -81,6 +81,15 @@ typedef void (*lunasvg_destroy_func_t)(void* closure);
 typedef void (*lunasvg_write_func_t)(void* closure, void* data, int size);
 
 /**
+ * @brief Callback used to return extended grapheme-cluster boundaries.
+ *
+ * The callback writes monotonically increasing UTF-32 offsets to `breaks` and
+ * returns the number of offsets written. The final offset should equal
+ * `length`.
+ */
+typedef size_t (*lunasvg_grapheme_break_func_t)(const uint32_t* text, size_t length, size_t* breaks, size_t capacity, void* closure);
+
+/**
  * @brief Returns the version of the lunasvg library encoded in a single integer.
  *
  * Encodes the version of the lunasvg library into a single integer for easier comparison.
@@ -122,6 +131,24 @@ LUNASVG_API bool lunasvg_add_font_face_from_file(const char* family, bool bold, 
 * @return `true` if the font face was successfully added to the cache, `false` otherwise.
 */
 LUNASVG_API bool lunasvg_add_font_face_from_data(const char* family, bool bold, bool italic, const void* data, size_t length, lunasvg_destroy_func_t destroy_func, void* closure);
+
+/**
+ * @brief Clears all registered font faces for the current thread.
+ */
+LUNASVG_API void lunasvg_clear_font_faces();
+
+/**
+ * @brief Sets the global font-family preference list for the current thread.
+ *
+ * Passing `nullptr` restores LunaSVG's legacy system-font behavior. Passing an
+ * an empty list enables strict font selection with no available global family.
+ */
+LUNASVG_API void lunasvg_set_font_preferences(const char* const* preferences, size_t count);
+
+/**
+ * @brief Sets the grapheme boundary callback for the current thread.
+ */
+LUNASVG_API void lunasvg_set_grapheme_break_func(lunasvg_grapheme_break_func_t callback, void* closure);
 
 #ifdef __cplusplus
 }
