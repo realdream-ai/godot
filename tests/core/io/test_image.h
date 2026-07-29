@@ -359,11 +359,11 @@ TEST_CASE("[Image] SVG fallback keeps an extended grapheme cluster atomic") {
 	};
 	GraphemeProbe probe;
 	auto callback = +[](const uint32_t *text, size_t length, size_t *breaks, size_t capacity, void *closure) -> size_t {
-		GraphemeProbe *probe = static_cast<GraphemeProbe *>(closure);
-		probe->calls++;
-		probe->length = length < 8 ? length : 8;
-		for (size_t i = 0; i < probe->length; i++) {
-			probe->text[i] = text[i];
+		GraphemeProbe *state = static_cast<GraphemeProbe *>(closure);
+		state->calls++;
+		state->length = length < 8 ? length : 8;
+		for (size_t i = 0; i < state->length; i++) {
+			state->text[i] = text[i];
 		}
 		if (capacity < 2) {
 			return 0;

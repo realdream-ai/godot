@@ -30,8 +30,8 @@ struct SVGCharacterPosition {
 using SVGCharacterPositions = std::map<size_t, SVGCharacterPosition>;
 
 struct SVGTextPosition {
-	SVGTextPosition(const SVGNode *node, size_t startOffset, size_t endOffset) :
-			node(node), startOffset(startOffset), endOffset(endOffset) {}
+	SVGTextPosition(const SVGNode *textNode, size_t start, size_t end) :
+			node(textNode), startOffset(start), endOffset(end) {}
 
 	const SVGNode *node;
 	size_t startOffset;
@@ -48,8 +48,8 @@ struct SVGShapedGlyph {
 };
 
 struct SVGTextFragment {
-	explicit SVGTextFragment(const SVGTextPositioningElement *element) :
-			element(element) {}
+	explicit SVGTextFragment(const SVGTextPositioningElement *textElement) :
+			element(textElement) {}
 	const SVGTextPositioningElement *element;
 	Font font;
 	size_t offset = 0;
@@ -73,6 +73,9 @@ public:
 	void build(const SVGTextElement *textElement);
 
 private:
+	void appendFragment(const SVGTextPosition &textPosition, const SVGTextPositioningElement *element,
+			float baselineOffset, size_t localStart, size_t localEnd, Font font,
+			std::vector<SVGShapedGlyph> glyphs, float width, bool missing, bool whitespace);
 	void buildTextNodeFragments(const SVGTextPosition &position);
 	void adjustTextAnchors();
 	void handleText(const SVGTextNode *node);

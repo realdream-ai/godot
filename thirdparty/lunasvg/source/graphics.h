@@ -81,7 +81,7 @@ class Point {
 public:
     constexpr Point() = default;
     constexpr Point(const plutovg_point_t& point) : Point(point.x, point.y) {}
-    constexpr Point(float x, float y) : x(x), y(y) {}
+    constexpr Point(float xValue, float yValue) : x(xValue), y(yValue) {}
 
     constexpr void move(float dx, float dy) { x += dx; y += dy; }
     constexpr void move(float d) { move(d, d); }
@@ -132,7 +132,7 @@ constexpr float operator*(const Point& a, const Point& b)
 class Size {
 public:
     constexpr Size() = default;
-    constexpr Size(float w, float h) : w(w), h(h) {}
+    constexpr Size(float width, float height) : w(width), h(height) {}
 
     constexpr void expand(float dw, float dh) { w += dw; h += dh; }
     constexpr void expand(float d) { expand(d, d); }
@@ -186,7 +186,7 @@ public:
     constexpr Rect(float width, float height) : Rect(0, 0, width, height) {}
     constexpr Rect(const Point& origin, const Size& size) : Rect(origin.x, origin.y, size.w, size.h) {}
     constexpr Rect(const plutovg_rect_t& rect) : Rect(rect.x, rect.y, rect.w, rect.h) {}
-    constexpr Rect(float x, float y, float w, float h) : x(x), y(y), w(w), h(h) {}
+    constexpr Rect(float xValue, float yValue, float width, float height) : x(xValue), y(yValue), w(width), h(height) {}
 
     Rect(const Box& box);
 

@@ -92,10 +92,7 @@ struct EmbeddedSVGGlyphBitmapCacheKeyHash {
 
 using EmbeddedSVGGlyphBitmapCache = std::unordered_map<EmbeddedSVGGlyphBitmapCacheKey, Bitmap, EmbeddedSVGGlyphBitmapCacheKeyHash>;
 
-static EmbeddedSVGGlyphBitmapCache &embeddedSVGGlyphBitmapCache() {
-	static thread_local EmbeddedSVGGlyphBitmapCache cache;
-	return cache;
-}
+static EmbeddedSVGGlyphBitmapCache &embeddedSVGGlyphBitmapCache();
 
 static bool fontFaceHasGlyph(const FontFace &face, uint32_t codepoint) {
 	return !face.isNull() && plutovg_font_face_has_glyph(face.get(), codepoint);
@@ -308,6 +305,18 @@ static bool isWhitespaceCluster(std::u32string_view cluster) {
 	return true;
 }
 
+static std::vector<GraphemeCluster> buildGraphemeClusters(std::u32string_view text) {
+	auto breaks = graphemeBreaks(text);
+	std::vector<GraphemeCluster> clusters;
+	clusters.reserve(breaks.size());
+	size_t start = 0;
+	for (auto end : breaks) {
+		clusters.push_back({ start, end, isWhitespaceCluster(text.substr(start, end - start)) });
+		start = end;
+	}
+	return clusters;
+}
+
 struct TextCluster {
 	explicit TextCluster(std::u32string_view text) :
 			text(text), drawableText(drawableClusterText(text)), isWhitespace(isWhitespaceCluster(text)) {}
@@ -404,10 +413,7 @@ private:
 
 using HarfBuzzFontCache = std::unordered_map<const plutovg_font_face_t *, std::unique_ptr<HarfBuzzFont>>;
 
-static HarfBuzzFontCache &harfBuzzFontCache() {
-	static thread_local HarfBuzzFontCache cache;
-	return cache;
-}
+static HarfBuzzFontCache &harfBuzzFontCache();
 
 static const HarfBuzzFont &harfBuzzFontForFace(const FontFace &face) {
 	auto &cache = harfBuzzFontCache();
@@ -698,24 +704,20 @@ static std::vector<ShapingRunPlan> shapingRuns(std::u32string_view text,
 	utf16Offsets[text.size()] = static_cast<int32_t>(utf16.size());
 
 	UErrorCode error = U_ZERO_ERROR;
-	UBiDi *bidi = ubidi_openSized(static_cast<int32_t>(utf16.size()), 0, &error);
+	using UBiDiPtr = std::unique_ptr<UBiDi, decltype(&ubidi_close)>;
+	UBiDiPtr bidi(ubidi_openSized(static_cast<int32_t>(utf16.size()), 0, &error), ubidi_close);
 	if (U_FAILURE(error) || bidi == nullptr) {
-		if (bidi != nullptr) {
-			ubidi_close(bidi);
-		}
 		return fallbackShapingRuns(text, clusters, paragraphDirection);
 	}
-	ubidi_setPara(bidi, utf16.data(), static_cast<int32_t>(utf16.size()),
+	ubidi_setPara(bidi.get(), utf16.data(), static_cast<int32_t>(utf16.size()),
 			paragraphDirection == Direction::Rtl ? UBIDI_RTL : UBIDI_LTR, nullptr, &error);
 	if (U_FAILURE(error)) {
-		ubidi_close(bidi);
 		return fallbackShapingRuns(text, clusters, paragraphDirection);
 	}
 
 	const auto scripts = resolvedClusterScripts(text, clusters);
-	const auto runCount = ubidi_countRuns(bidi, &error);
+	const auto runCount = ubidi_countRuns(bidi.get(), &error);
 	if (U_FAILURE(error)) {
-		ubidi_close(bidi);
 		return fallbackShapingRuns(text, clusters, paragraphDirection);
 	}
 
@@ -723,12 +725,11 @@ static std::vector<ShapingRunPlan> shapingRuns(std::u32string_view text,
 	for (int32_t runIndex = 0; runIndex < runCount; ++runIndex) {
 		int32_t logicalStart16 = 0;
 		int32_t logicalLength16 = 0;
-		const auto bidiDirection = ubidi_getVisualRun(bidi, runIndex, &logicalStart16, &logicalLength16);
+		const auto bidiDirection = ubidi_getVisualRun(bidi.get(), runIndex, &logicalStart16, &logicalLength16);
 		const auto logicalEnd16 = logicalStart16 + logicalLength16;
 		auto startIt = std::lower_bound(utf16Offsets.begin(), utf16Offsets.end(), logicalStart16);
 		auto endIt = std::lower_bound(utf16Offsets.begin(), utf16Offsets.end(), logicalEnd16);
 		if (startIt == utf16Offsets.end() || endIt == utf16Offsets.end() || *startIt != logicalStart16 || *endIt != logicalEnd16) {
-			ubidi_close(bidi);
 			return fallbackShapingRuns(text, clusters, paragraphDirection);
 		}
 		const auto logicalStart = static_cast<size_t>(startIt - utf16Offsets.begin());
@@ -743,7 +744,6 @@ static std::vector<ShapingRunPlan> shapingRuns(std::u32string_view text,
 			++endCluster;
 		}
 		if (firstCluster == endCluster || clusters[firstCluster].start < logicalStart || clusters[endCluster - 1].end > logicalEnd) {
-			ubidi_close(bidi);
 			return fallbackShapingRuns(text, clusters, paragraphDirection);
 		}
 
@@ -761,7 +761,6 @@ static std::vector<ShapingRunPlan> shapingRuns(std::u32string_view text,
 		}
 		runs.insert(runs.end(), scriptRuns.begin(), scriptRuns.end());
 	}
-	ubidi_close(bidi);
 	return runs;
 }
 #else
@@ -770,6 +769,35 @@ static std::vector<ShapingRunPlan> shapingRuns(std::u32string_view text,
 	return fallbackShapingRuns(text, clusters, paragraphDirection);
 }
 #endif
+#endif
+
+struct ThreadTextCaches {
+	EmbeddedSVGGlyphBitmapCache embeddedSVGGlyphBitmaps;
+#ifdef LUNASVG_ENABLE_HARFBUZZ
+	HarfBuzzFontCache harfBuzzFonts;
+#endif
+
+	void clear() {
+		embeddedSVGGlyphBitmaps.clear();
+#ifdef LUNASVG_ENABLE_HARFBUZZ
+		harfBuzzFonts.clear();
+#endif
+	}
+};
+
+static ThreadTextCaches &threadTextCaches() {
+	static thread_local ThreadTextCaches caches;
+	return caches;
+}
+
+static EmbeddedSVGGlyphBitmapCache &embeddedSVGGlyphBitmapCache() {
+	return threadTextCaches().embeddedSVGGlyphBitmaps;
+}
+
+#ifdef LUNASVG_ENABLE_HARFBUZZ
+static HarfBuzzFontCache &harfBuzzFontCache() {
+	return threadTextCaches().harfBuzzFonts;
+}
 #endif
 
 struct FontCandidate {
@@ -787,6 +815,116 @@ struct FontCandidate {
 	const HarfBuzzFont *shapingFont = nullptr;
 #endif
 };
+
+#ifdef LUNASVG_ENABLE_HARFBUZZ
+struct SelectedFontGroup {
+	size_t begin = 0;
+	size_t end = 0;
+	int candidateIndex = -1;
+};
+
+struct ShapedFontSpan {
+	size_t start = 0;
+	size_t end = 0;
+	int candidateIndex = -1;
+	std::vector<SVGShapedGlyph> glyphs;
+	float width = 0;
+	bool missing = false;
+	bool whitespace = false;
+};
+
+static std::vector<int> selectFallbackFonts(const std::vector<FontCandidate> &candidates, float fontSize,
+		std::u32string_view text, const std::vector<GraphemeCluster> &clusters, const ShapingRunPlan &run,
+		hb_language_t language) {
+	const auto runEndCluster = run.firstCluster + run.clusterCount;
+	const auto runStart = clusters[run.firstCluster].start;
+	const auto runEnd = clusters[runEndCluster - 1].end;
+	std::vector<int> selected(run.clusterCount, -1);
+	for (size_t candidateIndex = 0; candidateIndex < candidates.size(); ++candidateIndex) {
+		auto probe = shapeRun(*candidates[candidateIndex].shapingFont, fontSize, text, runStart, runEnd,
+				clusters, run.firstCluster, run.clusterCount, run.direction, run.script, language);
+		if (probe.supportedClusters.size() != run.clusterCount) {
+			continue;
+		}
+		bool allSelected = true;
+		for (size_t i = 0; i < run.clusterCount; ++i) {
+			if (selected[i] < 0 && probe.supportedClusters[i]) {
+				selected[i] = static_cast<int>(candidateIndex);
+			}
+			allSelected = allSelected && selected[i] >= 0;
+		}
+		if (allSelected) {
+			break;
+		}
+	}
+	return selected;
+}
+
+static std::vector<SelectedFontGroup> groupSelectedFonts(const std::vector<int> &selected,
+		const ShapingRunPlan &run, const std::vector<GraphemeCluster> &clusters, size_t textStartOffset,
+		const SVGCharacterPositions &characterPositions) {
+	std::vector<SelectedFontGroup> groups;
+	size_t group = 0;
+	while (group < run.clusterCount) {
+		const auto candidateIndex = selected[group];
+		size_t groupEnd = group + 1;
+		while (groupEnd < run.clusterCount && selected[groupEnd] == candidateIndex) {
+			const auto absoluteStart = textStartOffset + clusters[run.firstCluster + groupEnd].start;
+			// Per-character SVG positioning is itself a shaping boundary.
+			if (characterPositions.find(absoluteStart) != characterPositions.end()) {
+				break;
+			}
+			++groupEnd;
+		}
+		groups.push_back({ group, groupEnd, candidateIndex });
+		group = groupEnd;
+	}
+	return groups;
+}
+
+static std::vector<ShapedFontSpan> shapeSelectedGroups(const std::vector<SelectedFontGroup> &groups,
+		const std::vector<FontCandidate> &candidates, float fontSize, std::u32string_view text,
+		const std::vector<GraphemeCluster> &clusters, const ShapingRunPlan &run, hb_language_t language) {
+	std::vector<ShapedFontSpan> spans;
+	spans.reserve(groups.size());
+	auto shapeGroup = [&](const SelectedFontGroup &group) {
+		const auto firstCluster = run.firstCluster + group.begin;
+		const auto clusterCount = group.end - group.begin;
+		const auto start = clusters[firstCluster].start;
+		const auto end = clusters[firstCluster + clusterCount - 1].end;
+		bool whitespace = true;
+		for (size_t i = 0; i < clusterCount; ++i) {
+			whitespace = whitespace && clusters[firstCluster + i].isWhitespace;
+		}
+
+		if (group.candidateIndex >= 0) {
+			auto shaped = shapeRun(*candidates[group.candidateIndex].shapingFont, fontSize, text, start, end,
+					clusters, firstCluster, clusterCount, run.direction, run.script, language);
+			spans.push_back({ start, end, group.candidateIndex, std::move(shaped.glyphs), shaped.width, false, whitespace });
+			return;
+		}
+
+		// Missing-glyph boxes remain one per grapheme cluster and follow the
+		// visual direction of their shaping run.
+		for (size_t visualIndex = 0; visualIndex < clusterCount; ++visualIndex) {
+			const auto logicalIndex = run.direction == HB_DIRECTION_RTL ? clusterCount - visualIndex - 1 : visualIndex;
+			const auto &cluster = clusters[firstCluster + logicalIndex];
+			spans.push_back({ cluster.start, cluster.end, -1, {}, 0, !cluster.isWhitespace, cluster.isWhitespace });
+		}
+	};
+
+	if (run.direction == HB_DIRECTION_RTL) {
+		for (auto it = groups.rbegin(); it != groups.rend(); ++it) {
+			shapeGroup(*it);
+		}
+	} else {
+		for (const auto &group : groups) {
+			shapeGroup(group);
+		}
+	}
+	return spans;
+}
+#endif
 
 static std::vector<FontCandidate> resolveFontCandidates(const SVGTextPositioningElement *element) {
 	FontFamilyList families;
@@ -943,10 +1081,7 @@ static Path missingGlyphPath(const SVGTextFragment &fragment) {
 } // namespace
 
 void clearTextCaches() {
-	embeddedSVGGlyphBitmapCache().clear();
-#ifdef LUNASVG_ENABLE_HARFBUZZ
-	harfBuzzFontCache().clear();
-#endif
+	threadTextCaches().clear();
 }
 
 inline const SVGTextNode *toSVGTextNode(const SVGNode *node) {
@@ -1108,6 +1243,49 @@ void SVGTextFragmentsBuilder::build(const SVGTextElement *textElement) {
 	adjustTextAnchors();
 }
 
+void SVGTextFragmentsBuilder::appendFragment(const SVGTextPosition &textPosition,
+		const SVGTextPositioningElement *element, float baselineOffset, size_t localStart, size_t localEnd,
+		Font font, std::vector<SVGShapedGlyph> glyphs, float width, bool missing, bool whitespace) {
+	const auto startOffset = textPosition.startOffset + localStart;
+	const auto endOffset = textPosition.startOffset + localEnd;
+	SVGCharacterPosition characterPosition;
+	auto positionIt = m_characterPositions.find(startOffset);
+	if (positionIt != m_characterPositions.end()) {
+		characterPosition = positionIt->second;
+	}
+
+	auto angle = characterPosition.rotate.value_or(0);
+	auto dx = characterPosition.dx.value_or(0);
+	auto dy = characterPosition.dy.value_or(0);
+	m_x = dx + characterPosition.x.value_or(m_x);
+	m_y = dy + characterPosition.y.value_or(m_y);
+
+	SVGTextFragment fragment(element);
+	fragment.offset = startOffset;
+	fragment.length = endOffset - startOffset;
+	fragment.font = std::move(font);
+	for (auto &glyph : glyphs) {
+		glyph.cluster += textPosition.startOffset;
+	}
+	fragment.glyphs = std::move(glyphs);
+	fragment.x = m_x;
+	fragment.y = m_y - baselineOffset;
+	fragment.angle = angle;
+	fragment.startsNewTextChunk =
+			(characterPosition.x || characterPosition.y) && startOffset == textPosition.startOffset;
+	fragment.isMissingGlyph = missing;
+	fragment.isWhitespace = whitespace;
+	if (fragment.isMissingGlyph) {
+		fragment.width = std::max(1.f, element->font_size() * 0.6f);
+	} else if (fragment.font.isNull()) {
+		fragment.width = fragment.isWhitespace ? std::max(1.f, element->font_size() * 0.33f) : 0.f;
+	} else {
+		fragment.width = width;
+	}
+	m_fragments.push_back(std::move(fragment));
+	m_x += m_fragments.back().width;
+}
+
 void SVGTextFragmentsBuilder::buildTextNodeFragments(const SVGTextPosition &textPosition) {
 	if (!textPosition.node->isTextNode()) {
 		return;
@@ -1118,147 +1296,22 @@ void SVGTextFragmentsBuilder::buildTextNodeFragments(const SVGTextPosition &text
 	const auto candidates = resolveFontCandidates(element);
 	auto baselineOffset = calculateBaselineOffset(element);
 	auto nodeText = wholeText.substr(textPosition.startOffset, textPosition.endOffset - textPosition.startOffset);
-	auto clusterBreaks = graphemeBreaks(nodeText);
-	std::vector<GraphemeCluster> clusters;
-	clusters.reserve(clusterBreaks.size());
-	size_t localStartOffset = 0;
-	for (auto localEndOffset : clusterBreaks) {
-		clusters.push_back({ localStartOffset, localEndOffset,
-				isWhitespaceCluster(nodeText.substr(localStartOffset, localEndOffset - localStartOffset)) });
-		localStartOffset = localEndOffset;
-	}
-
-	auto appendFragment = [&](size_t localStart, size_t localEnd, Font font,
-								  std::vector<SVGShapedGlyph> glyphs, float width, bool missing, bool whitespace) {
-		const auto startOffset = textPosition.startOffset + localStart;
-		const auto endOffset = textPosition.startOffset + localEnd;
-		SVGCharacterPosition characterPosition;
-		auto positionIt = m_characterPositions.find(startOffset);
-		if (positionIt != m_characterPositions.end()) {
-			characterPosition = positionIt->second;
-		}
-
-		auto angle = characterPosition.rotate.value_or(0);
-		auto dx = characterPosition.dx.value_or(0);
-		auto dy = characterPosition.dy.value_or(0);
-
-		m_x = dx + characterPosition.x.value_or(m_x);
-		m_y = dy + characterPosition.y.value_or(m_y);
-
-		SVGTextFragment fragment(element);
-		fragment.offset = startOffset;
-		fragment.length = endOffset - startOffset;
-		fragment.font = std::move(font);
-		for (auto &glyph : glyphs) {
-			glyph.cluster += textPosition.startOffset;
-		}
-		fragment.glyphs = std::move(glyphs);
-		fragment.x = m_x;
-		fragment.y = m_y - baselineOffset;
-		fragment.angle = angle;
-		fragment.startsNewTextChunk =
-				(characterPosition.x || characterPosition.y) && startOffset == textPosition.startOffset;
-		fragment.isMissingGlyph = missing;
-		fragment.isWhitespace = whitespace;
-		if (fragment.isMissingGlyph) {
-			fragment.width = std::max(1.f, element->font_size() * 0.6f);
-		} else if (fragment.font.isNull()) {
-			fragment.width = fragment.isWhitespace ? std::max(1.f, element->font_size() * 0.33f) : 0.f;
-		} else {
-			fragment.width = width;
-		}
-		m_fragments.push_back(std::move(fragment));
-		m_x += m_fragments.back().width;
-	};
+	auto clusters = buildGraphemeClusters(nodeText);
 
 #ifdef LUNASVG_ENABLE_HARFBUZZ
 	const auto language = hb_language_from_string(element->language().c_str(), -1);
 	const auto fontSize = element->font().size();
 	for (const auto &shapingRun : shapingRuns(nodeText, clusters, element->direction())) {
-		const auto runEndCluster = shapingRun.firstCluster + shapingRun.clusterCount;
-		const auto runStart = clusters[shapingRun.firstCluster].start;
-		const auto runEnd = clusters[runEndCluster - 1].end;
-		std::vector<int> selected(shapingRun.clusterCount, -1);
-
 		// Shape the complete bidi/script run with every candidate only to decide
 		// fallback at grapheme granularity. A .notdef marks the owning grapheme
 		// cluster as unsupported; successful neighboring clusters keep context.
-		for (size_t candidateIndex = 0; candidateIndex < candidates.size(); ++candidateIndex) {
-			auto probe = shapeRun(*candidates[candidateIndex].shapingFont, fontSize, nodeText, runStart, runEnd,
-					clusters, shapingRun.firstCluster, shapingRun.clusterCount, shapingRun.direction, shapingRun.script, language);
-			if (probe.supportedClusters.size() != shapingRun.clusterCount) {
-				continue;
-			}
-			bool allSelected = true;
-			for (size_t i = 0; i < shapingRun.clusterCount; ++i) {
-				if (selected[i] < 0 && probe.supportedClusters[i]) {
-					selected[i] = static_cast<int>(candidateIndex);
-				}
-				allSelected = allSelected && selected[i] >= 0;
-			}
-			if (allSelected) {
-				break;
-			}
-		}
-
-		struct SelectedFontGroup {
-			size_t begin = 0;
-			size_t end = 0;
-			int candidateIndex = -1;
-		};
-		std::vector<SelectedFontGroup> groups;
-		size_t group = 0;
-		while (group < shapingRun.clusterCount) {
-			const auto candidateIndex = selected[group];
-			size_t groupEnd = group + 1;
-			while (groupEnd < shapingRun.clusterCount && selected[groupEnd] == candidateIndex) {
-				const auto absoluteStart = textPosition.startOffset + clusters[shapingRun.firstCluster + groupEnd].start;
-				// Per-character SVG positioning is itself a shaping boundary.
-				if (m_characterPositions.find(absoluteStart) != m_characterPositions.end()) {
-					break;
-				}
-				++groupEnd;
-			}
-			groups.push_back({ group, groupEnd, candidateIndex });
-			group = groupEnd;
-		}
-
-		auto emitGroup = [&](const SelectedFontGroup &selectedGroup) {
-			const auto candidateIndex = selectedGroup.candidateIndex;
-			const auto firstCluster = shapingRun.firstCluster + selectedGroup.begin;
-			const auto groupClusterCount = selectedGroup.end - selectedGroup.begin;
-			const auto start = clusters[firstCluster].start;
-			const auto end = clusters[firstCluster + groupClusterCount - 1].end;
-			bool whitespace = true;
-			for (size_t i = 0; i < groupClusterCount; ++i) {
-				whitespace = whitespace && clusters[firstCluster + i].isWhitespace;
-			}
-
-			if (candidateIndex >= 0) {
-				auto shaped = shapeRun(*candidates[candidateIndex].shapingFont, fontSize, nodeText, start, end,
-						clusters, firstCluster, groupClusterCount, shapingRun.direction, shapingRun.script, language);
-				appendFragment(start, end, Font(candidates[candidateIndex].face, fontSize),
-						std::move(shaped.glyphs), shaped.width, false, whitespace);
-			} else {
-				// Missing-glyph boxes remain one per grapheme cluster.
-				for (size_t visualIndex = 0; visualIndex < groupClusterCount; ++visualIndex) {
-					const auto logicalIndex = shapingRun.direction == HB_DIRECTION_RTL ? groupClusterCount - visualIndex - 1 : visualIndex;
-					const auto &cluster = clusters[firstCluster + logicalIndex];
-					Font missingFont = candidates.empty() ? Font(FontFace(), fontSize) : Font(candidates.front().face, fontSize);
-					appendFragment(cluster.start, cluster.end, std::move(missingFont), {}, 0,
-							!cluster.isWhitespace, cluster.isWhitespace);
-				}
-			}
-		};
-
-		if (shapingRun.direction == HB_DIRECTION_RTL) {
-			for (auto it = groups.rbegin(); it != groups.rend(); ++it) {
-				emitGroup(*it);
-			}
-		} else {
-			for (const auto &selectedGroup : groups) {
-				emitGroup(selectedGroup);
-			}
+		auto selected = selectFallbackFonts(candidates, fontSize, nodeText, clusters, shapingRun, language);
+		auto groups = groupSelectedFonts(selected, shapingRun, clusters, textPosition.startOffset, m_characterPositions);
+		auto spans = shapeSelectedGroups(groups, candidates, fontSize, nodeText, clusters, shapingRun, language);
+		for (auto &span : spans) {
+			Font font = span.candidateIndex >= 0 ? Font(candidates[span.candidateIndex].face, fontSize) : (candidates.empty() ? Font(FontFace(), fontSize) : Font(candidates.front().face, fontSize));
+			appendFragment(textPosition, element, baselineOffset, span.start, span.end, std::move(font),
+					std::move(span.glyphs), span.width, span.missing, span.whitespace);
 		}
 	}
 #else
@@ -1269,7 +1322,7 @@ void SVGTextFragmentsBuilder::buildTextNodeFragments(const SVGTextPosition &text
 			if (fontFaceSupportsClusterWithoutShaping(candidate.face, cluster)) {
 				auto font = Font(candidate.face, element->font().size());
 				auto width = font.measureText(cluster.drawableText);
-				appendFragment(clusterRange.start, clusterRange.end, std::move(font), {}, width, false,
+				appendFragment(textPosition, element, baselineOffset, clusterRange.start, clusterRange.end, std::move(font), {}, width, false,
 						cluster.isWhitespace);
 				selected = true;
 				break;
@@ -1278,7 +1331,7 @@ void SVGTextFragmentsBuilder::buildTextNodeFragments(const SVGTextPosition &text
 		if (!selected) {
 			auto fontSize = element->font().size();
 			Font missingFont = candidates.empty() ? Font(FontFace(), fontSize) : Font(candidates.front().face, fontSize);
-			appendFragment(clusterRange.start, clusterRange.end, std::move(missingFont), {}, 0,
+			appendFragment(textPosition, element, baselineOffset, clusterRange.start, clusterRange.end, std::move(missingFont), {}, 0,
 					!cluster.isWhitespace, cluster.isWhitespace);
 		}
 	}
