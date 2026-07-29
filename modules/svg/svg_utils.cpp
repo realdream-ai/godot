@@ -30,15 +30,19 @@
 
 #include "svg_utils.h"
 
+#include "core/os/memory.h"
 #include "core/os/mutex.h"
 #include "core/templates/hash_map.h"
 #include "core/templates/vector.h"
 #include "servers/text_server.h"
 #include "thirdparty/lunasvg/include/lunasvg.h"
+#include "thirdparty/lunasvg/include/plutovg.h"
 
 #include <lunasvg.h>
+#ifdef LUNASVG_ENABLE_HARFBUZZ
+#include <hb.h>
+#endif
 #include <algorithm>
-#include <cstdlib>
 #include <cstring>
 
 namespace {
@@ -70,6 +74,21 @@ struct FontRegistrySnapshot {
 
 class FontRegistry {
 public:
+	void replace_all(const Vector<uint8_t> &p_default_font_data, const Vector<SVGProjectFontFace> &p_named_font_faces, const Vector<String> &p_preferences) {
+		HashMap<String, Vector<uint8_t>> named_font_faces;
+		for (const SVGProjectFontFace &face : p_named_font_faces) {
+			named_font_faces.insert(_ascii_fold_font_family(face.family), face.data);
+		}
+
+		MutexLock lock(m_mutex);
+		m_default_font_data = p_default_font_data;
+		m_named_font_faces = named_font_faces;
+		m_font_preferences = p_preferences;
+		m_font_preferences_configured = true;
+		m_generation++;
+		m_serial++;
+	}
+
 	void replace_default_font(const Vector<uint8_t> &p_font_data) {
 		MutexLock lock(m_mutex);
 		m_default_font_data = p_font_data;
@@ -120,6 +139,11 @@ public:
 		return true;
 	}
 
+	uint64_t get_generation() const {
+		MutexLock lock(m_mutex);
+		return m_generation;
+	}
+
 private:
 	Mutex m_mutex;
 	Vector<uint8_t> m_default_font_data;
@@ -168,20 +192,25 @@ static bool _copy_font_bytes(const void *font_data, int length, Vector<uint8_t> 
 	return true;
 }
 
-static void _register_font_bytes_for_current_thread(const String &family, const Vector<uint8_t> &font_data) {
+static void _destroy_shared_font_bytes(void *p_data) {
+	memdelete(static_cast<Vector<uint8_t> *>(p_data));
+}
+
+static bool _register_font_bytes_for_current_thread(const String &family, const Vector<uint8_t> &font_data) {
 	if (font_data.is_empty()) {
-		return;
+		return false;
 	}
 
-	void *font_bytes = std::malloc(font_data.size());
-	if (font_bytes == nullptr) {
-		return;
-	}
-	::memcpy(font_bytes, font_data.ptr(), font_data.size());
+	// Godot Vector is copy-on-write. Retaining a Vector here gives the
+	// thread-local LunaSVG face immutable ownership without copying the complete
+	// font once per rendering thread.
+	Vector<uint8_t> *shared_font_data = memnew(Vector<uint8_t>);
+	*shared_font_data = font_data;
 
 	CharString utf8_family = family.utf8();
 	const char *family_name = family.is_empty() ? "" : utf8_family.get_data();
-	lunasvg_add_font_face_from_data(family_name, false, false, font_bytes, font_data.size(), std::free, font_bytes);
+	return lunasvg_add_font_face_from_data(family_name, false, false, shared_font_data->ptr(), shared_font_data->size(),
+			_destroy_shared_font_bytes, shared_font_data);
 }
 
 static void _install_grapheme_break_callback_for_current_thread() {
@@ -213,21 +242,63 @@ static void _apply_font_preferences_to_current_thread(const FontRegistrySnapshot
 			snapshot.font_preferences_configured ? preference_names.size() : 0);
 }
 
-static void _apply_font_registry_snapshot_to_current_thread(const FontRegistrySnapshot &snapshot, uint64_t &r_applied_generation) {
+static bool _apply_font_registry_snapshot_to_current_thread(const FontRegistrySnapshot &snapshot, uint64_t &r_applied_generation) {
 	if (r_applied_generation != snapshot.generation) {
 		// A new generation starts at reset. Every rendering thread clears its
 		// local cache before applying the first snapshot for the new project.
 		lunasvg_clear_font_faces();
 		r_applied_generation = snapshot.generation;
 	}
-	_register_font_bytes_for_current_thread("", snapshot.default_font_data);
+	if (!snapshot.default_font_data.is_empty() &&
+			!_register_font_bytes_for_current_thread("", snapshot.default_font_data)) {
+		lunasvg_clear_font_faces();
+		return false;
+	}
 	for (int i = 0; i < snapshot.named_font_faces.size(); i++) {
-		_register_font_bytes_for_current_thread(snapshot.named_font_faces[i].family, snapshot.named_font_faces[i].data);
+		if (!_register_font_bytes_for_current_thread(snapshot.named_font_faces[i].family, snapshot.named_font_faces[i].data)) {
+			// Do not render or mark the serial as applied with a partial font set.
+			// The next load retries the complete immutable snapshot.
+			lunasvg_clear_font_faces();
+			return false;
+		}
 	}
 	_apply_font_preferences_to_current_thread(snapshot);
+	return true;
 }
 
 } // namespace
+
+bool SVGUtils::is_font_data_valid(const Vector<uint8_t> &font_data) {
+	if (font_data.is_empty()) {
+		return false;
+	}
+
+	plutovg_font_face_t *face = plutovg_font_face_load_from_data(font_data.ptr(), font_data.size(), 0, nullptr, nullptr);
+	if (face == nullptr) {
+		return false;
+	}
+	plutovg_font_face_destroy(face);
+
+#ifdef LUNASVG_ENABLE_HARFBUZZ
+	hb_blob_t *blob = hb_blob_create(reinterpret_cast<const char *>(font_data.ptr()), font_data.size(), HB_MEMORY_MODE_READONLY, nullptr, nullptr);
+	hb_face_t *hb_face = hb_face_create(blob, 0);
+	const bool harfbuzz_valid = hb_face_get_upem(hb_face) > 0 && hb_face_get_glyph_count(hb_face) > 0;
+	hb_face_destroy(hb_face);
+	hb_blob_destroy(blob);
+	if (!harfbuzz_valid) {
+		return false;
+	}
+#endif
+	return true;
+}
+
+void SVGUtils::apply_font_registry(const Vector<uint8_t> &default_font_data, const Vector<SVGProjectFontFace> &named_font_faces, const Vector<String> &preferences) {
+	get_font_registry().replace_all(default_font_data, named_font_faces, preferences);
+}
+
+uint64_t SVGUtils::get_font_registry_generation() {
+	return get_font_registry().get_generation();
+}
 
 void SVGUtils::set_default_font(const void *font_data, int length) {
 	Vector<uint8_t> font_bytes;
@@ -259,15 +330,18 @@ void SVGUtils::reset_font_registry() {
 	get_font_registry().reset();
 }
 
-void SVGUtils::ensure_font_faces_registered() {
+bool SVGUtils::ensure_font_faces_registered() {
 	thread_local uint64_t applied_serial = 0;
 	thread_local uint64_t applied_generation = 0;
 	_install_grapheme_break_callback_for_current_thread();
 
 	FontRegistrySnapshot snapshot;
 	if (!get_font_registry().snapshot_if_changed(applied_serial, snapshot)) {
-		return;
+		return true;
 	}
-	_apply_font_registry_snapshot_to_current_thread(snapshot, applied_generation);
-	applied_serial = snapshot.serial;
+	if (_apply_font_registry_snapshot_to_current_thread(snapshot, applied_generation)) {
+		applied_serial = snapshot.serial;
+		return true;
+	}
+	return false;
 }

@@ -84,7 +84,8 @@ Error ImageLoaderSVG::create_image_from_utf8_buffer(Ref<Image> p_image, const ui
 	ERR_FAIL_COND_V_MSG(Math::is_zero_approx(p_scale), ERR_INVALID_PARAMETER, "ImageLoaderSVG: Can't load SVG with a scale of 0.");
 	ERR_FAIL_COND_V_MSG(p_scale < 0.0f, ERR_INVALID_PARAMETER, "ImageLoaderSVG: Can't load SVG with a negative scale.");
 
-	SVGUtils::ensure_font_faces_registered();
+	ERR_FAIL_COND_V_MSG(!SVGUtils::ensure_font_faces_registered(), ERR_CANT_CREATE,
+			"ImageLoaderSVG: Failed to install the complete project font snapshot.");
 
 	auto document = lunasvg::Document::loadFromData((const char *)p_buffer, p_buffer_size);
 	if (document == nullptr) {

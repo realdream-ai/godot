@@ -539,6 +539,71 @@ static bool isCSSWhitespace(char character)
 	return character == ' ' || character == '\t' || character == '\n' || character == '\r' || character == '\f';
 }
 
+static bool isCSSHexDigit(char character)
+{
+	return (character >= '0' && character <= '9') || (character >= 'A' && character <= 'F') ||
+		(character >= 'a' && character <= 'f');
+}
+
+static uint32_t cssHexValue(char character)
+{
+	if(character >= '0' && character <= '9')
+		return character - '0';
+	if(character >= 'A' && character <= 'F')
+		return character - 'A' + 10;
+	return character - 'a' + 10;
+}
+
+static void appendUTF8(std::string& output, uint32_t codepoint)
+{
+	if(codepoint == 0 || codepoint > 0x10FFFF || (codepoint >= 0xD800 && codepoint <= 0xDFFF))
+		codepoint = 0xFFFD;
+	if(codepoint <= 0x7F) {
+		output.push_back(static_cast<char>(codepoint));
+	} else if(codepoint <= 0x7FF) {
+		output.push_back(static_cast<char>(0xC0 | (codepoint >> 6)));
+		output.push_back(static_cast<char>(0x80 | (codepoint & 0x3F)));
+	} else if(codepoint <= 0xFFFF) {
+		output.push_back(static_cast<char>(0xE0 | (codepoint >> 12)));
+		output.push_back(static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F)));
+		output.push_back(static_cast<char>(0x80 | (codepoint & 0x3F)));
+	} else {
+		output.push_back(static_cast<char>(0xF0 | (codepoint >> 18)));
+		output.push_back(static_cast<char>(0x80 | ((codepoint >> 12) & 0x3F)));
+		output.push_back(static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F)));
+		output.push_back(static_cast<char>(0x80 | (codepoint & 0x3F)));
+	}
+}
+
+static bool consumeCSSEscape(std::string_view value, size_t& index, std::string& output)
+{
+	if(index >= value.size() || value[index] != '\\')
+		return false;
+	index++;
+	if(index >= value.size())
+		return false;
+	if(value[index] == '\n' || value[index] == '\r' || value[index] == '\f')
+		return false;
+	if(!isCSSHexDigit(value[index])) {
+		output.push_back(value[index++]);
+		return true;
+	}
+
+	uint32_t codepoint = 0;
+	size_t digits = 0;
+	while(index < value.size() && digits < 6 && isCSSHexDigit(value[index])) {
+		codepoint = (codepoint << 4) | cssHexValue(value[index++]);
+		digits++;
+	}
+	if(index < value.size() && isCSSWhitespace(value[index])) {
+		if(value[index] == '\r' && index + 1 < value.size() && value[index + 1] == '\n')
+			index++;
+		index++;
+	}
+	appendUTF8(output, codepoint);
+	return true;
+}
+
 static bool parseCSSString(std::string_view value, std::string &output)
 {
 	if(value.size() < 2 || (value.front() != '\'' && value.front() != '"'))
@@ -553,8 +618,19 @@ static bool parseCSSString(std::string_view value, std::string &output)
 				index++;
 			return index == value.size();
 		}
-		if(character == '\\')
+		if(character == '\\') {
+			const auto escapeStart = index;
+			if(consumeCSSEscape(value, index, output))
+				continue;
+			index = escapeStart + 1;
+			if(index < value.size() && value[index] == '\r' && index + 1 < value.size() && value[index + 1] == '\n')
+				index++;
+			if(index < value.size() && (value[index] == '\n' || value[index] == '\r' || value[index] == '\f')) {
+				index++;
+				continue;
+			}
 			return false;
+		}
 		if(character == '\n' || character == '\r' || character == '\f')
 			return false;
 		output.push_back(character);
@@ -563,7 +639,7 @@ static bool parseCSSString(std::string_view value, std::string &output)
 	return false;
 }
 
-static bool parseCSSCustomIdentifier(std::string_view value, std::string &output)
+static bool parseCSSCustomIdentifier(std::string_view value, size_t& index, std::string& output)
 {
 	auto isNameStart = [](unsigned char character) {
 		return (character >= 'A' && character <= 'Z') || (character >= 'a' && character <= 'z') || character == '_' || character >= 0x80;
@@ -571,11 +647,9 @@ static bool parseCSSCustomIdentifier(std::string_view value, std::string &output
 	auto isNameCharacter = [&isNameStart](unsigned char character) {
 		return isNameStart(character) || (character >= '0' && character <= '9') || character == '-';
 	};
-	if(value.empty())
+	if(index >= value.size())
 		return false;
 
-	output.clear();
-	size_t index = 0;
 	if(value[index] == '-') {
 		output.push_back(value[index++]);
 		if(index == value.size())
@@ -585,7 +659,10 @@ static bool parseCSSCustomIdentifier(std::string_view value, std::string &output
 	}
 	if(index == value.size())
 		return false;
-	if(isNameStart(static_cast<unsigned char>(value[index]))) {
+	if(value[index] == '\\') {
+		if(!consumeCSSEscape(value, index, output))
+			return false;
+	} else if(isNameStart(static_cast<unsigned char>(value[index]))) {
 		output.push_back(value[index++]);
 	} else {
 		return false;
@@ -593,11 +670,36 @@ static bool parseCSSCustomIdentifier(std::string_view value, std::string &output
 	for(; index < value.size(); ) {
 		if(isNameCharacter(static_cast<unsigned char>(value[index]))) {
 			output.push_back(value[index++]);
+		} else if(value[index] == '\\') {
+			if(!consumeCSSEscape(value, index, output))
+				return false;
 		} else {
-			return false;
+			break;
 		}
 	}
 	return true;
+}
+
+static bool parseCSSFamilyName(std::string_view value, std::string& output)
+{
+	output.clear();
+	size_t index = 0;
+	bool first = true;
+	while(index < value.size()) {
+		if(!first) {
+			if(!isCSSWhitespace(value[index]))
+				return false;
+			while(index < value.size() && isCSSWhitespace(value[index]))
+				index++;
+			if(index == value.size())
+				return false;
+			output.push_back(' ');
+		}
+		if(!parseCSSCustomIdentifier(value, index, output))
+			return false;
+		first = false;
+	}
+	return !first;
 }
 
 struct CSSFontFamilyToken {
@@ -673,7 +775,7 @@ static std::vector<CSSFontFamilyToken> parseCSSFontFamilyTokens(std::string_view
 
 		const bool quoted = !family.empty() && (family.front() == '\'' || family.front() == '"');
 		std::string name;
-		const bool valid = quoted ? parseCSSString(family, name) : parseCSSCustomIdentifier(family, name);
+		const bool valid = quoted ? parseCSSString(family, name) : parseCSSFamilyName(family, name);
 		if(valid && !name.empty())
 			tokens.push_back({ std::move(name), quoted });
 		if(comma == std::string_view::npos)

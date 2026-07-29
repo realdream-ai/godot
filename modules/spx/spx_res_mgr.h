@@ -114,6 +114,9 @@ public:
 	SPX_API GdString list_directories(GdString p_path);
 	SPX_API void reload_texture(GdString path);
 	SPX_API void free_str(GdString str);
+	// Atomically applies a complete project font configuration. Returns an
+	// allocated empty string on success, or an allocated diagnostic on failure.
+	SPX_API GdString apply_project_fonts(GdString default_font_path, GdArray font_paths, GdArray font_families, GdArray preferences);
 	SPX_API void set_default_font(GdString font_path);
 	SPX_API void register_font_face(GdString font_path, GdString family);
 	SPX_API void set_font_preferences(GdArray preferences);
