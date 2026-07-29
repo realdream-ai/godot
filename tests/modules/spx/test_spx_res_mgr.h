@@ -30,6 +30,7 @@
 #ifndef TEST_SPX_RES_MGR_H
 #define TEST_SPX_RES_MGR_H
 
+#include "modules/spx/project_font_transaction.h"
 #include "modules/spx/spx_res_mgr.h"
 
 #ifdef MODULE_SVG_ENABLED
@@ -87,6 +88,38 @@ static String apply_fonts_raw(SpxResMgr &p_res_mgr, const String &p_default_path
 
 static String apply_fonts(SpxResMgr &p_res_mgr, const String &p_default_path, GdStringArray &p_paths, GdStringArray &p_families, GdStringArray &p_preferences) {
 	return apply_fonts_raw(p_res_mgr, p_default_path, p_paths.ptr(), p_families.ptr(), p_preferences.ptr());
+}
+
+TEST_CASE("[SPX] Project font request validation") {
+	ProjectFonts::Request request;
+	request.default_path = "res://default.ttf";
+	request.faces.push_back({ "res://project.ttf", "Project", String() });
+	request.preferences.push_back("project");
+	request.preferences.push_back("default");
+	String error;
+
+	SUBCASE("canonicalizes family keys once") {
+		CHECK(ProjectFonts::validate_request(request, error));
+		CHECK(request.faces[0].family_key == "project");
+	}
+
+	SUBCASE("rejects the reserved default family") {
+		request.faces.write[0].family = "DEFAULT";
+		CHECK_FALSE(ProjectFonts::validate_request(request, error));
+		CHECK(error.contains("reserved name default"));
+	}
+
+	SUBCASE("rejects duplicate folded families") {
+		request.faces.push_back({ "res://duplicate.ttf", "PROJECT", String() });
+		CHECK_FALSE(ProjectFonts::validate_request(request, error));
+		CHECK(error.contains("duplicated after ASCII case folding"));
+	}
+
+	SUBCASE("rejects unavailable preferences") {
+		request.preferences.write[0] = "Missing";
+		CHECK_FALSE(ProjectFonts::validate_request(request, error));
+		CHECK(error.contains("not an available font family"));
+	}
 }
 
 TEST_CASE("[SceneTree][SPX] Project font transaction accepts typed empty arrays") {

@@ -41,6 +41,10 @@ class AudioStreamMP3;
 class AudioStreamWAV;
 class Texture2D;
 
+namespace ProjectFonts {
+struct Prepared;
+}
+
 struct FrameNormal {
 	String path;
 	double offset_x;
@@ -88,6 +92,7 @@ private:
 	Vector2 _read_offset(const Dictionary &d);
 	void _build_normal_frames(const String &p_sprite_type, const String &anim_key, const AnimPayload &payload, Vector<Vector2> &out_offsets);
 	void _build_atlas_frames(const String &anim_key, const AnimPayload &payload, Vector<Vector2> &out_offsets);
+	void _commit_project_fonts(ProjectFonts::Prepared &&p_prepared);
 
 public:
 	void on_awake() override;

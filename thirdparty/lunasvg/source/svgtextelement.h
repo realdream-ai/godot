@@ -73,6 +73,9 @@ public:
 	void build(const SVGTextElement *textElement);
 
 private:
+	void appendFragment(const SVGTextPosition &textPosition, const SVGTextPositioningElement *element,
+			float baselineOffset, size_t localStart, size_t localEnd, Font font,
+			std::vector<SVGShapedGlyph> glyphs, float width, bool missing, bool whitespace);
 	void buildTextNodeFragments(const SVGTextPosition &position);
 	void adjustTextAnchors();
 	void handleText(const SVGTextNode *node);
