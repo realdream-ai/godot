@@ -39,6 +39,20 @@
 #include "spx_sprite_render_util.h"
 #include "svg_mgr.h"
 
+void SpxSprite::set_render_offset(GdVec2 p_render_offset) {
+	if (render_offset == p_render_offset) {
+		return;
+	}
+	
+	render_offset = p_render_offset;
+	if (render_root != nullptr) {
+		render_root->set_position(render_offset);
+	}
+	if (enable_dynamic_frame_offset) {
+		_on_frame_changed();
+	}
+}
+
 void SpxSprite::set_render_scale(GdVec2 p_scale) {
 	_render_scale = p_scale;
 	bool frame_offset_updated = _update_anim_scale();
@@ -173,7 +187,7 @@ void SpxSprite::_on_frame_changed() {
 	String current_anim = String(anim2d->get_animation());
 	int current_frame = anim2d->get_frame();
 	Vector2 frame_offset = resMgr->get_animation_frame_offset(current_anim, current_frame);
-	Vector2 final_offset = spx_compute_anim_offset(is_single_image_mode, base_offset, pivot_offset, frame_offset, _render_scale);
+	Vector2 final_offset = spx_compute_anim_offset(is_single_image_mode, base_offset, render_offset, frame_offset, _render_scale);
 	anim2d->set_offset(final_offset);
 }
 

@@ -34,6 +34,8 @@
 
 #include "scene/2d/line_2d.h"
 
+#include "spx_coordinate.h"
+
 Mutex SpxDebugMgr::lock;
 
 void SpxDebugMgr::on_awake() {
@@ -83,7 +85,7 @@ void SpxDebugMgr::debug_draw_circle(GdVec2 pos, GdFloat radius, GdColor color) {
 		return;
 	}
 
-	pos.y = -pos.y;
+	pos = spx_to_godot_vec2(pos);
 	Line2D *circle = memnew(Line2D);
 	circle->set_default_color(color);
 	circle->set_width(2.0f);
@@ -117,7 +119,7 @@ void SpxDebugMgr::debug_draw_rect(GdVec2 pos, GdVec2 size, GdColor color) {
 	rect->set_default_color(color);
 	rect->set_width(2.0f);
 
-	pos.y = -pos.y;
+	pos = spx_to_godot_vec2(pos);
 	size = size * 0.5;
 	PackedVector2Array points;
 	points.append(Vector2(-size.x, -size.y));
@@ -144,8 +146,8 @@ void SpxDebugMgr::debug_draw_line(GdVec2 from, GdVec2 to, GdColor color) {
 		return;
 	}
 
-	from.y = -from.y;
-	to.y = -to.y;
+	from = spx_to_godot_vec2(from);
+	to = spx_to_godot_vec2(to);
 
 	Line2D *line = memnew(Line2D);
 	line->set_default_color(color);

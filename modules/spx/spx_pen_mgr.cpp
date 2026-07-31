@@ -30,10 +30,12 @@
 
 #include "spx_pen_mgr.h"
 
-#define SPX_WITH_PEN_OR_RETURN(OBJ_ID, BODY)                    \
-	if (!with_object(OBJ_ID, [&](SpxPen *pen) { BODY; })) {    \
-		print_error("try to access null SpxPen object");       \
-		return;                                                \
+#include "spx_coordinate.h"
+
+#define SPX_WITH_PEN_OR_RETURN(OBJ_ID, BODY)                \
+	if (!with_object(OBJ_ID, [&](SpxPen *pen) { BODY; })) { \
+		print_error("try to access null SpxPen object");    \
+		return;                                             \
 	}
 
 void SpxPenMgr::on_awake() {
@@ -80,7 +82,7 @@ void SpxPenMgr::flush_all() {
 }
 
 void SpxPenMgr::move_pen_to(GdObj obj, GdVec2 position) {
-	SPX_WITH_PEN_OR_RETURN(obj, pen->move_to(position))
+	SPX_WITH_PEN_OR_RETURN(obj, pen->move_to(spx_to_godot_vec2(position)))
 }
 
 void SpxPenMgr::pen_stamp(GdObj obj) {
@@ -120,5 +122,5 @@ void SpxPenMgr::set_pen_stamp_texture(GdObj obj, GdString texture_path) {
 }
 
 void SpxPenMgr::pen_stamp_with_transform(GdObj obj, GdString texture_path, GdVec2 position, GdFloat rotation_radians, GdVec2 scale) {
-	SPX_WITH_PEN_OR_RETURN(obj, pen->stamp_with_transform(texture_path, position, rotation_radians, scale))
+	SPX_WITH_PEN_OR_RETURN(obj, pen->stamp_with_transform(texture_path, spx_to_godot_vec2(position), rotation_radians, scale))
 }

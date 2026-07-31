@@ -112,7 +112,7 @@ Rect2 SpxSprite::get_rect() const {
 	}
 
 	Size2i size = texture->get_size();
-	Point2 offset = get_global_position() - Size2(size) / 2;
+	Point2 offset = render_root->get_global_position()  - Size2(size) / 2;
 
 	if (get_viewport() != nullptr && get_viewport()->is_snap_2d_transforms_to_pixel_enabled()) {
 		offset = (offset + Point2(0.5, 0.5)).floor();

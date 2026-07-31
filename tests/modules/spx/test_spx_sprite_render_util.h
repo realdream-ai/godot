@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  spx_sprite_render_util.h                                              */
+/*  test_spx_sprite_render_util.h                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,20 +28,34 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef SPX_SPRITE_RENDER_UTIL_H
-#define SPX_SPRITE_RENDER_UTIL_H
+#ifndef TEST_SPX_SPRITE_RENDER_UTIL_H
+#define TEST_SPX_SPRITE_RENDER_UTIL_H
 
-#include "core/math/vector2.h"
+#include "modules/spx/spx_sprite_render_util.h"
+#include "tests/test_macros.h"
 
-// RenderRoot owns the costume center offset. In single-image mode the animation
-// node inherits it directly; multi-frame animations cancel it before applying
-// their own frame metadata so the final placement remains unchanged.
-static inline Vector2 spx_compute_anim_offset(bool p_is_single_image_mode, const Vector2 &p_base_offset, const Vector2 &p_render_offset, const Vector2 &p_frame_offset, const Vector2 &p_render_scale) {
-	Vector2 final_offset = p_base_offset + (p_frame_offset * p_render_scale);
-	if (!p_is_single_image_mode) {
-		final_offset -= p_render_offset;
-	}
-	return final_offset;
+namespace TestSpxSpriteRenderUtil {
+
+TEST_CASE("[SPX] Render root preserves single-image render offset") {
+	const Vector2 render_offset(12.0, -8.0);
+	const Vector2 base_offset(1.0, 2.0);
+	const Vector2 frame_offset(3.0, 4.0);
+	const Vector2 render_scale(2.0, 0.5);
+
+	const Vector2 anim_offset = spx_compute_anim_offset(true, base_offset, render_offset, frame_offset, render_scale);
+	CHECK(render_offset + anim_offset == render_offset + base_offset + frame_offset * render_scale);
 }
 
-#endif // SPX_SPRITE_RENDER_UTIL_H
+TEST_CASE("[SPX] Render root cancels costume offset for animation frames") {
+	const Vector2 render_offset(12.0, -8.0);
+	const Vector2 base_offset(1.0, 2.0);
+	const Vector2 frame_offset(3.0, 4.0);
+	const Vector2 render_scale(2.0, 0.5);
+
+	const Vector2 anim_offset = spx_compute_anim_offset(false, base_offset, render_offset, frame_offset, render_scale);
+	CHECK(render_offset + anim_offset == base_offset + frame_offset * render_scale);
+}
+
+} // namespace TestSpxSpriteRenderUtil
+
+#endif // TEST_SPX_SPRITE_RENDER_UTIL_H

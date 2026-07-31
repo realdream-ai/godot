@@ -33,6 +33,8 @@
 #include "scene/2d/camera_2d.h"
 #include "scene/main/window.h"
 
+#include "spx_coordinate.h"
+
 void SpxCameraMgr::on_awake() {
 	SpxBaseMgr::on_awake();
 	camera = nullptr;
@@ -69,11 +71,11 @@ void SpxCameraMgr::set_stretch_clear_color() {
 }
 
 GdVec2 SpxCameraMgr::get_camera_position() {
-	return camera->get_position();
+	return godot_to_spx_vec2(camera->get_position());
 }
 
 void SpxCameraMgr::set_camera_position(GdVec2 position) {
-	camera->set_position(position);
+	camera->set_position(spx_to_godot_vec2(position));
 }
 
 GdVec2 SpxCameraMgr::get_camera_zoom() {

@@ -55,7 +55,7 @@ void connect_signal_once(Object *source, const StringName &signal_name, Object *
 }
 
 template <typename T>
-T *find_named_child(Node *owner, const char *child_name) {
+T *get_named_child(Node *owner, const char *child_name) {
 	if (owner == nullptr) {
 		return nullptr;
 	}
@@ -189,25 +189,37 @@ void SpxSprite::_draw() {
 }
 
 void SpxSprite::_resolve_runtime_components() {
-	anim2d = find_named_child<AnimatedSprite2D>(this, "Anim2D");
-	if (anim2d == nullptr) {
-		anim2d = _get_component<AnimatedSprite2D>();
+	render_root = get_named_child<Node2D>(this, "RenderRoot");
+	if (render_root == nullptr) {
+		render_root = memnew(Node2D);
+		render_root->set_name("RenderRoot");
+		add_child(render_root);
 	}
 
-	area2d = find_named_child<Area2D>(this, "Area2D");
+	anim2d = get_named_child<AnimatedSprite2D>(render_root, "Anim2D");
+	if (anim2d == nullptr) {
+		anim2d = _get_component<AnimatedSprite2D>(true);
+	}
+	if (anim2d != nullptr && anim2d->get_parent() != render_root) {
+		anim2d->reparent(render_root, true);
+	}
+
+	area2d = get_named_child<Area2D>(this, "Area2D");
 	if (area2d == nullptr) {
 		area2d = _get_component<Area2D>();
 	}
 
-	collider2d = find_named_child<CollisionShape2D>(this, "Collider2D");
+	collider2d = get_named_child<CollisionShape2D>(this, "Collider2D");
 	if (collider2d == nullptr) {
 		collider2d = _get_component<CollisionShape2D>();
 	}
 
-	trigger2d = find_named_child<CollisionShape2D>(area2d, "Trigger2D");
+	trigger2d = get_named_child<CollisionShape2D>(area2d, "Trigger2D");
 	if (trigger2d == nullptr && area2d != nullptr) {
 		trigger2d = _get_component<CollisionShape2D>(area2d);
 	}
+
+	render_root->set_position(render_offset);
 }
 
 void SpxSprite::_initialize_default_frames() {
@@ -221,15 +233,17 @@ void SpxSprite::_initialize_default_frames() {
 }
 
 void SpxSprite::_ensure_visible_notifier() {
-	visible_notifier = find_named_child<VisibleOnScreenNotifier2D>(this, "VisibleNotifier2D");
+	visible_notifier = get_named_child<VisibleOnScreenNotifier2D>(render_root, "VisibleNotifier2D");
 	if (visible_notifier == nullptr) {
-		visible_notifier = _get_component<VisibleOnScreenNotifier2D>();
+		visible_notifier = _get_component<VisibleOnScreenNotifier2D>(true);
 	}
 
 	if (visible_notifier == nullptr) {
 		visible_notifier = memnew(VisibleOnScreenNotifier2D);
 		visible_notifier->set_name("VisibleNotifier2D");
-		add_child(visible_notifier);
+		render_root->add_child(visible_notifier);
+	} else if (visible_notifier->get_parent() != render_root) {
+		visible_notifier->reparent(render_root, true);
 	}
 }
 

@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  spx_sprite_render_util.h                                              */
+/*  spx_coordinate.h                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,20 +28,22 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef SPX_SPRITE_RENDER_UTIL_H
-#define SPX_SPRITE_RENDER_UTIL_H
+#ifndef SPX_COORDINATE_H
+#define SPX_COORDINATE_H
 
 #include "core/math/vector2.h"
 
-// RenderRoot owns the costume center offset. In single-image mode the animation
-// node inherits it directly; multi-frame animations cancel it before applying
-// their own frame metadata so the final placement remains unchanged.
-static inline Vector2 spx_compute_anim_offset(bool p_is_single_image_mode, const Vector2 &p_base_offset, const Vector2 &p_render_offset, const Vector2 &p_frame_offset, const Vector2 &p_render_scale) {
-	Vector2 final_offset = p_base_offset + (p_frame_offset * p_render_scale);
-	if (!p_is_single_image_mode) {
-		final_offset -= p_render_offset;
-	}
-	return final_offset;
+// SPX uses an upward-positive Y axis while Godot uses a downward-positive Y
+// axis. Manager APIs exchange SPX coordinates; convert immediately at their
+// boundary so Godot nodes and physics APIs only receive Godot coordinates.
+_FORCE_INLINE_ Vector2 spx_to_godot_vec2(const Vector2 &p_value) {
+	return Vector2(p_value.x, -p_value.y);
 }
 
-#endif // SPX_SPRITE_RENDER_UTIL_H
+// Y-flip is self-inverse, so this delegates to spx_to_godot_vec2; 
+// kept as a distinct name for call-site clarity.
+_FORCE_INLINE_ Vector2 godot_to_spx_vec2(const Vector2 &p_value) {
+	return spx_to_godot_vec2(p_value);
+}
+
+#endif // SPX_COORDINATE_H

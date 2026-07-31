@@ -39,10 +39,11 @@
 #include "scene/2d/physics/physics_body_2d.h"
 #include "scene/main/node.h"
 #include "scene/main/window.h"
-#include "scene/resources/material.h"
 #include "scene/resources/2d/circle_shape_2d.h"
+#include "scene/resources/material.h"
 #include "scene/resources/packed_scene.h"
 
+#include "spx_coordinate.h"
 #include "spx_engine.h"
 #include "spx_ext_mgr.h"
 #include "spx_layer_sorter.h"
@@ -448,7 +449,7 @@ void SpxSpriteMgr::set_child_position(GdObj obj, GdString path, GdVec2 pos) {
 	SPX_REQUIRE_SPRITE_VOID()
 	auto child = (Node2D *)sprite->get_node(SpxStr(path));
 	if (child != nullptr) {
-		child->set_position(GdVec2{ pos.x, -pos.y });
+		child->set_position(spx_to_godot_vec2(pos));
 	}
 }
 
@@ -457,7 +458,7 @@ GdVec2 SpxSpriteMgr::get_child_position(GdObj obj, GdString path) {
 	auto child = (Node2D *)sprite->get_node(SpxStr(path));
 	if (child != nullptr) {
 		auto pos = child->get_position();
-		return GdVec2{ pos.x, -pos.y };
+		return godot_to_spx_vec2(pos);
 	}
 	return GdVec2();
 }
@@ -504,7 +505,7 @@ GdBool SpxSpriteMgr::check_collision(GdObj obj, GdObj target, GdBool is_src_trig
 
 GdBool SpxSpriteMgr::check_collision_with_point(GdObj obj, GdVec2 point, GdBool is_click_query) {
 	SPX_REQUIRE_SPRITE_RETURN(false)
-	point.y = -point.y;
+	point = spx_to_godot_vec2(point);
 
 	if (is_click_query && !sprite->is_visible_in_tree()) {
 		return false;
@@ -552,10 +553,13 @@ GdInt SpxSpriteMgr::_create_sprite(GdString path, GdVec2 pos, GdBool is_backdrop
 	SpxSprite *sprite = nullptr;
 	if (path_str == "") {
 		sprite = memnew(SpxSprite);
-		sprite->set_position(GdVec2(pos.x, -pos.y));
+		sprite->set_position(spx_to_godot_vec2(pos));
+		Node2D *render_root = memnew(Node2D);
+		render_root->set_name("RenderRoot");
+		sprite->add_child(render_root);
 		AnimatedSprite2D *animated_sprite = memnew(AnimatedSprite2D);
 		animated_sprite->set_name("Anim2D");
-		sprite->add_child(animated_sprite);
+		render_root->add_child(animated_sprite);
 		Area2D *area = memnew(Area2D);
 		area->set_name("Area2D");
 		sprite->add_child(area);
@@ -571,9 +575,6 @@ GdInt SpxSpriteMgr::_create_sprite(GdString path, GdVec2 pos, GdBool is_backdrop
 		body_shape->set_radius(10.0f);
 		body_collision_shape->set_shape(body_shape);
 		sprite->add_child(body_collision_shape);
-		Node2D *shooting_point = memnew(Node2D);
-		shooting_point->set_name("ShootingPoint");
-		sprite->add_child(shooting_point);
 	} else {
 		// load from path
 		Ref<PackedScene> scene = ResourceLoader::load(path_str);
@@ -643,19 +644,17 @@ GdBool SpxSpriteMgr::is_sprite_alive(GdObj obj) {
 
 void SpxSpriteMgr::set_position(GdObj obj, GdVec2 pos) {
 	SPX_REQUIRE_SPRITE_VOID()
-	// flip y axis
-	sprite->set_position(GdVec2(pos.x, -pos.y));
+	sprite->set_position(spx_to_godot_vec2(pos));
 }
 
 void SpxSpriteMgr::set_transform(GdObj obj, GdVec2 pos, GdFloat rot, GdVec2 scale, GdBool visible, GdVec2 pivot) {
 	SPX_REQUIRE_SPRITE_VOID()
-	sprite->set_position(GdVec2(pos.x, -pos.y));
+	sprite->set_position(spx_to_godot_vec2(pos));
 	sprite->set_rotation(rot);
 	sprite->set_scale(scale);
 	sprite->set_visible(visible);
 	sprite->on_set_visible(visible);
-	pivot.y = -pivot.y;
-	sprite->set_pivot(pivot);
+	sprite->set_render_offset(spx_to_godot_vec2(pivot));
 }
 
 void SpxSpriteMgr::set_rotation(GdObj obj, GdFloat rot) {
@@ -671,8 +670,7 @@ void SpxSpriteMgr::set_scale(GdObj obj, GdVec2 scale) {
 GdVec2 SpxSpriteMgr::get_position(GdObj obj) {
 	SPX_REQUIRE_SPRITE_RETURN(GdVec2())
 	auto pos = sprite->get_position();
-	// flip y axis
-	return GdVec2{ pos.x, -pos.y };
+	return godot_to_spx_vec2(pos);
 }
 
 GdFloat SpxSpriteMgr::get_rotation(GdObj obj) {
@@ -867,12 +865,12 @@ GdBool SpxSpriteMgr::is_anim_centered(GdObj obj) {
 
 void SpxSpriteMgr::set_anim_offset(GdObj obj, GdVec2 p_offset) {
 	SPX_REQUIRE_SPRITE_VOID()
-	sprite->set_anim_offset(p_offset);
+	sprite->set_anim_offset(spx_to_godot_vec2(p_offset));
 }
 
 GdVec2 SpxSpriteMgr::get_anim_offset(GdObj obj) {
 	SPX_REQUIRE_SPRITE_RETURN(GdVec2())
-	return sprite->get_anim_offset();
+	return godot_to_spx_vec2(sprite->get_anim_offset());
 }
 
 void SpxSpriteMgr::set_anim_flip_h(GdObj obj, GdBool p_flip) {
@@ -905,15 +903,13 @@ GdString SpxSpriteMgr::get_current_anim_name(GdObj obj) {
 
 void SpxSpriteMgr::set_velocity(GdObj obj, GdVec2 velocity) {
 	SPX_REQUIRE_SPRITE_VOID()
-	// flip y axis
-	sprite->set_velocity(GdVec2(velocity.x, -velocity.y));
+	sprite->set_velocity(spx_to_godot_vec2(velocity));
 }
 
 GdVec2 SpxSpriteMgr::get_velocity(GdObj obj) {
 	SPX_REQUIRE_SPRITE_RETURN(GdVec2())
 	auto val = sprite->get_velocity();
-	// flip y axis
-	return GdVec2{ val.x, -val.y };
+	return godot_to_spx_vec2(val);
 }
 
 GdBool SpxSpriteMgr::is_on_floor(GdObj obj) {
@@ -948,27 +944,27 @@ GdBool SpxSpriteMgr::is_on_ceiling_only(GdObj obj) {
 
 GdVec2 SpxSpriteMgr::get_last_motion(GdObj obj) {
 	SPX_REQUIRE_SPRITE_RETURN(GdVec2())
-	return sprite->get_last_motion();
+	return godot_to_spx_vec2(sprite->get_last_motion());
 }
 
 GdVec2 SpxSpriteMgr::get_position_delta(GdObj obj) {
 	SPX_REQUIRE_SPRITE_RETURN(GdVec2())
-	return sprite->get_position_delta();
+	return godot_to_spx_vec2(sprite->get_position_delta());
 }
 
 GdVec2 SpxSpriteMgr::get_floor_normal(GdObj obj) {
 	SPX_REQUIRE_SPRITE_RETURN(GdVec2())
-	return sprite->get_floor_normal();
+	return godot_to_spx_vec2(sprite->get_floor_normal());
 }
 
 GdVec2 SpxSpriteMgr::get_wall_normal(GdObj obj) {
 	SPX_REQUIRE_SPRITE_RETURN(GdVec2())
-	return sprite->get_wall_normal();
+	return godot_to_spx_vec2(sprite->get_wall_normal());
 }
 
 GdVec2 SpxSpriteMgr::get_real_velocity(GdObj obj) {
 	SPX_REQUIRE_SPRITE_RETURN(GdVec2())
-	return sprite->get_real_velocity();
+	return godot_to_spx_vec2(sprite->get_real_velocity());
 }
 
 void SpxSpriteMgr::move_and_slide(GdObj obj) {
@@ -998,12 +994,12 @@ GdFloat SpxSpriteMgr::get_mass(GdObj obj) {
 
 void SpxSpriteMgr::add_force(GdObj obj, GdVec2 force) {
 	SPX_REQUIRE_SPRITE_VOID()
-	sprite->add_force(force);
+	sprite->add_force(spx_to_godot_vec2(force));
 }
 
 void SpxSpriteMgr::add_impulse(GdObj obj, GdVec2 impulse) {
 	SPX_REQUIRE_SPRITE_VOID()
-	sprite->add_impulse(impulse);
+	sprite->add_impulse(spx_to_godot_vec2(impulse));
 }
 
 void SpxSpriteMgr::set_physics_mode(GdObj obj, GdInt mode) {
@@ -1113,7 +1109,6 @@ void SpxSpriteMgr::set_collider_capsule(GdObj obj, GdVec2 center, GdVec2 size) {
 
 void SpxSpriteMgr::set_collider_polygon(GdObj obj, GdVec2 center, GdArray points) {
 	SPX_REQUIRE_SPRITE_VOID()
-	center.y = -center.y;
 	sprite->set_collider_polygon(center, points);
 }
 
@@ -1476,13 +1471,11 @@ void SpxSpriteMgr::_check_pixel_collision_events() {
 
 void SpxSpriteMgr::set_pivot(GdObj obj, GdVec2 pivot) {
 	SPX_REQUIRE_SPRITE_VOID()
-	pivot.y = -pivot.y;
-	sprite->set_pivot(pivot);
+	sprite->set_render_offset(spx_to_godot_vec2(pivot));
 }
 GdVec2 SpxSpriteMgr::get_pivot(GdObj obj) {
 	SPX_REQUIRE_SPRITE_RETURN(GdVec2())
-	auto pivot = sprite->get_pivot();
-	return GdVec2(pivot.x, -pivot.y);
+	return godot_to_spx_vec2(sprite->get_render_offset());
 }
 
 namespace {
@@ -1513,7 +1506,7 @@ GdObj read_gd_obj_lanes(const float *record) {
 void batch_update_transforms_impl(SpxSpriteMgr *mgr, const float *buffer_data, int len, const char *op_name) {
 	// Buffer format with header: [updateCount, deleteCount, update_data..., delete_ids...]
 	// - Header: [updateCount, deleteCount]
-	// - Update section: [id, x, y, rotation, scaleX, scaleY, offsetX, offsetY, visible, ...] (9 fields per sprite)
+	// - Update section: [id, x, y, rotation, scaleX, scaleY, renderOffsetX, renderOffsetY, visible, ...] (9 fields per sprite)
 	// - Delete section: [id1, id2, id3, ...] (1 field per sprite)
 	const int FIELDS_PER_SPRITE = 9;
 	const int HEADER_SIZE = 2;
@@ -1558,8 +1551,8 @@ void batch_update_transforms_impl(SpxSpriteMgr *mgr, const float *buffer_data, i
 		auto rotation = buffer_data[idx + 3];
 		auto scale_x = buffer_data[idx + 4];
 		auto scale_y = buffer_data[idx + 5];
-		auto offset_x = buffer_data[idx + 6];
-		auto offset_y = buffer_data[idx + 7];
+		auto render_offset_x = buffer_data[idx + 6];
+		auto render_offset_y = buffer_data[idx + 7];
 		auto visible = buffer_data[idx + 8] != 0.0;
 
 		idx += FIELDS_PER_SPRITE;
@@ -1571,12 +1564,12 @@ void batch_update_transforms_impl(SpxSpriteMgr *mgr, const float *buffer_data, i
 
 		// Apply transforms
 		// Note: Y-axis is flipped in Godot coordinate system
-		sprite->set_position(GdVec2(x, -y));
+		sprite->set_position(spx_to_godot_vec2(GdVec2(x, y)));
 		sprite->set_rotation(rotation);
 		sprite->set_scale(GdVec2(scale_x, scale_y));
 		sprite->set_visible(visible);
 		sprite->on_set_visible(visible);
-		sprite->set_pivot(GdVec2(offset_x, -offset_y));
+		sprite->set_render_offset(spx_to_godot_vec2(GdVec2(render_offset_x, render_offset_y)));
 	}
 
 	// Process deletes
@@ -1701,8 +1694,9 @@ void SpxSpriteMgr::_batch_write_positions(const GdObj *ids, int count, float *ou
 		SpxSprite *sprite = get_sprite(id);
 		if (sprite != nullptr) {
 			auto pos = sprite->get_position();
-			out[j++] = pos.x;
-			out[j++] = -pos.y;
+			const Vector2 spx_pos = godot_to_spx_vec2(pos);
+			out[j++] = spx_pos.x;
+			out[j++] = spx_pos.y;
 		} else {
 			const float missing = std::numeric_limits<float>::quiet_NaN();
 			out[j++] = missing;
@@ -1747,7 +1741,7 @@ void SpxSpriteMgr::batch_update_physics(const float *buffer_data, int len) {
 			float b = buffer_data[idx + 4];
 			switch (cmd) {
 				case SPX_PHYSICS_CMD_VELOCITY:
-					sprite->set_velocity(GdVec2(a, -b));
+					sprite->set_velocity(spx_to_godot_vec2(GdVec2(a, b)));
 					break;
 				case SPX_PHYSICS_CMD_GRAVITY:
 					sprite->set_gravity(a);

@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  spx_sprite_render_util.h                                              */
+/*  test_spx_coordinate.h                                                 */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,20 +28,24 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef SPX_SPRITE_RENDER_UTIL_H
-#define SPX_SPRITE_RENDER_UTIL_H
+#ifndef TEST_SPX_COORDINATE_H
+#define TEST_SPX_COORDINATE_H
 
-#include "core/math/vector2.h"
+#include "modules/spx/spx_coordinate.h"
+#include "tests/test_macros.h"
 
-// RenderRoot owns the costume center offset. In single-image mode the animation
-// node inherits it directly; multi-frame animations cancel it before applying
-// their own frame metadata so the final placement remains unchanged.
-static inline Vector2 spx_compute_anim_offset(bool p_is_single_image_mode, const Vector2 &p_base_offset, const Vector2 &p_render_offset, const Vector2 &p_frame_offset, const Vector2 &p_render_scale) {
-	Vector2 final_offset = p_base_offset + (p_frame_offset * p_render_scale);
-	if (!p_is_single_image_mode) {
-		final_offset -= p_render_offset;
-	}
-	return final_offset;
+namespace TestSpxCoordinate {
+
+TEST_CASE("[SPX] Coordinate conversion reflects only the Y axis") {
+	CHECK(spx_to_godot_vec2(Vector2(12.5, 7.25)) == Vector2(12.5, -7.25));
+	CHECK(godot_to_spx_vec2(Vector2(-3.5, 9.0)) == Vector2(-3.5, -9.0));
 }
 
-#endif // SPX_SPRITE_RENDER_UTIL_H
+TEST_CASE("[SPX] Coordinate conversion round trips") {
+	const Vector2 position(-123.25, 456.75);
+	CHECK(godot_to_spx_vec2(spx_to_godot_vec2(position)) == position);
+}
+
+} // namespace TestSpxCoordinate
+
+#endif // TEST_SPX_COORDINATE_H

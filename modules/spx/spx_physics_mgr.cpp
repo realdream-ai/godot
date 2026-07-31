@@ -44,6 +44,7 @@
 
 #include "gdextension_spx_ext.h"
 #include "spx_camera_mgr.h"
+#include "spx_coordinate.h"
 #include "spx_engine.h"
 #include "spx_sprite.h"
 #include "spx_sprite_mgr.h"
@@ -98,9 +99,8 @@ SpxRaycastInfo SpxPhysicsMgr::_raycast(GdVec2 from, GdVec2 to, GdArray ignore_sp
 	info.normal = GdVec2{ 0, 0 };
 	info.sprite_gid = 0;
 
-	// invert y
-	GdVec2 current_from = GdVec2{ from.x, -from.y };
-	GdVec2 target_to = GdVec2{ to.x, -to.y };
+	GdVec2 current_from = spx_to_godot_vec2(from);
+	GdVec2 target_to = spx_to_godot_vec2(to);
 
 	HashSet<RID> ignore_set;
 	if (ignore_sprites && ignore_sprites->size > 0) {
@@ -139,8 +139,8 @@ SpxRaycastInfo SpxPhysicsMgr::_raycast(GdVec2 from, GdVec2 to, GdArray ignore_sp
 	SpxSprite *collider = dynamic_cast<SpxSprite *>(result.collider);
 	GdObj current_gid = collider ? collider->get_gid() : 0;
 	info.collide = true;
-	info.position = GdVec2{ result.position.x, -result.position.y };
-	info.normal = GdVec2{ result.normal.x, -result.normal.y };
+	info.position = godot_to_spx_vec2(result.position);
+	info.normal = godot_to_spx_vec2(result.normal);
 	info.sprite_gid = current_gid;
 	return info;
 }
@@ -156,9 +156,8 @@ GdObj SpxPhysicsMgr::raycast(GdVec2 from, GdVec2 to, GdInt collision_mask) {
 
 	PhysicsDirectSpaceState2D::RayResult result;
 	PhysicsDirectSpaceState2D::RayParameters params;
-	// flip y axis
-	from = GdVec2{ from.x, -from.y };
-	to = GdVec2{ to.x, -to.y };
+	from = spx_to_godot_vec2(from);
+	to = spx_to_godot_vec2(to);
 	params.from = from;
 	params.to = to;
 	params.collision_mask = (uint32_t)collision_mask;
@@ -178,9 +177,8 @@ GdBool SpxPhysicsMgr::check_collision(GdVec2 from, GdVec2 to, GdInt collision_ma
 	PhysicsDirectSpaceState2D::RayResult result;
 	PhysicsDirectSpaceState2D::RayParameters params;
 
-	// flip y axis
-	from = GdVec2{ from.x, -from.y };
-	to = GdVec2{ to.x, -to.y };
+	from = spx_to_godot_vec2(from);
+	to = spx_to_godot_vec2(to);
 	params.from = from;
 	params.to = to;
 	params.collision_mask = (uint32_t)collision_mask;
@@ -276,7 +274,6 @@ GdInt SpxPhysicsMgr::_check_nearest_touched_boundary(GdObj obj, GdBool use_stage
 	if (sprite_shape.is_null()) {
 		return 0;
 	}
-
 
 	Transform2D shape_transform = collision_shape->get_global_transform();
 	Rect2 world_rect = shape_transform.xform(sprite_shape->get_rect());
@@ -381,8 +378,7 @@ GdArray SpxPhysicsMgr::_check_collision(RID shape, GdVec2 pos, GdInt collision_m
 		return create_array(GD_ARRAY_TYPE_GDOBJ, 0);
 	}
 
-	GdVec2 flipped_pos = GdVec2{ pos.x, -pos.y };
-	Transform2D query_transform(0, flipped_pos);
+	Transform2D query_transform(0, spx_to_godot_vec2(pos));
 
 	PhysicsDirectSpaceState2D::ShapeParameters params;
 	params.shape_rid = shape;
