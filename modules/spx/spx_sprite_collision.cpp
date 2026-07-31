@@ -40,6 +40,7 @@
 #include <cstdint>
 
 #include "spx_base_mgr.h"
+#include "spx_coordinate.h"
 
 namespace {
 
@@ -50,10 +51,10 @@ void apply_shape(CollisionShape2D *p_collision_shape, const Ref<TShape> &p_shape
 	}
 
 	p_collision_shape->set_shape(p_shape);
-	p_collision_shape->set_position(p_center);
+	p_collision_shape->set_position(spx_to_godot_vec2(p_center));
 }
 
-bool build_polygon_points(GdArray p_points, GdBool p_invert_y, Vector<Vector2> &r_points) {
+bool build_polygon_points(GdArray p_points, Vector<Vector2> &r_points) {
 	if (!p_points || p_points->size < 6) {
 		return false;
 	}
@@ -62,8 +63,7 @@ bool build_polygon_points(GdArray p_points, GdBool p_invert_y, Vector<Vector2> &
 	int point_count = p_points->size / 2;
 
 	for (int i = 0; i < point_count; ++i) {
-		float y = data[i * 2 + 1];
-		r_points.push_back(Vector2(data[i * 2], p_invert_y ? -y : y));
+		r_points.push_back(spx_to_godot_vec2(Vector2(data[i * 2], data[i * 2 + 1])));
 	}
 
 	return true;
@@ -124,7 +124,7 @@ void SpxSprite::set_collider_capsule(GdVec2 p_center, GdVec2 p_size) {
 
 void SpxSprite::set_collider_polygon(GdVec2 p_center, GdArray p_points) {
 	Vector<Vector2> polygon_points;
-	if (!build_polygon_points(p_points, false, polygon_points)) {
+	if (!build_polygon_points(p_points, polygon_points)) {
 		print_error("set_collider_polygon: need at least 3 points");
 		return;
 	}
@@ -164,7 +164,7 @@ void SpxSprite::set_trigger_circle(GdVec2 p_center, GdFloat p_radius) {
 
 void SpxSprite::set_trigger_polygon(GdVec2 p_center, GdArray p_points) {
 	Vector<Vector2> polygon_points;
-	if (!build_polygon_points(p_points, true, polygon_points)) {
+	if (!build_polygon_points(p_points, polygon_points)) {
 		print_error("set_trigger_polygon: need at least 3 points");
 		return;
 	}

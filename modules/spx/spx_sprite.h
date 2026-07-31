@@ -151,8 +151,8 @@ public:
 	CollisionShape2D *get_trigger() const { return trigger2d; }
 
 	// Rendering
-	void set_pivot(GdVec2 p_pivot) { pivot_offset = p_pivot; }
-	GdVec2 get_pivot() { return pivot_offset; }
+	void set_render_offset(GdVec2 p_render_offset);
+	GdVec2 get_render_offset() const { return render_offset; }
 	void set_render_scale(GdVec2 p_scale);
 	GdVec2 get_render_scale();
 	void set_material_shader(GdString p_path);
@@ -241,7 +241,7 @@ public:
 
 	// ISortableSprite
 	GdObj get_sort_id() const override { return gid; }
-	Point2 get_sort_position() const override { return get_global_position() - pivot_offset; }
+	Point2 get_sort_position() const override { return get_global_position(); }
 	void set_sort_z_index(int p_z_index) override { set_z_index(p_z_index); }
 	int get_sort_z_index() const override { return get_z_index(); }
 	bool is_node_valid() const override { return is_inside_tree(); }
@@ -305,7 +305,7 @@ private:
 
 	// State
 	GdObj gid = 0;
-	Vector2 pivot_offset;
+	Vector2 render_offset;
 
 	PhysicsMode physics_mode = NO_PHYSICS;
 	bool use_gravity = true;
@@ -344,6 +344,7 @@ private:
 	CollisionShape2D *collider2d = nullptr;
 	VisibleOnScreenNotifier2D *visible_notifier = nullptr;
 	AnimatedSprite2D *anim2d = nullptr;
+	Node2D *render_root = nullptr;
 };
 
 template <typename T>

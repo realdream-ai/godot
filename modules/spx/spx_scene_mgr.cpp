@@ -38,6 +38,7 @@
 #include "scene/resources/2d/convex_polygon_shape_2d.h"
 #include "scene/resources/2d/rectangle_shape_2d.h"
 
+#include "spx_coordinate.h"
 #include "spx_draw_tiles.h"
 #include "spx_engine.h"
 #include "spx_layer_sorter.h"
@@ -221,11 +222,11 @@ GdObj SpxSceneMgr::create_render_sprite(GdString texture_path, GdVec2 pos, GdFlo
 	}
 
 	SpxRenderSprite *sprite = memnew(SpxRenderSprite);
-	sprite->set_pivot(GdVec2(pivot.x, -pivot.y));
+	sprite->set_pivot(spx_to_godot_vec2(pivot));
 	auto path_str = SpxStr(texture_path);
 	Ref<Texture2D> texture = resMgr->load_texture(path_str, true);
 	sprite->set_texture(texture);
-	sprite->set_position(Vector2(pos.x, -pos.y));
+	sprite->set_position(spx_to_godot_vec2(pos));
 	sprite->set_rotation_degrees(degree);
 	sprite->set_scale(Vector2(scale.x, scale.y));
 	sprite->set_name(path_str.get_file());
@@ -252,7 +253,7 @@ GdObj SpxSceneMgr::create_static_sprite(GdString texture_path, GdVec2 pos, GdFlo
 	auto path_str = SpxStr(texture_path);
 	// Create StaticBody2D
 	SpxStaticSprite *static_body = memnew(SpxStaticSprite);
-	static_body->set_position(Vector2(pos.x, -pos.y));
+	static_body->set_position(spx_to_godot_vec2(pos));
 	static_body->set_rotation_degrees(degree);
 	static_body->set_name(path_str.get_file());
 
@@ -262,14 +263,14 @@ GdObj SpxSceneMgr::create_static_sprite(GdString texture_path, GdVec2 pos, GdFlo
 	sprite->set_texture(texture);
 	sprite->set_z_index(zindex);
 	static_body->add_child(sprite);
-	sprite->set_position(Vector2(pivot.x, -pivot.y));
+	sprite->set_position(spx_to_godot_vec2(pivot));
 
 	// Create collision shape (default: rectangle matching texture size)
 	CollisionShape2D *collision_shape = memnew(CollisionShape2D);
 
 	static_body->set_collider(collision_shape);
 	static_body->add_child(collision_shape);
-	collision_shape->set_position(Vector2(collider_pivot.x, -collider_pivot.y));
+	collision_shape->set_position(spx_to_godot_vec2(collider_pivot));
 	auto data_len = collider_params == nullptr ? 0 : collider_params->size;
 	switch (type) {
 		case ColliderType::NONE:
@@ -317,7 +318,7 @@ GdObj SpxSceneMgr::create_static_sprite(GdString texture_path, GdVec2 pos, GdFlo
 			for (int i = 0; i + 1 < len; i += 2) {
 				auto x = *(SpxBaseMgr::get_array<real_t>(collider_params, i));
 				auto y = *(SpxBaseMgr::get_array<real_t>(collider_params, i + 1));
-				points.append(Vector2(x, y));
+				points.append(spx_to_godot_vec2(Vector2(x, y)));
 			}
 			polygon->set_points(points);
 			collision_shape->set_shape(polygon);

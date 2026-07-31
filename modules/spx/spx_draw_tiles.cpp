@@ -30,6 +30,8 @@
 
 #include "spx_draw_tiles.h"
 
+#include "spx_coordinate.h"
+
 #include "core/io/resource_loader.h"
 #include "core/os/keyboard.h"
 #include "scene/2d/physics/animatable_body_2d.h"
@@ -281,14 +283,14 @@ void SpxDrawTiles::place_tile_spx(GdVec2 pos, GdString texture_path, GdInt index
 }
 
 void SpxDrawTiles::erase_tile_spx(GdVec2 pos, GdInt layer_index) {
-	auto flipped_pos = flip_y(pos);
+	auto godot_pos = spx_to_godot_vec2(pos);
 
 	auto erase_at_layer = [&](TileMapLayer *layer) {
 		if (!layer) {
 			return;
 		}
 
-		Vector2 local_pos = layer->to_local(flipped_pos);
+		Vector2 local_pos = layer->to_local(godot_pos);
 		Vector2i coords = layer->local_to_map(local_pos);
 		layer->erase_cell(coords);
 	};
@@ -312,7 +314,7 @@ GdString SpxDrawTiles::get_tile_spx(GdVec2 pos, GdInt layer_index) {
 
 	if (index_layer_map.has(layer_index)) {
 		auto layer = index_layer_map[layer_index];
-		Vector2 local_pos = layer->to_local(flip_y(pos));
+		Vector2 local_pos = layer->to_local(spx_to_godot_vec2(pos));
 		Vector2i coords = layer->local_to_map(local_pos);
 		return SpxReturnStr(_get_tile_texture_path(layer, coords));
 	}
@@ -340,7 +342,7 @@ void SpxDrawTiles::set_tile_texture_spx(GdString texture_path, const Vector<Vect
 }
 
 void SpxDrawTiles::erase_tile_spx(GdVec2 pos) {
-	place_or_erase_tile(flip_y(pos), true);
+	place_or_erase_tile(spx_to_godot_vec2(pos), true);
 }
 
 void SpxDrawTiles::_place_tiles_bulk_spx(GdArray positions) {
@@ -361,7 +363,7 @@ void SpxDrawTiles::_place_tiles_bulk_spx(GdArray positions) {
 		auto y = *(SpxBaseMgr::get_array<float>(positions, i + 1));
 
 		Vector2 pos = { x, y };
-		Vector2 local_pos = layer->to_local(flip_y(pos));
+		Vector2 local_pos = layer->to_local(spx_to_godot_vec2(pos));
 		Vector2i coords = layer->local_to_map(local_pos);
 
 		layer->set_cell(coords, source_id, default_atlas_coord, 0);
@@ -369,7 +371,7 @@ void SpxDrawTiles::_place_tiles_bulk_spx(GdArray positions) {
 }
 
 void SpxDrawTiles::_place_tile_spx(GdVec2 pos) {
-	place_or_erase_tile(flip_y(pos), false);
+	place_or_erase_tile(spx_to_godot_vec2(pos), false);
 }
 
 void SpxDrawTiles::set_layer_index(int index) {
@@ -384,7 +386,7 @@ void SpxDrawTiles::set_layer_offset_spx(int layer_index, Vector2 offset) {
 		return;
 	}
 
-	layer->set_position(flip_y(offset));
+	layer->set_position(spx_to_godot_vec2(offset));
 }
 
 Vector2 SpxDrawTiles::get_layer_offset_spx(int layer_index) {
@@ -394,7 +396,7 @@ Vector2 SpxDrawTiles::get_layer_offset_spx(int layer_index) {
 	}
 
 	auto pos = layer->get_position();
-	return flip_y(pos);
+	return godot_to_spx_vec2(pos);
 }
 
 void SpxDrawTiles::set_texture(Ref<Texture2D> texture, bool with_collision) {

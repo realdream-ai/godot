@@ -113,7 +113,9 @@
 #include "tests/core/variant/test_variant.h"
 #include "tests/core/variant/test_variant_utility.h"
 #ifdef MODULE_SPX_ENABLED
+#include "tests/modules/spx/test_spx_coordinate.h"
 #include "tests/modules/spx/test_spx_res_mgr.h"
+#include "tests/modules/spx/test_spx_sprite_render_util.h"
 #endif
 #include "tests/scene/test_animation.h"
 #include "tests/scene/test_audio_stream_wav.h"

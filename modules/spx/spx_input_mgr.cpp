@@ -34,6 +34,7 @@
 
 #include "gdextension_spx_ext.h"
 #include "spx_camera_mgr.h"
+#include "spx_coordinate.h"
 #include "spx_engine.h"
 
 void SpxInputMgr::on_start() {
@@ -59,7 +60,7 @@ void SpxInputMgr::on_reset(int reset_code) {
 // input
 GdVec2 SpxInputMgr::get_global_mouse_pos() {
 	auto mouse_pos = cameraMgr->get_global_mouse_position();
-	return GdVec2(mouse_pos.x, -mouse_pos.y);
+	return godot_to_spx_vec2(mouse_pos);
 }
 
 GdBool SpxInputMgr::get_mouse_state(GdInt mouse_id) {
