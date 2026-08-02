@@ -35,8 +35,13 @@
 #include "spx_object_mgr.h"
 #include "spx_pen.h"
 
+class SpxPenSurface;
 class SpxPenMgr : public SpxObjectMgr<SpxPen> {
 	SPXCLASS(SpxPenMgr, SpxObjectMgr<SpxPen>)
+
+private:
+	SpxPenSurface *surface = nullptr;
+
 public:
 	virtual ~SpxPenMgr() = default;
 

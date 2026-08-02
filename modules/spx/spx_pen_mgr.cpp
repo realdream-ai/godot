@@ -30,7 +30,10 @@
 
 #include "spx_pen_mgr.h"
 
+#include "scene/main/viewport.h"
+
 #include "spx_coordinate.h"
+#include "spx_pen_surface.h"
 
 #define SPX_WITH_PEN_OR_RETURN(OBJ_ID, BODY)                \
 	if (!with_object(OBJ_ID, [&](SpxPen *pen) { BODY; })) { \
@@ -40,7 +43,16 @@
 
 void SpxPenMgr::on_awake() {
 	SpxBaseMgr::on_awake();
-	_create_root("pen_root");
+	surface = memnew(SpxPenSurface);
+	surface->set_name("pen_root");
+	root = surface;
+	get_spx_root()->add_child(surface);
+
+	Size2 viewport_size(480, 360);
+	if (surface->get_viewport() != nullptr) {
+		viewport_size = surface->get_viewport()->get_visible_rect().size;
+	}
+	surface->initialize(Size2i(MAX(1, (int)Math::ceil(viewport_size.x)), MAX(1, (int)Math::ceil(viewport_size.y))));
 }
 
 void SpxPenMgr::on_update(float delta) {
@@ -50,11 +62,15 @@ void SpxPenMgr::on_update(float delta) {
 
 void SpxPenMgr::on_destroy() {
 	_destroy_all();
+	surface = nullptr;
 	SpxBaseMgr::on_destroy();
 }
 
 void SpxPenMgr::on_reset(int reset_code) {
 	_reset_all(reset_code);
+	if (surface != nullptr) {
+		surface->clear();
+	}
 }
 
 GdObj SpxPenMgr::create_pen() {
@@ -66,19 +82,19 @@ void SpxPenMgr::destroy_pen(GdObj obj) {
 }
 
 void SpxPenMgr::destroy_all_pens() {
-	rw_lock.read_lock();
-	for (const auto &[id, pen] : id_objects) {
-		pen->erase_all();
+	if (surface != nullptr) {
+		surface->clear();
 	}
-	rw_lock.read_unlock();
+	RWLockRead read_lock(rw_lock);
+	for (const auto &[id, pen] : id_objects) {
+		pen->on_erase_all();
+	}
 }
 
 void SpxPenMgr::flush_all() {
-	rw_lock.read_lock();
-	for (const auto &[id, pen] : id_objects) {
-		pen->flush();
+	if (surface != nullptr) {
+		surface->flush();
 	}
-	rw_lock.read_unlock();
 }
 
 void SpxPenMgr::move_pen_to(GdObj obj, GdVec2 position) {
