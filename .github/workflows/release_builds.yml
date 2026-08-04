@@ -33,7 +33,6 @@ on:
       runtime_version:
         description: Runtime version used to label the build artifacts.
         required: true
-        default: 2.2.6
         type: string
       platforms:
         description: Comma-separated platforms (android,ios,web,linux,macos,windows,all).
