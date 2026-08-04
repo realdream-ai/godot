@@ -1,138 +1,143 @@
-name: 🍏 iOS Build Workflow
+name: Build iOS Runtime Artifact
 
 on:
   workflow_call:
     inputs:
-      version:
+      runtime_version:
         required: true
         type: string
-        description: "Version number for the build"
-      platforms:
+      godot_repository:
         required: true
         type: string
-        description: "Platforms to build"
-      godot_base_branch:
+      godot_ref:
         required: true
         type: string
-        description: "Base branch for Godot"
-      engine_version:
+      spx_repository:
         required: true
         type: string
-        description: "Engine version"
+      spx_ref:
+        required: true
+        type: string
       common_args:
         required: true
         type: string
-        description: "Common build arguments"
       release_args:
         required: true
         type: string
-        description: "Release build arguments"
-      event_name:
-        required: true
-        type: string
-        description: "Event name triggering the build"
-      release_tag:
-        required: false
-        type: string
-        description: "Release tag name"
-    secrets:
-      GH_TOKEN:
-        required: true
+
+permissions:
+  contents: read
 
 env:
-  SCONS_CACHE: "${{github.workspace}}/.scons-cache/"
-  SCONS_CACHE_LIMIT: "10000"
+  SCONS_CACHE: ${{ github.workspace }}/.scons_cache/
 
 jobs:
   ios-build:
-    name: 🍏 iOS Release
-    if: contains(inputs.platforms, 'ios') || contains(inputs.platforms, 'all')
+    name: iOS templates
     runs-on: macos-latest
     steps:
-      - name: Checkout
+      - name: Check out Godot source
         uses: actions/checkout@v4
         with:
+          repository: ${{ inputs.godot_repository }}
+          ref: ${{ inputs.godot_ref }}
           submodules: recursive
+          persist-credentials: false
 
-      # Set up shared cache for all iOS builds
-      - name: Set up build cache
+      - name: Set up external SPX module
+        id: spx-source
+        uses: ./.github/actions/setup-spx-module
+        with:
+          repository: ${{ inputs.spx_repository }}
+          ref: ${{ inputs.spx_ref }}
+
+      - name: Restore SCons cache
         uses: actions/cache@v4
         with:
-          path: ${{github.workspace}}/.scons-cache/
-          # Do not use SHA in cache key to allow cache reuse across commits
-          key: ios-release-${{inputs.godot_base_branch}}-${{github.ref}}
+          path: ${{ env.SCONS_CACHE }}
+          key: spx-runtime-ios-${{ steps.spx-source.outputs.godot-sha }}-${{ steps.spx-source.outputs.module-sha }}
           restore-keys: |
-            ios-release-${{inputs.godot_base_branch}}-
-            ios-release-
+            spx-runtime-ios-${{ steps.spx-source.outputs.godot-sha }}-
+            spx-runtime-ios-
 
-      - name: Setup Python and SCons
+      - name: Set up Python and SCons
         uses: ./.github/actions/godot-deps
 
-      # Build in specific order to maximize cache utilization
-      # Group by architecture, debug first then release
-
-      # iOS Simulator arm64 builds
-      - name: Build iOS Simulator (arm64) Debug Template
+      - name: Build iOS simulator arm64 debug template
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: platform=ios target=template_debug ios_simulator=yes arch=arm64 ${{ inputs.common_args }} ${{ inputs.release_args }}
+          sconsflags: >-
+            platform=ios target=template_debug ios_simulator=yes arch=arm64
+            ${{ inputs.common_args }} ${{ inputs.release_args }}
+            custom_modules=${{ steps.spx-source.outputs.module-path }} module_spx_enabled=true
           platform: ios
           target: template_debug
 
-      - name: Build iOS Simulator (arm64) Release Template
+      - name: Build iOS simulator arm64 release template
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: platform=ios target=template_release ios_simulator=yes arch=arm64 ${{ inputs.common_args }} ${{ inputs.release_args }}
+          sconsflags: >-
+            platform=ios target=template_release ios_simulator=yes arch=arm64
+            ${{ inputs.common_args }} ${{ inputs.release_args }}
+            custom_modules=${{ steps.spx-source.outputs.module-path }} module_spx_enabled=true
           platform: ios
           target: template_release
 
-      # iOS Simulator x86_64 builds
-      - name: Build iOS Simulator (x86_64) Debug Template
+      - name: Build iOS simulator x86_64 debug template
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: platform=ios target=template_debug ios_simulator=yes arch=x86_64 ${{ inputs.common_args }} ${{ inputs.release_args }}
+          sconsflags: >-
+            platform=ios target=template_debug ios_simulator=yes arch=x86_64
+            ${{ inputs.common_args }} ${{ inputs.release_args }}
+            custom_modules=${{ steps.spx-source.outputs.module-path }} module_spx_enabled=true
           platform: ios
           target: template_debug
 
-      - name: Build iOS Simulator (x86_64) Release Template
+      - name: Build iOS simulator x86_64 release template
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: platform=ios target=template_release ios_simulator=yes arch=x86_64 ${{ inputs.common_args }} ${{ inputs.release_args }} generate_bundle=yes
+          sconsflags: >-
+            platform=ios target=template_release ios_simulator=yes arch=x86_64 generate_bundle=yes
+            ${{ inputs.common_args }} ${{ inputs.release_args }}
+            custom_modules=${{ steps.spx-source.outputs.module-path }} module_spx_enabled=true
           platform: ios
           target: template_release
 
-      # iOS Device builds
-      - name: Build iOS Device Debug Template
+      - name: Build iOS device debug template
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: platform=ios target=template_debug ios_simulator=no
+          sconsflags: >-
+            platform=ios target=template_debug ios_simulator=no
+            ${{ inputs.common_args }} ${{ inputs.release_args }}
+            custom_modules=${{ steps.spx-source.outputs.module-path }} module_spx_enabled=true
           platform: ios
           target: template_debug
 
-      - name: Build iOS Device Release Template
+      - name: Build iOS device release template
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: platform=ios target=template_release ios_simulator=no generate_bundle=yes
+          sconsflags: >-
+            platform=ios target=template_release ios_simulator=no generate_bundle=yes
+            ${{ inputs.common_args }} ${{ inputs.release_args }}
+            custom_modules=${{ steps.spx-source.outputs.module-path }} module_spx_enabled=true
           platform: ios
           target: template_release
 
-      - name: Upload iOS Build Results
+      - name: Package iOS artifact
+        shell: bash
+        env:
+          RUNTIME_VERSION: ${{ inputs.runtime_version }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          cp bin/godot_ios.zip artifacts/ios.zip
+          echo "[info] Packaged iOS runtime ${RUNTIME_VERSION}"
+          unzip -l artifacts/ios.zip
+
+      - name: Upload iOS artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ios-${{ inputs.version }}
-          path: bin/godot_ios.zip
+          name: runtime-ios
+          path: artifacts/ios.zip
+          if-no-files-found: error
           retention-days: 14
-
-      - name: Prepare iOS files for release
-        if: inputs.event_name == 'release'
-        run: |
-          cp bin/godot_ios.zip bin/ios.zip
-
-      - name: Publish to GitHub Release
-        if: inputs.event_name == 'release'
-        uses: softprops/action-gh-release@v1
-        with:
-          files: bin/ios.zip
-          tag_name: ${{ inputs.release_tag }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }} 

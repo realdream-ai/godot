@@ -1,88 +1,73 @@
-name: 🪟 Windows Build Workflow
+name: Build Windows Runtime Artifacts
 
 on:
   workflow_call:
     inputs:
-      version:
+      runtime_version:
         required: true
         type: string
-        description: "Version number for the build"
-      platforms:
+      godot_repository:
         required: true
         type: string
-        description: "Platforms to build"
-      godot_base_branch:
+      godot_ref:
         required: true
         type: string
-        description: "Base branch for Godot"
-      engine_version:
+      spx_repository:
         required: true
         type: string
-        description: "Engine version"
+      spx_ref:
+        required: true
+        type: string
       common_args:
         required: true
         type: string
-        description: "Common build arguments"
       release_args:
         required: true
         type: string
-        description: "Release build arguments"
       editor_args:
         required: true
         type: string
-        description: "Editor build arguments"
-      event_name:
-        required: true
-        type: string
-        description: "Event name triggering the build"
-      release_tag:
-        required: false
-        type: string
-        description: "Release tag name"
-    secrets:
-      GH_TOKEN:
-        required: true
+
+permissions:
+  contents: read
 
 env:
-  SCONS_CACHE: "${{github.workspace}}/.scons-cache/"
-  SCONS_CACHE_LIMIT: "10000"
+  SCONS_CACHE: ${{ github.workspace }}/.scons_cache/
 
 jobs:
   windows-editor-build:
-    name: 🪟 Windows ${{ matrix.arch }} Editor Build
-    if: contains(inputs.platforms, 'windows') || contains(inputs.platforms, 'all')
+    name: Windows x86_64 editor
     runs-on: windows-latest
-    strategy:
-      matrix:
-        arch: [x86_64]
-        include:
-          - arch: x86_64
-            artifact_suffix: x86_64
-
     steps:
-      - name: Checkout
+      - name: Check out Godot source
         uses: actions/checkout@v4
         with:
+          repository: ${{ inputs.godot_repository }}
+          ref: ${{ inputs.godot_ref }}
           submodules: recursive
+          persist-credentials: false
 
-      # Set up shared cache for Windows builds
-      - name: Set up build cache
+      - name: Set up external SPX module
+        id: spx-source
+        uses: ./.github/actions/setup-spx-module
+        with:
+          repository: ${{ inputs.spx_repository }}
+          ref: ${{ inputs.spx_ref }}
+
+      - name: Restore SCons cache
         uses: actions/cache@v4
         with:
-          path: ${{github.workspace}}/.scons-cache/
-          # Use arch-specific cache key but allow fallback to other architectures
-          key: windows-${{ matrix.arch }}-editor-${{inputs.godot_base_branch}}-${{github.ref}}
+          path: ${{ env.SCONS_CACHE }}
+          key: spx-runtime-windows-x86_64-${{ steps.spx-source.outputs.godot-sha }}-${{ steps.spx-source.outputs.module-sha }}-editor
           restore-keys: |
-            windows-${{ matrix.arch }}-editor-${{inputs.godot_base_branch}}-
-            windows-${{ matrix.arch }}-editor-
-            windows-editor-${{inputs.godot_base_branch}}-
-            windows-editor-
+            spx-runtime-windows-x86_64-${{ steps.spx-source.outputs.godot-sha }}-
+            spx-runtime-windows-x86_64-
 
-      - name: Setup Python and SCons
+      - name: Set up Python and SCons
         uses: ./.github/actions/godot-deps
 
       - name: Download pre-built ANGLE
-        shell: sh
+        shell: bash
         id: angle-sdk
         run: |
           if python ./misc/scripts/install_angle.py; then
@@ -92,68 +77,64 @@ jobs:
             echo "ANGLE_ENABLED=no" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Build Windows Editor (${{ matrix.arch }})
+      - name: Build Windows editor
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: platform=windows target=editor arch=${{ matrix.arch }} ${{ inputs.common_args }} ${{ inputs.editor_args }} use_llvm=yes angle=${{ steps.angle-sdk.outputs.ANGLE_ENABLED }}
+          sconsflags: >-
+            platform=windows target=editor arch=x86_64 use_llvm=yes
+            angle=${{ steps.angle-sdk.outputs.ANGLE_ENABLED }}
+            ${{ inputs.common_args }} ${{ inputs.editor_args }}
+            custom_modules=${{ steps.spx-source.outputs.module-path }} module_spx_enabled=true
           platform: windows
           target: editor
 
-      - name: Compress Windows Editor Build
-        run: Compress-Archive -Path bin/godot.windows.editor.${{ matrix.arch }}.exe -DestinationPath bin/editor-windows-${{ matrix.artifact_suffix }}.zip
+      - name: Package Windows editor
         shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path artifacts -Force | Out-Null
+          Compress-Archive -Path bin/godot.windows.editor.x86_64.exe -DestinationPath artifacts/editor-windows-x86_64.zip
 
-      - name: Upload Windows Editor Build Results
+      - name: Upload Windows editor artifact
         uses: actions/upload-artifact@v4
         with:
-          name: windows-${{ matrix.arch }}-editor-${{ inputs.version }}
-          path: bin/editor-windows-${{ matrix.artifact_suffix }}.zip
+          name: runtime-editor-windows-x86_64
+          path: artifacts/editor-windows-x86_64.zip
+          if-no-files-found: error
           retention-days: 14
 
-      - name: Publish to GitHub Release
-        if: inputs.event_name == 'release'
-        uses: softprops/action-gh-release@v1
-        with:
-          files: bin/editor-windows-${{ matrix.artifact_suffix }}.zip
-          tag_name: ${{ inputs.release_tag }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   windows-template-build:
-    name: 🪟 Windows ${{ matrix.arch }} Template Build
-    if: contains(inputs.platforms, 'windows') || contains(inputs.platforms, 'all')
+    name: Windows x86_64 templates
     runs-on: windows-latest
-    strategy:
-      matrix:
-        arch: [x86_64]
-        include:
-          - arch: x86_64
-            artifact_suffix: x86_64
-
     steps:
-      - name: Checkout
+      - name: Check out Godot source
         uses: actions/checkout@v4
         with:
+          repository: ${{ inputs.godot_repository }}
+          ref: ${{ inputs.godot_ref }}
           submodules: recursive
+          persist-credentials: false
 
-      # Set up shared cache for Windows builds
-      - name: Set up build cache
+      - name: Set up external SPX module
+        id: spx-source
+        uses: ./.github/actions/setup-spx-module
+        with:
+          repository: ${{ inputs.spx_repository }}
+          ref: ${{ inputs.spx_ref }}
+
+      - name: Restore SCons cache
         uses: actions/cache@v4
         with:
-          path: ${{github.workspace}}/.scons-cache/
-          # Use arch-specific cache key but allow fallback to other architectures
-          key: windows-${{ matrix.arch }}-template-${{inputs.godot_base_branch}}-${{github.ref}}
+          path: ${{ env.SCONS_CACHE }}
+          key: spx-runtime-windows-x86_64-${{ steps.spx-source.outputs.godot-sha }}-${{ steps.spx-source.outputs.module-sha }}-templates
           restore-keys: |
-            windows-${{ matrix.arch }}-template-${{inputs.godot_base_branch}}-
-            windows-${{ matrix.arch }}-template-
-            windows-template-${{inputs.godot_base_branch}}-
-            windows-template-
+            spx-runtime-windows-x86_64-${{ steps.spx-source.outputs.godot-sha }}-
+            spx-runtime-windows-x86_64-
 
-      - name: Setup Python and SCons
+      - name: Set up Python and SCons
         uses: ./.github/actions/godot-deps
 
       - name: Download pre-built ANGLE
-        shell: sh
+        shell: bash
         id: angle-sdk
         run: |
           if python ./misc/scripts/install_angle.py; then
@@ -163,38 +144,43 @@ jobs:
             echo "ANGLE_ENABLED=no" >> "$GITHUB_OUTPUT"
           fi
 
-      # Build debug template first to maximize cache utilization
-      - name: Build Windows Template Debug (${{ matrix.arch }})
+      - name: Build Windows debug template
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: platform=windows target=template_debug arch=${{ matrix.arch }} ${{ inputs.common_args }} ${{ inputs.release_args }} use_llvm=yes angle=${{ steps.angle-sdk.outputs.ANGLE_ENABLED }}
+          sconsflags: >-
+            platform=windows target=template_debug arch=x86_64 use_llvm=yes
+            angle=${{ steps.angle-sdk.outputs.ANGLE_ENABLED }}
+            ${{ inputs.common_args }} ${{ inputs.release_args }}
+            custom_modules=${{ steps.spx-source.outputs.module-path }} module_spx_enabled=true
           platform: windows
           target: template_debug
 
-      - name: Build Windows Template Release (${{ matrix.arch }})
+      - name: Build Windows release template
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: platform=windows target=template_release arch=${{ matrix.arch }} ${{ inputs.common_args }} ${{ inputs.release_args }} use_llvm=yes angle=${{ steps.angle-sdk.outputs.ANGLE_ENABLED }}
+          sconsflags: >-
+            platform=windows target=template_release arch=x86_64 use_llvm=yes
+            angle=${{ steps.angle-sdk.outputs.ANGLE_ENABLED }}
+            ${{ inputs.common_args }} ${{ inputs.release_args }}
+            custom_modules=${{ steps.spx-source.outputs.module-path }} module_spx_enabled=true
           platform: windows
           target: template_release
 
-      - name: Compress Windows Template Builds
-        run: |
-          Compress-Archive -Path bin/godot.windows.template_debug.${{ matrix.arch }}.exe,bin/godot.windows.template_release.${{ matrix.arch }}.exe -DestinationPath bin/windows-${{ matrix.artifact_suffix }}.zip
+      - name: Package Windows templates
         shell: pwsh
+        env:
+          RUNTIME_VERSION: ${{ inputs.runtime_version }}
+        run: |
+          New-Item -ItemType Directory -Path artifacts -Force | Out-Null
+          Compress-Archive `
+            -Path bin/godot.windows.template_debug.x86_64.exe,bin/godot.windows.template_release.x86_64.exe `
+            -DestinationPath artifacts/windows-x86_64.zip
+          Write-Host "[info] Packaged Windows runtime $env:RUNTIME_VERSION"
 
-      - name: Upload Windows Template Build Results
+      - name: Upload Windows template artifact
         uses: actions/upload-artifact@v4
         with:
-          name: windows-${{ matrix.arch }}-template-${{ inputs.version }}
-          path: bin/windows-${{ matrix.artifact_suffix }}.zip
+          name: runtime-windows-x86_64
+          path: artifacts/windows-x86_64.zip
+          if-no-files-found: error
           retention-days: 14
-
-      - name: Publish to GitHub Release
-        if: inputs.event_name == 'release'
-        uses: softprops/action-gh-release@v1
-        with:
-          files: bin/windows-${{ matrix.artifact_suffix }}.zip
-          tag_name: ${{ inputs.release_tag }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

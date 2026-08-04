@@ -1,0 +1,63 @@
+name: Set up external SPX module
+description: Check out the SPX source used by a runtime build and expose its immutable source identifiers.
+
+inputs:
+  repository:
+    description: SPX repository containing godot_modules/spx.
+    required: true
+  ref:
+    description: SPX branch, tag, or full commit SHA to check out.
+    required: true
+
+outputs:
+  godot-sha:
+    description: Full Godot source commit SHA.
+    value: ${{ steps.source.outputs.godot-sha }}
+  spx-sha:
+    description: Full SPX source commit SHA.
+    value: ${{ steps.source.outputs.spx-sha }}
+  module-sha:
+    description: Git tree SHA for godot_modules/spx.
+    value: ${{ steps.source.outputs.module-sha }}
+  module-path:
+    description: Absolute path to godot_modules/spx.
+    value: ${{ steps.source.outputs.module-path }}
+
+runs:
+  using: composite
+  steps:
+    - name: Check out SPX source
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.repository }}
+        ref: ${{ inputs.ref }}
+        path: .spx-source
+        persist-credentials: false
+
+    - name: Resolve source identifiers
+      id: source
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        module_relative_path=".spx-source/godot_modules/spx"
+        if [ ! -f "${module_relative_path}/SCsub" ] || [ ! -f "${module_relative_path}/config.py" ]; then
+          module_path="$(python -c 'import os; print(os.path.abspath(".spx-source/godot_modules/spx"))')"
+          echo "[error] External SPX module is incomplete: ${module_path}" >&2
+          exit 1
+        fi
+
+        module_path="$(python -c 'import os; print(os.path.abspath(".spx-source/godot_modules/spx"))')"
+        godot_sha="$(git rev-parse HEAD)"
+        spx_sha="$(git -C .spx-source rev-parse HEAD)"
+        module_sha="$(git -C .spx-source rev-parse HEAD:godot_modules/spx)"
+
+        echo "[info] Godot commit: ${godot_sha}"
+        echo "[info] SPX commit: ${spx_sha}"
+        echo "[info] SPX module tree: ${module_sha}"
+        echo "[info] SPX module path: ${module_path}"
+
+        echo "godot-sha=${godot_sha}" >> "${GITHUB_OUTPUT}"
+        echo "spx-sha=${spx_sha}" >> "${GITHUB_OUTPUT}"
+        echo "module-sha=${module_sha}" >> "${GITHUB_OUTPUT}"
+        echo "module-path=${module_path}" >> "${GITHUB_OUTPUT}"
