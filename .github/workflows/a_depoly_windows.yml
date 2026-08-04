@@ -65,6 +65,8 @@ jobs:
 
       - name: Set up Python and SCons
         uses: ./.github/actions/godot-deps
+        with:
+          scons-version: 4.8.1
 
       - name: Download pre-built ANGLE
         shell: bash
@@ -132,6 +134,8 @@ jobs:
 
       - name: Set up Python and SCons
         uses: ./.github/actions/godot-deps
+        with:
+          scons-version: 4.8.1
 
       - name: Download pre-built ANGLE
         shell: bash

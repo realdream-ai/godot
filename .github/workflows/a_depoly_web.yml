@@ -121,6 +121,8 @@ jobs:
 
       - name: Set up Python and SCons
         uses: ./.github/actions/godot-deps
+        with:
+          scons-version: 4.8.1
 
       - name: Build Web ${{ matrix.mode }}
         uses: ./.github/actions/godot-build

@@ -57,6 +57,43 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Set up Android NDK r23c
+        id: setup-ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r23c
+          add-to-path: true
+          link-to-sdk: true
+          local-cache: true
+
+      - name: Export Android NDK environment
+        shell: bash
+        env:
+          INSTALLED_NDK_PATH: ${{ steps.setup-ndk.outputs.ndk-path }}
+          INSTALLED_NDK_VERSION: ${{ steps.setup-ndk.outputs.ndk-full-version }}
+        run: |
+          set -euo pipefail
+
+          expected_version="23.2.8568313"
+          if [ "${INSTALLED_NDK_VERSION}" != "${expected_version}" ]; then
+            echo "[error] Android NDK version is ${INSTALLED_NDK_VERSION}; expected ${expected_version}" >&2
+            exit 1
+          fi
+          if [ ! -d "${INSTALLED_NDK_PATH}" ]; then
+            echo "[error] Android NDK path does not exist: ${INSTALLED_NDK_PATH}" >&2
+            exit 1
+          fi
+
+          godot_ndk_path="${ANDROID_HOME}/ndk/${expected_version}"
+          if [ ! -e "${godot_ndk_path}" ]; then
+            echo "[error] Godot cannot find the linked Android NDK at ${godot_ndk_path}" >&2
+            exit 1
+          fi
+
+          echo "ANDROID_NDK_ROOT=${godot_ndk_path}" >> "${GITHUB_ENV}"
+          echo "ANDROID_NDK_HOME=${godot_ndk_path}" >> "${GITHUB_ENV}"
+          echo "[info] Godot Android NDK: ${godot_ndk_path}"
+
       - name: Restore SCons cache
         uses: actions/cache@v4
         with:
@@ -68,6 +105,8 @@ jobs:
 
       - name: Set up Python and SCons
         uses: ./.github/actions/godot-deps
+        with:
+          scons-version: 4.8.1
 
       - name: Build Android 32-bit debug template
         uses: ./.github/actions/godot-build

@@ -62,6 +62,8 @@ jobs:
 
       - name: Set up Python and SCons
         uses: ./.github/actions/godot-deps
+        with:
+          scons-version: 4.8.1
 
       - name: Build iOS simulator arm64 debug template
         uses: ./.github/actions/godot-build
