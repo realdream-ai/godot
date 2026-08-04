@@ -32,11 +32,8 @@
 
 #include "core/os/memory.h"
 #include "core/variant/variant.h"
-#include "svg_utils.h"
 
-#include <lunasvg.h>
-
-#include <cstring>
+#include <thorvg.h>
 
 HashMap<Color, Color> ImageLoaderSVG::forced_color_map = HashMap<Color, Color>();
 
@@ -82,61 +79,57 @@ Ref<Image> ImageLoaderSVG::load_mem_svg(const uint8_t *p_svg, int p_size, float 
 
 Error ImageLoaderSVG::create_image_from_utf8_buffer(Ref<Image> p_image, const uint8_t *p_buffer, int p_buffer_size, float p_scale, bool p_upsample) {
 	ERR_FAIL_COND_V_MSG(Math::is_zero_approx(p_scale), ERR_INVALID_PARAMETER, "ImageLoaderSVG: Can't load SVG with a scale of 0.");
-	ERR_FAIL_COND_V_MSG(p_scale < 0.0f, ERR_INVALID_PARAMETER, "ImageLoaderSVG: Can't load SVG with a negative scale.");
 
-	ERR_FAIL_COND_V_MSG(!SVGUtils::ensure_font_faces_registered(), ERR_CANT_CREATE,
-			"ImageLoaderSVG: Failed to install the complete project font snapshot.");
+	std::unique_ptr<tvg::Picture> picture = tvg::Picture::gen();
 
-	auto document = lunasvg::Document::loadFromData((const char *)p_buffer, p_buffer_size);
-	if (document == nullptr) {
+	tvg::Result result = picture->load((const char *)p_buffer, p_buffer_size, "svg", true);
+	if (result != tvg::Result::Success) {
 		return ERR_INVALID_DATA;
 	}
+	float fw, fh;
+	picture->size(&fw, &fh);
 
-	uint32_t width = document->width();
-	uint32_t height = document->height();
-	// check the invalid svg file
-	if (width == 0 || height == 0) {
-		return ERR_INVALID_DATA;
+	uint32_t width = MAX(1, round(fw * p_scale));
+	uint32_t height = MAX(1, round(fh * p_scale));
+
+	const uint32_t max_dimension = 16384;
+	if (width > max_dimension || height > max_dimension) {
+		WARN_PRINT(vformat(
+				String::utf8("ImageLoaderSVG: Target canvas dimensions %d×%d (with scale %.2f) exceed the max supported dimensions %d×%d. The target canvas will be scaled down."),
+				width, height, p_scale, max_dimension, max_dimension));
+		width = MIN(width, max_dimension);
+		height = MIN(height, max_dimension);
 	}
 
-	const double scaled_width = (double)width * p_scale;
-	const double scaled_height = (double)height * p_scale;
-	ERR_FAIL_COND_V_MSG(scaled_width > Image::MAX_WIDTH || scaled_height > Image::MAX_HEIGHT, ERR_INVALID_DATA, "ImageLoaderSVG: SVG dimensions are too large.");
+	picture->size(width, height);
 
-	const uint32_t requested_width = scaled_width;
-	const uint32_t requested_height = scaled_height;
-	ERR_FAIL_COND_V_MSG(requested_width == 0 || requested_height == 0, ERR_INVALID_DATA, "ImageLoaderSVG: SVG dimensions became empty after scaling.");
+	std::unique_ptr<tvg::SwCanvas> sw_canvas = tvg::SwCanvas::gen();
+	Vector<uint8_t> buffer;
+	buffer.resize(sizeof(uint32_t) * width * height);
 
-	const uint64_t requested_pixel_count = (uint64_t)requested_width * requested_height;
-	ERR_FAIL_COND_V_MSG(requested_pixel_count > Image::MAX_PIXELS, ERR_INVALID_DATA, "ImageLoaderSVG: SVG rasterized image is too large.");
-
-	auto bitmap = document->renderToBitmap(requested_width, requested_height, 0x00000000);
-	ERR_FAIL_COND_V_MSG(bitmap.isNull(), ERR_INVALID_DATA, "ImageLoaderSVG: Failed to rasterize SVG.");
-	bitmap.convertToRGBA();
-
-	const int bitmap_width = bitmap.width();
-	const int bitmap_height = bitmap.height();
-	ERR_FAIL_COND_V_MSG(bitmap_width <= 0 || bitmap_height <= 0, ERR_INVALID_DATA, "ImageLoaderSVG: SVG rasterization returned an empty bitmap.");
-
-	const uint64_t bitmap_pixel_count = (uint64_t)bitmap_width * bitmap_height;
-	ERR_FAIL_COND_V_MSG(bitmap_pixel_count > Image::MAX_PIXELS, ERR_INVALID_DATA, "ImageLoaderSVG: SVG rasterized image is too large.");
-
-	Vector<uint8_t> result;
-	result.resize((int64_t)bitmap_pixel_count * 4);
-
-	const uint8_t *buffer = bitmap.data();
-	ERR_FAIL_COND_V_MSG(buffer == nullptr, ERR_INVALID_DATA, "ImageLoaderSVG: SVG rasterization returned no pixel data.");
-
-	const int stride = bitmap.stride();
-	const uint64_t row_bytes = (uint64_t)bitmap_width * 4;
-	ERR_FAIL_COND_V_MSG(stride < (int)row_bytes, ERR_INVALID_DATA, "ImageLoaderSVG: SVG rasterized bitmap stride is invalid.");
-
-	uint8_t *dst = result.ptrw();
-	for (int y = 0; y < bitmap_height; y++) {
-		memcpy(dst + (row_bytes * y), buffer + ((uint64_t)stride * y), row_bytes);
+	tvg::Result res = sw_canvas->target((uint32_t *)buffer.ptrw(), width, width, height, tvg::SwCanvas::ABGR8888S);
+	if (res != tvg::Result::Success) {
+		ERR_FAIL_V_MSG(FAILED, "ImageLoaderSVG: Couldn't set target on ThorVG canvas.");
 	}
 
-	p_image->set_data(bitmap_width, bitmap_height, false, Image::FORMAT_RGBA8, result);
+	res = sw_canvas->push(std::move(picture));
+	if (res != tvg::Result::Success) {
+		ERR_FAIL_V_MSG(FAILED, "ImageLoaderSVG: Couldn't insert ThorVG picture on canvas.");
+	}
+
+	res = sw_canvas->draw();
+	if (res != tvg::Result::Success) {
+		ERR_FAIL_V_MSG(FAILED, "ImageLoaderSVG: Couldn't draw ThorVG pictures on canvas.");
+	}
+
+	res = sw_canvas->sync();
+	if (res != tvg::Result::Success) {
+		ERR_FAIL_V_MSG(FAILED, "ImageLoaderSVG: Couldn't sync ThorVG canvas.");
+	}
+
+	p_image->set_data(width, height, false, Image::FORMAT_RGBA8, buffer);
+
+	res = sw_canvas->clear(true);
 
 	return OK;
 }
@@ -153,7 +146,7 @@ Error ImageLoaderSVG::create_image_from_string(Ref<Image> p_image, String p_stri
 	}
 
 	PackedByteArray bytes = p_string.to_utf8_buffer();
-	
+
 	return create_image_from_utf8_buffer(p_image, bytes, p_scale, p_upsample);
 }
 

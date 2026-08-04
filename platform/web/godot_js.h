@@ -47,7 +47,6 @@ extern void godot_js_config_canvas_id_get(char *p_ptr, int p_ptr_max);
 // OS
 extern void godot_js_os_finish_async(void (*p_callback)());
 extern void godot_js_os_request_quit_cb(void (*p_callback)());
-extern void godot_js_os_request_reset_cb(void (*p_callback)());
 extern int godot_js_os_fs_is_persistent();
 extern void godot_js_os_fs_sync(void (*p_callback)());
 extern int godot_js_os_execute(const char *p_json);
@@ -133,11 +132,6 @@ extern int godot_js_display_tts_available();
 extern void godot_js_display_vk_cb(void (*p_input)(const char *p_text, int p_cursor));
 extern void godot_js_display_vk_show(const char *p_text, int p_type, int p_start, int p_end);
 extern void godot_js_display_vk_hide();
-
-//spx extension
-extern void godot_js_on_game_datas_set_callback(void (*p_callback)(const char *p_path, const char **p_filev, int p_filec));
-extern void godot_js_display_window_size_get_ext(int32_t *p_x, int32_t *p_y);
-#include "godot_js_spx.h"
 
 #ifdef __cplusplus
 }
