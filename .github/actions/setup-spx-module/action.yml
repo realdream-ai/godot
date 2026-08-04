@@ -42,12 +42,12 @@ runs:
 
         module_relative_path=".spx-source/godot_modules/spx"
         if [ ! -f "${module_relative_path}/SCsub" ] || [ ! -f "${module_relative_path}/config.py" ]; then
-          module_path="$(python -c 'import os; print(os.path.abspath(".spx-source/godot_modules/spx"))')"
+          module_path="$(python -c 'from pathlib import Path; print(Path(".spx-source/godot_modules/spx").resolve().as_posix())')"
           echo "[error] External SPX module is incomplete: ${module_path}" >&2
           exit 1
         fi
 
-        module_path="$(python -c 'import os; print(os.path.abspath(".spx-source/godot_modules/spx"))')"
+        module_path="$(python -c 'from pathlib import Path; print(Path(".spx-source/godot_modules/spx").resolve().as_posix())')"
         godot_sha="$(git rev-parse HEAD)"
         spx_sha="$(git -C .spx-source rev-parse HEAD)"
         module_sha="$(git -C .spx-source rev-parse HEAD:godot_modules/spx)"
