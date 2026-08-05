@@ -42,6 +42,7 @@ private:
 	SpxPenSurface *surface = nullptr;
 	Vector2 last_draw_pos;
 	bool has_last_draw_pos = false;
+	bool needs_start_cap = true;
 	bool is_pen_down = false;
 	float min_draw_distance = 1.0f;
 
@@ -60,7 +61,7 @@ private:
 	String stamp_texture_path;
 
 private:
-	void _draw_line(GdVec2 from, GdVec2 to, float size, Color color);
+	void _draw_line(GdVec2 from, GdVec2 to, float size, Color color, bool draw_start_cap);
 	GdVec2 _get_draw_position(GdVec2 position, float size) const;
 	void _start_new_line();
 	void _append_current_point_if_needed(GdVec2 position);

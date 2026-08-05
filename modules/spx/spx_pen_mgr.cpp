@@ -61,8 +61,8 @@ void SpxPenMgr::on_update(float delta) {
 }
 
 void SpxPenMgr::on_destroy() {
-	_destroy_all();
 	surface = nullptr;
+	_destroy_all();
 	SpxBaseMgr::on_destroy();
 }
 

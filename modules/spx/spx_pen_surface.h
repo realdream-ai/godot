@@ -50,6 +50,7 @@ private:
 		Vector2 to;
 		Color color;
 		float width = 1.0f;
+		bool draw_start_cap = true;
 		Ref<Texture2D> texture;
 		float rotation = 0.0f;
 		Vector2 scale = Vector2(1.0f, 1.0f);
@@ -63,7 +64,7 @@ protected:
 	void _notification(int p_what);
 
 public:
-	void add_line(const Vector2 &p_from, const Vector2 &p_to, float p_width, const Color &p_color);
+	void add_line(const Vector2 &p_from, const Vector2 &p_to, float p_width, const Color &p_color, bool p_draw_start_cap);
 	void add_stamp(const Ref<Texture2D> &p_texture, const Vector2 &p_position, float p_rotation, const Vector2 &p_scale);
 	void discard_pending();
 };
@@ -87,7 +88,7 @@ protected:
 
 public:
 	void initialize(const Size2i &p_size);
-	void draw_line(const Vector2 &p_from, const Vector2 &p_to, float p_width, const Color &p_color);
+	void draw_line(const Vector2 &p_from, const Vector2 &p_to, float p_width, const Color &p_color, bool p_draw_start_cap);
 	void draw_stamp(const Ref<Texture2D> &p_texture, const Vector2 &p_position, float p_rotation, const Vector2 &p_scale);
 	void clear();
 	void flush();

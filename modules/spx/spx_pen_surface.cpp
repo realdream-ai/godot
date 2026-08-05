@@ -33,25 +33,55 @@
 
 void SpxPenCanvas::_draw_line_batch(int p_begin, int p_end) {
 	constexpr int CAP_SEGMENTS = 12;
+	constexpr int DISC_VERTEX_COUNT = CAP_SEGMENTS + 1;
+	constexpr int DISC_INDEX_COUNT = CAP_SEGMENTS * 3;
 	Vector<int> indices;
 	Vector<Point2> vertices;
 	Vector<Color> colors;
+	int64_t required_vertices = 0;
+	int64_t required_indices = 0;
+	for (int i = p_begin; i < p_end; i++) {
+		const DrawCommand &command = pending_commands[i];
+		if ((command.to - command.from).is_zero_approx()) {
+			required_vertices += DISC_VERTEX_COUNT;
+			required_indices += DISC_INDEX_COUNT;
+		} else {
+			const int disc_count = command.draw_start_cap ? 2 : 1;
+			required_vertices += 4 + disc_count * DISC_VERTEX_COUNT;
+			required_indices += 6 + disc_count * DISC_INDEX_COUNT;
+		}
+	}
+
+	ERR_FAIL_COND_MSG(required_vertices > INT_MAX || required_indices > INT_MAX, "Pen line batch is too large.");
+	ERR_FAIL_COND_MSG(vertices.resize(required_vertices) != OK, "Failed to allocate pen line vertices.");
+	ERR_FAIL_COND_MSG(colors.resize(required_vertices) != OK, "Failed to allocate pen line colors.");
+	ERR_FAIL_COND_MSG(indices.resize(required_indices) != OK, "Failed to allocate pen line indices.");
+
+	Point2 *vertex_data = vertices.ptrw();
+	Color *color_data = colors.ptrw();
+	int *index_data = indices.ptrw();
+	int vertex_count = 0;
+	int index_count = 0;
 
 	auto append_vertex = [&](const Vector2 &p_position, const Color &p_color) {
-		vertices.push_back(p_position);
-		colors.push_back(p_color);
+		vertex_data[vertex_count] = p_position;
+		color_data[vertex_count] = p_color;
+		vertex_count++;
+	};
+	auto append_index = [&](int p_index) {
+		index_data[index_count++] = p_index;
 	};
 	auto append_disc = [&](const Vector2 &p_center, float p_radius, const Color &p_color) {
-		const int center_index = vertices.size();
+		const int center_index = vertex_count;
 		append_vertex(p_center, p_color);
 		for (int i = 0; i < CAP_SEGMENTS; i++) {
 			const float angle = Math_TAU * (float)i / (float)CAP_SEGMENTS;
 			append_vertex(p_center + Vector2(Math::cos(angle), Math::sin(angle)) * p_radius, p_color);
 		}
 		for (int i = 0; i < CAP_SEGMENTS; i++) {
-			indices.push_back(center_index);
-			indices.push_back(center_index + 1 + i);
-			indices.push_back(center_index + 1 + ((i + 1) % CAP_SEGMENTS));
+			append_index(center_index);
+			append_index(center_index + 1 + i);
+			append_index(center_index + 1 + ((i + 1) % CAP_SEGMENTS));
 		}
 	};
 
@@ -65,25 +95,28 @@ void SpxPenCanvas::_draw_line_batch(int p_begin, int p_end) {
 		}
 
 		const Vector2 normal = Vector2(-delta.y, delta.x).normalized() * radius;
-		const int quad_index = vertices.size();
+		const int quad_index = vertex_count;
 		append_vertex(command.from + normal, command.color);
 		append_vertex(command.from - normal, command.color);
 		append_vertex(command.to + normal, command.color);
 		append_vertex(command.to - normal, command.color);
-		indices.push_back(quad_index);
-		indices.push_back(quad_index + 1);
-		indices.push_back(quad_index + 2);
-		indices.push_back(quad_index + 2);
-		indices.push_back(quad_index + 1);
-		indices.push_back(quad_index + 3);
+		append_index(quad_index);
+		append_index(quad_index + 1);
+		append_index(quad_index + 2);
+		append_index(quad_index + 2);
+		append_index(quad_index + 1);
+		append_index(quad_index + 3);
 
-		// Scratch uses round pen caps. Each cap is deliberately low-poly: the
-		// complete frame is sent as one colored triangle array, so segment
-		// count affects vertices rather than draw-call count.
-		append_disc(command.from, radius, command.color);
+		// Scratch uses round pen caps. A continuing stroke reuses the preceding
+		// endpoint cap, including when the segments are flushed in different frames.
+		if (command.draw_start_cap) {
+			append_disc(command.from, radius, command.color);
+		}
 		append_disc(command.to, radius, command.color);
 	}
 
+	DEV_ASSERT(vertex_count == required_vertices);
+	DEV_ASSERT(index_count == required_indices);
 	if (!indices.is_empty()) {
 		RenderingServer::get_singleton()->canvas_item_add_triangle_array(get_canvas_item(), indices, vertices, colors);
 	}
@@ -127,13 +160,14 @@ void SpxPenCanvas::_notification(int p_what) {
 	pending_commands.clear();
 }
 
-void SpxPenCanvas::add_line(const Vector2 &p_from, const Vector2 &p_to, float p_width, const Color &p_color) {
+void SpxPenCanvas::add_line(const Vector2 &p_from, const Vector2 &p_to, float p_width, const Color &p_color, bool p_draw_start_cap) {
 	DrawCommand command;
 	command.type = DrawCommand::LINE;
 	command.from = p_from;
 	command.to = p_to;
 	command.width = MAX(p_width, 1.0f);
 	command.color = p_color;
+	command.draw_start_cap = p_draw_start_cap;
 	pending_commands.push_back(command);
 }
 
@@ -183,10 +217,10 @@ void SpxPenSurface::initialize(const Size2i &p_size) {
 	add_child(canvas_sprite);
 }
 
-void SpxPenSurface::draw_line(const Vector2 &p_from, const Vector2 &p_to, float p_width, const Color &p_color) {
+void SpxPenSurface::draw_line(const Vector2 &p_from, const Vector2 &p_to, float p_width, const Color &p_color, bool p_draw_start_cap) {
 	ERR_FAIL_NULL(canvas);
 	const Vector2 canvas_origin = Vector2(canvas_size) * 0.5f;
-	canvas->add_line(p_from + canvas_origin, p_to + canvas_origin, p_width, p_color);
+	canvas->add_line(p_from + canvas_origin, p_to + canvas_origin, p_width, p_color, p_draw_start_cap);
 	dirty = true;
 }
 
