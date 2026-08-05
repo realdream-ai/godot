@@ -54,6 +54,7 @@ public:
 	void flush_all();
 	SPX_API GdObj create_pen();
 	SPX_API void destroy_pen(GdObj obj);
+	SPX_API void batch_update_commands(const float *buffer_data, int len);
 	// Pen operation methods
 	SPX_API void pen_stamp(GdObj obj);
 	SPX_API void move_pen_to(GdObj obj, GdVec2 position);

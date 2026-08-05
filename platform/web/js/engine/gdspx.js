@@ -628,6 +628,12 @@ gdspx_pen_destroy_pen(obj_low,obj_high) {
 	FreeGdObj(_arg0);
 
 }
+gdspx_pen_batch_update_commands(buffer) {
+	var _gdFuncPtr = Module._gdspx_pen_batch_update_commands;
+	var _arg0 = GetFastArrayWasmPtr(buffer);
+	var _arg1 = buffer.count;
+	_gdFuncPtr(_arg0, _arg1);
+}
 gdspx_pen_pen_stamp(obj_low,obj_high) {
 	var _gdFuncPtr = Module._gdspx_pen_pen_stamp;
 

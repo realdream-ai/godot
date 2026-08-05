@@ -328,6 +328,10 @@ void gdspx_pen_destroy_pen(GdObj *obj) {
 	 penMgr->destroy_pen(*obj);
 }
 EMSCRIPTEN_KEEPALIVE
+void gdspx_pen_batch_update_commands(const float *buffer_data, int len) {
+	penMgr->batch_update_commands(buffer_data, len);
+}
+EMSCRIPTEN_KEEPALIVE
 void gdspx_pen_pen_stamp(GdObj *obj) {
 	 penMgr->pen_stamp(*obj);
 }
