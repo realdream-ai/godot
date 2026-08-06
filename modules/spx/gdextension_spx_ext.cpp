@@ -299,6 +299,10 @@ static void gdextension_spx_pen_destroy_all_pens() {
 	penMgr->destroy_all_pens();
 }
 
+static void gdextension_spx_pen_set_canvas_size(GdInt width, GdInt height) {
+	penMgr->set_canvas_size(width, height);
+}
+
 static void gdextension_spx_pen_create_pen(GdObj *ret_val) {
 	*ret_val = penMgr->create_pen();
 }
@@ -1477,6 +1481,7 @@ void gdextension_spx_setup_interface() {
 	REGISTER_SPX_INTERFACE_FUNC(spx_navigation_set_obstacle);
 	REGISTER_SPX_INTERFACE_FUNC(spx_navigation_find_path);
 	REGISTER_SPX_INTERFACE_FUNC(spx_pen_destroy_all_pens);
+	REGISTER_SPX_INTERFACE_FUNC(spx_pen_set_canvas_size);
 	REGISTER_SPX_INTERFACE_FUNC(spx_pen_create_pen);
 	REGISTER_SPX_INTERFACE_FUNC(spx_pen_destroy_pen);
 	REGISTER_SPX_INTERFACE_FUNC(spx_pen_batch_update_commands);

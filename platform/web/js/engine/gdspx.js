@@ -612,6 +612,16 @@ gdspx_pen_destroy_all_pens() {
 	_gdFuncPtr();
 
 }
+gdspx_pen_set_canvas_size(width_low,width_high,height_low,height_high) {
+	var _gdFuncPtr = Module._gdspx_pen_set_canvas_size;
+
+	var _arg0 = Module._gdspx_new_int(width_high, width_low);
+	var _arg1 = Module._gdspx_new_int(height_high, height_low);
+	_gdFuncPtr(_arg0, _arg1);
+	FreeGdInt(_arg0);
+	FreeGdInt(_arg1);
+
+}
 gdspx_pen_create_pen() {
 	var _gdFuncPtr = Module._gdspx_pen_create_pen;
 	var _retValue = AllocGdObj();

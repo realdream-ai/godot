@@ -51,6 +51,7 @@ public:
 	void on_reset(int reset_code) override;
 
 	SPX_API void destroy_all_pens();
+	SPX_API void set_canvas_size(GdInt width, GdInt height);
 	void flush_all();
 	SPX_API GdObj create_pen();
 	SPX_API void destroy_pen(GdObj obj);
