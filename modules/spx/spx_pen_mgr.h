@@ -35,8 +35,13 @@
 #include "spx_object_mgr.h"
 #include "spx_pen.h"
 
+class SpxPenSurface;
 class SpxPenMgr : public SpxObjectMgr<SpxPen> {
 	SPXCLASS(SpxPenMgr, SpxObjectMgr<SpxPen>)
+
+private:
+	SpxPenSurface *surface = nullptr;
+
 public:
 	virtual ~SpxPenMgr() = default;
 
@@ -49,6 +54,7 @@ public:
 	void flush_all();
 	SPX_API GdObj create_pen();
 	SPX_API void destroy_pen(GdObj obj);
+	SPX_API void batch_update_commands(const float *buffer_data, int len);
 	// Pen operation methods
 	SPX_API void pen_stamp(GdObj obj);
 	SPX_API void move_pen_to(GdObj obj, GdVec2 position);

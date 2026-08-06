@@ -1,16 +1,15 @@
 /**************************************************************************/
-/*  spx_pen.h                                                             */
+/*  spx_pen_surface.h                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
 /**************************************************************************/
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
 /* Permission is hereby granted, free of charge, to any person obtaining  */
 /* a copy of this software and associated documentation files (the        */
-/* "Software"), to deal in the Software without restriction, including    */
+/* "Software"), to deal in the Software without restriction, including  */
 /* without limitation the rights to use, copy, modify, merge, publish,    */
 /* distribute, sublicense, and/or sell copies of the Software, and to     */
 /* permit persons to whom the Software is furnished to do so, subject to  */
@@ -28,69 +27,74 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef SPX_PEN_H
-#define SPX_PEN_H
+#ifndef SPX_PEN_SURFACE_H
+#define SPX_PEN_SURFACE_H
 
-#include "gdextension_spx_ext.h"
-#include "spx_base_mgr.h"
+#include "core/templates/vector.h"
+#include "scene/2d/node_2d.h"
+#include "scene/2d/sprite_2d.h"
+#include "scene/main/viewport.h"
 
-class SpxSprite;
-class SpxPenSurface;
-class SpxPen {
-private:
-	GdObj id;
-	SpxPenSurface *surface = nullptr;
-	Vector2 last_draw_pos;
-	bool has_last_draw_pos = false;
-	bool needs_start_cap = true;
-	bool is_pen_down = false;
-	float min_draw_distance = 1.0f;
-
-	struct PenProperties {
-		Color color = Color(0, 0, 0, 1); // BLACK
-		float size = 2.0f;
-		float saturation = 1.0f;
-		float brightness = 1.0f;
-		float transparency = 0.0f;
-	} pen_properties;
-
-	Vector2 current_pen_pos;
-	bool move_by_mouse = false;
-
-	Ref<Texture2D> stamp_texture;
-	String stamp_texture_path;
+class SpxPenCanvas : public Node2D {
+	GDCLASS(SpxPenCanvas, Node2D);
 
 private:
-	void _draw_line(GdVec2 from, GdVec2 to, float size, Color color, bool draw_start_cap);
-	GdVec2 _get_draw_position(GdVec2 position, float size) const;
-	void _start_new_line();
-	void _append_current_point_if_needed(GdVec2 position);
-	Color _get_current_color() const;
-	void _stamp_texture(const Ref<Texture2D> &texture, GdVec2 position, GdFloat rotation_radians, GdVec2 scale);
-	Ref<Texture2D> _resolve_stamp_texture(const String &texture_path);
+	struct DrawCommand {
+		enum Type {
+			LINE,
+			STAMP,
+		};
+
+		Type type = LINE;
+		Vector2 from;
+		Vector2 to;
+		Color color;
+		float width = 1.0f;
+		bool draw_start_cap = true;
+		Ref<Texture2D> texture;
+		float rotation = 0.0f;
+		Vector2 scale = Vector2(1.0f, 1.0f);
+	};
+
+	Vector<DrawCommand> pending_commands;
+	void _draw_line_batch(int p_begin, int p_end);
+
+protected:
+	static void _bind_methods();
+	void _notification(int p_what);
 
 public:
-	void on_create(GdInt id, Node *root);
-	void on_destroy();
-	void on_update(float delta);
-	void on_reset(int reset_code);
-
-public:
-	// Pen APIs
-	void on_erase_all();
-	GdObj get_id();
-	void on_down(GdBool move_by_mouse);
-	void on_up();
-	void stamp();
-	void move_to(GdVec2 position);
-	void set_color_to(GdColor color);
-	void change_by(GdInt property, GdFloat amount);
-	void set_to(GdInt property, GdFloat value);
-	void change_size_by(GdFloat amount);
-	void set_size_to(GdFloat size);
-	void set_stamp_texture(GdString texture_path);
-	// rotation_radians is in radians.
-	void stamp_with_transform(GdString texture_path, GdVec2 position, GdFloat rotation_radians, GdVec2 scale);
+	void add_line(const Vector2 &p_from, const Vector2 &p_to, float p_width, const Color &p_color, bool p_draw_start_cap);
+	void add_stamp(const Ref<Texture2D> &p_texture, const Vector2 &p_position, float p_rotation, const Vector2 &p_scale);
+	void discard_pending();
 };
 
-#endif // SPX_PEN_H
+// A Scratch-style shared pen layer. Drawing commands are rasterized by the
+// renderer into a persistent transparent SubViewport instead of touching
+// Image pixels on the CPU and uploading the whole stage texture every frame.
+class SpxPenSurface : public Node2D {
+	GDCLASS(SpxPenSurface, Node2D);
+
+private:
+	SubViewport *render_target = nullptr;
+	SpxPenCanvas *canvas = nullptr;
+	Sprite2D *canvas_sprite = nullptr;
+	Size2i canvas_size;
+	bool dirty = false;
+	bool clear_requested = true;
+
+protected:
+	static void _bind_methods();
+
+public:
+	void initialize(const Size2i &p_size);
+	void draw_line(const Vector2 &p_from, const Vector2 &p_to, float p_width, const Color &p_color, bool p_draw_start_cap);
+	void draw_stamp(const Ref<Texture2D> &p_texture, const Vector2 &p_position, float p_rotation, const Vector2 &p_scale);
+	void clear();
+	void flush();
+	Size2i get_canvas_size() const;
+
+	~SpxPenSurface();
+};
+
+#endif // SPX_PEN_SURFACE_H

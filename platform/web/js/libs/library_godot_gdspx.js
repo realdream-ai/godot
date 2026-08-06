@@ -1,10 +1,6 @@
 const GodotGdspx = {
 	$GodotGdspx__deps: ['$GodotConfig', '$GodotRuntime', '$GodotFS'],
 	$GodotGdspx: {
-		// Keep library-local constants under $GodotGdspx itself because emscripten
-		// library methods are emitted independently and should not rely on top-level
-		// lexical bindings remaining in scope at runtime.
-		directCallbackHandlerSlots: globalThis.__spxDirectCallbackHandlerSlots || (globalThis.__spxDirectCallbackHandlerSlots = Object.create(null)),
 		contactCallbackExportNames: [
 			"gdspx_on_collision_enter",
 			"gdspx_on_collision_stay",
@@ -25,7 +21,11 @@ const GodotGdspx = {
 		contactEventWarnThreshold: 4096 * 5,
 
 		getDirectHandler: function (exportName) {
-			const directHandler = GodotGdspx.directCallbackHandlerSlots[exportName];
+			// Read the shared slots at call time. Emscripten serializes library object
+			// properties while linking, which would detach a stored object from the
+			// global table populated later by the SPX Web runtime.
+			const slots = globalThis.__spxDirectCallbackHandlerSlots;
+			const directHandler = slots && slots[exportName];
 			return typeof directHandler === 'function' ? directHandler : null;
 		},
 
