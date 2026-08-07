@@ -217,6 +217,22 @@ void SpxPenSurface::initialize(const Size2i &p_size) {
 	add_child(canvas_sprite);
 }
 
+void SpxPenSurface::set_canvas_size(const Size2i &p_size) {
+	ERR_FAIL_NULL(render_target);
+	ERR_FAIL_NULL(canvas);
+
+	const Size2i next_size(MAX(1, p_size.x), MAX(1, p_size.y));
+	if (canvas_size == next_size) {
+		return;
+	}
+
+	canvas->discard_pending();
+	canvas_size = next_size;
+	render_target->set_size(canvas_size);
+	clear_requested = true;
+	dirty = true;
+}
+
 void SpxPenSurface::draw_line(const Vector2 &p_from, const Vector2 &p_to, float p_width, const Color &p_color, bool p_draw_start_cap) {
 	ERR_FAIL_NULL(canvas);
 	const Vector2 canvas_origin = Vector2(canvas_size) * 0.5f;

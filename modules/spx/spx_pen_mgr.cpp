@@ -203,6 +203,12 @@ void SpxPenMgr::destroy_all_pens() {
 	}
 }
 
+void SpxPenMgr::set_canvas_size(GdInt width, GdInt height) {
+	if (surface != nullptr) {
+		surface->set_canvas_size(Size2i(width, height));
+	}
+}
+
 void SpxPenMgr::flush_all() {
 	if (surface != nullptr) {
 		surface->flush();

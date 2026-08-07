@@ -88,6 +88,7 @@ protected:
 
 public:
 	void initialize(const Size2i &p_size);
+	void set_canvas_size(const Size2i &p_size);
 	void draw_line(const Vector2 &p_from, const Vector2 &p_to, float p_width, const Color &p_color, bool p_draw_start_cap);
 	void draw_stamp(const Ref<Texture2D> &p_texture, const Vector2 &p_position, float p_rotation, const Vector2 &p_scale);
 	void clear();

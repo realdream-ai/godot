@@ -320,6 +320,10 @@ void gdspx_pen_destroy_all_pens() {
 	 penMgr->destroy_all_pens();
 }
 EMSCRIPTEN_KEEPALIVE
+void gdspx_pen_set_canvas_size(GdInt *width, GdInt *height) {
+	 penMgr->set_canvas_size(*width, *height);
+}
+EMSCRIPTEN_KEEPALIVE
 void gdspx_pen_create_pen(GdObj *ret_val) {
 	*ret_val = penMgr->create_pen();
 }
