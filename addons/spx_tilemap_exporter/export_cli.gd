@@ -2,43 +2,53 @@
 extends SceneTree
 ## Command-line export script for SPX TileMap and Decorator data
 ##
-## Usage: godot --headless --path <project_path> -s addons/spx_tilemap_exporter/export_cli.gd
+## Usage: godot --headless --path <project_path> -s addons/spx_tilemap_exporter/export_cli.gd [-- --scene <scene_path>]
 ##
-## Configuration is done via constants below:
+## Arguments:
+##   --scene <path>  Path to the scene file to export (default: res://main.tscn)
+##
+## Examples:
+##   godot --headless --path . -s addons/spx_tilemap_exporter/export_cli.gd
+##   godot --headless --path . -s addons/spx_tilemap_exporter/export_cli.gd -- --scene res://levels/level1.tscn
 
 const TileMapExtractor = preload("res://addons/spx_tilemap_exporter/tilemap_extractor.gd")
 const DecoratorExtractor = preload("res://addons/spx_tilemap_exporter/decorator_extractor.gd")
 
 # ============================================================================
-# Configuration - modify these as needed
+# Configuration - default values (can be overridden via command line)
 # ============================================================================
-const SCENE_PATH = "res://main.tscn"
+const DEFAULT_SCENE_PATH = "res://main.tscn"
 const EXPORT_TILEMAP = true
 const EXPORT_DECORATORS = true
 # ============================================================================
 
 func _init() -> void:
-	# Get scene name for export directory
-	var scene_name = SCENE_PATH.get_file().get_basename()
-	var export_base = "res://_export/" + scene_name
+	# Parse command line arguments
+	var scene_path = _parse_scene_argument()
+	
+	# Get export directory path (preserves scene path structure)
+	# e.g., "res://main.tscn" -> "res://_export/main"
+	# e.g., "res://levels/level1.tscn" -> "res://_export/levels/level1"
+	var export_path = scene_path.get_file().get_basename()
+	var export_base = "res://_export/" + export_path
 	
 	print("SPX Export CLI")
 	print("==============")
-	print("Scene:  ", SCENE_PATH)
+	print("Scene:  ", scene_path)
 	print("Output: ", export_base)
 	print("Export TileMap: ", EXPORT_TILEMAP)
 	print("Export Decorators: ", EXPORT_DECORATORS)
 	print("")
 	
 	# Load the scene
-	var packed_scene = load(SCENE_PATH)
+	var packed_scene = load(scene_path)
 	if not packed_scene:
-		printerr("ERROR: Failed to load scene: ", SCENE_PATH)
+		printerr("ERROR: Failed to load scene: ", scene_path)
 		quit(1)
 		return
 	
 	if not packed_scene is PackedScene:
-		printerr("ERROR: Loaded resource is not a PackedScene: ", SCENE_PATH)
+		printerr("ERROR: Loaded resource is not a PackedScene: ", scene_path)
 		quit(1)
 		return
 	
@@ -179,6 +189,25 @@ func _export_decorators(scene_root: Node, output_path: String, node_offset: Vect
 # ============================================================================
 # Helper Functions
 # ============================================================================
+
+func _parse_scene_argument() -> String:
+	"""Parse --scene argument from command line, return default if not specified"""
+	# Use get_cmdline_user_args() for arguments after "--" separator
+	var args = OS.get_cmdline_user_args()
+	
+	# Look for --scene argument
+	for i in range(args.size()):
+		if args[i] == "--scene" and i + 1 < args.size():
+			var scene_arg = args[i + 1]
+			# Validate the scene path
+			if not scene_arg.begins_with("res://"):
+				scene_arg = "res://" + scene_arg
+			print("Using scene from command line: ", scene_arg)
+			return scene_arg
+	
+	# Return default if not specified
+	return DEFAULT_SCENE_PATH
+
 
 func _find_tilemap_layers(node: Node) -> Array[TileMapLayer]:
 	var layers: Array[TileMapLayer] = []
