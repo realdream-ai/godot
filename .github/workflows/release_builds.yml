@@ -29,6 +29,9 @@ env:
     disable_3d=true
   EDITOR_ARGS: >-
     debug_symbols=true
+  # Keep the release engine aligned with spx's local buildctl engineCommonArgs.
+  # Project font collections require the Advanced text server and HarfBuzz;
+  # the Fallback server produces different shaping and rasterization results.
   COMMON_ARGS: >-
     optimize=size
     use_volk=no 
@@ -40,8 +43,9 @@ env:
     disable_3d_physics=true 
     disable_navigation=true 
     module_msdfgen_enabled=false 
-    module_text_server_adv_enabled=false 
-    module_text_server_fb_enabled=true 
+    module_text_server_adv_enabled=true
+    module_text_server_fb_enabled=false
+    builtin_harfbuzz=true
     modules_enabled_by_default=true 
     module_gdscript_enabled=true 
     module_freetype_enabled=true 
