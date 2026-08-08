@@ -3,27 +3,70 @@ extends EditorPlugin
 
 const TileMapExtractor = preload("res://addons/spx_tilemap_exporter/tilemap_extractor.gd")
 const DecoratorExtractor = preload("res://addons/spx_tilemap_exporter/decorator_extractor.gd")
+const PreviewExporter = preload("res://addons/spx_tilemap_exporter/preview_exporter.gd")
 
 var _tilemap_extractor: TileMapExtractor
 var _decorator_extractor: DecoratorExtractor
+var _preview_exporter: PreviewExporter
+var _preview_shortcut: Shortcut
 
 
 func _enter_tree() -> void:
 	_tilemap_extractor = TileMapExtractor.new()
 	_decorator_extractor = DecoratorExtractor.new()
+	_preview_exporter = PreviewExporter.new(get_editor_interface())
 	add_tool_menu_item("SPX Export TileMap...", _on_export_tilemap_pressed)
 	add_tool_menu_item("SPX Export Decorators...", _on_export_decorators_pressed)
 	add_tool_menu_item("SPX Export All...", _on_export_all_pressed)
+	add_tool_menu_item("SPX Export Preview PNG (Ctrl+Shift+E)", _on_export_preview_pressed)
+	
+	# Setup keyboard shortcut for preview export
+	_setup_preview_shortcut()
 
 
 func _exit_tree() -> void:
 	remove_tool_menu_item("SPX Export TileMap...")
 	remove_tool_menu_item("SPX Export Decorators...")
 	remove_tool_menu_item("SPX Export All...")
+	remove_tool_menu_item("SPX Export Preview PNG (Ctrl+Shift+E)")
 	if _tilemap_extractor:
 		_tilemap_extractor = null
 	if _decorator_extractor:
 		_decorator_extractor = null
+	if _preview_exporter:
+		_preview_exporter = null
+
+
+## Setup the keyboard shortcut (Ctrl+Shift+E) for preview export
+func _setup_preview_shortcut() -> void:
+	_preview_shortcut = Shortcut.new()
+	var key_event = InputEventKey.new()
+	key_event.keycode = KEY_E
+	key_event.ctrl_pressed = true
+	key_event.shift_pressed = true
+	_preview_shortcut.events = [key_event]
+
+
+## Handle keyboard shortcut input
+func _shortcut_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if _preview_shortcut and _preview_shortcut.matches_event(event):
+			get_viewport().set_input_as_handled()
+			_on_export_preview_pressed()
+
+
+## Alternative: Handle input when editing 2D nodes in canvas
+func _handles(object: Object) -> bool:
+	return object is Node2D or object is TileMapLayer or object is TileMap
+
+
+func _forward_canvas_gui_input(event: InputEvent) -> bool:
+	if event is InputEventKey and event.pressed and not event.echo:
+		var key = event as InputEventKey
+		if key.keycode == KEY_E and key.ctrl_pressed and key.shift_pressed:
+			_on_export_preview_pressed()
+			return true  # Consume the event
+	return false
 
 
 # ============================================================================
@@ -288,3 +331,34 @@ func _show_info(message: String) -> void:
 	dialog.canceled.connect(dialog.queue_free)
 	get_editor_interface().get_base_control().add_child(dialog)
 	dialog.popup_centered()
+
+
+# ============================================================================
+# Preview PNG Export (Ctrl+Shift+E)
+# ============================================================================
+
+func _on_export_preview_pressed() -> void:
+	var edited_scene = get_editor_interface().get_edited_scene_root()
+	if not edited_scene:
+		_show_error("No scene is currently open.")
+		return
+	
+	_export_preview(edited_scene)
+
+
+func _export_preview(scene_root: Node) -> void:
+	# Show exporting message in console
+	print("Exporting preview PNG...")
+	
+	# Use async version to wait for rendering
+	var result = await _preview_exporter.export_scene_as_png_async(scene_root)
+	
+	if result.success:
+		var full_path = ProjectSettings.globalize_path(result.export_path)
+		_show_info("Preview PNG exported successfully!\n\nPath: %s\nSize: %d x %d pixels" % [
+			full_path,
+			result.image_size.x,
+			result.image_size.y
+		])
+	else:
+		_show_error("Preview export failed:\n" + result.error)
