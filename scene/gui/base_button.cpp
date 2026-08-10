@@ -32,7 +32,6 @@
 
 #include "core/config/project_settings.h"
 #include "scene/gui/label.h"
-#include "core/os/keyboard.h"
 #include "scene/main/window.h"
 
 void BaseButton::_unpress_group() {
@@ -197,9 +196,6 @@ void BaseButton::on_action_event(Ref<InputEvent> p_event) {
 }
 
 void BaseButton::pressed() {
-	if(spx_owner != nullptr) {
-		spx_owner->on_click_internal();
-	}
 }
 
 void BaseButton::toggled(bool p_pressed) {

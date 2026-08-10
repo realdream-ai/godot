@@ -103,7 +103,7 @@ class Sample {
 	constructor(params, options = {}) {
 		/** @type {string} */
 		this.id = params.id;
-		/** @type {AudioBuffer?} */
+		/** @type {AudioBuffer} */
 		this._audioBuffer = null;
 		/** @type {number} */
 		this.numberOfChannels = options.numberOfChannels ?? 2;
@@ -122,20 +122,14 @@ class Sample {
 	/**
 	 * Gets the audio buffer of the sample.
 	 * @returns {AudioBuffer}
-	 * @throws {Error} When the sample no longer has an audio buffer.
 	 */
 	getAudioBuffer() {
-		if (this._audioBuffer == null) {
-			throw new Error(`Sample "${this.id}" AudioBuffer is null; it may have already been cleared`);
-		}
-		// AudioBuffer can be shared by multiple AudioBufferSourceNode instances.
-		// Duplicating it on every playback causes large browser-side allocations.
-		return this._audioBuffer;
+		return this._duplicateAudioBuffer();
 	}
 
 	/**
 	 * Sets the audio buffer of the sample.
-	 * @param {AudioBuffer?} val The audio buffer to set.
+	 * @param {AudioBuffer} val The audio buffer to set.
 	 * @returns {void}
 	 */
 	setAudioBuffer(val) {
@@ -149,6 +143,31 @@ class Sample {
 	clear() {
 		this.setAudioBuffer(null);
 		GodotAudio.Sample.delete(this.id);
+	}
+
+	/**
+	 * Returns a duplicate of the stored audio buffer.
+	 * @returns {AudioBuffer}
+	 */
+	_duplicateAudioBuffer() {
+		if (this._audioBuffer == null) {
+			throw new Error('couldn\'t duplicate a null audioBuffer');
+		}
+		/** @type {Array<Float32Array>} */
+		const channels = new Array(this._audioBuffer.numberOfChannels);
+		for (let i = 0; i < this._audioBuffer.numberOfChannels; i++) {
+			const channel = new Float32Array(this._audioBuffer.getChannelData(i));
+			channels[i] = channel;
+		}
+		const buffer = GodotAudio.ctx.createBuffer(
+			this.numberOfChannels,
+			this._audioBuffer.length,
+			this._audioBuffer.sampleRate
+		);
+		for (let i = 0; i < channels.length; i++) {
+			buffer.copyToChannel(channels[i], i, 0);
+		}
+		return buffer;
 	}
 }
 
@@ -404,7 +423,7 @@ class SampleNode {
 		/** @type {number} */
 		this.offset = options.offset ?? 0;
 		/** @type {number} */
-		this._playbackPosition = this.offset;
+		this._playbackPosition = options.offset;
 		/** @type {number} */
 		this.startTime = options.startTime ?? 0;
 		/** @type {boolean} */
@@ -431,11 +450,6 @@ class SampleNode {
 		this._onended = null;
 		/** @type {AudioWorkletNode | null} */
 		this._positionWorklet = null;
-		/** @type {Promise<void> | null} */
-		this._positionWorkletPromise = null;
-		this._positionWorker = null;
-		/** @type {number} */
-		this._sourceStartOffset = this.offset;
 
 		this.setPlaybackRate(options.playbackRate ?? 44100);
 		this._source.buffer = this.getSample().getAudioBuffer();
@@ -445,9 +459,12 @@ class SampleNode {
 		const bus = GodotAudio.Bus.getBus(params.busIndex);
 		const sampleNodeBus = this.getSampleNodeBus(bus);
 		sampleNodeBus.setVolume(options.volume);
-		if (options.start) {
-			this.start();
-		}
+
+		this.connectPositionWorklet(options.start).catch((err) => {
+			const newErr = new Error('Failed to create PositionWorklet.');
+			newErr.cause = err;
+			GodotRuntime.error(newErr);
+		});
 	}
 
 	/**
@@ -460,56 +477,10 @@ class SampleNode {
 
 	/**
 	 * Gets the playback position.
-	 * May lazily initialize the position reporter while playback is active.
 	 * @returns {number}
 	 */
 	getPlaybackPosition() {
-		this._playbackPosition = this._estimatePlaybackPosition();
-		if (this.isStarted && !this.isCanceled && this._positionWorklet == null && this._positionWorkletPromise == null) {
-			this.connectPositionWorklet(false).catch((err) => {
-				this._reportPositionWorkletError(err);
-			});
-		}
 		return this._playbackPosition;
-	}
-
-	/**
-	 * Reports a position-worklet initialization failure.
-	 * @param {Error} err
-	 * @returns {void}
-	 */
-	_reportPositionWorkletError(err) {
-		const newErr = new Error('Failed to create PositionWorklet.');
-		newErr.cause = err;
-		GodotRuntime.error(newErr);
-	}
-
-	/**
-	 * Estimates the playback position between reporter updates.
-	 * @returns {number}
-	 */
-	_estimatePlaybackPosition() {
-		if (this.isPaused) {
-			return this.offset + this.pauseTime;
-		}
-		if (!this.isStarted || !GodotAudio.ctx) {
-			return this._playbackPosition;
-		}
-		const playbackRate = this._source ? this._source.playbackRate.value : this.getPlaybackRate() * this.getPitchScale();
-		return this._sourceStartOffset + Math.max(GodotAudio.ctx.currentTime - this._sourceStartTime, 0) * playbackRate;
-	}
-
-	/**
-	 * Anchors future playback-position estimates to the current audio clock.
-	 * @param {number} position
-	 * @returns {void}
-	 */
-	_setPlaybackPositionAnchor(position) {
-		this._playbackPosition = position;
-		this._sourceStartOffset = position;
-		if (GodotAudio.ctx) {
-			this._resetSourceStartTime();
-		}
 	}
 
 	/**
@@ -564,7 +535,7 @@ class SampleNode {
 		if (this.isStarted) {
 			return;
 		}
-		this._setPlaybackPositionAnchor(this.offset);
+		this._resetSourceStartTime();
 		this._source.start(this.startTime, this.offset);
 		this.isStarted = true;
 	}
@@ -583,6 +554,7 @@ class SampleNode {
 	restart() {
 		this.isPaused = false;
 		this.pauseTime = 0;
+		this._resetSourceStartTime();
 		this._restart();
 	}
 
@@ -645,37 +617,12 @@ class SampleNode {
 	 * If the worklet module is not loaded in, it will be added
 	 */
 	async connectPositionWorklet(start) {
-		if (this._positionWorkletPromise != null) {
-			await this._positionWorkletPromise;
-			if (start && !this.isCanceled && this._source != null) {
-				this.start();
-			}
+		await GodotAudio.audioPositionWorkletPromise;
+		if (this.isCanceled) {
 			return;
 		}
-		this._positionWorkletPromise = (async () => {
-			const initialPosition = this._estimatePlaybackPosition();
-			const initialPositionFrames = Math.round(initialPosition * this.getSample().sampleRate);
-
-			if(typeof miniEngine === 'undefined' || !miniEngine){	
-				await GodotAudio.audioPositionWorkletPromise;
-			}
-			if (this.isCanceled || this._source == null) {
-				return;
-			}
-			const positionWorklet = this.getPositionWorklet();
-			if(typeof miniEngine === 'undefined' || !miniEngine){
-				positionWorklet.port.postMessage({ type: 'clear', data: initialPositionFrames });
-			}else if (this._positionWorker) {
-				this._positionWorker.postMessage({type: 'clear'});
-			}
-			this._source.connect(positionWorklet);
-		})();
-		try {
-			await this._positionWorkletPromise;
-		} finally {
-			this._positionWorkletPromise = null;
-		}
-		if (start && !this.isCanceled && this._source != null) {
+		this._source.connect(this.getPositionWorklet());
+		if (start) {
 			this.start();
 		}
 	}
@@ -688,45 +635,19 @@ class SampleNode {
 		if (this._positionWorklet != null) {
 			return this._positionWorklet;
 		}
-		if(typeof miniEngine === 'undefined' || !miniEngine){
-			this._positionWorklet = new AudioWorkletNode(
-				GodotAudio.ctx,
-				'godot-position-reporting-processor'
-			);
-			this._positionWorklet.port.onmessage = (event) => {
-				switch (event.data['type']) {
-				case 'position':
-					this._setPlaybackPositionAnchor(parseInt(event.data.data, 10) / this.getSample().sampleRate);
-					break;
-				default:
-					// Do nothing.
-				}
-			};
-		}else{
-			let scriptProcessorNode = GodotAudio.ctx.createScriptProcessor(2048, 2, 2);
-			if (typeof positionWorker !== 'undefined') {
-				positionWorker.postMessage({type: 'init', currentTime: GodotAudio.ctx.currentTime});
+		this._positionWorklet = new AudioWorkletNode(
+			GodotAudio.ctx,
+			'godot-position-reporting-processor'
+		);
+		this._positionWorklet.port.onmessage = (event) => {
+			switch (event.data['type']) {
+			case 'position':
+				this._playbackPosition = (parseInt(event.data.data, 10) / this.getSample().sampleRate) + this.offset;
+				break;
+			default:
+				// Do nothing.
 			}
-			scriptProcessorNode.onaudioprocess = function (event) {
-				const audiobuffer = event.inputBuffer;
-				if (audiobuffer.numberOfChannels > 0) {
-					const input = audiobuffer.getChannelData(0);
-					if (input.length > 0 && typeof positionWorker !== 'undefined') {
-						positionWorker.postMessage({type: 'process', inputLength: input.length, currentTime: GodotAudio.ctx.currentTime});
-					}
-				}
-			};
-			if (typeof positionWorker !== 'undefined') {
-				positionWorker.onMessage(event => {
-					if (event.type === 'position') {
-						this._setPlaybackPositionAnchor(parseInt(event.data, 10) / this.getSample().sampleRate + this.offset);
-					}
-				});
-			}
-			this._positionWorklet = scriptProcessorNode;
-			this._positionWorker = (typeof positionWorker !== 'undefined') ? positionWorker : null;
-			this._positionWorklet.connect(GodotAudio.ctx.destination);
-		}
+		};
 		return this._positionWorklet;
 	}
 
@@ -740,9 +661,7 @@ class SampleNode {
 		this.pauseTime = 0;
 
 		if (this._source != null) {
-			if(typeof miniEngine === 'undefined' || !miniEngine){
-				this._source.removeEventListener('ended', this._onended);
-			}
+			this._source.removeEventListener('ended', this._onended);
 			this._onended = null;
 			if (this.isStarted) {
 				this._source.stop();
@@ -758,17 +677,10 @@ class SampleNode {
 
 		if (this._positionWorklet) {
 			this._positionWorklet.disconnect();
-			if(typeof miniEngine === 'undefined' || !miniEngine){
-				this._positionWorklet.port.onmessage = null;
-				this._positionWorklet.port.postMessage({ type: 'ended' });
-			}else{
-				if (this._positionWorker) {
-					this._positionWorker.postMessage({type: 'ended'});
-				}
-			}
+			this._positionWorklet.port.onmessage = null;
+			this._positionWorklet.port.postMessage({ type: 'ended' });
 			this._positionWorklet = null;
 		}
-		this._positionWorkletPromise = null;
 
 		GodotAudio.SampleNode.delete(this.id);
 	}
@@ -786,9 +698,6 @@ class SampleNode {
 	 * @returns {void}
 	 */
 	_syncPlaybackRate() {
-		if (this.isStarted && !this.isPaused && GodotAudio.ctx && this._source != null) {
-			this._setPlaybackPositionAnchor(this._estimatePlaybackPosition());
-		}
 		this._source.playbackRate.value = this.getPlaybackRate() * this.getPitchScale();
 	}
 
@@ -803,7 +712,6 @@ class SampleNode {
 		}
 		this._source = GodotAudio.ctx.createBufferSource();
 		this._source.buffer = this.getSample().getAudioBuffer();
-		this._source.playbackRate.value = this.getPlaybackRate() * this.getPitchScale();
 
 		// Make sure that we connect the new source to the sample node bus.
 		for (const sampleNodeBus of this._sampleNodeBuses.values()) {
@@ -814,18 +722,8 @@ class SampleNode {
 		const pauseTime = this.isPaused
 			? this.pauseTime
 			: 0;
-		this._setPlaybackPositionAnchor(this.offset + pauseTime);
 		if (this._positionWorklet != null) {
-			if(typeof miniEngine === 'undefined' || !miniEngine){
-				this._positionWorklet.port.postMessage({
-					type: 'clear',
-					data: Math.round((this.offset + pauseTime) * this.getSample().sampleRate),
-				});
-			}else{
-				if (this._positionWorker) {
-					this._positionWorker.postMessage({type: 'clear'});
-				}
-			}
+			this._positionWorklet.port.postMessage({ type: 'clear' });
 			this._source.connect(this._positionWorklet);
 		}
 		this._source.start(this.startTime, this.offset + pauseTime);
@@ -840,15 +738,9 @@ class SampleNode {
 		if (!this.isStarted) {
 			return;
 		}
-		const pauseTime = GodotAudio.ctx
-			? Math.max(this._estimatePlaybackPosition() - this.offset, 0)
-			: this.pauseTime;
 		this.isPaused = true;
-		if(GodotAudio.ctx){
-			this.pauseTime = pauseTime;
-			this._playbackPosition = this.offset + this.pauseTime;
-			this._source.stop();
-		}
+		this.pauseTime = (GodotAudio.ctx.currentTime - this._sourceStartTime) / this.getPlaybackRate();
+		this._source.stop();
 	}
 
 	/**
@@ -867,9 +759,7 @@ class SampleNode {
 	 */
 	_addEndedListener() {
 		if (this._onended != null) {
-			if(typeof miniEngine === 'undefined' || !miniEngine){
-				this._source.removeEventListener('ended', this._onended);
-			}
+			this._source.removeEventListener('ended', this._onended);
 		}
 
 		/** @type {SampleNode} */
@@ -898,11 +788,7 @@ class SampleNode {
 				// do nothing
 			}
 		};
-		if(typeof miniEngine === 'undefined' || !miniEngine){
-			this._source.addEventListener('ended', this._onended);
-		}else{
-			this._source.onended = this._onended;
-		}
+		this._source.addEventListener('ended', this._onended);
 	}
 }
 
@@ -955,10 +841,7 @@ class Bus {
 	 */
 	static getBus(index) {
 		if (index < 0 || index >= GodotAudio.buses.length) {
-			// spxext fix: invalid bus index
-			//console.warn('invalid bus index', index);
-			//throw new ReferenceError(`invalid bus index "${index}"`);
-			index = 0;
+			throw new ReferenceError(`invalid bus index "${index}"`);
 		}
 		return GodotAudio.buses[index];
 	}
@@ -1237,9 +1120,6 @@ class Bus {
 
 const _GodotAudio = {
 	$GodotAudio__deps: ['$GodotRuntime', '$GodotOS'],
-	$GodotAudio__postset: [
-		'Module["getAudioContext"] = GodotAudio.get_audio_context;',
-	].join(''),
 	$GodotAudio: {
 		/**
 		 * Max number of volume channels.
@@ -1353,12 +1233,7 @@ const _GodotAudio = {
 			}
 			// Do not specify, leave 'interactive' for good performance.
 			// opts['latencyHint'] = latency / 1000;
-			let ctx = null;
-			if (typeof miniEngine !== 'undefined' && miniEngine){
-				ctx = miniEngine.createWebAudioContext();
-			}else{
-				ctx = new (window.AudioContext || window.webkitAudioContext)(opts);
-			}
+			const ctx = new (window.AudioContext || window.webkitAudioContext)(opts);
 			GodotAudio.ctx = ctx;
 			ctx.onstatechange = function () {
 				let state = 0;
@@ -1391,10 +1266,8 @@ const _GodotAudio = {
 			}, 1000);
 			GodotOS.atexit(GodotAudio.close_async);
 
-			if(typeof miniEngine === 'undefined' || !miniEngine){
-				const path = GodotConfig.locate_file('godot.audio.position.worklet.js');
-				GodotAudio.audioPositionWorkletPromise = ctx.audioWorklet.addModule(path);
-			}
+			const path = GodotConfig.locate_file('godot.audio.position.worklet.js');
+			GodotAudio.audioPositionWorkletPromise = ctx.audioWorklet.addModule(path);
 
 			return ctx.destination.channelCount;
 		},
@@ -1644,9 +1517,6 @@ const _GodotAudio = {
 				return;
 			}
 			bus.mute(enable);
-		},
-		get_audio_context: function () {
-			return GodotAudio.ctx;
 		},
 	},
 
@@ -2106,58 +1976,40 @@ const GodotAudioWorklet = {
 			p_in_size,
 			in_callback
 		) {
-			const MAX_OUTPUT_POOL_SIZE = 32;
-
-			function NoThreadTransport() {
+			function RingBuffer() {
 				let wpos = 0;
 				let rpos = 0;
 				let pending_samples = 0;
-				let output_chunk_size = 0;
-				const output_pool = [];
-
-				function acquireOutputBuffer(size) {
-					for (let i = output_pool.length - 1; i >= 0; i--) {
-						const buffer = output_pool[i];
-						if (buffer.length === size) {
-							output_pool[i] = output_pool[output_pool.length - 1];
-							output_pool.pop();
-							return buffer;
-						}
-					}
-					return new Float32Array(size);
-				}
+				const wbuf = new Float32Array(p_out_size);
 
 				function send(port) {
 					if (pending_samples === 0) {
 						return;
 					}
-					const chunk_size = output_chunk_size > 0 ? output_chunk_size : pending_samples;
 					const buffer = GodotRuntime.heapSub(HEAPF32, p_out_buf, p_out_size);
 					const size = buffer.length;
-					while (pending_samples > 0) {
-						const to_send = Math.min(pending_samples, chunk_size);
-						const chunk = acquireOutputBuffer(to_send);
-						out_callback(wpos, to_send);
-						if (wpos + to_send > size) {
-							const high = size - wpos;
-							chunk.set(buffer.subarray(wpos, size));
-							chunk.set(buffer.subarray(0, to_send - high), high);
-						} else {
-							chunk.set(buffer.subarray(wpos, wpos + to_send));
-						}
-						port.postMessage(
-							{ 'cmd': 'chunk', 'data': [chunk.buffer, to_send] },
-							[chunk.buffer]
-						);
-						wpos = (wpos + to_send) % size;
-						pending_samples -= to_send;
+					const tot_sent = pending_samples;
+					out_callback(wpos, pending_samples);
+					if (wpos + pending_samples >= size) {
+						const high = size - wpos;
+						wbuf.set(buffer.subarray(wpos, size));
+						pending_samples -= high;
+						wpos = 0;
 					}
+					if (pending_samples > 0) {
+						wbuf.set(
+							buffer.subarray(wpos, wpos + pending_samples),
+							tot_sent - pending_samples
+						);
+					}
+					port.postMessage({ 'cmd': 'chunk', 'data': wbuf.subarray(0, tot_sent) });
+					wpos += pending_samples;
+					pending_samples = 0;
 				}
-
-				this.receive = function (recv_buf, recv_size, port) {
+				this.receive = function (recv_buf) {
 					const buffer = GodotRuntime.heapSub(HEAPF32, p_in_buf, p_in_size);
 					const from = rpos;
-					let to_write = recv_size;
+					let to_write = recv_buf.length;
 					let high = 0;
 					if (rpos + to_write >= p_in_size) {
 						high = p_in_size - rpos;
@@ -2166,29 +2018,17 @@ const GodotAudioWorklet = {
 						rpos = 0;
 					}
 					if (to_write) {
-						buffer.set(recv_buf.subarray(high, high + to_write), rpos);
+						buffer.set(recv_buf.subarray(high, to_write), rpos);
 					}
-					in_callback(from, recv_size);
+					in_callback(from, recv_buf.length);
 					rpos += to_write;
-					port.postMessage({ 'cmd': 'input_recycle', 'data': recv_buf.buffer }, [recv_buf.buffer]);
 				};
-
-				this.recycleOutput = function (buffer) {
-					if (buffer && output_pool.length < MAX_OUTPUT_POOL_SIZE) {
-						// Keep mismatched recycled buffers in the pool to avoid extra
-						// churn if the render quantum size flips again later.
-						output_pool.push(new Float32Array(buffer));
-					}
-				};
-
 				this.consumed = function (size, port) {
-					output_chunk_size = size;
 					pending_samples += size;
 					send(port);
 				};
 			}
-
-			GodotAudioWorklet.ring_buffer = new NoThreadTransport();
+			GodotAudioWorklet.ring_buffer = new RingBuffer();
 			GodotAudioWorklet.promise.then(function () {
 				const node = GodotAudioWorklet.worklet;
 				const buffer = GodotRuntime.heapSlice(HEAPF32, p_out_buf, p_out_size);
@@ -2196,7 +2036,7 @@ const GodotAudioWorklet = {
 				node.port.postMessage({
 					'cmd': 'start_nothreads',
 					'data': [buffer, p_in_size],
-				}, [buffer.buffer]);
+				});
 				node.port.onmessage = function (event) {
 					if (!GodotAudioWorklet.worklet) {
 						return;
@@ -2207,20 +2047,13 @@ const GodotAudioWorklet = {
 							read,
 							GodotAudioWorklet.worklet.port
 						);
-					} else if (event.data['cmd'] === 'chunk_recycle') {
-						GodotAudioWorklet.ring_buffer.recycleOutput(event.data['data']);
 					} else if (event.data['cmd'] === 'input') {
-						const input_buffer = event.data['data'][0];
-						const input_size = event.data['data'][1];
-						if ((input_size || 0) > p_in_size) {
+						const buf = event.data['data'];
+						if (buf.length > p_in_size) {
 							GodotRuntime.error('Input chunk is too big');
 							return;
 						}
-						GodotAudioWorklet.ring_buffer.receive(
-							new Float32Array(input_buffer, 0, input_size),
-							input_size,
-							GodotAudioWorklet.worklet.port
-						);
+						GodotAudioWorklet.ring_buffer.receive(buf);
 					} else {
 						GodotRuntime.error(event.data);
 					}
@@ -2246,7 +2079,6 @@ const GodotAudioWorklet = {
 					GodotAudioWorklet.worklet.disconnect();
 					GodotAudioWorklet.worklet.port.onmessage = null;
 					GodotAudioWorklet.worklet = null;
-					GodotAudioWorklet.ring_buffer = null;
 					GodotAudioWorklet.promise = null;
 					resolve();
 				}).catch(function (err) {

@@ -35,11 +35,6 @@
 #include "core/templates/local_vector.h"
 #include "servers/audio_server.h"
 
-class HybridAudioDriver;
-class AudioDriver;
-
-
-
 class MovieWriter : public Object {
 	GDCLASS(MovieWriter, Object);
 
@@ -54,16 +49,12 @@ class MovieWriter : public Object {
 
 	LocalVector<int32_t> audio_mix_buffer;
 
-	// Real-time recording support
-	bool realtime_mode = false;
-	static class HybridAudioDriver *hybrid_driver;
-	class AudioDriver *original_driver = nullptr;
-
 	enum {
 		MAX_WRITERS = 8
 	};
 	static MovieWriter *writers[];
 	static uint32_t writer_count;
+
 protected:
 	virtual uint32_t get_audio_mix_rate() const;
 	virtual AudioServer::SpeakerMode get_audio_speaker_mode() const;
@@ -85,30 +76,18 @@ protected:
 	static void _bind_methods();
 
 public:
-	MovieWriter() {} // 确保成员变量正确初始化
-	
 	virtual bool handles_file(const String &p_path) const;
 	virtual void get_supported_extensions(List<String> *r_extensions) const;
 
 	static void add_writer(MovieWriter *p_writer);
 	static MovieWriter *find_writer_for_file(const String &p_file);
-	static void set_extensions_hint();
 
 	void begin(const Size2i &p_movie_size, uint32_t p_fps, const String &p_base_path);
 	void add_frame();
+
+	static void set_extensions_hint();
+
 	void end();
-
-
-	// Real-time recording control
-	void set_realtime_mode(bool p_enable);
-	bool is_realtime_mode() const { return realtime_mode; }
-
-	// Get HybridAudioDriver instance (for other recorders to use)
-	static class HybridAudioDriver *get_hybrid_audio_driver();
-
-private:
-	void setup_hybrid_audio_driver();
-	void restore_original_audio_driver();
 };
 
 #endif // MOVIE_WRITER_H

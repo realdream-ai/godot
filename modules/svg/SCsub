@@ -72,73 +72,6 @@ env_svg.Append(CPPDEFINES=["TVG_STATIC"])
 # Explicit support for embedded images in svg.
 env_svg.Append(CPPDEFINES=["THORVG_FILE_IO_SUPPORT"])
 
-
-
-# ----------- Luna ----------------
-thirdparty_dir2 = "#thirdparty/lunasvg/"
-thirdparty_obj2 = []
-
-# LunaSVG's shaping tests exercise internal headers from tests/test_main.cpp,
-# outside this module's cloned environment.
-if env["tests"]:
-    env.Prepend(CPPPATH=[thirdparty_dir2 + "include"])
-
-thirdparty_sources2 = [
-    "source/graphics.cpp",
-    "source/lunasvg.cpp",
-    "source/plutovg-blend.c",
-    "source/plutovg-canvas.c",
-    "source/plutovg-font.c",
-    "source/plutovg-ft-math.c",
-    "source/plutovg-ft-raster.c",
-    "source/plutovg-ft-stroker.c",
-    "source/plutovg-matrix.c",
-    "source/plutovg-paint.c",
-    "source/plutovg-path.c",
-    "source/plutovg-rasterize.c",
-    "source/plutovg-surface.c",
-    "source/svgelement.cpp",
-    "source/svggeometryelement.cpp",
-    "source/svglayoutstate.cpp",
-    "source/svgpaintelement.cpp",
-    "source/svgparser.cpp",
-    "source/svgproperty.cpp",
-    "source/svgrenderstate.cpp",
-    "source/svgtextelement.cpp",
-]
-# enable embedded font for all platforms (needed for SVGUtils::set_default_font)
-env_svg.Append(CPPDEFINES=["LUNASVG_ENABLE_EMBEDDED_FONTS"])
-thirdparty_sources2 = thirdparty_sources2 + ["source/embedded_cnfont.cpp"]
-
-thirdparty_sources2 = [thirdparty_dir2 + file for file in thirdparty_sources2]
-
-env_svg.Prepend(CPPPATH=[thirdparty_dir2 + "include"])
-
-# LunaSVG uses the same HarfBuzz and ICU implementations as
-# TextServerAdvanced for shaping and Unicode bidi itemization. SPX builds keep
-# these as a single capability: silently falling back to per-codepoint layout
-# would make Native and Web render different project text.
-if "text_server_adv" in env.module_list:
-    if env["builtin_harfbuzz"]:
-        env_svg.Prepend(CPPPATH=["#thirdparty/harfbuzz/src"])
-    if env["builtin_icu4c"]:
-        env_svg.Prepend(CPPPATH=["#thirdparty/icu4c/common/", "#thirdparty/icu4c/i18n/"])
-        env_svg.Append(
-            CXXFLAGS=[
-                "-DU_STATIC_IMPLEMENTATION",
-                "-DU_HAVE_LIB_SUFFIX=1",
-                "-DU_LIB_SUFFIX_C_NAME=_godot",
-            ]
-        )
-    env_svg.Append(CPPDEFINES=["LUNASVG_ENABLE_HARFBUZZ", "LUNASVG_ENABLE_ICU_BIDI"])
-
-# Enable lunasvg static object linking.
-env_svg.Append(CPPDEFINES=["PLUTOVG_BUILD", "PLUTOVG_BUILD_STATIC", "LUNASVG_BUILD", "LUNASVG_BUILD_STATIC"])
-
-
-
-#-------------------------------
-
 env_thirdparty = env_svg.Clone()
 env_thirdparty.disable_warnings()
 env_thirdparty.Prepend(
@@ -162,9 +95,6 @@ if env["module_webp_enabled"]:
 env_thirdparty.add_source_files(thirdparty_obj, thirdparty_sources)
 env.modules_sources += thirdparty_obj
 
-env_thirdparty.add_source_files(thirdparty_obj2, thirdparty_sources2)
-env.modules_sources += thirdparty_obj2
-
 # Godot source files
 
 module_obj = []
@@ -174,4 +104,3 @@ env.modules_sources += module_obj
 
 # Needed to force rebuilding the module files when the thirdparty library is updated.
 env.Depends(module_obj, thirdparty_obj)
-env.Depends(module_obj, thirdparty_obj2)

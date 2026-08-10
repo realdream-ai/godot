@@ -112,14 +112,6 @@ const GodotFS = {
 	$GodotFS__postset: [
 		'Module["initFS"] = GodotFS.init;',
 		'Module["copyToFS"] = GodotFS.copy_to_fs;',
-		'Module["getPThread"] = GodotFS.getPThread;',
-		'Module["deleteDirFS"] = GodotFS.rm_dir;',
-		'Module["deleteDirRecursive"] = GodotFS.rm_dir_recursive;',
-		'Module["copyToAdapter"] = GodotFS.copy_to_adapter;',
-		'Module["updateGameDatas"] = GodotFS.update_game_datas;',
-		'Module["readAllFS"] = GodotFS.read_all;',
-		'Module["getFileSize"] = GodotFS.get_file_size;',
-		
 	].join(''),
 	$GodotFS: {
 		// ERRNO_CODES works every odd version of emscripten, but this will break too eventually.
@@ -127,20 +119,7 @@ const GodotFS = {
 		_idbfs: false,
 		_syncing: false,
 		_mount_points: [],
-		_game_datas: null,
-		_set_game_data_cb: null,
-		
-		
-		getPThread:function () {
-			return PThread
-		},
 
-		update_game_datas: function (path, files) {
-			GodotFS._game_datas = { path: path, files: files }
-			if(GodotFS._set_game_data_cb){
-				GodotFS._set_game_data_cb(path, files)
-			}
-		},
 		is_persistent: function () {
 			return GodotFS._idbfs ? 1 : 0;
 		},
@@ -188,24 +167,7 @@ const GodotFS = {
 				});
 			});
 		},
-		copy_to_adapter: function (path, adapter) {
-			const promises = [];
-			const dirs = FS.readdir(path).filter(function (value) {
-				return value != '.' && value != '..';
-			});
-			dirs.forEach(function (dir) {
-				const _path = `${path}/${dir}`;
-				const stat = FS.stat(_path);
-				if (FS.isFile(stat.mode)) {
-					const array = FS.readFile(_path);
-					promises.push(adapter.writeFile(_path, array));
-				}
-				if (FS.isDir(stat.mode)) {
-					promises.push(GodotFS.copy_to_adapter(_path, adapter));
-				}
-			});
-			return promises;
-		},
+
 		// Deinit godot file system, making sure to unmount file systems, and close IDBFS(s).
 		deinit: function () {
 			GodotFS._mount_points.forEach(function (path) {
@@ -241,13 +203,6 @@ const GodotFS = {
 			});
 		},
 
-		try_sync: function () {
-			if (GodotFS._syncing) {
-				return Promise.resolve();
-			}
-			return GodotFS.sync();
-		},
-
 		// Copies a buffer to the internal file system. Creating directories recursively.
 		copy_to_fs: function (path, buffer) {
 			const idx = path.lastIndexOf('/');
@@ -266,77 +221,6 @@ const GodotFS = {
 			}
 			FS.writeFile(path, new Uint8Array(buffer));
 		},
-
-		rm_dir: function (path) {
-			const analysis = FS.analyzePath(path);
-			if (analysis.exists && analysis.object && FS.isDir(analysis.object.mode)) {
-			  FS.rmdir(path);
-			}
-		},
-		rm_dir_recursive: function (path) {
-			try {
-				const stat = FS.stat(path);
-				if (FS.isDir(stat.mode)) {
-					const entries = FS.readdir(path).filter(name => name !== "." && name !== "..");
-					for (const name of entries) {
-						const childPath = `${path}/${name}`;
-						const childStat = FS.stat(childPath);
-						if (FS.isDir(childStat.mode)) {
-							GodotFS.rm_dir_recursive(childPath);
-						} else {
-							try {
-								FS.unlink(childPath);
-							} catch (e) {
-								console.warn("[GodotFS] unlink failed:", childPath, e);
-							}
-						}
-					}
-					try {
-						FS.rmdir(path);
-					} catch (e) {
-						console.warn("[GodotFS] rmdir failed:", path, e);
-					}
-				} else {
-					try {
-						FS.unlink(path);
-					} catch (e) {
-						console.warn("[GodotFS] unlink failed:", path, e);
-					}
-				}
-			} catch (e) {
-				if (e.errno !== GodotFS.ENOENT) {
-					console.warn("[GodotFS] rm_dir_recursive error:", path, e);
-				}
-			}
-		},
-
-		refresh_fs: function () {
-			if ( !GodotFS._syncing ) {
-				GodotFS.sync()
-			}
-		},
-
-		// Read all data from a binary file
-		read_all: function (path) {
-			try {
-				const stat = FS.stat(path);
-				if (!FS.isFile(stat.mode)) {
-					throw new Error(`Path is not a file: ${path}`);
-				}
-				return FS.readFile(path);
-			} catch (e) {
-				if (e.errno === GodotFS.ENOENT) {
-					GodotRuntime.error(`File not found: ${path}`);
-				} else {
-					GodotRuntime.error(`Failed to read file: ${path}`, e);
-				}
-				return null;
-			}
-		},
-		get_file_size: function (path) {
-			const stat = FS.stat(path);
-			return stat.size;
-		},
 	},
 };
 mergeInto(LibraryManager.library, GodotFS);
@@ -345,13 +229,11 @@ const GodotOS = {
 	$GodotOS__deps: ['$GodotRuntime', '$GodotConfig', '$GodotFS'],
 	$GodotOS__postset: [
 		'Module["request_quit"] = function() { GodotOS.request_quit() };',
-		'Module["request_reset"] = function() { GodotOS.request_reset() };',
 		'Module["onExit"] = GodotOS.cleanup;',
 		'GodotOS._fs_sync_promise = Promise.resolve();',
 	].join(''),
 	$GodotOS: {
 		request_quit: function () {},
-		request_reset: function () {},
 		_async_cbs: [],
 		_fs_sync_promise: null,
 
@@ -397,12 +279,6 @@ const GodotOS = {
 	godot_js_os_request_quit_cb__sig: 'vi',
 	godot_js_os_request_quit_cb: function (p_callback) {
 		GodotOS.request_quit = GodotRuntime.get_func(p_callback);
-	},
-
-	godot_js_os_request_reset_cb__proxy: 'sync',
-	godot_js_os_request_reset_cb__sig: 'vi',
-	godot_js_os_request_reset_cb: function (p_callback) {
-		GodotOS.request_reset = GodotRuntime.get_func(p_callback);
 	},
 
 	godot_js_os_fs_is_persistent__proxy: 'sync',

@@ -8,64 +8,6 @@
  * @module Engine
  * @header Web export JavaScript reference
  */
-
-/* -------------------------
-   TimeProfiler utility class
-   ------------------------- */
-class TimeProfiler {
-	static enabled = false;
-	static marks = {};
-
-	static mark(label) {
-		if (!this.enabled) return;
-		try {
-			this.marks[label] = performance.now();
-		} catch (e) {
-			// ignore
-		}
-	}
-	static measure(startLabel, endLabel) {
-		if (!this.enabled) return;
-		const s = this.marks[startLabel];
-		const e = this.marks[endLabel];
-		if (s != null && e != null) {
-			const cost = (e - s).toFixed(2);
-			console.log(`[Perf] ${startLabel} → ${endLabel}: ${cost} ms`);
-			return cost;
-		}
-		return null;
-	}
-    static async profile(label, fn) {
-        if (!this.enabled) return await fn();
-        const start = performance.now();
-        try {
-            const result = await fn();
-            const end = performance.now();
-            console.log(`[Perf] ${label}: ${(end - start).toFixed(2)} ms`);
-            return result;
-        } catch (err) {
-            const end = performance.now();
-            console.warn(`[Perf] ${label} failed after ${(end - start).toFixed(2)} ms`);
-            throw err;
-        }
-    }
-	static summary(labels, note = '') {
-		if (!this.enabled) return;
-		console.log(`==== Perf(${note}) Summary ====`);
-		for (let i = 0; i + 1 < labels.length; i++) {
-			const a = labels[i], b = labels[i + 1];
-			this.measure(a, b);
-		}
-		console.log("======================");
-	}
-}
-
-const globalScope = typeof window !== 'undefined' ? window :
-                    typeof self !== 'undefined' ? self :
-                    globalThis;
-
-globalScope.profiler = TimeProfiler;
-
 const Engine = (function () {
 	const preloader = new Preloader();
 
@@ -132,32 +74,27 @@ const Engine = (function () {
 			 * @param {string=} basePath Base path of the engine to load.
 			 * @return {Promise} A ``Promise`` that resolves once the engine is loaded and initialized.
 			 */
-			init: function () {
-				if(initPromise != null){
-					return Promise.resolve();
+			init: function (basePath) {
+				if (initPromise) {
+					return initPromise;
 				}
-				loadPath = this.config.executable;
-				if(typeof miniEngine !== 'undefined' && miniEngine){
-					loadPath = "js/"+loadPath;
+				if (loadPromise == null) {
+					if (!basePath) {
+						initPromise = Promise.reject(new Error('A base path must be provided when calling `init` and the engine is not loaded.'));
+						return initPromise;
+					}
+					Engine.load(basePath, this.config.fileSizes[`${basePath}.wasm`]);
 				}
 				const me = this;
-				function doInit() {
+				function doInit(promise) {
 					// Care! Promise chaining is bogus with old emscripten versions.
 					// This caused a regression with the Mono build (which uses an older emscripten version).
 					// Make sure to test that when refactoring.
 					return new Promise(function (resolve, reject) {
-						// Now proceed with Godot and other logic
-						let gdmodule = me.config.getModuleConfig(loadPath, me.config.wasmEngine);
-						Godot(gdmodule).then(function (module) {
-							const paths = me.config.persistentPaths;
-							// ---- WASM Crash Hook ----
-							module.onAbort = function (msg) {
-								console.error("[Godot WASM Crashed] ", msg);
-								window.dispatchEvent(new CustomEvent("godot-wasm-crash", {
-									detail: msg
-								}));
-							};
-							if (typeof miniEngine === 'undefined' || !miniEngine){
+						promise.then(function (response) {
+							const cloned = new Response(response.clone().body, { 'headers': [['content-type', 'application/wasm']] });
+							Godot(me.config.getModuleConfig(loadPath, cloned)).then(function (module) {
+								const paths = me.config.persistentPaths;
 								module['initFS'](paths).then(function (err) {
 									me.rtenv = module;
 									if (me.config.unloadAfterInit) {
@@ -165,15 +102,12 @@ const Engine = (function () {
 									}
 									resolve();
 								});
-							}else{
-								me.rtenv = module;
-								resolve();
-							}
+							});
 						});
 					});
 				}
 				preloader.setProgressFunc(this.config.onProgress);
-				initPromise = doInit();
+				initPromise = doInit(loadPromise);
 				return initPromise;
 			},
 
@@ -196,81 +130,6 @@ const Engine = (function () {
 			preloadFile: function (file, path) {
 				return preloader.preload(file, path, this.config.fileSizes[file]);
 			},
-			getPThread:function () {
-				return this.rtenv['getPThread']()
-			},
-			unpackEngineData:async function (dir, pckName, pckData) {
-				let datas = []
-				if ( pckName != "" ){
-					datas.push({ "path": pckName, "data": pckData })
-				} 
-				// write project data to file	
-				let files = []
-				this.rtenv['deleteDirFS'](dir);
-				for (let info of datas) {
-					files.push(info.path)
-					this.rtenv['copyToFS'](dir + "/" + info.path, info.data);
-				}
-				this.rtenv['updateGameDatas'](dir, files);
-			},
-
-			updateAssetsData: async function (dir, assetList) {
-				try {
-					const updatedPaths = [];
-
-					for (const { name, data } of assetList) {
-						const assetPath = `${dir}/${name}`;
-						this.rtenv['copyToFS'](assetPath, data);
-						updatedPaths.push(name);
-					}
-
-					this.rtenv['updateGameDatas'](dir, updatedPaths);
-
-				} catch (e) {
-					console.error(`[GodotFS] updateAssetsData failed: ${e.message}`);
-				}
-			},
-
-			deleteAssetsData: async function (dir, assetNames) {
-				try {
-					const deletedPaths = [];
-
-					for (const name of assetNames) {
-						const assetPath = `${dir}/${name}`;
-						this.rtenv['deleteDirRecursive'](assetPath);
-						deletedPaths.push(name);
-					}
-
-					this.rtenv['updateGameDatas'](dir, deletedPaths);
-
-				} catch (e) {
-					console.error(`[GodotFS] deleteAssetsData failed: ${e.message}`);
-				}
-			},
-
-			downloadRecordedVideo: function (fileName) {
-				if (this.rtenv == null) {
-					throw new Error('Engine must be inited before downloading web recorder');
-				}
-				if (this.rtenv['downloadRecordedVideo']) {
-					return this.rtenv['downloadRecordedVideo'](fileName);
-				} else {
-					return Promise.reject(new Error('Web recorder is not supported by this engine version. '
-						+ 'Enable "Web Recorder" for your export preset and/or build your custom template with "web_recorder_enabled=yes".'));
-				}
-			},
-			
-			getRecordedVideoBlob: function () {
-				if (this.rtenv == null) {
-					throw new Error('Engine must be inited before getting web recorder');
-				}			
-				if (this.rtenv['getRecordedVideoBlob']) {
-					return this.rtenv['getRecordedVideoBlob']();
-				} else {
-					return Promise.reject(new Error('Web recorder is not supported by this engine version. '
-						+ 'Enable "Web Recorder" for your export preset and/or build your custom template with "web_recorder_enabled=yes".'));
-				}
-			},
 
 			/**
 			 * Start the engine instance using the given override configuration (if any).
@@ -287,15 +146,11 @@ const Engine = (function () {
 			start: function (override) {
 				this.config.update(override);
 				const me = this;
-				
 				return me.init().then(function () {
 					if (!me.rtenv) {
 						return Promise.reject(new Error('The engine must be initialized before it can be started'));
 					}
-					
-					me.rtenv['setRecorderCanvas'](me.config.canvas);
 
-					initPromise = null
 					let config = {};
 					try {
 						config = me.config.getGodotConfig(function () {
@@ -312,29 +167,16 @@ const Engine = (function () {
 						return Promise.reject(new Error('GDExtension libraries are not supported by this engine version. '
 							+ 'Enable "Extensions Support" for your export preset and/or build your custom template with "dlink_enabled=yes".'));
 					}
-					let libs = [];
-					me.config.gdextensionLibs.forEach(function (lib) {
-						// gdspx is special, it must be loaded before the others.
-						if(lib.startsWith('gdspx')) {
-							console.log('Loading gdspx dynamic library:', lib);
-							return 
+					return new Promise(function (resolve, reject) {
+						for (const file of preloader.preloadedFiles) {
+							me.rtenv['copyToFS'](file.path, file.buffer);
 						}
-						libs.push(me.rtenv['loadDynamicLibrary'](lib, { 'loadAsync': true }));
+						preloader.preloadedFiles.length = 0; // Clear memory
+						me.rtenv['callMain'](me.config.args);
+						initPromise = null;
+						me.installServiceWorker();
+						resolve();
 					});
-					function executeMainLogic() {
-						return new Promise(function (resolve, reject) {
-							preloader.preloadedFiles.forEach(function (file) {
-								me.rtenv['copyToFS'](file.path, file.buffer);
-							});
-							preloader.preloadedFiles.length = 0; // Clear memory
-							me.rtenv['callMain'](me.config.args);
-							initPromise = null;
-							me.installServiceWorker();
-							resolve();
-						});
-					}
-					return executeMainLogic();
-					
 				});
 			},
 
@@ -380,25 +222,6 @@ const Engine = (function () {
 				this.rtenv['copyToFS'](path, buffer);
 			},
 
-            copyFSToAdapter: function (adapter) {
-                if (this.rtenv == null) {
-                    throw new Error('Engine must be inited before copying files');
-                }
-                const me = this;
-                var promises = [];
-                this.config.persistentPaths.forEach(function (path) {
-                    promises.push(me.rtenv['copyToAdapter'](path, adapter));
-                });
-                return Promise.all(promises);
-            },
-			
-			getAudioContext: function () {
-				if (this.rtenv == null) {
-					throw new Error('Engine must be inited before getting audio context');
-				}
-				return this.rtenv['getAudioContext']();
-			},
-
 			/**
 			 * Request that the current instance quit.
 			 *
@@ -409,18 +232,6 @@ const Engine = (function () {
 			requestQuit: function () {
 				if (this.rtenv) {
 					this.rtenv['request_quit']();
-				}
-			},
-
-			/**
-			 * Request that the current instance reset.
-			 *
-			 * This will restart the engine as if it was just started.
-			 *
-			 */
-			requestReset: function () {
-				if (this.rtenv) {
-					this.rtenv['request_reset']();
 				}
 			},
 
