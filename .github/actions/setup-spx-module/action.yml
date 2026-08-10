@@ -1,0 +1,348 @@
+name: Set up external SPX module
+description: Check out the SPX source used by a runtime build and expose its immutable source identifiers.
+
+inputs:
+  runtime-version:
+    description: Runtime version that must match the selected SPX runtime lock.
+    required: true
+  repository:
+    description: SPX repository containing the runtime lock and external module.
+    required: true
+  ref:
+    description: SPX branch, tag, or full commit SHA to check out.
+    required: true
+
+outputs:
+  godot-sha:
+    description: Full Godot source commit SHA.
+    value: ${{ steps.source.outputs.godot-sha }}
+  spx-sha:
+    description: Full SPX source commit SHA.
+    value: ${{ steps.source.outputs.spx-sha }}
+  module-sha:
+    description: Git tree SHA for godot_modules/spx.
+    value: ${{ steps.source.outputs.module-sha }}
+  module-path:
+    description: Absolute path to the external module declared by the SPX runtime lock.
+    value: ${{ steps.source.outputs.module-path }}
+  common-flags:
+    description: Common SCons flags from the SPX module build profile.
+    value: ${{ steps.source.outputs.common-flags }}
+  editor-release-flags:
+    description: Common and native editor release SCons flags from the SPX module build profile.
+    value: ${{ steps.source.outputs.editor-release-flags }}
+  template-release-flags:
+    description: Common and export template release SCons flags from the SPX module build profile.
+    value: ${{ steps.source.outputs.template-release-flags }}
+
+runs:
+  using: composite
+  steps:
+    - name: Check out SPX source
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.repository }}
+        ref: ${{ inputs.ref }}
+        path: .spx-source
+        persist-credentials: false
+        sparse-checkout: /internal/release/runtime.lock.json
+        sparse-checkout-cone-mode: false
+
+    - name: Resolve source identifiers
+      id: source
+      shell: bash
+      env:
+        INPUT_RUNTIME_VERSION: ${{ inputs.runtime-version }}
+      run: |
+        set -euo pipefail
+
+        if command -v python3 >/dev/null 2>&1; then
+          python_command=python3
+        elif command -v python >/dev/null 2>&1; then
+          python_command=python
+        else
+          echo "[error] Python 3 is required to validate the SPX runtime lock and SCons profile" >&2
+          exit 1
+        fi
+
+        source_root=".spx-source"
+        lock_path="${source_root}/internal/release/runtime.lock.json"
+        if [ ! -f "${lock_path}" ]; then
+          echo "[error] SPX runtime lock is missing: ${lock_path}" >&2
+          exit 1
+        fi
+
+        if ! current_godot_origin="$(git remote get-url origin)"; then
+          echo "[error] Current Godot checkout has no origin remote" >&2
+          exit 1
+        fi
+        if ! current_godot_sha="$(git rev-parse --verify 'HEAD^{commit}')"; then
+          echo "[error] Cannot resolve the current Godot HEAD commit" >&2
+          exit 1
+        fi
+
+        module_relative_path="$(
+          LOCK_PATH="${lock_path}" \
+          CURRENT_GODOT_ORIGIN="${current_godot_origin}" \
+          CURRENT_GODOT_SHA="${current_godot_sha}" \
+          "${python_command}" - <<'PY'
+        import json
+        import os
+        import re
+        import sys
+        from pathlib import PurePosixPath
+        from urllib.parse import urlsplit
+
+
+        runtime_version_pattern = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$")
+        git_commit_pattern = re.compile(r"^[0-9a-f]{40}$")
+        repository_component_pattern = re.compile(r"^[A-Za-z0-9_.-]+$")
+
+
+        def reject_duplicate_fields(pairs):
+            result = {}
+            for key, value in pairs:
+                if key in result:
+                    raise ValueError(f"duplicate JSON field: {key!r}")
+                result[key] = value
+            return result
+
+
+        def fail(message):
+            print(f"[error] Invalid SPX runtime lock: {message}", file=sys.stderr)
+            raise SystemExit(1)
+
+
+        def normalize_github_repository(value, field):
+            if type(value) is not str or not value:
+                fail(f"{field} must be a non-empty string")
+            if value != value.strip() or any(character in value for character in "\0\r\n\t"):
+                fail(f"{field} must be a single GitHub repository URL without surrounding whitespace")
+
+            scp_match = re.fullmatch(r"git@github\.com:(.+)", value, flags=re.IGNORECASE)
+            if scp_match:
+                repository_path = scp_match.group(1)
+            elif re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?:\.git)?/?", value):
+                repository_path = value
+            else:
+                url_value = value
+                if value.lower().startswith("github.com/"):
+                    url_value = "https://" + value
+                try:
+                    parsed = urlsplit(url_value)
+                    port = parsed.port
+                except ValueError as error:
+                    fail(f"{field} is not a valid GitHub repository URL: {error}")
+
+                scheme = parsed.scheme.lower()
+                allowed_ports = {
+                    "http": {None, 80},
+                    "https": {None, 443},
+                    "ssh": {None, 22},
+                    "git+ssh": {None, 22},
+                    "git": {None, 9418},
+                }
+                if scheme not in allowed_ports or port not in allowed_ports[scheme]:
+                    fail(f"{field} must use a standard GitHub HTTP, SSH, or Git URL")
+                if (parsed.hostname or "").lower() != "github.com":
+                    fail(f"{field} must refer to github.com")
+                if parsed.query or parsed.fragment:
+                    fail(f"{field} must not contain a query or fragment")
+                if scheme in ("ssh", "git+ssh") and parsed.username not in (None, "git"):
+                    fail(f"{field} SSH URLs must use the git user")
+                repository_path = parsed.path.lstrip("/")
+
+            repository_path = repository_path.rstrip("/")
+            if repository_path.lower().endswith(".git"):
+                repository_path = repository_path[:-4]
+            parts = repository_path.split("/")
+            if (
+                len(parts) != 2
+                or any(part in ("", ".", "..") for part in parts)
+                or any(repository_component_pattern.fullmatch(part) is None for part in parts)
+            ):
+                fail(f"{field} must identify exactly one GitHub owner/repository")
+            return "/".join(parts).lower()
+
+
+        try:
+            with open(os.environ["LOCK_PATH"], encoding="utf-8") as lock_file:
+                lock = json.load(lock_file, object_pairs_hook=reject_duplicate_fields)
+        except (OSError, json.JSONDecodeError, ValueError) as error:
+            fail(str(error))
+
+        if type(lock) is not dict:
+            fail("top level must be an object")
+
+        runtime_version = lock.get("runtime_version")
+        if type(runtime_version) is not str or runtime_version_pattern.fullmatch(runtime_version) is None:
+            fail("runtime_version must be a semantic runtime version")
+        requested_runtime_version = os.environ["INPUT_RUNTIME_VERSION"]
+        if requested_runtime_version.startswith("v"):
+            requested_runtime_version = requested_runtime_version[1:]
+        if runtime_version_pattern.fullmatch(requested_runtime_version) is None:
+            fail("runtime version input must be a semantic runtime version, optionally prefixed by v")
+        if requested_runtime_version != runtime_version:
+            fail(
+                f"runtime version input {requested_runtime_version!r} does not match "
+                f"runtime_version {runtime_version!r}"
+            )
+
+        godot = lock.get("godot")
+        if type(godot) is not dict:
+            fail("godot must be an object")
+        locked_godot_repository = normalize_github_repository(godot.get("repository"), "godot.repository")
+        current_godot_repository = normalize_github_repository(
+            os.environ["CURRENT_GODOT_ORIGIN"], "current Godot origin"
+        )
+        if current_godot_repository != locked_godot_repository:
+            fail(
+                f"current Godot origin identifies {current_godot_repository!r}; "
+                f"godot.repository identifies {locked_godot_repository!r}"
+            )
+
+        locked_godot_commit = godot.get("commit")
+        if type(locked_godot_commit) is not str or git_commit_pattern.fullmatch(locked_godot_commit) is None:
+            fail("godot.commit must be a 40-character lowercase SHA-1")
+        current_godot_sha = os.environ["CURRENT_GODOT_SHA"]
+        if git_commit_pattern.fullmatch(current_godot_sha) is None:
+            fail("current Godot HEAD is not a 40-character lowercase SHA-1")
+        if current_godot_sha != locked_godot_commit:
+            fail(f"current Godot HEAD {current_godot_sha!r} does not match godot.commit {locked_godot_commit!r}")
+
+        module = lock.get("module")
+        if type(module) is not dict:
+            fail("module must be an object")
+        raw_path = module.get("path")
+        if type(raw_path) is not str or not raw_path:
+            fail("module.path must be a non-empty string")
+        if "\\" in raw_path or any(character in raw_path for character in "\0\r\n"):
+            fail("module.path must use a single-line POSIX path")
+
+        module_path = PurePosixPath(raw_path)
+        if module_path.is_absolute() or raw_path != module_path.as_posix():
+            fail("module.path must be a normalized relative path")
+        if any(part in ("", ".", "..") for part in module_path.parts):
+            fail("module.path must not contain empty, current, or parent segments")
+        if any(not re.fullmatch(r"[A-Za-z0-9._-]+", part) for part in module_path.parts):
+            fail("module.path segments may contain only letters, digits, dot, underscore, and hyphen")
+
+        print(module_path.as_posix())
+        PY
+        )"
+
+        if ! module_object_type="$(git -C "${source_root}" cat-file -t "HEAD:${module_relative_path}")"; then
+          echo "[error] SPX module is missing from the selected commit: ${module_relative_path}" >&2
+          exit 1
+        fi
+        if [ "${module_object_type}" != "tree" ]; then
+          echo "[error] SPX module is not a Git tree: ${module_relative_path}" >&2
+          exit 1
+        fi
+        printf '/%s/\n' "${module_relative_path}" | git -C "${source_root}" sparse-checkout add --stdin
+
+        module_checkout_path="${source_root}/${module_relative_path}"
+        profile_path="${module_checkout_path}/spx_scons_profile.json"
+        if [ ! -f "${module_checkout_path}/SCsub" ] || [ ! -f "${module_checkout_path}/config.py" ] || [ ! -f "${profile_path}" ]; then
+          module_path="$(MODULE_CHECKOUT_PATH="${module_checkout_path}" "${python_command}" -c 'import os; from pathlib import Path; print(Path(os.environ["MODULE_CHECKOUT_PATH"]).resolve().as_posix())')"
+          echo "[error] External SPX module is incomplete: ${module_path}" >&2
+          exit 1
+        fi
+
+        module_path="$(MODULE_CHECKOUT_PATH="${module_checkout_path}" "${python_command}" -c 'import os; from pathlib import Path; print(Path(os.environ["MODULE_CHECKOUT_PATH"]).resolve().as_posix())')"
+        godot_sha="${current_godot_sha}"
+        spx_sha="$(git -C "${source_root}" rev-parse HEAD)"
+        module_sha="$(git -C "${source_root}" rev-parse "HEAD:${module_relative_path}")"
+
+        echo "[info] Runtime version: ${INPUT_RUNTIME_VERSION#v}"
+        echo "[info] Godot commit: ${godot_sha}"
+        echo "[info] SPX commit: ${spx_sha}"
+        echo "[info] SPX module tree: ${module_sha}"
+        echo "[info] SPX module path: ${module_path}"
+
+        echo "godot-sha=${godot_sha}" >> "${GITHUB_OUTPUT}"
+        echo "spx-sha=${spx_sha}" >> "${GITHUB_OUTPUT}"
+        echo "module-sha=${module_sha}" >> "${GITHUB_OUTPUT}"
+        echo "module-path=${module_path}" >> "${GITHUB_OUTPUT}"
+
+        PROFILE_PATH="${profile_path}" "${python_command}" - <<'PY'
+        import json
+        import os
+        import re
+        import sys
+        import unicodedata
+        from pathlib import Path
+
+        expected_fields = {"schema", "common", "editor_release", "template_release"}
+        flag_key_pattern = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+
+        def reject_duplicate_fields(pairs):
+            result = {}
+            for key, value in pairs:
+                if key in result:
+                    raise ValueError(f"duplicate JSON field: {key!r}")
+                result[key] = value
+            return result
+
+
+        def fail(message):
+            print(f"[error] Invalid SPX SCons profile: {message}", file=sys.stderr)
+            raise SystemExit(1)
+
+
+        profile_path = Path(os.environ["PROFILE_PATH"])
+        try:
+            with profile_path.open(encoding="utf-8") as profile_file:
+                profile = json.load(profile_file, object_pairs_hook=reject_duplicate_fields)
+        except (OSError, json.JSONDecodeError, ValueError) as error:
+            fail(str(error))
+
+        if type(profile) is not dict:
+            fail("top level must be an object")
+        if set(profile) != expected_fields:
+            missing = sorted(expected_fields - set(profile))
+            extra = sorted(set(profile) - expected_fields)
+            fail(f"expected exactly {sorted(expected_fields)}; missing={missing}, extra={extra}")
+        if type(profile["schema"]) is not int or profile["schema"] != 1:
+            fail("schema must be the integer 1")
+
+        groups = {}
+        group_keys = {}
+        for group_name in ("common", "editor_release", "template_release"):
+            tokens = profile[group_name]
+            if type(tokens) is not list:
+                fail(f"{group_name} must be an array")
+
+            keys = set()
+            for index, token in enumerate(tokens):
+                if type(token) is not str or not token or any(
+                    character.isspace() or unicodedata.category(character) == "Cc" for character in token
+                ):
+                    fail(f"{group_name}[{index}] must be a non-empty token without whitespace or control characters")
+                if token.count("=") != 1:
+                    fail(f"{group_name}[{index}] must be a single key=value token")
+                key, value = token.split("=", 1)
+                if not flag_key_pattern.fullmatch(key) or not value:
+                    fail(f"{group_name}[{index}] must have a valid non-empty key and value")
+                if key in keys:
+                    fail(f"{group_name} contains duplicate key {key!r}")
+                keys.add(key)
+
+            groups[group_name] = tokens
+            group_keys[group_name] = keys
+
+        for variant in ("editor_release", "template_release"):
+            duplicates = sorted(group_keys["common"] & group_keys[variant])
+            if duplicates:
+                fail(f"common and {variant} contain duplicate keys: {duplicates}")
+
+        outputs = {
+            "common-flags": groups["common"],
+            "editor-release-flags": groups["common"] + groups["editor_release"],
+            "template-release-flags": groups["common"] + groups["template_release"],
+        }
+        with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as output_file:
+            for name, tokens in outputs.items():
+                print(f"{name}={' '.join(tokens)}", file=output_file)
+        PY

@@ -13,7 +13,11 @@ inputs:
     description: Target platform.
     required: false
   sconsflags:
-    description: Additional SCons flags.
+    description: Additional whitespace-delimited SCons key=value arguments. Shell syntax is not evaluated.
+    default: ""
+    required: false
+  custom-modules:
+    description: Absolute path to the external SPX custom module.
     default: ""
     required: false
   scons-cache:
@@ -29,13 +33,46 @@ runs:
   using: composite
   steps:
     - name: SCons Build
-      shell: sh
+      shell: bash
       env:
+        BUILD_PLATFORM: ${{ inputs.platform }}
+        BUILD_TARGET: ${{ inputs.target }}
+        BUILD_TESTS: ${{ inputs.tests }}
         SCONSFLAGS: ${{ inputs.sconsflags }}
+        CUSTOM_MODULES: ${{ inputs.custom-modules }}
+        SCONS_CACHE: ${{ inputs.scons-cache }}
+        SCONS_CACHE_LIMIT: ${{ inputs.scons-cache-limit }}
       run: |
-        echo "Building with flags:" platform=${{ inputs.platform }} target=${{ inputs.target }} tests=${{ inputs.tests }} ${{ env.SCONSFLAGS }} "cache_path=${{ inputs.scons-cache }}" cache_limit=${{ inputs.scons-cache-limit }}
+        set -euo pipefail
 
-        if [ "${{ inputs.target }}" != "editor" ]; then
+        if [ -n "${CUSTOM_MODULES}" ] && [ ! -d "${CUSTOM_MODULES}" ]; then
+          echo "[error] custom-modules must be an existing directory: ${CUSTOM_MODULES}" >&2
+          exit 1
+        fi
+
+        extra_scons_args=()
+        scons_args=(
+          "platform=${BUILD_PLATFORM}"
+          "target=${BUILD_TARGET}"
+          "tests=${BUILD_TESTS}"
+        )
+        if [ -n "${SCONSFLAGS}" ]; then
+          read -r -a extra_scons_args <<< "${SCONSFLAGS}"
+          scons_args+=("${extra_scons_args[@]}")
+        fi
+        scons_args+=(
+          "cache_path=${SCONS_CACHE}"
+          "cache_limit=${SCONS_CACHE_LIMIT}"
+        )
+        if [ -n "${CUSTOM_MODULES}" ]; then
+          scons_args+=("custom_modules=${CUSTOM_MODULES}")
+        fi
+
+        printf 'Building with arguments:'
+        printf ' %q' "${scons_args[@]}"
+        printf '\n'
+
+        if [ "${BUILD_TARGET}" != "editor" ]; then
           # Ensure we don't include editor code in export template builds.
           rm -rf editor
         fi
@@ -47,5 +84,5 @@ runs:
           export BUILD_NAME="gh"
         fi
 
-        scons platform=${{ inputs.platform }} target=${{ inputs.target }} tests=${{ inputs.tests }} ${{ env.SCONSFLAGS }} "cache_path=${{ inputs.scons-cache }}" cache_limit=${{ inputs.scons-cache-limit }}
+        scons "${scons_args[@]}"
         ls -l bin/

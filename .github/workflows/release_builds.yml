@@ -1,218 +1,224 @@
-name: 🚀 Release Build
+name: Build SPX Runtime Artifacts
+
 on:
-  release:
-    types: [created, edited]
+  workflow_call:
+    inputs:
+      runtime_version:
+        description: Runtime version used to label the build artifacts.
+        required: true
+        type: string
+      platforms:
+        description: Comma-separated platforms (android,ios,web,linux,macos,windows,all).
+        required: false
+        default: all
+        type: string
+      godot_repository:
+        description: Godot repository to build.
+        required: true
+        type: string
+      godot_ref:
+        description: Godot branch, tag, or full commit SHA to build.
+        required: true
+        type: string
+      spx_repository:
+        description: SPX repository containing the runtime lock and external module.
+        required: true
+        type: string
+      spx_ref:
+        description: SPX branch, tag, or full commit SHA supplying the external module.
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
-      release_tag:
-        description: 'Release version (e.g. v2.0.1)'
+      runtime_version:
+        description: Runtime version used to label the build artifacts.
         required: true
-        default: 'v2.0.1'
+        type: string
       platforms:
-        description: 'Platforms to build (comma-separated: android,ios,web,linux,macos,windows,all)'
+        description: Comma-separated platforms (android,ios,web,linux,macos,windows,all).
         required: true
-        default: 'android,ios,linux,macos,windows,web'
+        default: all
+        type: string
+      godot_repository:
+        description: Godot repository to build; empty uses the current repository.
+        required: false
+        default: ''
+        type: string
+      godot_ref:
+        description: Godot branch, tag, or full commit SHA; empty uses the dispatched commit.
+        required: false
+        default: ''
+        type: string
+      spx_repository:
+        description: SPX repository containing the runtime lock and external module.
+        required: true
+        default: goplus/spx
+        type: string
+      spx_ref:
+        description: SPX branch, tag, or full commit SHA supplying the external module.
+        required: true
+        default: dev
+        type: string
+
+permissions:
+  contents: read
 
 concurrency:
-  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-release
-  cancel-in-progress: true
-
-env:
-  ENGINE_VERSION: 4.4.1.stable
-  # SCons cache settings to ensure efficient cache utilization
-  SCONS_CACHE: "${{github.workspace}}/.scons-cache/"
-  SCONS_CACHE_LIMIT: "10000"
-  VERSION: 2.0.1
-  GODOT_BASE_BRANCH: master
-  RELEASE_ARGS: >-
-    debug_symbols=false
-    disable_3d=true
-  EDITOR_ARGS: >-
-    debug_symbols=true
-  # Keep the release engine aligned with spx's local buildctl engineCommonArgs.
-  # Project font collections require the Advanced text server and HarfBuzz;
-  # the Fallback server produces different shaping and rasterization results.
-  COMMON_ARGS: >-
-    optimize=size
-    use_volk=no 
-    deprecated=no 
-    minizip=yes  
-    openxr=false 
-    vulkan=false 
-    graphite=false 
-    disable_3d_physics=true 
-    disable_navigation=true 
-    module_msdfgen_enabled=false 
-    module_text_server_adv_enabled=true
-    module_text_server_fb_enabled=false
-    builtin_harfbuzz=true
-    modules_enabled_by_default=true 
-    module_gdscript_enabled=true 
-    module_freetype_enabled=true 
-    module_minimp3_enabled=true 
-    module_svg_enabled=true 
-    module_jpg_enabled=true 
-    module_ogg_enabled=true 
-    module_regex_enabled=true 
-    module_godot_physics_2d_enabled=true 
-
+  group: spx-runtime-${{ inputs.runtime_version }}-${{ inputs.godot_ref || github.sha }}-${{ inputs.spx_ref }}
+  cancel-in-progress: false
 
 jobs:
   setup:
-    name: 📋 Prepare Build Environment
+    name: Resolve runtime build inputs
     runs-on: ubuntu-22.04
     outputs:
-      version: ${{ steps.set-version.outputs.version }}
-      platforms: ${{ steps.set-platforms.outputs.platforms }}
-      godot_base_branch: ${{ steps.set-build-params.outputs.godot_base_branch }}
-      engine_version: ${{ steps.set-build-params.outputs.engine_version }}
-      common_args: ${{ steps.set-build-params.outputs.common_args }}
-      release_args: ${{ steps.set-build-params.outputs.release_args }}
-      editor_args: ${{ steps.set-build-params.outputs.editor_args }}
+      runtime_version: ${{ steps.inputs.outputs.runtime_version }}
+      platforms: ${{ steps.inputs.outputs.platforms }}
+      run_android: ${{ steps.inputs.outputs.run_android }}
+      run_ios: ${{ steps.inputs.outputs.run_ios }}
+      run_web: ${{ steps.inputs.outputs.run_web }}
+      run_linux: ${{ steps.inputs.outputs.run_linux }}
+      run_macos: ${{ steps.inputs.outputs.run_macos }}
+      run_windows: ${{ steps.inputs.outputs.run_windows }}
+      godot_repository: ${{ steps.inputs.outputs.godot_repository }}
+      godot_ref: ${{ steps.inputs.outputs.godot_ref }}
+      spx_repository: ${{ steps.inputs.outputs.spx_repository }}
+      spx_ref: ${{ steps.inputs.outputs.spx_ref }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Set Version Number
-        id: set-version
+      - name: Validate inputs
+        id: inputs
+        shell: bash
+        env:
+          INPUT_RUNTIME_VERSION: ${{ inputs.runtime_version }}
+          INPUT_PLATFORMS: ${{ inputs.platforms }}
+          INPUT_GODOT_REPOSITORY: ${{ inputs.godot_repository }}
+          INPUT_GODOT_REF: ${{ inputs.godot_ref }}
+          INPUT_SPX_REPOSITORY: ${{ inputs.spx_repository }}
+          INPUT_SPX_REF: ${{ inputs.spx_ref }}
         run: |
-          if [ "${{ github.event_name }}" == "release" ]; then
-            VERSION="${{ github.event.release.tag_name }}"
-          else
-            VERSION="${{ github.event.inputs.release_tag }}"
-          fi
-          VERSION="${VERSION#v}"  # Remove 'v' prefix (if present)
-          echo "VERSION=$VERSION"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          set -euo pipefail
 
-      - name: Set Build Platforms
-        id: set-platforms
-        run: |
-          if [ "${{ github.event_name }}" == "release" ]; then
-            PLATFORMS="all"
-          else
-            PLATFORMS="${{ github.event.inputs.platforms }}"
+          runtime_version="${INPUT_RUNTIME_VERSION#v}"
+          if [[ ! "${runtime_version}" =~ ^[0-9A-Za-z][0-9A-Za-z._-]*$ ]]; then
+            echo "[error] Invalid runtime version: ${INPUT_RUNTIME_VERSION}" >&2
+            exit 1
           fi
-          
-          if [ "$PLATFORMS" == "all" ]; then
-            PLATFORMS="android,ios,web,linux,macos,windows"
-          fi
-          
-          echo "PLATFORMS=$PLATFORMS"
-          echo "platforms=$PLATFORMS" >> $GITHUB_OUTPUT
 
-      - name: Set Build Parameters
-        id: set-build-params
-        run: |
-          echo "godot_base_branch=${{ env.GODOT_BASE_BRANCH }}" >> $GITHUB_OUTPUT
-          echo "engine_version=${{ env.ENGINE_VERSION }}" >> $GITHUB_OUTPUT
-          echo "common_args=${{ env.COMMON_ARGS }}" >> $GITHUB_OUTPUT
-          echo "release_args=${{ env.RELEASE_ARGS }}" >> $GITHUB_OUTPUT
-          echo "editor_args=${{ env.EDITOR_ARGS }}" >> $GITHUB_OUTPUT
+          godot_repository="${INPUT_GODOT_REPOSITORY:-${GITHUB_REPOSITORY}}"
+          godot_ref="${INPUT_GODOT_REF:-${GITHUB_SHA}}"
+          if [ -z "${INPUT_SPX_REPOSITORY}" ] || [ -z "${INPUT_SPX_REF}" ]; then
+            echo "[error] spx_repository and spx_ref are required" >&2
+            exit 1
+          fi
+
+          raw_platforms="$(printf '%s' "${INPUT_PLATFORMS:-all}" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
+          if [ "${raw_platforms}" = all ]; then
+            raw_platforms="android,ios,web,linux,macos,windows"
+          fi
+
+          run_android=false
+          run_ios=false
+          run_web=false
+          run_linux=false
+          run_macos=false
+          run_windows=false
+          IFS=',' read -r -a requested_platforms <<< "${raw_platforms}"
+          for platform in "${requested_platforms[@]}"; do
+            case "${platform}" in
+              android) run_android=true ;;
+              ios) run_ios=true ;;
+              web) run_web=true ;;
+              linux) run_linux=true ;;
+              macos) run_macos=true ;;
+              windows) run_windows=true ;;
+              *)
+                echo "[error] Unsupported platform: ${platform}" >&2
+                exit 1
+                ;;
+            esac
+          done
+
+          echo "runtime_version=${runtime_version}" >> "${GITHUB_OUTPUT}"
+          echo "platforms=${raw_platforms}" >> "${GITHUB_OUTPUT}"
+          echo "run_android=${run_android}" >> "${GITHUB_OUTPUT}"
+          echo "run_ios=${run_ios}" >> "${GITHUB_OUTPUT}"
+          echo "run_web=${run_web}" >> "${GITHUB_OUTPUT}"
+          echo "run_linux=${run_linux}" >> "${GITHUB_OUTPUT}"
+          echo "run_macos=${run_macos}" >> "${GITHUB_OUTPUT}"
+          echo "run_windows=${run_windows}" >> "${GITHUB_OUTPUT}"
+          echo "godot_repository=${godot_repository}" >> "${GITHUB_OUTPUT}"
+          echo "godot_ref=${godot_ref}" >> "${GITHUB_OUTPUT}"
+          echo "spx_repository=${INPUT_SPX_REPOSITORY}" >> "${GITHUB_OUTPUT}"
+          echo "spx_ref=${INPUT_SPX_REF}" >> "${GITHUB_OUTPUT}"
 
   android-build:
-    name: 🤖 Android Build
+    name: Android artifacts
     needs: setup
-    if: contains(needs.setup.outputs.platforms, 'android') || contains(needs.setup.outputs.platforms, 'all')
+    if: needs.setup.outputs.run_android == 'true'
     uses: ./.github/workflows/a_depoly_android.yml
     with:
-      version: ${{ needs.setup.outputs.version }}
-      platforms: ${{ needs.setup.outputs.platforms }}
-      godot_base_branch: ${{ needs.setup.outputs.godot_base_branch }}
-      engine_version: ${{ needs.setup.outputs.engine_version }}
-      common_args: ${{ needs.setup.outputs.common_args }}
-      release_args: ${{ needs.setup.outputs.release_args }}
-      event_name: ${{ github.event_name }}
-      release_tag: ${{ github.event.release.tag_name }}
-    secrets:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      runtime_version: ${{ needs.setup.outputs.runtime_version }}
+      godot_repository: ${{ needs.setup.outputs.godot_repository }}
+      godot_ref: ${{ needs.setup.outputs.godot_ref }}
+      spx_repository: ${{ needs.setup.outputs.spx_repository }}
+      spx_ref: ${{ needs.setup.outputs.spx_ref }}
 
   ios-build:
-    name: 🍏 iOS Build
+    name: iOS artifacts
     needs: setup
-    if: contains(needs.setup.outputs.platforms, 'ios') || contains(needs.setup.outputs.platforms, 'all')
+    if: needs.setup.outputs.run_ios == 'true'
     uses: ./.github/workflows/a_depoly_ios.yml
     with:
-      version: ${{ needs.setup.outputs.version }}
-      platforms: ${{ needs.setup.outputs.platforms }}
-      godot_base_branch: ${{ needs.setup.outputs.godot_base_branch }}
-      engine_version: ${{ needs.setup.outputs.engine_version }}
-      common_args: ${{ needs.setup.outputs.common_args }}
-      release_args: ${{ needs.setup.outputs.release_args }}
-      event_name: ${{ github.event_name }}
-      release_tag: ${{ github.event.release.tag_name }}
-    secrets:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      runtime_version: ${{ needs.setup.outputs.runtime_version }}
+      godot_repository: ${{ needs.setup.outputs.godot_repository }}
+      godot_ref: ${{ needs.setup.outputs.godot_ref }}
+      spx_repository: ${{ needs.setup.outputs.spx_repository }}
+      spx_ref: ${{ needs.setup.outputs.spx_ref }}
 
   windows-build:
-    name: 🪟 Windows Build
+    name: Windows artifacts
     needs: setup
-    if: contains(needs.setup.outputs.platforms, 'windows') || contains(needs.setup.outputs.platforms, 'all')
+    if: needs.setup.outputs.run_windows == 'true'
     uses: ./.github/workflows/a_depoly_windows.yml
     with:
-      version: ${{ needs.setup.outputs.version }}
-      platforms: ${{ needs.setup.outputs.platforms }}
-      godot_base_branch: ${{ needs.setup.outputs.godot_base_branch }}
-      engine_version: ${{ needs.setup.outputs.engine_version }}
-      common_args: ${{ needs.setup.outputs.common_args }}
-      release_args: ${{ needs.setup.outputs.release_args }}
-      editor_args: ${{ needs.setup.outputs.editor_args }}
-      event_name: ${{ github.event_name }}
-      release_tag: ${{ github.event.release.tag_name }}
-    secrets:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      runtime_version: ${{ needs.setup.outputs.runtime_version }}
+      godot_repository: ${{ needs.setup.outputs.godot_repository }}
+      godot_ref: ${{ needs.setup.outputs.godot_ref }}
+      spx_repository: ${{ needs.setup.outputs.spx_repository }}
+      spx_ref: ${{ needs.setup.outputs.spx_ref }}
 
   linux-build:
-    name: 🐧 Linux Build
+    name: Linux artifacts
     needs: setup
-    if: contains(needs.setup.outputs.platforms, 'linux') || contains(needs.setup.outputs.platforms, 'all')
+    if: needs.setup.outputs.run_linux == 'true'
     uses: ./.github/workflows/a_depoly_linux.yml
     with:
-      version: ${{ needs.setup.outputs.version }}
-      platforms: ${{ needs.setup.outputs.platforms }}
-      godot_base_branch: ${{ needs.setup.outputs.godot_base_branch }}
-      engine_version: ${{ needs.setup.outputs.engine_version }}
-      common_args: ${{ needs.setup.outputs.common_args }}
-      release_args: ${{ needs.setup.outputs.release_args }}
-      event_name: ${{ github.event_name }}
-      release_tag: ${{ github.event.release.tag_name }}
-    secrets:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      runtime_version: ${{ needs.setup.outputs.runtime_version }}
+      godot_repository: ${{ needs.setup.outputs.godot_repository }}
+      godot_ref: ${{ needs.setup.outputs.godot_ref }}
+      spx_repository: ${{ needs.setup.outputs.spx_repository }}
+      spx_ref: ${{ needs.setup.outputs.spx_ref }}
 
   macos-build:
-    name: 🍎 macOS Build
+    name: macOS artifacts
     needs: setup
-    if: contains(needs.setup.outputs.platforms, 'macos') || contains(needs.setup.outputs.platforms, 'all')
+    if: needs.setup.outputs.run_macos == 'true'
     uses: ./.github/workflows/a_depoly_macos.yml
     with:
-      version: ${{ needs.setup.outputs.version }}
-      platforms: ${{ needs.setup.outputs.platforms }}
-      godot_base_branch: ${{ needs.setup.outputs.godot_base_branch }}
-      engine_version: ${{ needs.setup.outputs.engine_version }}
-      common_args: ${{ needs.setup.outputs.common_args }}
-      release_args: ${{ needs.setup.outputs.release_args }}
-      editor_args: ${{ needs.setup.outputs.editor_args }}
-      event_name: ${{ github.event_name }}
-      release_tag: ${{ github.event.release.tag_name }}
-    secrets:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      runtime_version: ${{ needs.setup.outputs.runtime_version }}
+      godot_repository: ${{ needs.setup.outputs.godot_repository }}
+      godot_ref: ${{ needs.setup.outputs.godot_ref }}
+      spx_repository: ${{ needs.setup.outputs.spx_repository }}
+      spx_ref: ${{ needs.setup.outputs.spx_ref }}
 
   web-build:
-    name: 🌐 Web Build
+    name: Web artifacts
     needs: setup
-    if: contains(needs.setup.outputs.platforms, 'web') || contains(needs.setup.outputs.platforms, 'all')
+    if: needs.setup.outputs.run_web == 'true'
     uses: ./.github/workflows/a_depoly_web.yml
     with:
-      version: ${{ needs.setup.outputs.version }}
-      platforms: ${{ needs.setup.outputs.platforms }}
-      godot_base_branch: ${{ needs.setup.outputs.godot_base_branch }}
-      engine_version: ${{ needs.setup.outputs.engine_version }}
-      common_args: ${{ needs.setup.outputs.common_args }}
-      release_args: ${{ needs.setup.outputs.release_args }}
-      editor_args: ${{ needs.setup.outputs.editor_args }}
-      event_name: ${{ github.event_name }}
-      release_tag: ${{ github.event.release.tag_name }}
-    secrets:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      runtime_version: ${{ needs.setup.outputs.runtime_version }}
+      godot_repository: ${{ needs.setup.outputs.godot_repository }}
+      godot_ref: ${{ needs.setup.outputs.godot_ref }}
+      spx_repository: ${{ needs.setup.outputs.spx_repository }}
+      spx_ref: ${{ needs.setup.outputs.spx_ref }}

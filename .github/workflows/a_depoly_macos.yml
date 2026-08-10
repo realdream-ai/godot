@@ -1,270 +1,275 @@
-name: 🍎 macOS Build Workflow
+name: Build macOS Runtime Artifacts
 
 on:
   workflow_call:
     inputs:
-      version:
+      runtime_version:
         required: true
         type: string
-        description: "Version number for the build"
-      platforms:
+      godot_repository:
         required: true
         type: string
-        description: "Platforms to build"
-      godot_base_branch:
+      godot_ref:
         required: true
         type: string
-        description: "Base branch for Godot"
-      engine_version:
+      spx_repository:
         required: true
         type: string
-        description: "Engine version"
-      common_args:
+      spx_ref:
         required: true
         type: string
-        description: "Common build arguments"
-      release_args:
-        required: true
-        type: string
-        description: "Release build arguments"
-      editor_args:
-        required: true
-        type: string
-        description: "Editor build arguments"
-      event_name:
-        required: true
-        type: string
-        description: "Event name triggering the build"
-      release_tag:
-        required: false
-        type: string
-        description: "Release tag name"
-    secrets:
-      GH_TOKEN:
-        required: true
+
+permissions:
+  contents: read
 
 env:
-  SCONS_CACHE: "${{github.workspace}}/.scons-cache/"
-  SCONS_CACHE_LIMIT: "10000"
+  SCONS_CACHE: ${{ github.workspace }}/.scons_cache/
 
 jobs:
   macos-editor-build:
-    name: 🍎 macOS ${{ matrix.arch }} Editor Build
-    if: contains(inputs.platforms, 'macos') || contains(inputs.platforms, 'all')
+    name: macOS ${{ matrix.arch }} editor
     runs-on: macos-latest
     strategy:
+      fail-fast: false
       matrix:
         arch: [x86_64, arm64]
-        include:
-          - arch: x86_64
-            artifact_suffix: x86_64
-          - arch: arm64
-            artifact_suffix: arm64
     steps:
-      - name: Checkout
+      - name: Check out Godot source
         uses: actions/checkout@v4
         with:
+          repository: ${{ inputs.godot_repository }}
+          ref: ${{ inputs.godot_ref }}
           submodules: recursive
+          persist-credentials: false
 
-      # Set up shared cache for macOS builds
-      - name: Set up build cache
+      - name: Set up external SPX module
+        id: spx-source
+        uses: ./.github/actions/setup-spx-module
+        with:
+          runtime-version: ${{ inputs.runtime_version }}
+          repository: ${{ inputs.spx_repository }}
+          ref: ${{ inputs.spx_ref }}
+
+      - name: Restore SCons cache
         uses: actions/cache@v4
         with:
-          path: ${{github.workspace}}/.scons-cache/
-          # Do not use SHA in cache key to allow cache reuse across commits
-          key: macos-editor-${{inputs.godot_base_branch}}-${{github.ref}}
+          path: ${{ env.SCONS_CACHE }}
+          key: spx-runtime-macos-${{ matrix.arch }}-${{ steps.spx-source.outputs.godot-sha }}-${{ steps.spx-source.outputs.module-sha }}-editor
           restore-keys: |
-            macos-editor-${{inputs.godot_base_branch}}-
-            macos-editor-
+            spx-runtime-macos-${{ matrix.arch }}-${{ steps.spx-source.outputs.godot-sha }}-
+            spx-runtime-macos-${{ matrix.arch }}-
 
-      - name: Setup Python and SCons
+      - name: Set up Python and SCons
         uses: ./.github/actions/godot-deps
+        with:
+          scons-version: 4.8.1
 
-      # Build macOS Editor for specific architecture
-      - name: Build macOS Editor (${{ matrix.arch }})
+      - name: Build macOS editor
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: platform=macos target=editor arch=${{ matrix.arch }} ${{ inputs.common_args }} ${{ inputs.editor_args }}
+          sconsflags: >-
+            arch=${{ matrix.arch }}
+            ${{ steps.spx-source.outputs.editor-release-flags }}
+          custom-modules: ${{ steps.spx-source.outputs.module-path }}
           platform: macos
           target: editor
 
-      - name: Compress macOS Editor Build
+      - name: Package macOS editor
+        shell: bash
         run: |
-          chmod +x bin/godot.macos.editor.${{ matrix.arch }}
-          zip -j bin/editor-macos-${{ matrix.artifact_suffix }}.zip bin/godot.macos.editor.${{ matrix.arch }}
+          set -euo pipefail
+          chmod +x "bin/godot.macos.editor.${{ matrix.arch }}"
+          mkdir -p artifacts
+          zip -j "artifacts/editor-macos-${{ matrix.arch }}.zip" "bin/godot.macos.editor.${{ matrix.arch }}"
 
-      - name: Upload macOS Editor Build Results
+      - name: Upload macOS editor artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macos-${{ matrix.arch }}-editor-${{ inputs.version }}
-          path: bin/editor-macos-${{ matrix.artifact_suffix }}.zip
+          name: runtime-editor-macos-${{ matrix.arch }}
+          path: artifacts/editor-macos-${{ matrix.arch }}.zip
+          if-no-files-found: error
           retention-days: 14
-
-      - name: Publish to GitHub Release
-        if: inputs.event_name == 'release'
-        uses: softprops/action-gh-release@v1
-        with:
-          files: bin/editor-macos-${{ matrix.artifact_suffix }}.zip
-          tag_name: ${{ inputs.release_tag }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
   macos-template-build:
-    name: 🍎 macOS ${{ matrix.arch }} Template Build
-    if: contains(inputs.platforms, 'macos') || contains(inputs.platforms, 'all')
+    name: macOS ${{ matrix.arch }} templates
     runs-on: macos-latest
     strategy:
+      fail-fast: false
       matrix:
         arch: [x86_64, arm64]
-        include:
-          - arch: x86_64
-            artifact_suffix: x86_64
-          - arch: arm64
-            artifact_suffix: arm64
     steps:
-      - name: Checkout
+      - name: Check out Godot source
         uses: actions/checkout@v4
         with:
+          repository: ${{ inputs.godot_repository }}
+          ref: ${{ inputs.godot_ref }}
           submodules: recursive
+          persist-credentials: false
 
-      # Set up shared cache for macOS builds
-      - name: Set up build cache
+      - name: Set up external SPX module
+        id: spx-source
+        uses: ./.github/actions/setup-spx-module
+        with:
+          runtime-version: ${{ inputs.runtime_version }}
+          repository: ${{ inputs.spx_repository }}
+          ref: ${{ inputs.spx_ref }}
+
+      - name: Restore SCons cache
         uses: actions/cache@v4
         with:
-          path: ${{github.workspace}}/.scons-cache/
-          # Do not use SHA in cache key to allow cache reuse across commits
-          key: macos-template-bin-${{inputs.godot_base_branch}}-${{github.ref}}
+          path: ${{ env.SCONS_CACHE }}
+          key: spx-runtime-macos-${{ matrix.arch }}-${{ steps.spx-source.outputs.godot-sha }}-${{ steps.spx-source.outputs.module-sha }}-templates
           restore-keys: |
-            macos-template-bin-${{inputs.godot_base_branch}}-
-            macos-template-bin-
+            spx-runtime-macos-${{ matrix.arch }}-${{ steps.spx-source.outputs.godot-sha }}-
+            spx-runtime-macos-${{ matrix.arch }}-
 
-      - name: Setup Python and SCons
+      - name: Set up Python and SCons
         uses: ./.github/actions/godot-deps
+        with:
+          scons-version: 4.8.1
 
-      # Build macOS Template for specific architecture
-      - name: Build macOS Template Release (${{ matrix.arch }})
+      - name: Build macOS release template
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: platform=macos target=template_release ${{ inputs.common_args }} ${{ inputs.release_args }} arch=${{ matrix.arch }}
+          sconsflags: >-
+            arch=${{ matrix.arch }}
+            ${{ steps.spx-source.outputs.template-release-flags }}
+          custom-modules: ${{ steps.spx-source.outputs.module-path }}
           platform: macos
           target: template_release
-          
-      - name: Build macOS Template Debug (${{ matrix.arch }})
+
+      - name: Build macOS debug template
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: platform=macos target=template_debug ${{ inputs.common_args }} ${{ inputs.release_args }} arch=${{ matrix.arch }}
+          sconsflags: >-
+            arch=${{ matrix.arch }}
+            ${{ steps.spx-source.outputs.template-release-flags }}
+          custom-modules: ${{ steps.spx-source.outputs.module-path }}
           platform: macos
           target: template_debug
 
-      - name: Compress macOS Template Builds
+      - name: Package macOS templates
+        shell: bash
+        env:
+          RUNTIME_VERSION: ${{ inputs.runtime_version }}
         run: |
-          chmod +x bin/godot.macos.template_debug.${{ matrix.arch }}
-          chmod +x bin/godot.macos.template_release.${{ matrix.arch }}
-          zip -j bin/macos-${{ matrix.artifact_suffix }}.zip bin/godot.macos.template_debug.${{ matrix.arch }} bin/godot.macos.template_release.${{ matrix.arch }}
+          set -euo pipefail
+          chmod +x "bin/godot.macos.template_debug.${{ matrix.arch }}"
+          chmod +x "bin/godot.macos.template_release.${{ matrix.arch }}"
+          mkdir -p artifacts
+          zip -j "artifacts/macos-${{ matrix.arch }}.zip" \
+            "bin/godot.macos.template_debug.${{ matrix.arch }}" \
+            "bin/godot.macos.template_release.${{ matrix.arch }}"
+          echo "[info] Packaged macOS ${RUNTIME_VERSION} ${{ matrix.arch }} templates"
 
-      - name: Upload macOS Template Build Results
+      - name: Upload macOS template artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macos-${{ matrix.arch }}-template-${{ inputs.version }}
-          path: bin/macos-${{ matrix.artifact_suffix }}.zip
+          name: runtime-macos-${{ matrix.arch }}
+          path: artifacts/macos-${{ matrix.arch }}.zip
+          if-no-files-found: error
           retention-days: 14
-
-      - name: Publish to GitHub Release
-        if: inputs.event_name == 'release'
-        uses: softprops/action-gh-release@v1
-        with:
-          files: bin/macos-${{ matrix.artifact_suffix }}.zip
-          tag_name: ${{ inputs.release_tag }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
   macos-template-app-build:
-    name: 🍎 macOS Template App Build
-    if: contains(inputs.platforms, 'macos') || contains(inputs.platforms, 'all')
+    name: macOS universal export template
     runs-on: macos-latest
     steps:
-      - name: Checkout
+      - name: Check out Godot source
         uses: actions/checkout@v4
         with:
+          repository: ${{ inputs.godot_repository }}
+          ref: ${{ inputs.godot_ref }}
           submodules: recursive
+          persist-credentials: false
 
-      # Set up shared cache for macOS builds
-      - name: Set up build cache
+      - name: Set up external SPX module
+        id: spx-source
+        uses: ./.github/actions/setup-spx-module
+        with:
+          runtime-version: ${{ inputs.runtime_version }}
+          repository: ${{ inputs.spx_repository }}
+          ref: ${{ inputs.spx_ref }}
+
+      - name: Restore SCons cache
         uses: actions/cache@v4
         with:
-          path: ${{github.workspace}}/.scons-cache/
-          key: macos-template-${{inputs.godot_base_branch}}-${{github.ref}}
+          path: ${{ env.SCONS_CACHE }}
+          key: spx-runtime-macos-universal-${{ steps.spx-source.outputs.godot-sha }}-${{ steps.spx-source.outputs.module-sha }}
           restore-keys: |
-            macos-template-${{inputs.godot_base_branch}}-
-            macos-template-
+            spx-runtime-macos-universal-${{ steps.spx-source.outputs.godot-sha }}-
+            spx-runtime-macos-universal-
 
-      - name: Setup Python and SCons
+      - name: Set up Python and SCons
         uses: ./.github/actions/godot-deps
+        with:
+          scons-version: 4.8.1
 
-      # Build x86_64 templates
-      - name: Build macOS Template Release (x86_64)
+      - name: Build macOS x86_64 release template
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: platform=macos target=template_release arch=x86_64 ${{ inputs.common_args }} ${{ inputs.release_args }}
+          sconsflags: >-
+            arch=x86_64
+            ${{ steps.spx-source.outputs.template-release-flags }}
+          custom-modules: ${{ steps.spx-source.outputs.module-path }}
           platform: macos
           target: template_release
 
-      - name: Build macOS Template Debug (x86_64)
+      - name: Build macOS x86_64 debug template
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: platform=macos target=template_debug arch=x86_64 ${{ inputs.common_args }} ${{ inputs.release_args }}
+          sconsflags: >-
+            arch=x86_64
+            ${{ steps.spx-source.outputs.template-release-flags }}
+          custom-modules: ${{ steps.spx-source.outputs.module-path }}
           platform: macos
           target: template_debug
 
-      # Build arm64 templates
-      - name: Build macOS Template Release (arm64)
+      - name: Build macOS arm64 release template
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: platform=macos target=template_release arch=arm64 ${{ inputs.common_args }} ${{ inputs.release_args }}
+          sconsflags: >-
+            arch=arm64
+            ${{ steps.spx-source.outputs.template-release-flags }}
+          custom-modules: ${{ steps.spx-source.outputs.module-path }}
           platform: macos
           target: template_release
 
-      - name: Build macOS Template Debug (arm64)
+      - name: Build macOS arm64 debug template
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: platform=macos target=template_debug arch=arm64 ${{ inputs.common_args }} ${{ inputs.release_args }}
+          sconsflags: >-
+            arch=arm64
+            ${{ steps.spx-source.outputs.template-release-flags }}
+          custom-modules: ${{ steps.spx-source.outputs.module-path }}
           platform: macos
           target: template_debug
 
-      # Create Universal Binaries
-      - name: Create Universal Template Binaries
+      - name: Package universal macOS export template
+        shell: bash
         run: |
-          # Create universal binaries using lipo
-          lipo -create bin/godot.macos.template_release.x86_64 bin/godot.macos.template_release.arm64 -output bin/godot.macos.template_release.universal
-          lipo -create bin/godot.macos.template_debug.x86_64 bin/godot.macos.template_debug.arm64 -output bin/godot.macos.template_debug.universal
-          
-          # Create app bundle structure
-          cp -r misc/dist/macos_template.app .
-          mkdir -p macos_template.app/Contents/MacOS
-          mkdir -p macos_template.app/Contents/Frameworks
-          
-          # Copy binaries to app bundle
+          set -euo pipefail
+          lipo -create \
+            bin/godot.macos.template_release.x86_64 \
+            bin/godot.macos.template_release.arm64 \
+            -output bin/godot.macos.template_release.universal
+          lipo -create \
+            bin/godot.macos.template_debug.x86_64 \
+            bin/godot.macos.template_debug.arm64 \
+            -output bin/godot.macos.template_debug.universal
+
+          cp -R misc/dist/macos_template.app macos_template.app
+          mkdir -p macos_template.app/Contents/MacOS macos_template.app/Contents/Frameworks
           cp bin/godot.macos.template_release.universal macos_template.app/Contents/MacOS/godot_macos_release.universal
           cp bin/godot.macos.template_debug.universal macos_template.app/Contents/MacOS/godot_macos_debug.universal
-          
-          # Set executable permissions
-          chmod +x macos_template.app/Contents/MacOS/godot_macos*
-          
-          # Create final zip
-          zip -q -9 -r bin/macos.zip macos_template.app
+          chmod +x macos_template.app/Contents/MacOS/godot_macos_*.universal
 
-      - name: Upload macOS Template Build Results
+          mkdir -p artifacts
+          zip -q -9 -r artifacts/macos.zip macos_template.app
+
+      - name: Upload universal macOS artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macos-template-${{ inputs.version }}
-          path: bin/macos.zip
+          name: runtime-macos-universal
+          path: artifacts/macos.zip
+          if-no-files-found: error
           retention-days: 14
-
-      - name: Publish to GitHub Release
-        if: inputs.event_name == 'release'
-        uses: softprops/action-gh-release@v1
-        with:
-          files: bin/macos.zip
-          tag_name: ${{ inputs.release_tag }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
