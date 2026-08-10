@@ -138,8 +138,6 @@ private:
 	static void _ime_callback(int p_type, const String &p_text);
 	WASM_EXPORT static void request_quit_callback();
 	static void _request_quit_callback();
-	WASM_EXPORT static void request_reset_callback();
-	static void _request_reset_callback();
 	WASM_EXPORT static void window_blur_callback();
 	static void _window_blur_callback();
 	WASM_EXPORT static void update_voices_callback(int p_size, const char **p_voice);
@@ -150,10 +148,6 @@ private:
 	static void _send_window_event_callback(int p_notification);
 	WASM_EXPORT static void drop_files_js_callback(const char **p_filev, int p_filec);
 	static void _drop_files_js_callback(const Vector<String> &p_files);
-
-	//spx extension
-	WASM_EXPORT static void on_game_datas_set_callback(const char *p_path, const char **p_filev, int p_filec);
-	static void _on_game_datas_set_callback(const String &p_path,const Vector<String> &p_files);
 
 	void process_joypads();
 	void process_keys();
@@ -265,7 +259,6 @@ public:
 	virtual void window_set_size(const Size2i p_size, WindowID p_window = MAIN_WINDOW_ID) override;
 	virtual Size2i window_get_size(WindowID p_window = MAIN_WINDOW_ID) const override;
 	virtual Size2i window_get_size_with_decorations(WindowID p_window = MAIN_WINDOW_ID) const override;
-	virtual Size2i window_get_size_ext(WindowID p_window = MAIN_WINDOW_ID) const override;
 
 	virtual void window_set_mode(WindowMode p_mode, WindowID p_window = MAIN_WINDOW_ID) override;
 	virtual WindowMode window_get_mode(WindowID p_window = MAIN_WINDOW_ID) const override;

@@ -135,9 +135,6 @@ public:
 #endif // TOOLS_ENABLED
 
 	AnimatedSprite2D();
-
-
-	Rect2 get_uv_rect() const;
 };
 
 #endif // ANIMATED_SPRITE_2D_H

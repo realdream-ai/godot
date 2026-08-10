@@ -35,10 +35,6 @@
 
 #include "thirdparty/misc/qoa.h"
 
-// Audio trimming constants
-static const float TRIM_DB_LIMIT = -50;
-static const int TRIM_FADE_OUT_FRAMES = 500;
-
 class AudioStreamWAV;
 
 class AudioStreamPlaybackWAV : public AudioStreamPlayback {

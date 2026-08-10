@@ -1,0 +1,97 @@
+name: Set up SPX build context
+description: Resolve the external SPX module, restore its engine cache, and install locked SCons.
+
+inputs:
+  runtime-version:
+    description: Runtime version that must match the selected SPX runtime lock.
+    required: true
+  runtime-abi:
+    description: Runtime ABI that must match the selected SPX runtime lock.
+    required: true
+  repository:
+    description: SPX repository containing the runtime lock and external module.
+    required: true
+  ref:
+    description: SPX branch, tag, or full commit SHA supplying the external module.
+    required: true
+  toolchain-scope:
+    description: Toolchain digest scope for the target platform (native, web, or android).
+    required: true
+  cache-scope:
+    description: Stable platform-specific compatible-build namespace for the SCons cache.
+    required: true
+
+outputs:
+  module-path:
+    description: Absolute path to the external SPX module.
+    value: ${{ steps.source.outputs.module-path }}
+  common-flags:
+    description: Common SCons flags from the SPX module build profile.
+    value: ${{ steps.source.outputs.common-flags }}
+  editor-release-flags:
+    description: Common and editor release SCons flags from the SPX module build profile.
+    value: ${{ steps.source.outputs.editor-release-flags }}
+  template-release-flags:
+    description: Common and export template release SCons flags from the SPX module build profile.
+    value: ${{ steps.source.outputs.template-release-flags }}
+  emsdk-version:
+    description: Emscripten SDK version pinned by the SPX runtime lock.
+    value: ${{ steps.source.outputs.emsdk-version }}
+  android-ndk-version:
+    description: Full Android NDK package revision pinned by the SPX runtime lock.
+    value: ${{ steps.source.outputs.android-ndk-version }}
+  android-ndk-installer-alias:
+    description: Validated setup-ndk alias when known; only Android builds require it.
+    value: ${{ steps.source.outputs.android-ndk-installer-alias }}
+  jdk-version:
+    description: JDK version pinned by the SPX runtime lock.
+    value: ${{ steps.source.outputs.jdk-version }}
+
+runs:
+  using: composite
+  steps:
+    - name: Validate build context
+      shell: bash
+      env:
+        CACHE_SCOPE: ${{ inputs.cache-scope }}
+        TOOLCHAIN_SCOPE: ${{ inputs.toolchain-scope }}
+      run: |
+        set -euo pipefail
+
+        if [[ ! "${CACHE_SCOPE}" =~ ^[a-z0-9][a-z0-9._-]*$ ]]; then
+          echo "[error] Invalid SPX cache scope: ${CACHE_SCOPE}" >&2
+          exit 1
+        fi
+        case "${TOOLCHAIN_SCOPE}:${CACHE_SCOPE}" in
+          android:android-*|web:web-*|native:ios-*|native:linux-*|native:macos-*|native:windows-*)
+            ;;
+          *)
+            echo "[error] Cache scope ${CACHE_SCOPE} does not match toolchain scope ${TOOLCHAIN_SCOPE}" >&2
+            exit 1
+            ;;
+        esac
+
+    - name: Set up external SPX module
+      id: source
+      uses: ./.github/actions/setup-spx-module
+      with:
+        runtime-version: ${{ inputs.runtime-version }}
+        runtime-abi: ${{ inputs.runtime-abi }}
+        repository: ${{ inputs.repository }}
+        ref: ${{ inputs.ref }}
+        toolchain-scope: ${{ inputs.toolchain-scope }}
+
+    - name: Restore SCons cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ github.workspace }}/.scons_cache/
+        key: spx-runtime-${{ inputs.cache-scope }}-${{ steps.source.outputs.engine-toolchain-sha256 }}-${{ steps.source.outputs.godot-sha }}-${{ steps.source.outputs.module-sha }}
+        # The fully qualified scope keeps fallback restores inside one platform/arch/variant.
+        restore-keys: |
+          spx-runtime-${{ inputs.cache-scope }}-${{ steps.source.outputs.engine-toolchain-sha256 }}-${{ steps.source.outputs.godot-sha }}-
+          spx-runtime-${{ inputs.cache-scope }}-${{ steps.source.outputs.engine-toolchain-sha256 }}-
+
+    - name: Set up Python and SCons
+      uses: ./.github/actions/godot-deps
+      with:
+        scons-version: ${{ steps.source.outputs.scons-version }}

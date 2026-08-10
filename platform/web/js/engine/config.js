@@ -10,13 +10,7 @@
  * @typedef {Object} EngineConfig
  */
 const EngineConfig = {}; // eslint-disable-line no-unused-vars
-const LOG_LEVEL_VERBOSE = 0
-const LOG_LEVEL_LOG = 1
-const LOG_LEVEL_WARNING = 2
-const LOG_LEVEL_ERROR = 3
-const LOG_LEVEL_NONE = 4
 
-let engineLogLevel = LOG_LEVEL_VERBOSE
 /**
  * @struct
  * @constructor
@@ -139,7 +133,6 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
 		 * @type {Array.<string>}
 		 */
 		fileSizes: [],
-		wasmEngine: null,
 		/**
 		 * A callback function for handling Godot's ``OS.execute`` calls.
 		 *
@@ -202,9 +195,6 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
 		 * @type {?function(...*)}
 		 */
 		onPrint: function () {
-			if (engineLogLevel > LOG_LEVEL_LOG) {
-				return
-			}
 			console.log.apply(console, Array.from(arguments)); // eslint-disable-line no-console
 		},
 		/**
@@ -220,9 +210,6 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
 		 * @type {?function(...*)}
 		 */
 		onPrintError: function (var_args) {
-			if (engineLogLevel > LOG_LEVEL_ERROR) {
-				return
-			}
 			console.error.apply(console, Array.from(arguments)); // eslint-disable-line no-console
 		},
 	};
@@ -275,10 +262,6 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
 		this.args = parse('args', this.args);
 		this.onExecute = parse('onExecute', this.onExecute);
 		this.onExit = parse('onExit', this.onExit);
-
-		// Wasm data
-		this.wasmEngine = parse('wasmEngine', this.wasmEngine);
-		engineLogLevel = parse('logLevel', engineLogLevel);
 	};
 
 	/**
@@ -286,8 +269,9 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
 	 * @param {string} loadPath
 	 * @param {Response} response
 	 */
-	Config.prototype.getModuleConfig = function (loadPath, buffer) {
-		let curBuffer = buffer
+	Config.prototype.getModuleConfig = function (loadPath, response) {
+		let r = response;
+		const gdext = this.gdextensionLibs;
 		return {
 			'print': this.onPrint,
 			'printErr': this.onPrintError,
@@ -295,9 +279,17 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
 			'noExitRuntime': false,
 			'dynamicLibraries': [`${loadPath}.side.wasm`].concat(this.gdextensionLibs),
 			'instantiateWasm': function (imports, onSuccess) {
-				WebAssembly.instantiate(curBuffer, imports).then((result) => {
+				function done(result) {
 					onSuccess(result['instance'], result['module']);
-				});
+				}
+				if (typeof (WebAssembly.instantiateStreaming) !== 'undefined') {
+					WebAssembly.instantiateStreaming(Promise.resolve(r), imports).then(done);
+				} else {
+					r.arrayBuffer().then(function (buffer) {
+						WebAssembly.instantiate(buffer, imports).then(done);
+					});
+				}
+				r = null;
 				return {};
 			},
 			'locateFile': function (path) {
@@ -309,6 +301,8 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
 					return `${loadPath}.audio.position.worklet.js`;
 				} else if (path.endsWith('.js')) {
 					return `${loadPath}.js`;
+				} else if (path in gdext) {
+					return path;
 				} else if (path.endsWith('.side.wasm')) {
 					return `${loadPath}.side.wasm`;
 				} else if (path.endsWith('.wasm')) {
@@ -325,16 +319,14 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
 	 */
 	Config.prototype.getGodotConfig = function (cleanup) {
 		// Try to find a canvas
-		if (typeof miniEngine === 'undefined' || !miniEngine){
-			if (!(this.canvas instanceof HTMLCanvasElement)) {
-				const nodes = document.getElementsByTagName('canvas');
-				if (nodes.length && nodes[0] instanceof HTMLCanvasElement) {
-					const first = nodes[0];
-					this.canvas = /** @type {!HTMLCanvasElement} */ (first);
-				}
-				if (!this.canvas) {
-					throw new Error('No canvas found in page');
-				}
+		if (!(this.canvas instanceof HTMLCanvasElement)) {
+			const nodes = document.getElementsByTagName('canvas');
+			if (nodes.length && nodes[0] instanceof HTMLCanvasElement) {
+				const first = nodes[0];
+				this.canvas = /** @type {!HTMLCanvasElement} */ (first);
+			}
+			if (!this.canvas) {
+				throw new Error('No canvas found in page');
 			}
 		}
 		// Canvas can grab focus on click, or key events won't work.

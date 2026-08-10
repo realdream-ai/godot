@@ -30,11 +30,7 @@
 
 #include "resource_importer_wav.h"
 
-#include "core/config/project_settings.h"
-#include "core/io/file_access.h"
-#include "core/io/marshalls.h"
 #include "core/io/resource_saver.h"
-#include "scene/resources/audio_importer_wav.h"
 
 String ResourceImporterWAV::get_importer_name() const {
 	return "wav";
@@ -91,22 +87,16 @@ void ResourceImporterWAV::get_import_options(const String &p_path, List<ImportOp
 	// Quite OK Audio is lightweight enough and supports virtually every significant AudioStreamWAV feature.
 	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "compress/mode", PROPERTY_HINT_ENUM, "PCM (Uncompressed),IMA ADPCM,Quite OK Audio"), 2));
 }
-Error ResourceImporterWAV::import_asset(Ref<AudioStreamWAV> &sample, const String &p_source_file, const HashMap<StringName, Variant> &p_options, List<String> *r_platform_variants, List<String> *r_gen_files, Variant *r_metadata) {
-	return AudioImporterWav::import_asset(sample,p_source_file,p_options);
-}
-void ResourceImporterWAV::_compress_ima_adpcm(const Vector<float> &p_data, Vector<uint8_t> &dst_data) {
-	return AudioImporterWav::_compress_ima_adpcm(p_data,dst_data);
-}
 
 Error ResourceImporterWAV::import(ResourceUID::ID p_source_id, const String &p_source_file, const String &p_save_path, const HashMap<StringName, Variant> &p_options, List<String> *r_platform_variants, List<String> *r_gen_files, Variant *r_metadata) {
 	Dictionary options;
 	for (const KeyValue<StringName, Variant> &pair : p_options) {
 		options[pair.key] = pair.value;
 	}
-	Ref<AudioStreamWAV> sample;
-	auto err = import_asset(sample, p_source_file, p_options, r_platform_variants, r_gen_files, r_metadata);
+
+	Ref<AudioStreamWAV> sample = AudioStreamWAV::load_from_file(p_source_file, options);
 	ResourceSaver::save(sample, p_save_path + ".sample");
-	return err;
+	return OK;
 }
 
 ResourceImporterWAV::ResourceImporterWAV() {
