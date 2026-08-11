@@ -57,12 +57,13 @@ jobs:
 
       - name: Set up locked Android NDK installer adapter
         id: setup-ndk
-        uses: nttld/setup-ndk@v1
+        uses: nttld/setup-ndk@ed92fe6cadad69be94a966a7ee3271275e62f779 # v1.6.0
+        # setup-ndk's persistent cache can restore compiler symlinks that still
+        # point at a previous runner's tool cache. Keep the installation fresh.
         with:
           ndk-version: ${{ steps.spx-build.outputs.android-ndk-installer-alias }}
           add-to-path: true
           link-to-sdk: true
-          local-cache: true
 
       - name: Export Android NDK environment
         shell: bash
@@ -87,6 +88,19 @@ jobs:
             echo "[error] Godot cannot find the linked Android NDK at ${godot_ndk_path}" >&2
             exit 1
           fi
+
+          ndk_bin="${godot_ndk_path}/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          for compiler in clang clang++; do
+            compiler_path="${ndk_bin}/${compiler}"
+            if [ ! -x "${compiler_path}" ]; then
+              echo "[error] Android NDK compiler is not executable: ${compiler_path}" >&2
+              exit 1
+            fi
+            if ! "${compiler_path}" --version; then
+              echo "[error] Android NDK compiler failed its version check: ${compiler_path}" >&2
+              exit 1
+            fi
+          done
 
           echo "ANDROID_NDK_ROOT=${godot_ndk_path}" >> "${GITHUB_ENV}"
           echo "ANDROID_NDK_HOME=${godot_ndk_path}" >> "${GITHUB_ENV}"
