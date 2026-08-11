@@ -12,10 +12,15 @@ on:
         required: true
         type: string
       platforms:
-        description: Comma-separated platforms (android,ios,web,linux,macos,windows,all).
+        description: Comma-separated platforms (android,ios,web,linux,macos,windows,all,none).
         required: false
         default: all
         type: string
+      module_checks:
+        description: Run external SPX module integration checks.
+        required: false
+        default: false
+        type: boolean
       godot_repository:
         description: Godot repository to build.
         required: true
@@ -43,10 +48,15 @@ on:
         required: true
         type: string
       platforms:
-        description: Comma-separated platforms (android,ios,web,linux,macos,windows,all).
+        description: Comma-separated platforms (android,ios,web,linux,macos,windows,all,none).
         required: true
         default: all
         type: string
+      module_checks:
+        description: Run external SPX module integration checks.
+        required: false
+        default: false
+        type: boolean
       godot_repository:
         description: Godot repository to build; empty uses the current repository.
         required: false
@@ -100,6 +110,7 @@ jobs:
           INPUT_RUNTIME_VERSION: ${{ inputs.runtime_version }}
           INPUT_RUNTIME_ABI: ${{ inputs.runtime_abi }}
           INPUT_PLATFORMS: ${{ inputs.platforms }}
+          INPUT_MODULE_CHECKS: ${{ inputs.module_checks }}
           INPUT_GODOT_REPOSITORY: ${{ inputs.godot_repository }}
           INPUT_GODOT_REF: ${{ inputs.godot_ref }}
           INPUT_SPX_REPOSITORY: ${{ inputs.spx_repository }}
@@ -127,6 +138,12 @@ jobs:
           raw_platforms="$(printf '%s' "${INPUT_PLATFORMS:-all}" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
           if [ "${raw_platforms}" = all ]; then
             raw_platforms="android,ios,web,linux,macos,windows"
+          elif [ "${raw_platforms}" = none ]; then
+            if [ "${INPUT_MODULE_CHECKS}" != true ]; then
+              echo "[error] platforms=none requires module_checks=true" >&2
+              exit 1
+            fi
+            raw_platforms=""
           fi
 
           run_android=false
@@ -135,21 +152,23 @@ jobs:
           run_linux=false
           run_macos=false
           run_windows=false
-          IFS=',' read -r -a requested_platforms <<< "${raw_platforms}"
-          for platform in "${requested_platforms[@]}"; do
-            case "${platform}" in
-              android) run_android=true ;;
-              ios) run_ios=true ;;
-              web) run_web=true ;;
-              linux) run_linux=true ;;
-              macos) run_macos=true ;;
-              windows) run_windows=true ;;
-              *)
-                echo "[error] Unsupported platform: ${platform}" >&2
-                exit 1
-                ;;
-            esac
-          done
+          if [ -n "${raw_platforms}" ]; then
+            IFS=',' read -r -a requested_platforms <<< "${raw_platforms}"
+            for platform in "${requested_platforms[@]}"; do
+              case "${platform}" in
+                android) run_android=true ;;
+                ios) run_ios=true ;;
+                web) run_web=true ;;
+                linux) run_linux=true ;;
+                macos) run_macos=true ;;
+                windows) run_windows=true ;;
+                *)
+                  echo "[error] Unsupported platform: ${platform}" >&2
+                  exit 1
+                  ;;
+              esac
+            done
+          fi
 
           echo "runtime_version=${runtime_version}" >> "${GITHUB_OUTPUT}"
           echo "runtime_abi=${INPUT_RUNTIME_ABI}" >> "${GITHUB_OUTPUT}"
@@ -234,6 +253,19 @@ jobs:
     needs: setup
     if: needs.setup.outputs.run_web == 'true'
     uses: ./.github/workflows/a_depoly_web.yml
+    with:
+      runtime_version: ${{ needs.setup.outputs.runtime_version }}
+      runtime_abi: ${{ needs.setup.outputs.runtime_abi }}
+      godot_repository: ${{ needs.setup.outputs.godot_repository }}
+      godot_ref: ${{ needs.setup.outputs.godot_ref }}
+      spx_repository: ${{ needs.setup.outputs.spx_repository }}
+      spx_ref: ${{ needs.setup.outputs.spx_ref }}
+
+  module-checks:
+    name: External SPX module integration checks
+    needs: setup
+    if: inputs.module_checks
+    uses: ./.github/workflows/spx_module_checks.yml
     with:
       runtime_version: ${{ needs.setup.outputs.runtime_version }}
       runtime_abi: ${{ needs.setup.outputs.runtime_abi }}
