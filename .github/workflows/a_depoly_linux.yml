@@ -63,9 +63,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          chmod +x bin/godot.linuxbsd.editor.x86_64
           mkdir -p artifacts
-          zip -j artifacts/editor-linux-x86_64.zip bin/godot.linuxbsd.editor.x86_64
+          install -m 0755 \
+            bin/godot.linuxbsd.editor.x86_64.llvm \
+            artifacts/godot.linuxbsd.editor.x86_64
+          zip -j \
+            artifacts/editor-linux-x86_64.zip \
+            artifacts/godot.linuxbsd.editor.x86_64
 
       - name: Upload Linux editor artifact
         uses: actions/upload-artifact@v4
@@ -124,12 +128,16 @@ jobs:
           RUNTIME_VERSION: ${{ inputs.runtime_version }}
         run: |
           set -euo pipefail
-          chmod +x bin/godot.linuxbsd.template_debug.x86_64
-          chmod +x bin/godot.linuxbsd.template_release.x86_64
           mkdir -p artifacts
+          install -m 0755 \
+            bin/godot.linuxbsd.template_debug.x86_64.llvm \
+            artifacts/godot.linuxbsd.template_debug.x86_64
+          install -m 0755 \
+            bin/godot.linuxbsd.template_release.x86_64.llvm \
+            artifacts/godot.linuxbsd.template_release.x86_64
           zip -j artifacts/linux-x86_64.zip \
-            bin/godot.linuxbsd.template_debug.x86_64 \
-            bin/godot.linuxbsd.template_release.x86_64
+            artifacts/godot.linuxbsd.template_debug.x86_64 \
+            artifacts/godot.linuxbsd.template_release.x86_64
           echo "[info] Packaged Linux runtime ${RUNTIME_VERSION}"
 
       - name: Upload Linux template artifact

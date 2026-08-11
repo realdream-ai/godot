@@ -70,7 +70,8 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Path artifacts -Force | Out-Null
-          Compress-Archive -Path bin/godot.windows.editor.x86_64.exe -DestinationPath artifacts/editor-windows-x86_64.zip
+          Copy-Item bin/godot.windows.editor.x86_64.llvm.exe artifacts/godot.windows.editor.x86_64.exe
+          Compress-Archive -Path artifacts/godot.windows.editor.x86_64.exe -DestinationPath artifacts/editor-windows-x86_64.zip
 
       - name: Upload Windows editor artifact
         uses: actions/upload-artifact@v4
@@ -137,8 +138,10 @@ jobs:
           RUNTIME_VERSION: ${{ inputs.runtime_version }}
         run: |
           New-Item -ItemType Directory -Path artifacts -Force | Out-Null
+          Copy-Item bin/godot.windows.template_debug.x86_64.llvm.exe artifacts/godot.windows.template_debug.x86_64.exe
+          Copy-Item bin/godot.windows.template_release.x86_64.llvm.exe artifacts/godot.windows.template_release.x86_64.exe
           Compress-Archive `
-            -Path bin/godot.windows.template_debug.x86_64.exe,bin/godot.windows.template_release.x86_64.exe `
+            -Path artifacts/godot.windows.template_debug.x86_64.exe,artifacts/godot.windows.template_release.x86_64.exe `
             -DestinationPath artifacts/windows-x86_64.zip
           Write-Host "[info] Packaged Windows runtime $env:RUNTIME_VERSION"
 

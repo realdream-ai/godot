@@ -5,6 +5,61 @@ from methods import print_error
 
 Import("env")
 
+# Custom modules may override platform-owned defaults by file name, and may
+# append only to groups whose output shape is open-ended. Keeping the ordered
+# defaults here prevents a module from silently dropping new platform sources.
+
+
+def _find_duplicate_names(names):
+    seen = set()
+    duplicates = set()
+    for name in names:
+        if name in seen:
+            duplicates.add(name)
+        seen.add(name)
+    return sorted(duplicates)
+
+
+def _resolve_web_sources(defaults, overrides_key, append_key=None):
+    """Resolve an ordered source group while keeping its defaults platform-owned."""
+    default_nodes = [env.File(source) for source in defaults]
+    default_names = [source.name for source in default_nodes]
+    duplicate_defaults = _find_duplicate_names(default_names)
+    if duplicate_defaults:
+        print_error(f"Web source defaults contain duplicate file names: {', '.join(duplicate_defaults)}")
+        Exit(255)
+
+    overrides = env.get(overrides_key, {})
+    if overrides is None:
+        overrides = {}
+    if not isinstance(overrides, dict):
+        print_error(f"{overrides_key} must be a dictionary keyed by file name")
+        Exit(255)
+
+    unknown_overrides = sorted(set(overrides).difference(default_names))
+    if unknown_overrides:
+        print_error(f"{overrides_key} contains unknown Web sources: {', '.join(unknown_overrides)}")
+        Exit(255)
+
+    sources = [env.File(overrides.get(source.name, source)) for source in default_nodes]
+    if append_key:
+        appended = env.get(append_key, [])
+        if appended is None:
+            appended = []
+        if not isinstance(appended, (list, tuple)):
+            print_error(f"{append_key} must be a list of Web sources")
+            Exit(255)
+        sources += [env.File(source) for source in appended]
+
+    source_names = [source.name for source in sources]
+    duplicate_names = _find_duplicate_names(source_names)
+    if duplicate_names:
+        print_error(f"Resolved Web sources contain duplicate file names: {', '.join(duplicate_names)}")
+        Exit(255)
+
+    return sources
+
+
 # The HTTP server "targets". Run with "scons p=web serve", or "scons p=web run"
 if "serve" in COMMAND_LINE_TARGETS or "run" in COMMAND_LINE_TARGETS:
     import os
@@ -31,15 +86,14 @@ web_files = [
     "net_socket_web.cpp",
     "os_web.cpp",
 ]
-web_files += env.get("WEB_NATIVE_SOURCES", [])
+web_files += env.get("WEB_NATIVE_SOURCES_APPEND", [])
 
 if env["target"] == "editor":
     env.add_source_files(web_files, "editor/*.cpp")
 
 sys_env = env.Clone()
 sys_env.AddJSLibraries(
-    env.get(
-        "WEB_JS_LIBRARIES",
+    _resolve_web_sources(
         [
             "js/libs/library_godot_audio.js",
             "js/libs/library_godot_display.js",
@@ -50,6 +104,8 @@ sys_env.AddJSLibraries(
             "js/libs/library_godot_input.js",
             "js/libs/library_godot_webgl2.js",
         ],
+        "WEB_JS_LIBRARY_OVERRIDES",
+        "WEB_JS_LIBRARIES_APPEND",
     )
 )
 sys_env.AddJSExterns(
@@ -100,20 +156,18 @@ sys_env.Depends(build[0], sys_env["JS_LIBS"])
 sys_env.Depends(build[0], sys_env["JS_PRE"])
 sys_env.Depends(build[0], sys_env["JS_EXTERNS"])
 
-engine = [
-    "js/engine/features.js",
-]
-engine += env.get(
-    "WEB_ENGINE_CORE_SOURCES",
+engine = _resolve_web_sources(
     [
+        "js/engine/features.js",
         "js/engine/preloader.js",
         "js/engine/config.js",
         "js/engine/engine.js",
     ],
+    "WEB_ENGINE_SOURCE_OVERRIDES",
+    "WEB_ENGINE_SOURCES_APPEND",
 )
-engine += env.get("WEB_ENGINE_SOURCES", [])
 externs = [env.File("#platform/web/js/engine/engine.externs.js")]
-externs += env.get("WEB_ENGINE_EXTERNS", [])
+externs += env.get("WEB_ENGINE_EXTERNS_APPEND", [])
 js_engine = env.CreateEngineFile("#bin/godot${PROGSUFFIX}.engine.js", engine, externs, env["threads"])
 env.Depends(js_engine, externs)
 
@@ -126,11 +180,11 @@ js_wrapped = env.Textfile("#bin/godot", [env.File(f) for f in wrap_list], TEXTFI
 # 0 - unwrapped js file (use wrapped one instead)
 # 1 - wasm file
 # 2 - wasm side (when dlink is enabled).
-worklet_sources = env.get(
-    "WEB_WORKLET_SOURCES",
+worklet_sources = _resolve_web_sources(
     [
-        env.File("#platform/web/js/libs/audio.worklet.js"),
-        env.File("#platform/web/js/libs/audio.position.worklet.js"),
+        "#platform/web/js/libs/audio.worklet.js",
+        "#platform/web/js/libs/audio.position.worklet.js",
     ],
+    "WEB_WORKLET_SOURCE_OVERRIDES",
 )
 env.CreateTemplateZip(js_wrapped, build[1], build[2] if len(build) > 2 else None, worklet_sources)
