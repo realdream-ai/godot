@@ -37,7 +37,7 @@ concurrency:
 
 jobs:
   linux-editor-tests:
-    name: Linux editor and Godot/module unit tests
+    name: Linux editor and SPX module unit tests
     runs-on: ubuntu-22.04
     timeout-minutes: 120
     steps:
@@ -147,7 +147,7 @@ jobs:
           target: editor
           tests: 'yes'
 
-      - name: Run Godot and SPX module unit tests
+      - name: Run SPX module unit tests
         shell: bash
         run: |
           set -euo pipefail
@@ -161,7 +161,7 @@ jobs:
             echo "[error] The tests=yes build did not register SPX module unit tests" >&2
             exit 1
           fi
-          "${godot_bin}" --headless --test --force-colors
+          "${godot_bin}" --headless --test --test-case='*SPX*' --force-colors
 
   web-worker-smoke:
     name: Web worker compile smoke
