@@ -20,22 +20,22 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: Editor w/ clang-cl (target=editor, tests=yes, use_llvm=yes)
-            cache-name: windows-editor-clang
+          - name: Editor with MinGW GCC (target=editor, tests=yes)
+            cache-name: windows-editor-mingw
             target: editor
             tests: true
-            sconsflags: debug_symbols=no windows_subsystem=console use_llvm=yes
-            bin: ./bin/godot.windows.editor.x86_64.llvm.exe
-            compiler: clang
+            sconsflags: debug_symbols=no windows_subsystem=console use_mingw=yes use_llvm=no
+            bin: ./bin/godot.windows.editor.x86_64.exe
+            compiler: mingw
             cache-limit: 1
 
-          - name: Template (target=template_release, tests=yes use_llvm=yes)
+          - name: Template with MinGW GCC (target=template_release, tests=yes)
             cache-name: windows-template
             target: template_release
             tests: true
-            sconsflags: debug_symbols=no use_llvm=yes
-            bin: ./bin/godot.windows.template_release.x86_64.llvm.console.exe
-            compiler: clang
+            sconsflags: debug_symbols=no use_mingw=yes use_llvm=no
+            bin: ./bin/godot.windows.template_release.x86_64.console.exe
+            compiler: mingw
             cache-limit: 2
 
     steps:

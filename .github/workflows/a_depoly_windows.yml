@@ -60,7 +60,7 @@ jobs:
         with:
           sconsflags: >-
             ${{ steps.spx-build.outputs.editor-release-flags }}
-            arch=x86_64 use_llvm=yes
+            arch=x86_64 use_mingw=yes use_llvm=no
             angle=yes
           custom-modules: ${{ steps.spx-build.outputs.module-path }}
           platform: windows
@@ -70,7 +70,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Path artifacts -Force | Out-Null
-          Copy-Item bin/godot.windows.editor.x86_64.llvm.exe artifacts/godot.windows.editor.x86_64.exe
+          Copy-Item bin/godot.windows.editor.x86_64.exe artifacts/godot.windows.editor.x86_64.exe
           Compress-Archive -Path artifacts/godot.windows.editor.x86_64.exe -DestinationPath artifacts/editor-windows-x86_64.zip
 
       - name: Upload Windows editor artifact
@@ -115,7 +115,7 @@ jobs:
         with:
           sconsflags: >-
             ${{ steps.spx-build.outputs.template-release-flags }}
-            arch=x86_64 use_llvm=yes
+            arch=x86_64 use_mingw=yes use_llvm=no
             angle=yes
           custom-modules: ${{ steps.spx-build.outputs.module-path }}
           platform: windows
@@ -126,7 +126,7 @@ jobs:
         with:
           sconsflags: >-
             ${{ steps.spx-build.outputs.template-release-flags }}
-            arch=x86_64 use_llvm=yes
+            arch=x86_64 use_mingw=yes use_llvm=no
             angle=yes
           custom-modules: ${{ steps.spx-build.outputs.module-path }}
           platform: windows
@@ -138,8 +138,8 @@ jobs:
           RUNTIME_VERSION: ${{ inputs.runtime_version }}
         run: |
           New-Item -ItemType Directory -Path artifacts -Force | Out-Null
-          Copy-Item bin/godot.windows.template_debug.x86_64.llvm.exe artifacts/godot.windows.template_debug.x86_64.exe
-          Copy-Item bin/godot.windows.template_release.x86_64.llvm.exe artifacts/godot.windows.template_release.x86_64.exe
+          Copy-Item bin/godot.windows.template_debug.x86_64.exe artifacts/godot.windows.template_debug.x86_64.exe
+          Copy-Item bin/godot.windows.template_release.x86_64.exe artifacts/godot.windows.template_release.x86_64.exe
           Compress-Archive `
             -Path artifacts/godot.windows.template_debug.x86_64.exe,artifacts/godot.windows.template_release.x86_64.exe `
             -DestinationPath artifacts/windows-x86_64.zip
