@@ -188,7 +188,7 @@ jobs:
     needs: setup
     if: needs.setup.outputs.run_android == 'true'
     uses: ./.github/workflows/a_depoly_android.yml
-    with:
+    with: &runtime_build_inputs
       runtime_version: ${{ needs.setup.outputs.runtime_version }}
       runtime_abi: ${{ needs.setup.outputs.runtime_abi }}
       godot_repository: ${{ needs.setup.outputs.godot_repository }}
@@ -201,75 +201,39 @@ jobs:
     needs: setup
     if: needs.setup.outputs.run_ios == 'true'
     uses: ./.github/workflows/a_depoly_ios.yml
-    with:
-      runtime_version: ${{ needs.setup.outputs.runtime_version }}
-      runtime_abi: ${{ needs.setup.outputs.runtime_abi }}
-      godot_repository: ${{ needs.setup.outputs.godot_repository }}
-      godot_ref: ${{ needs.setup.outputs.godot_ref }}
-      spx_repository: ${{ needs.setup.outputs.spx_repository }}
-      spx_ref: ${{ needs.setup.outputs.spx_ref }}
+    with: *runtime_build_inputs
 
   windows-build:
     name: Windows artifacts
     needs: setup
     if: needs.setup.outputs.run_windows == 'true'
     uses: ./.github/workflows/a_depoly_windows.yml
-    with:
-      runtime_version: ${{ needs.setup.outputs.runtime_version }}
-      runtime_abi: ${{ needs.setup.outputs.runtime_abi }}
-      godot_repository: ${{ needs.setup.outputs.godot_repository }}
-      godot_ref: ${{ needs.setup.outputs.godot_ref }}
-      spx_repository: ${{ needs.setup.outputs.spx_repository }}
-      spx_ref: ${{ needs.setup.outputs.spx_ref }}
+    with: *runtime_build_inputs
 
   linux-build:
     name: Linux artifacts
     needs: setup
     if: needs.setup.outputs.run_linux == 'true'
     uses: ./.github/workflows/a_depoly_linux.yml
-    with:
-      runtime_version: ${{ needs.setup.outputs.runtime_version }}
-      runtime_abi: ${{ needs.setup.outputs.runtime_abi }}
-      godot_repository: ${{ needs.setup.outputs.godot_repository }}
-      godot_ref: ${{ needs.setup.outputs.godot_ref }}
-      spx_repository: ${{ needs.setup.outputs.spx_repository }}
-      spx_ref: ${{ needs.setup.outputs.spx_ref }}
+    with: *runtime_build_inputs
 
   macos-build:
     name: macOS artifacts
     needs: setup
     if: needs.setup.outputs.run_macos == 'true'
     uses: ./.github/workflows/a_depoly_macos.yml
-    with:
-      runtime_version: ${{ needs.setup.outputs.runtime_version }}
-      runtime_abi: ${{ needs.setup.outputs.runtime_abi }}
-      godot_repository: ${{ needs.setup.outputs.godot_repository }}
-      godot_ref: ${{ needs.setup.outputs.godot_ref }}
-      spx_repository: ${{ needs.setup.outputs.spx_repository }}
-      spx_ref: ${{ needs.setup.outputs.spx_ref }}
+    with: *runtime_build_inputs
 
   web-build:
     name: Web artifacts
     needs: setup
     if: needs.setup.outputs.run_web == 'true'
     uses: ./.github/workflows/a_depoly_web.yml
-    with:
-      runtime_version: ${{ needs.setup.outputs.runtime_version }}
-      runtime_abi: ${{ needs.setup.outputs.runtime_abi }}
-      godot_repository: ${{ needs.setup.outputs.godot_repository }}
-      godot_ref: ${{ needs.setup.outputs.godot_ref }}
-      spx_repository: ${{ needs.setup.outputs.spx_repository }}
-      spx_ref: ${{ needs.setup.outputs.spx_ref }}
+    with: *runtime_build_inputs
 
   module-checks:
     name: External SPX module integration checks
     needs: setup
     if: inputs.module_checks
     uses: ./.github/workflows/spx_module_checks.yml
-    with:
-      runtime_version: ${{ needs.setup.outputs.runtime_version }}
-      runtime_abi: ${{ needs.setup.outputs.runtime_abi }}
-      godot_repository: ${{ needs.setup.outputs.godot_repository }}
-      godot_ref: ${{ needs.setup.outputs.godot_ref }}
-      spx_repository: ${{ needs.setup.outputs.spx_repository }}
-      spx_ref: ${{ needs.setup.outputs.spx_ref }}
+    with: *runtime_build_inputs
