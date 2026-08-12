@@ -163,8 +163,8 @@ jobs:
           fi
           "${godot_bin}" --headless --test --test-case='*SPX*' --force-colors
 
-  web-worker-smoke:
-    name: Web worker compile smoke
+  web-normal-smoke:
+    name: Web normal compile smoke
     runs-on: ubuntu-22.04
     timeout-minutes: 90
     steps:
@@ -185,7 +185,7 @@ jobs:
           repository: ${{ inputs.spx_repository }}
           ref: ${{ inputs.spx_ref }}
           toolchain-scope: web
-          cache-scope: web-worker-smoke
+          cache-scope: web-normal-smoke
 
       - name: Resolve Web build identity
         id: identity
@@ -258,15 +258,15 @@ jobs:
       - name: Verify locked Emscripten
         run: emcc --version
 
-      - name: Compile Web worker template
+      - name: Compile Web normal template
         uses: ./.github/actions/godot-build
         with:
           sconsflags: >-
             ${{ steps.spx-build.outputs.template-release-flags }}
-            threads=yes proxy_to_pthread=yes
+            threads=no
           custom-modules: ${{ steps.spx-build.outputs.module-path }}
           platform: web
           target: template_release
 
-      - name: Verify Web worker archive
-        run: python3 -m zipfile --test bin/godot.web.template_release.wasm32.zip
+      - name: Verify Web normal archive
+        run: python3 -m zipfile --test bin/godot.web.template_release.wasm32.nothreads.zip
