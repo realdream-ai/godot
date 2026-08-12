@@ -1,0 +1,272 @@
+name: Check External SPX Module
+
+on:
+  workflow_call:
+    inputs:
+      runtime_version:
+        description: Runtime version that must match the selected SPX runtime lock.
+        required: true
+        type: string
+      runtime_abi:
+        description: Runtime ABI that must match the selected SPX runtime lock.
+        required: true
+        type: string
+      godot_repository:
+        description: Godot repository containing the engine source to test.
+        required: true
+        type: string
+      godot_ref:
+        description: Full locked Godot commit SHA to test.
+        required: true
+        type: string
+      spx_repository:
+        description: SPX repository containing the current runtime lock and module source.
+        required: true
+        type: string
+      spx_ref:
+        description: Full current SPX commit SHA to test.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: spx-module-checks-${{ inputs.godot_ref }}-${{ inputs.spx_ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux-editor-tests:
+    name: Linux editor and SPX module unit tests
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    steps:
+      - name: Check out locked Godot source
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.godot_repository }}
+          ref: ${{ inputs.godot_ref }}
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gcc \
+            g++ \
+            pkg-config \
+            libgl1-mesa-dev \
+            libegl1-mesa-dev \
+            libgles2-mesa-dev \
+            libx11-dev \
+            xorg-dev \
+            libasound2-dev \
+            libopenal-dev \
+            libwayland-bin
+
+      - name: Set up current SPX module and locked native context
+        id: spx-build
+        uses: ./.github/actions/setup-spx-module/build-context
+        with:
+          runtime-version: ${{ inputs.runtime_version }}
+          runtime-abi: ${{ inputs.runtime_abi }}
+          repository: ${{ inputs.spx_repository }}
+          ref: ${{ inputs.spx_ref }}
+          toolchain-scope: native
+          cache-scope: linux-x86_64-module-tests
+
+      - name: Resolve native build identity
+        id: identity
+        shell: bash
+        env:
+          INPUT_RUNTIME_ABI: ${{ inputs.runtime_abi }}
+          INPUT_RUNTIME_VERSION: ${{ inputs.runtime_version }}
+          MODULE_PATH: ${{ steps.spx-build.outputs.module-path }}
+        run: |
+          set -euo pipefail
+
+          godot_origin="$(git remote get-url origin)"
+          godot_sha="$(git rev-parse --verify 'HEAD^{commit}')"
+          contract=.spx-source/.github/scripts/runtime_build_contract.py
+          module_relative_path="$(python3 "${contract}" source \
+            --lock .spx-source/internal/release/runtime.lock.json \
+            --github-output "${GITHUB_OUTPUT}" \
+            --runtime-version "${INPUT_RUNTIME_VERSION}" \
+            --runtime-abi "${INPUT_RUNTIME_ABI}" \
+            --godot-origin "${godot_origin}" \
+            --godot-commit "${godot_sha}" \
+            --toolchain-scope native)"
+
+          expected_module_path="$(MODULE_PATH=".spx-source/${module_relative_path}" python3 -c 'import os; from pathlib import Path; print(Path(os.environ["MODULE_PATH"]).resolve().as_posix())')"
+          if [ "${MODULE_PATH}" != "${expected_module_path}" ]; then
+            echo "[error] Resolved module path drifted: ${MODULE_PATH} != ${expected_module_path}" >&2
+            exit 1
+          fi
+
+          spx_sha="$(git -C .spx-source rev-parse --verify 'HEAD^{commit}')"
+          module_sha="$(git -C .spx-source rev-parse "HEAD:${module_relative_path}")"
+          profile_sha="$(git -C .spx-source rev-parse "HEAD:${module_relative_path}/spx_scons_profile.json")"
+          printf '%s\n' \
+            "spx-sha=${spx_sha}" \
+            "godot-sha=${godot_sha}" \
+            "module-sha=${module_sha}" \
+            "profile-sha=${profile_sha}" >> "${GITHUB_OUTPUT}"
+
+      - name: Report native build identity
+        shell: bash
+        env:
+          GODOT_SHA: ${{ steps.identity.outputs.godot-sha }}
+          MODULE_SHA: ${{ steps.identity.outputs.module-sha }}
+          PROFILE_SHA: ${{ steps.identity.outputs.profile-sha }}
+          SCONS_VERSION: ${{ steps.identity.outputs.scons-version }}
+          SPX_SHA: ${{ steps.identity.outputs.spx-sha }}
+          TOOLCHAIN_SHA256: ${{ steps.identity.outputs.engine-toolchain-sha256 }}
+        run: |
+          set -euo pipefail
+          {
+            echo "### Native SPX module build identity"
+            echo
+            echo "| Input | Identity |"
+            echo "| --- | --- |"
+            echo "| SPX | \`${SPX_SHA}\` |"
+            echo "| Godot | \`${GODOT_SHA}\` |"
+            echo "| Module tree | \`${MODULE_SHA}\` |"
+            echo "| SCons profile | \`${PROFILE_SHA}\` |"
+            echo "| Native toolchain | \`${TOOLCHAIN_SHA256}\` (SCons \`${SCONS_VERSION}\`) |"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Build Linux editor with unit tests
+        uses: ./.github/actions/godot-build
+        with:
+          sconsflags: >-
+            ${{ steps.spx-build.outputs.editor-release-flags }}
+            dev_build=yes debug_symbols=no
+          custom-modules: ${{ steps.spx-build.outputs.module-path }}
+          platform: linuxbsd
+          target: editor
+          tests: 'yes'
+
+      - name: Run SPX module unit tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot_bin=./bin/godot.linuxbsd.editor.dev.x86_64
+          test_list="${RUNNER_TEMP}/godot-test-cases.txt"
+
+          test -x "${godot_bin}"
+          "${godot_bin}" --version
+          "${godot_bin}" --headless --test --test-case='*SPX*' --list-test-cases | tee "${test_list}"
+          if ! grep -F '[SPX]' "${test_list}" >/dev/null; then
+            echo "[error] The tests=yes build did not register SPX module unit tests" >&2
+            exit 1
+          fi
+          "${godot_bin}" --headless --test --test-case='*SPX*' --force-colors
+
+  web-worker-smoke:
+    name: Web worker compile smoke
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    steps:
+      - name: Check out locked Godot source
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.godot_repository }}
+          ref: ${{ inputs.godot_ref }}
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Set up current SPX module and locked Web context
+        id: spx-build
+        uses: ./.github/actions/setup-spx-module/build-context
+        with:
+          runtime-version: ${{ inputs.runtime_version }}
+          runtime-abi: ${{ inputs.runtime_abi }}
+          repository: ${{ inputs.spx_repository }}
+          ref: ${{ inputs.spx_ref }}
+          toolchain-scope: web
+          cache-scope: web-worker-smoke
+
+      - name: Resolve Web build identity
+        id: identity
+        shell: bash
+        env:
+          INPUT_RUNTIME_ABI: ${{ inputs.runtime_abi }}
+          INPUT_RUNTIME_VERSION: ${{ inputs.runtime_version }}
+          MODULE_PATH: ${{ steps.spx-build.outputs.module-path }}
+        run: |
+          set -euo pipefail
+
+          godot_origin="$(git remote get-url origin)"
+          godot_sha="$(git rev-parse --verify 'HEAD^{commit}')"
+          contract=.spx-source/.github/scripts/runtime_build_contract.py
+          module_relative_path="$(python3 "${contract}" source \
+            --lock .spx-source/internal/release/runtime.lock.json \
+            --github-output "${GITHUB_OUTPUT}" \
+            --runtime-version "${INPUT_RUNTIME_VERSION}" \
+            --runtime-abi "${INPUT_RUNTIME_ABI}" \
+            --godot-origin "${godot_origin}" \
+            --godot-commit "${godot_sha}" \
+            --toolchain-scope web)"
+
+          expected_module_path="$(MODULE_PATH=".spx-source/${module_relative_path}" python3 -c 'import os; from pathlib import Path; print(Path(os.environ["MODULE_PATH"]).resolve().as_posix())')"
+          if [ "${MODULE_PATH}" != "${expected_module_path}" ]; then
+            echo "[error] Resolved module path drifted: ${MODULE_PATH} != ${expected_module_path}" >&2
+            exit 1
+          fi
+
+          spx_sha="$(git -C .spx-source rev-parse --verify 'HEAD^{commit}')"
+          module_sha="$(git -C .spx-source rev-parse "HEAD:${module_relative_path}")"
+          profile_sha="$(git -C .spx-source rev-parse "HEAD:${module_relative_path}/spx_scons_profile.json")"
+          printf '%s\n' \
+            "spx-sha=${spx_sha}" \
+            "godot-sha=${godot_sha}" \
+            "module-sha=${module_sha}" \
+            "profile-sha=${profile_sha}" >> "${GITHUB_OUTPUT}"
+
+      - name: Report Web build identity
+        shell: bash
+        env:
+          EMSDK_VERSION: ${{ steps.identity.outputs.emsdk-version }}
+          GODOT_SHA: ${{ steps.identity.outputs.godot-sha }}
+          MODULE_SHA: ${{ steps.identity.outputs.module-sha }}
+          PROFILE_SHA: ${{ steps.identity.outputs.profile-sha }}
+          SCONS_VERSION: ${{ steps.identity.outputs.scons-version }}
+          SPX_SHA: ${{ steps.identity.outputs.spx-sha }}
+          TOOLCHAIN_SHA256: ${{ steps.identity.outputs.engine-toolchain-sha256 }}
+        run: |
+          set -euo pipefail
+          {
+            echo "### Web SPX module build identity"
+            echo
+            echo "| Input | Identity |"
+            echo "| --- | --- |"
+            echo "| SPX | \`${SPX_SHA}\` |"
+            echo "| Godot | \`${GODOT_SHA}\` |"
+            echo "| Module tree | \`${MODULE_SHA}\` |"
+            echo "| SCons profile | \`${PROFILE_SHA}\` |"
+            echo "| Web toolchain | \`${TOOLCHAIN_SHA256}\` (SCons \`${SCONS_VERSION}\`, Emscripten \`${EMSDK_VERSION}\`) |"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Set up locked Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: ${{ steps.spx-build.outputs.emsdk-version }}
+          actions-cache-folder: emsdk-cache
+          cache-key: spx-module-checks-emsdk-${{ steps.spx-build.outputs.emsdk-version }}-${{ runner.os }}
+
+      - name: Verify locked Emscripten
+        run: emcc --version
+
+      - name: Compile Web worker template
+        uses: ./.github/actions/godot-build
+        with:
+          sconsflags: >-
+            ${{ steps.spx-build.outputs.template-release-flags }}
+            threads=yes proxy_to_pthread=yes
+          custom-modules: ${{ steps.spx-build.outputs.module-path }}
+          platform: web
+          target: template_release
+
+      - name: Verify Web worker archive
+        run: python3 -m zipfile --test bin/godot.web.template_release.wasm32.zip

@@ -47,7 +47,6 @@ void initialize_svg_module(ModuleInitializationLevel p_level) {
 		return;
 	}
 
-	std::unique_ptr<tvg::SwCanvas> sw_canvas = tvg::SwCanvas::gen();
 	tvg::CanvasEngine tvgEngine = tvg::CanvasEngine::Sw;
 
 	if (tvg::Initializer::init(tvgEngine, TVG_THREADS) != tvg::Result::Success) {

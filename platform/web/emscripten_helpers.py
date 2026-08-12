@@ -30,15 +30,10 @@ def create_engine_file(env, target, source, externs, threads_enabled):
     return env.Substfile(target=target, source=[env.File(s) for s in source], SUBST_DICT=subst_dict)
 
 
-def create_template_zip(env, js, wasm, side):
+def create_template_zip(env, js, wasm, side, worklet_sources):
     binary_name = "godot.editor" if env.editor_build else "godot"
     zip_dir = env.Dir(env.GetTemplateZipPath())
-    in_files = [
-        js,
-        wasm,
-        "#platform/web/js/libs/audio.worklet.js",
-        "#platform/web/js/libs/audio.position.worklet.js",
-    ]
+    in_files = [js, wasm] + list(worklet_sources)
     out_files = [
         zip_dir.File(binary_name + ".js"),
         zip_dir.File(binary_name + ".wasm"),

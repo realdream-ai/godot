@@ -38,20 +38,12 @@
 #include "core/object/callable_method_pointer.h"
 #include "servers/rendering/dummy/rasterizer_dummy.h"
 
-#include "modules/spx/spx.h"
-#include "modules/spx/spx_engine.h"
-#include "modules/spx/spx_res_mgr.h"
-
 #ifdef GLES3_ENABLED
 #include "drivers/gles3/rasterizer_gles3.h"
 #endif
 
 #include <emscripten.h>
 #include <png.h>
-
-#ifdef TOOLS_ENABLED
-#include "editor/filesystem_dock.h"
-#endif
 
 #define DOM_BUTTON_LEFT 0
 #define DOM_BUTTON_MIDDLE 1
@@ -148,14 +140,6 @@ void DisplayServerWeb::_request_quit_callback() {
 		Variant event = int(DisplayServer::WINDOW_EVENT_CLOSE_REQUEST);
 		ds->window_event_callback.call(event);
 	}
-}
-
-void DisplayServerWeb::request_reset_callback() {
-	_request_reset_callback();
-}
-
-void DisplayServerWeb::_request_reset_callback() {
-	Spx::reset(0);
 }
 
 // Keys
@@ -1011,27 +995,6 @@ void DisplayServerWeb::update_clipboard_callback(const char *p_text) {
 void DisplayServerWeb::_update_clipboard_callback(const String &p_text) {
 	get_singleton()->clipboard = p_text;
 }
-void DisplayServerWeb::on_game_datas_set_callback(const char *p_path, const char **p_file_paths, int p_size) {
-	String path = p_path;
-	Vector<String> file_paths;
-	for (int i = 0; i < p_size; i++) {
-		file_paths.append(String::utf8(p_file_paths[i]));
-	}
-
-#ifdef PROXY_TO_PTHREAD_ENABLED
-	if (!Thread::is_main_thread()) {
-		callable_mp_static(DisplayServerWeb::_on_game_datas_set_callback).bind(path, file_paths).call_deferred();
-		return;
-	}
-#endif
-
-	_on_game_datas_set_callback(path, file_paths);
-}
-
-void DisplayServerWeb::_on_game_datas_set_callback(const String &p_path, const Vector<String> &p_file_paths) {
-	SpxEngine::get_singleton()->get_res()->set_game_datas(p_path, p_file_paths);
-}
-
 
 void DisplayServerWeb::clipboard_set(const String &p_text) {
 	clipboard = p_text;
@@ -1137,8 +1100,6 @@ DisplayServerWeb::DisplayServerWeb(const String &p_rendering_driver, WindowMode 
 
 	// Expose method for requesting quit.
 	godot_js_os_request_quit_cb(request_quit_callback);
-	// Expose method for requesting reset.
-	godot_js_os_request_reset_cb(request_reset_callback);
 
 #ifdef GLES3_ENABLED
 	bool webgl2_inited = false;
@@ -1169,8 +1130,6 @@ DisplayServerWeb::DisplayServerWeb(const String &p_rendering_driver, WindowMode 
 #else
 	RasterizerDummy::make_current();
 #endif
-	// spx
-	godot_js_on_game_datas_set_callback(&DisplayServerWeb::on_game_datas_set_callback);
 
 	// JS Input interface (js/libs/library_godot_input.js)
 	godot_js_input_mouse_button_cb(&DisplayServerWeb::mouse_button_callback);
@@ -1384,12 +1343,6 @@ Size2i DisplayServerWeb::window_get_size(WindowID p_window) const {
 
 Size2i DisplayServerWeb::window_get_size_with_decorations(WindowID p_window) const {
 	return window_get_size(p_window);
-}
-
-Size2i DisplayServerWeb::window_get_size_ext(WindowID p_window) const {
-	int size[2];
-	godot_js_display_window_size_get_ext(size, size + 1);
-	return Size2i(size[0], size[1]);
 }
 
 void DisplayServerWeb::window_set_mode(WindowMode p_mode, WindowID p_window) {

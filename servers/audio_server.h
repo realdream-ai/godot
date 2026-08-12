@@ -47,7 +47,6 @@ class AudioStream;
 class AudioStreamWAV;
 class AudioStreamPlayback;
 class AudioSamplePlayback;
-class AudioCaptureInterface; // Forward declaration
 
 class AudioDriver {
 	static AudioDriver *singleton;
@@ -339,10 +338,6 @@ private:
 	SafeList<CallbackItem *> mix_callback_list;
 	SafeList<CallbackItem *> listener_changed_callback_list;
 
-	// Audio capture function
-	AudioCaptureInterface *audio_capture_interface = nullptr;
-	Mutex capture_mutex;
-
 	friend class AudioDriver;
 	void _driver_process(int p_frames, int32_t *p_buffer);
 
@@ -478,10 +473,6 @@ public:
 
 	void add_mix_callback(AudioCallback p_callback, void *p_userdata);
 	void remove_mix_callback(AudioCallback p_callback, void *p_userdata);
-
-	// Audio capture function - for real-time recording
-	void set_audio_capture_interface(AudioCaptureInterface *p_interface);
-	void remove_audio_capture_interface();
 
 	void set_bus_layout(const Ref<AudioBusLayout> &p_bus_layout);
 	Ref<AudioBusLayout> generate_bus_layout() const;

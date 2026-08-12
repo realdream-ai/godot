@@ -1,177 +1,149 @@
-name: 🐧 Linux Build Workflow
+name: Build Linux Runtime Artifacts
 
 on:
   workflow_call:
     inputs:
-      version:
+      runtime_version:
         required: true
         type: string
-        description: "Version number for the build"
-      platforms:
+      runtime_abi:
         required: true
         type: string
-        description: "Platforms to build"
-      godot_base_branch:
+      godot_repository:
         required: true
         type: string
-        description: "Base branch for Godot"
-      engine_version:
+      godot_ref:
         required: true
         type: string
-        description: "Engine version"
-      common_args:
+      spx_repository:
         required: true
         type: string
-        description: "Common build arguments"
-      release_args:
+      spx_ref:
         required: true
         type: string
-        description: "Release build arguments"
-      event_name:
-        required: true
-        type: string
-        description: "Event name triggering the build"
-      release_tag:
-        required: false
-        type: string
-        description: "Release tag name"
-    secrets:
-      GH_TOKEN:
-        required: true
 
-env:
-  SCONS_CACHE: "${{github.workspace}}/.scons-cache/"
-  SCONS_CACHE_LIMIT: "10000"
+permissions:
+  contents: read
 
 jobs:
   linux-editor-build:
-    name: 🐧 Linux ${{ matrix.arch }} Editor Build
-    if: contains(inputs.platforms, 'linux') || contains(inputs.platforms, 'all')
+    name: Linux x86_64 editor
     runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        arch: [x86_64]
-        include:
-          - arch: x86_64
-            artifact_suffix: x86_64
-
     steps:
-      - name: Checkout
+      - name: Check out Godot source
         uses: actions/checkout@v4
         with:
+          repository: ${{ inputs.godot_repository }}
+          ref: ${{ inputs.godot_ref }}
           submodules: recursive
+          persist-credentials: false
 
-      # Set up shared cache for Linux builds
-      - name: Set up build cache
-        uses: actions/cache@v4
+      - name: Set up SPX build context
+        id: spx-build
+        uses: ./.github/actions/setup-spx-module/build-context
         with:
-          path: ${{github.workspace}}/.scons-cache/
-          # Use arch-specific cache key but allow fallback to other architectures
-          key: linux-${{ matrix.arch }}-editor-${{inputs.godot_base_branch}}-${{github.ref}}
-          restore-keys: |
-            linux-${{ matrix.arch }}-editor-${{inputs.godot_base_branch}}-
-            linux-${{ matrix.arch }}-editor-
-            linux-editor-${{inputs.godot_base_branch}}-
-            linux-editor-
+          runtime-version: ${{ inputs.runtime_version }}
+          runtime-abi: ${{ inputs.runtime_abi }}
+          repository: ${{ inputs.spx_repository }}
+          ref: ${{ inputs.spx_ref }}
+          toolchain-scope: native
+          cache-scope: linux-x86_64-editor
 
-      - name: Setup Python and SCons
-        uses: ./.github/actions/godot-deps
-
-      # Linux editor build, no debug symbols
-      - name: Build Linux Editor (${{ matrix.arch }})
+      - name: Build Linux editor
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: platform=linuxbsd target=editor ${{ inputs.common_args }} arch=${{ matrix.arch }} use_llvm=yes linker=lld
+          sconsflags: >-
+            ${{ steps.spx-build.outputs.editor-release-flags }}
+            arch=x86_64 use_llvm=yes linker=lld
+          custom-modules: ${{ steps.spx-build.outputs.module-path }}
           platform: linuxbsd
           target: editor
 
-      - name: Compress Linux Editor Build
+      - name: Package Linux editor
+        shell: bash
         run: |
-          chmod +x bin/godot.linuxbsd.editor.${{ matrix.arch }}
-          zip -j bin/editor-linux-${{ matrix.artifact_suffix }}.zip bin/godot.linuxbsd.editor.${{ matrix.arch }}
+          set -euo pipefail
+          mkdir -p artifacts
+          install -m 0755 \
+            bin/godot.linuxbsd.editor.x86_64.llvm \
+            artifacts/godot.linuxbsd.editor.x86_64
+          zip -j \
+            artifacts/editor-linux-x86_64.zip \
+            artifacts/godot.linuxbsd.editor.x86_64
 
-      - name: Upload Linux Editor Build Results
+      - name: Upload Linux editor artifact
         uses: actions/upload-artifact@v4
         with:
-          name: linux-${{ matrix.arch }}-editor-${{ inputs.version }}
-          path: bin/editor-linux-${{ matrix.artifact_suffix }}.zip
+          name: runtime-editor-linux-x86_64
+          path: artifacts/editor-linux-x86_64.zip
+          if-no-files-found: error
           retention-days: 14
 
-      - name: Publish to GitHub Release
-        if: inputs.event_name == 'release'
-        uses: softprops/action-gh-release@v1
-        with:
-          files: bin/editor-linux-${{ matrix.artifact_suffix }}.zip
-          tag_name: ${{ inputs.release_tag }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-
   linux-template-build:
-    name: 🐧 Linux ${{ matrix.arch }} Template Build
-    if: contains(inputs.platforms, 'linux') || contains(inputs.platforms, 'all')
+    name: Linux x86_64 templates
     runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        arch: [x86_64]
-        include:
-          - arch: x86_64
-            artifact_suffix: x86_64
-
     steps:
-      - name: Checkout
+      - name: Check out Godot source
         uses: actions/checkout@v4
         with:
+          repository: ${{ inputs.godot_repository }}
+          ref: ${{ inputs.godot_ref }}
           submodules: recursive
+          persist-credentials: false
 
-      # Set up shared cache for Linux builds
-      - name: Set up build cache
-        uses: actions/cache@v4
+      - name: Set up SPX build context
+        id: spx-build
+        uses: ./.github/actions/setup-spx-module/build-context
         with:
-          path: ${{github.workspace}}/.scons-cache/
-          # Use arch-specific cache key but allow fallback to other architectures
-          key: linux-${{ matrix.arch }}-template-${{inputs.godot_base_branch}}-${{github.ref}}
-          restore-keys: |
-            linux-${{ matrix.arch }}-template-${{inputs.godot_base_branch}}-
-            linux-${{ matrix.arch }}-template-
-            linux-template-${{inputs.godot_base_branch}}-
-            linux-template-
+          runtime-version: ${{ inputs.runtime_version }}
+          runtime-abi: ${{ inputs.runtime_abi }}
+          repository: ${{ inputs.spx_repository }}
+          ref: ${{ inputs.spx_ref }}
+          toolchain-scope: native
+          cache-scope: linux-x86_64-templates
 
-      - name: Setup Python and SCons
-        uses: ./.github/actions/godot-deps
-
-      # Build debug template first to maximize cache utilization
-      - name: Build Linux Template Debug (${{ matrix.arch }})
+      - name: Build Linux debug template
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: platform=linuxbsd target=template_debug ${{ inputs.common_args }} ${{ inputs.release_args }} arch=${{ matrix.arch }} use_llvm=yes linker=lld
+          sconsflags: >-
+            ${{ steps.spx-build.outputs.template-release-flags }}
+            arch=x86_64 use_llvm=yes linker=lld
+          custom-modules: ${{ steps.spx-build.outputs.module-path }}
           platform: linuxbsd
           target: template_debug
 
-      - name: Build Linux Template Release (${{ matrix.arch }})
+      - name: Build Linux release template
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: platform=linuxbsd target=template_release ${{ inputs.common_args }} ${{ inputs.release_args }} arch=${{ matrix.arch }} use_llvm=yes linker=lld
+          sconsflags: >-
+            ${{ steps.spx-build.outputs.template-release-flags }}
+            arch=x86_64 use_llvm=yes linker=lld
+          custom-modules: ${{ steps.spx-build.outputs.module-path }}
           platform: linuxbsd
           target: template_release
 
-      - name: Compress Linux Template Builds
+      - name: Package Linux templates
+        shell: bash
+        env:
+          RUNTIME_VERSION: ${{ inputs.runtime_version }}
         run: |
-          chmod +x bin/godot.linuxbsd.template_debug.${{ matrix.arch }}
-          chmod +x bin/godot.linuxbsd.template_release.${{ matrix.arch }}
-          zip -j bin/linux-${{ matrix.artifact_suffix }}.zip bin/godot.linuxbsd.template_debug.${{ matrix.arch }} bin/godot.linuxbsd.template_release.${{ matrix.arch }}
+          set -euo pipefail
+          mkdir -p artifacts
+          install -m 0755 \
+            bin/godot.linuxbsd.template_debug.x86_64.llvm \
+            artifacts/godot.linuxbsd.template_debug.x86_64
+          install -m 0755 \
+            bin/godot.linuxbsd.template_release.x86_64.llvm \
+            artifacts/godot.linuxbsd.template_release.x86_64
+          zip -j artifacts/linux-x86_64.zip \
+            artifacts/godot.linuxbsd.template_debug.x86_64 \
+            artifacts/godot.linuxbsd.template_release.x86_64
+          echo "[info] Packaged Linux runtime ${RUNTIME_VERSION}"
 
-      - name: Upload Linux Template Build Results
+      - name: Upload Linux template artifact
         uses: actions/upload-artifact@v4
         with:
-          name: linux-${{ matrix.arch }}-template-${{ inputs.version }}
-          path: bin/linux-${{ matrix.artifact_suffix }}.zip
+          name: runtime-linux-x86_64
+          path: artifacts/linux-x86_64.zip
+          if-no-files-found: error
           retention-days: 14
-
-      - name: Publish to GitHub Release
-        if: inputs.event_name == 'release'
-        uses: softprops/action-gh-release@v1
-        with:
-          files: bin/linux-${{ matrix.artifact_suffix }}.zip
-          tag_name: ${{ inputs.release_tag }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }} 

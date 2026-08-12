@@ -1,184 +1,151 @@
-name: 🌐 Web Build Workflow
+name: Build Web Runtime Artifacts
 
 on:
   workflow_call:
     inputs:
-      version:
+      runtime_version:
         required: true
         type: string
-        description: "Version number for the build"
-      platforms:
+      runtime_abi:
         required: true
         type: string
-        description: "Platforms to build"
-      godot_base_branch:
+      godot_repository:
         required: true
         type: string
-        description: "Base branch for Godot"
-      engine_version:
+      godot_ref:
         required: true
         type: string
-        description: "Engine version"
-      common_args:
+      spx_repository:
         required: true
         type: string
-        description: "Common build arguments"
-      release_args:
+      spx_ref:
         required: true
         type: string
-        description: "Release build arguments"
-      editor_args:
-        required: true
-        type: string
-        description: "Editor build arguments"
-      event_name:
-        required: true
-        type: string
-        description: "Event name triggering the build"
-      release_tag:
-        required: false
-        type: string
-        description: "Release tag name"
-    secrets:
-      GH_TOKEN:
-        required: true
+
+permissions:
+  contents: read
 
 env:
-  SCONS_CACHE: "${{github.workspace}}/.scons-cache/"
-  SCONS_CACHE_LIMIT: "10000"
-  EM_VERSION: 3.1.62
-  EM_CACHE_FOLDER: "emsdk-cache"
+  EM_CACHE_FOLDER: emsdk-cache
 
 jobs:
   web-build:
-    name: 🌐 Web Build (${{ matrix.target }} - ${{ matrix.mode }})
-    if: contains(inputs.platforms, 'web') || contains(inputs.platforms, 'all')
+    name: Web ${{ matrix.mode }}
     runs-on: ubuntu-22.04
     timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
         include:
-          # Editor builds
           - target: editor
             mode: editor
             threads_flag: threads=no
             extra_flags: debug_symbols=no
-            cache_key: web-editor
             source_file: bin/godot.web.editor.wasm32.nothreads.zip
-            artifact_prefix: web-editor
-            artifact_suffix: ""
             output_file: editor-web.zip
-            release_file: editor-web.zip
-          # Template builds
+            artifact_name: runtime-editor-web
           - target: template_release
             mode: normal
             threads_flag: threads=no
-            extra_flags: ""
-            cache_key: web-template-normal
+            extra_flags: ''
             source_file: bin/godot.web.template_release.wasm32.nothreads.zip
-            artifact_prefix: web-template
-            artifact_suffix: ""
             output_file: web.zip
-            release_file: web.zip
+            artifact_name: runtime-web
           - target: template_release
             mode: threads
             threads_flag: threads=yes
-            extra_flags: ""
-            cache_key: web-template-threads
+            extra_flags: ''
             source_file: bin/godot.web.template_release.wasm32.zip
-            artifact_prefix: web-template
-            artifact_suffix: "-threads"
             output_file: web-threads.zip
-            release_file: web-threads.zip
+            artifact_name: runtime-web-threads
           - target: template_release
             mode: worker
-            threads_flag: threads=yes proxy_to_pthread=yes
-            extra_flags: ""
-            cache_key: web-template-worker
+            threads_flag: threads=yes
+            extra_flags: proxy_to_pthread=yes
             source_file: bin/godot.web.template_release.wasm32.zip
-            artifact_prefix: web-template
-            artifact_suffix: "-worker"
             output_file: web-worker.zip
-            release_file: web-worker.zip
-          - target: template_release
-            mode: minigame
-            threads_flag: threads=no
-            extra_flags: ""
-            cache_key: web-template-minigame
-            source_file: bin/godot.web.template_release.wasm32.nothreads.zip
-            artifact_prefix: web-template
-            artifact_suffix: "-minigame"
-            output_file: web-minigame.zip
-            release_file: web-minigame.zip
-          - target: template_release
-            mode: miniprogram
-            threads_flag: threads=no
-            extra_flags: ""
-            cache_key: web-template-miniprogram
-            source_file: bin/godot.web.template_release.wasm32.nothreads.zip
-            artifact_prefix: web-template
-            artifact_suffix: "-miniprogram"
-            output_file: web-miniprogram.zip
-            release_file: web-miniprogram.zip
+            artifact_name: runtime-web-worker
     steps:
-      - name: Checkout
+      - name: Check out Godot source
         uses: actions/checkout@v4
         with:
+          repository: ${{ inputs.godot_repository }}
+          ref: ${{ inputs.godot_ref }}
           submodules: recursive
+          persist-credentials: false
 
-      # Setup Emscripten
-      - name: Setup Emscripten
+      - name: Set up SPX build context
+        id: spx-build
+        uses: ./.github/actions/setup-spx-module/build-context
+        with:
+          runtime-version: ${{ inputs.runtime_version }}
+          runtime-abi: ${{ inputs.runtime_abi }}
+          repository: ${{ inputs.spx_repository }}
+          ref: ${{ inputs.spx_ref }}
+          toolchain-scope: web
+          cache-scope: web-${{ matrix.mode }}
+
+      - name: Set up Emscripten
         uses: mymindstorm/setup-emsdk@v14
         with:
-          version: ${{env.EM_VERSION}}
-          actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
-          cache-key: emsdk-${{ matrix.cache_key }}-${{inputs.godot_base_branch}}-${{github.ref}}
-      
-      - name: Verify Emscripten Installation
-        run: |
-          emcc -v
+          version: ${{ steps.spx-build.outputs.emsdk-version }}
+          actions-cache-folder: ${{ env.EM_CACHE_FOLDER }}
+          cache-key: emsdk-${{ steps.spx-build.outputs.emsdk-version }}-${{ runner.os }}
 
-      # Set up shared cache for Web builds
-      - name: Set up build cache
-        uses: actions/cache@v4
-        with:
-          path: ${{github.workspace}}/.scons-cache/
-          # Do not use SHA in cache key to allow cache reuse across commits
-          key: ${{ matrix.cache_key }}-${{inputs.godot_base_branch}}-${{github.ref}}
-          restore-keys: |
-            ${{ matrix.cache_key }}-${{inputs.godot_base_branch}}-
-            ${{ matrix.cache_key }}-
+      - name: Verify Emscripten installation
+        run: emcc -v
 
-      - name: Setup Python and SCons
-        uses: ./.github/actions/godot-deps
-
-      # Build Web
-      - name: Build Web (${{ matrix.target }} - ${{ matrix.mode }})
+      - name: Build Web ${{ matrix.mode }}
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: platform=web target=${{ matrix.target }} ${{ matrix.threads_flag }} ${{ matrix.extra_flags }} ${{ inputs.common_args }} ${{ matrix.target == 'template_release' && inputs.release_args || '' }}
+          sconsflags: >-
+            ${{ matrix.target == 'editor' && steps.spx-build.outputs.common-flags || steps.spx-build.outputs.template-release-flags }}
+            ${{ matrix.threads_flag }} ${{ matrix.extra_flags }}
+          custom-modules: ${{ steps.spx-build.outputs.module-path }}
           platform: web
           target: ${{ matrix.target }}
 
-      - name: Prepare Files
+      - name: Package Web artifact
+        shell: bash
+        env:
+          SOURCE_FILE: ${{ matrix.source_file }}
+          OUTPUT_FILE: ${{ matrix.output_file }}
+          MODE: ${{ matrix.mode }}
+          RUNTIME_VERSION: ${{ inputs.runtime_version }}
         run: |
+          set -euo pipefail
           mkdir -p artifacts
-          cp ${{ matrix.source_file }} artifacts/${{ matrix.output_file }}
+          cp "${SOURCE_FILE}" "artifacts/${OUTPUT_FILE}"
+          echo "[info] Packaged Web ${RUNTIME_VERSION} ${OUTPUT_FILE}"
 
-      - name: Upload Web Build Results
+          if [ "${MODE}" = normal ]; then
+            cp "${SOURCE_FILE}" artifacts/web-minigame.zip
+            cp "${SOURCE_FILE}" artifacts/web-miniprogram.zip
+            echo "[info] Reused the normal no-threads build for minigame and miniprogram"
+          fi
+
+      - name: Upload Web artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact_prefix }}${{ matrix.artifact_suffix }}-${{ inputs.version }}
+          name: ${{ matrix.artifact_name }}
           path: artifacts/${{ matrix.output_file }}
+          if-no-files-found: error
           retention-days: 14
 
-      - name: Publish to GitHub Release
-        if: inputs.event_name == 'release'
-        uses: softprops/action-gh-release@v1
+      - name: Upload Web minigame artifact
+        if: matrix.mode == 'normal'
+        uses: actions/upload-artifact@v4
         with:
-          files: artifacts/${{ matrix.release_file }}
-          tag_name: ${{ inputs.release_tag }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          
+          name: runtime-web-minigame
+          path: artifacts/web-minigame.zip
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload Web miniprogram artifact
+        if: matrix.mode == 'normal'
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-web-miniprogram
+          path: artifacts/web-miniprogram.zip
+          if-no-files-found: error
+          retention-days: 14

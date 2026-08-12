@@ -37,9 +37,6 @@
 #include "core/extension/extension_api_dump.h"
 #include "core/extension/gdextension_interface_dump.gen.h"
 #include "core/extension/gdextension_manager.h"
-#ifdef SPX_ENABLED
-#include "modules/spx/spx.h"
-#endif
 #include "core/input/input.h"
 #include "core/input/input_map.h"
 #include "core/io/dir_access.h"
@@ -58,6 +55,7 @@
 #include "core/version.h"
 #include "drivers/register_driver_types.h"
 #include "main/app_icon.gen.h"
+#include "main/main_loop_phase_callback_bus.h"
 #include "main/main_timer_sync.h"
 #include "main/performance.h"
 #include "main/splash.gen.h"
@@ -75,7 +73,6 @@
 #include "servers/display_server.h"
 #include "servers/movie_writer/movie_writer.h"
 #include "servers/movie_writer/movie_writer_mjpeg.h"
-#include "servers/movie_writer/movie_recorder_manager.h"
 #include "servers/navigation_server_3d.h"
 #include "servers/navigation_server_3d_dummy.h"
 #include "servers/register_server_types.h"
@@ -193,7 +190,6 @@ static int audio_driver_idx = -1;
 static bool single_window = false;
 static bool editor = false;
 static bool project_manager = false;
-static String install_project_name = "";
 static bool cmdline_tool = false;
 static String locale;
 static String log_file;
@@ -251,6 +247,7 @@ static int frame_delay = 0;
 static int audio_output_latency = 0;
 static bool disable_render_loop = false;
 static int fixed_fps = -1;
+static MovieWriter *movie_writer = nullptr;
 static bool disable_vsync = false;
 static bool print_fps = false;
 #ifdef TOOLS_ENABLED
@@ -670,9 +667,6 @@ void Main::print_help(const char *p_binary) {
 #ifdef TESTS_ENABLED
 	print_help_option("--test [--help]", "Run unit tests. Use --test --help for more information.\n", CLI_OPTION_AVAILABILITY_EDITOR);
 #endif
-    // spx args
-	print_help_option("--gdextpath <path>","Specify the gdextension path. The path should be absolute.\n");
-
 #endif
 	OS::get_singleton()->print("\n");
 }
@@ -714,9 +708,6 @@ Error Main::test_setup() {
 	// From `Main::setup2()`.
 	register_early_core_singletons();
 	initialize_modules(MODULE_INITIALIZATION_LEVEL_CORE);
-	#ifdef SPX_ENABLED 
-	Spx::register_extension_functions();
-	#endif
 	register_core_extensions();
 
 	register_core_singletons();
@@ -995,7 +986,6 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 #endif
 	bool skip_breakpoints = false;
 	String main_pack;
-	String main_project_data;
 	bool quiet_stdout = false;
 	int separate_thread_render = -1; // Tri-state: -1 = not set, 0 = false, 1 = true.
 
@@ -1656,18 +1646,6 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 				goto error;
 			}
 
-		} else if (arg == "--main-project-data") {
-			if (N) {
-				main_project_data = N->get();
-				#ifdef SPX_ENABLED 
-				Spx::project_data_path = main_project_data;
-				#endif
-				print_line("setup main project_data ", main_project_data);
-				N = N->next();
-			} else {
-				OS::get_singleton()->print("Missing path to main project data pack file, aborting.\n");
-				goto error;
-			};
 		} else if (arg == "--main-pack") {
 			if (N) {
 				main_pack = N->get();
@@ -1838,14 +1816,6 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 
 		} else if (arg == "--" || arg == "++") {
 			adding_user_args = true;
-		} else if (arg == "--gdextpath") { // set path of project to start or edit
-			if (N) {
-				GDExtension::ext_path = N->get();
-				N = N->next();
-			} else {
-				OS::get_singleton()->print("Missing relative or absolute gdextension path, aborting.\n");
-				goto error;
-			}
 		} else {
 			main_args.push_back(arg);
 		}
@@ -2039,9 +2009,6 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 
 	register_early_core_singletons();
 	initialize_modules(MODULE_INITIALIZATION_LEVEL_CORE);
-	#ifdef SPX_ENABLED 
-	Spx::register_extension_functions();
-	#endif
 	register_core_extensions(); // core extensions must be registered after globals setup and before display
 
 	ResourceUID::get_singleton()->load_from_cache(true); // load UUIDs from cache.
@@ -2643,26 +2610,6 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 		// If all else failed it would be the dummy driver (no sound).
 		audio_driver_idx = 0;
 	}
-
-
-	if (Engine::get_singleton()->get_write_movie_path() != String()) {
-		// Check if real-time recording mode is enabled
-		bool realtime_recording = false;
-		if (ProjectSettings::get_singleton()->has_setting("movie_writer/realtime_mode")) {
-			realtime_recording = (bool)ProjectSettings::get_singleton()->get_setting("movie_writer/realtime_mode");
-		}
-		if (realtime_recording) {
-			// Real-time recording mode: keep the original audio driver, the hybrid driver will be set later
-			if (Engine::get_singleton()->is_editor_hint() || OS::get_singleton()->is_stdout_verbose()) {
-				print_line("MovieWriter: Realtime recording mode enabled");
-			}
-		} else {
-			// Traditional offline recording mode: use dummy driver
-			audio_driver_idx = AudioDriverManager::get_driver_count() - 1;
-			AudioDriverDummy::get_dummy_singleton()->set_use_threads(false);
-		}
-	}
-
 	{
 		window_orientation = DisplayServer::ScreenOrientation(int(GLOBAL_DEF_BASIC("display/window/handheld/orientation", DisplayServer::ScreenOrientation::SCREEN_LANDSCAPE)));
 	}
@@ -3010,6 +2957,21 @@ Error Main::setup2(bool p_show_boot_logo) {
 		OS::get_singleton()->benchmark_end_measure("Servers", "Modules and Extensions");
 	}
 
+	const String write_movie_path = Engine::get_singleton()->get_write_movie_path();
+	if (!write_movie_path.is_empty()) {
+		const Error route_error = get_main_loop_phase_callback_bus().resolve_movie_route(write_movie_path);
+		if (route_error != OK) {
+			ERR_PRINT("Failed to resolve the movie recording route.");
+		}
+
+		const bool use_live_audio = route_error == OK && get_main_loop_phase_callback_bus().is_movie_route_claimed() && get_main_loop_phase_callback_bus().movie_route_requires_live_audio();
+		if (!use_live_audio) {
+			// The official MovieWriter path renders deterministically through Dummy.
+			audio_driver_idx = AudioDriverManager::get_driver_count() - 1;
+			AudioDriverDummy::get_dummy_singleton()->set_use_threads(false);
+		}
+	}
+
 	/* Initialize Input */
 
 	{
@@ -3234,9 +3196,13 @@ Error Main::setup2(bool p_show_boot_logo) {
 			rendering_server->set_print_gpu_profile(true);
 		}
 
-		// Initialize movie recorder manager
-		MovieRecorderManager::set_fixed_fps(fixed_fps);
-		MovieRecorderManager::onInit();
+		if (!write_movie_path.is_empty() && !get_main_loop_phase_callback_bus().is_movie_route_claimed()) {
+			movie_writer = MovieWriter::find_writer_for_file(write_movie_path);
+			if (movie_writer == nullptr) {
+				ERR_PRINT("Can't find movie writer for file type, aborting: " + write_movie_path);
+				Engine::get_singleton()->set_write_movie_path(String());
+			}
+		}
 
 		OS::get_singleton()->benchmark_end_measure("Servers", "Rendering");
 	}
@@ -4034,9 +4000,7 @@ int Main::start() {
 	}
 
 	OS::get_singleton()->set_main_loop(main_loop);
-	#ifdef SPX_ENABLED 
-	Spx::register_types();
-	#endif
+
 	SceneTree *sml = Object::cast_to<SceneTree>(main_loop);
 	if (sml) {
 #ifdef DEBUG_ENABLED
@@ -4374,9 +4338,7 @@ int Main::start() {
 			}
 
 			OS::get_singleton()->benchmark_end_measure("Startup", "Load Game");
-			#ifdef SPX_ENABLED 
-			Spx::on_start(sml);
-			#endif
+			get_main_loop_phase_callback_bus().notify_start(sml);
 		}
 
 #ifdef TOOLS_ENABLED
@@ -4414,8 +4376,15 @@ int Main::start() {
 		DisplayServer::get_singleton()->set_icon(icon);
 	}
 
-	// Start movie recording if needed
-	MovieRecorderManager::onStart();
+	if (movie_writer) {
+		movie_writer->begin(DisplayServer::get_singleton()->window_get_size(), fixed_fps, Engine::get_singleton()->get_write_movie_path());
+	} else if (get_main_loop_phase_callback_bus().is_movie_route_claimed()) {
+		const Error movie_begin_error = get_main_loop_phase_callback_bus().notify_movie_begin(DisplayServer::get_singleton()->window_get_size(), fixed_fps, Engine::get_singleton()->get_write_movie_path());
+		if (movie_begin_error != OK) {
+			ERR_PRINT("Failed to start the claimed movie recorder.");
+			Engine::get_singleton()->set_write_movie_path(String());
+		}
+	}
 
 	if (minimum_time_msec) {
 		uint64_t minimum_time = 1000 * minimum_time_msec;
@@ -4528,9 +4497,8 @@ bool Main::iteration() {
 
 		PhysicsServer2D::get_singleton()->sync();
 		PhysicsServer2D::get_singleton()->flush_queries();
-		#ifdef SPX_ENABLED 
-		Spx::on_fixed_update(physics_step * time_scale);
-		#endif
+
+		get_main_loop_phase_callback_bus().notify_fixed_update(physics_step * time_scale);
 		if (OS::get_singleton()->get_main_loop()->physics_process(physics_step * time_scale)) {
 #ifndef _3D_DISABLED
 			PhysicsServer3D::get_singleton()->end_sync();
@@ -4605,9 +4573,7 @@ bool Main::iteration() {
 	process_max = MAX(process_ticks, process_max);
 	uint64_t frame_time = OS::get_singleton()->get_ticks_usec() - ticks;
 
-	#ifdef SPX_ENABLED 
-	Spx::on_update(process_step * time_scale);
-	#endif
+	get_main_loop_phase_callback_bus().notify_update(process_step * time_scale);
 	for (int i = 0; i < ScriptServer::get_language_count(); i++) {
 		ScriptServer::get_language(i)->frame();
 	}
@@ -4649,8 +4615,10 @@ bool Main::iteration() {
 
 	iterating--;
 
-	// Update movie recording
-	MovieRecorderManager::onUpdate();
+	if (movie_writer) {
+		movie_writer->add_frame();
+	}
+	get_main_loop_phase_callback_bus().notify_movie_frame();
 
 #ifdef TOOLS_ENABLED
 	bool quit_after_timeout = false;
@@ -4726,8 +4694,10 @@ void Main::cleanup(bool p_force) {
 		TextServerManager::get_singleton()->get_interface(i)->cleanup();
 	}
 
-	// Cleanup movie recording
-	MovieRecorderManager::onCleanup();
+	if (movie_writer) {
+		movie_writer->end();
+	}
+	get_main_loop_phase_callback_bus().notify_movie_end();
 
 	ResourceLoader::clear_thread_load_tasks();
 
@@ -4738,9 +4708,7 @@ void Main::cleanup(bool p_force) {
 	// Flush before uninitializing the scene, but delete the MessageQueue as late as possible.
 	message_queue->flush();
 
-	#ifdef SPX_ENABLED 
-	Spx::on_destroy();
-	#endif
+	get_main_loop_phase_callback_bus().notify_destroy();
 
 	OS::get_singleton()->delete_main_loop();
 

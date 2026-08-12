@@ -1,133 +1,170 @@
-name: 🤖 Android Build Workflow
+name: Build Android Runtime Artifact
 
 on:
   workflow_call:
     inputs:
-      version:
+      runtime_version:
         required: true
         type: string
-        description: "Version number for the build"
-      platforms:
+      runtime_abi:
         required: true
         type: string
-        description: "Platforms to build"
-      godot_base_branch:
+      godot_repository:
         required: true
         type: string
-        description: "Base branch for Godot"
-      engine_version:
+      godot_ref:
         required: true
         type: string
-        description: "Engine version"
-      common_args:
+      spx_repository:
         required: true
         type: string
-        description: "Common build arguments"
-      release_args:
+      spx_ref:
         required: true
         type: string
-        description: "Release build arguments"
-      event_name:
-        required: true
-        type: string
-        description: "Event name triggering the build"
-      release_tag:
-        required: false
-        type: string
-        description: "Release tag name"
-    secrets:
-      GH_TOKEN:
-        required: true
 
-env:
-  SCONS_CACHE: "${{github.workspace}}/.scons-cache/"
-  SCONS_CACHE_LIMIT: "10000"
+permissions:
+  contents: read
 
 jobs:
   android-build:
-    name: 🤖 Android Release
-    if: contains(inputs.platforms, 'android') || contains(inputs.platforms, 'all')
+    name: Android templates
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout
+      - name: Check out Godot source
         uses: actions/checkout@v4
         with:
+          repository: ${{ inputs.godot_repository }}
+          ref: ${{ inputs.godot_ref }}
           submodules: recursive
+          persist-credentials: false
 
-      - name: Setup Java 17
+      - name: Set up SPX build context
+        id: spx-build
+        uses: ./.github/actions/setup-spx-module/build-context
+        with:
+          runtime-version: ${{ inputs.runtime_version }}
+          runtime-abi: ${{ inputs.runtime_abi }}
+          repository: ${{ inputs.spx_repository }}
+          ref: ${{ inputs.spx_ref }}
+          toolchain-scope: android
+          cache-scope: android-templates
+
+      - name: Set up locked JDK
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: 17
+          distribution: temurin
+          java-version: ${{ steps.spx-build.outputs.jdk-version }}
 
-      # Set up shared cache for all Android architectures
-      - name: Set up build cache
-        uses: actions/cache@v4
+      - name: Set up locked Android NDK installer adapter
+        id: setup-ndk
+        uses: nttld/setup-ndk@ed92fe6cadad69be94a966a7ee3271275e62f779 # v1.6.0
+        # setup-ndk's persistent cache can restore compiler symlinks that still
+        # point at a previous runner's tool cache. Keep the installation fresh.
         with:
-          path: ${{github.workspace}}/.scons-cache/
-          # Do not use SHA in cache key to allow cache reuse across commits
-          key: android-release-${{inputs.godot_base_branch}}-${{github.ref}}
-          restore-keys: |
-            android-release-${{inputs.godot_base_branch}}-
-            android-release-
+          ndk-version: ${{ steps.spx-build.outputs.android-ndk-installer-alias }}
+          add-to-path: true
+          link-to-sdk: true
 
-      - name: Setup Python and SCons
-        uses: ./.github/actions/godot-deps
-
-      # Build in specific order to maximize cache utilization
-      # First build debug and release versions of the same architecture to reuse compilation cache
-
-      # arm32 builds (debug first, then release)
-      - name: Build Android 32-bit Debug Template
-        uses: ./.github/actions/godot-build
-        with:
-          sconsflags: platform=android target=template_debug arch=arm32 ${{ inputs.common_args }} ${{ inputs.release_args }}
-          platform: android
-          target: template_debug
-
-      - name: Build Android 32-bit Release Template
-        uses: ./.github/actions/godot-build
-        with:
-          sconsflags: platform=android target=template_release arch=arm32 ${{ inputs.common_args }} ${{ inputs.release_args }}
-          platform: android
-          target: template_release
-
-      # arm64 builds (debug first, then release)
-      - name: Build Android 64-bit Debug Template
-        uses: ./.github/actions/godot-build
-        with:
-          sconsflags: platform=android target=template_debug arch=arm64 ${{ inputs.common_args }} ${{ inputs.release_args }}
-          platform: android
-          target: template_debug
-
-      - name: Build Android 64-bit Release Template
-        uses: ./.github/actions/godot-build
-        with:
-          sconsflags: platform=android target=template_release arch=arm64 ${{ inputs.common_args }} ${{ inputs.release_args }}
-          platform: android
-          target: template_release
-
-      - name: Generate Final Android Templates
-        run: |
-          cd platform/android/java
-          ./gradlew generateGodotTemplates
-          echo "View generated files:"
-          ls -la ../../..
-          ls -la ../../../bin/
-
-      - name: Prepare Android files for release
-        if: inputs.event_name == 'release'
-        run: |
-          mkdir -p release
-          cp bin/android*.apk release/
-          cp bin/android_source.zip release/
-          zip -j release/android.zip release/*
-
-      - name: Publish to GitHub Release
-        if: inputs.event_name == 'release'
-        uses: softprops/action-gh-release@v1
-        with:
-          files: release/android.zip
-          tag_name: ${{ inputs.release_tag }}
+      - name: Export Android NDK environment
+        shell: bash
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }} 
+          EXPECTED_NDK_VERSION: ${{ steps.spx-build.outputs.android-ndk-version }}
+          INSTALLED_NDK_PATH: ${{ steps.setup-ndk.outputs.ndk-path }}
+          INSTALLED_NDK_VERSION: ${{ steps.setup-ndk.outputs.ndk-full-version }}
+        run: |
+          set -euo pipefail
+
+          if [ "${INSTALLED_NDK_VERSION}" != "${EXPECTED_NDK_VERSION}" ]; then
+            echo "[error] Android NDK version is ${INSTALLED_NDK_VERSION}; expected ${EXPECTED_NDK_VERSION}" >&2
+            exit 1
+          fi
+          if [ ! -d "${INSTALLED_NDK_PATH}" ]; then
+            echo "[error] Android NDK path does not exist: ${INSTALLED_NDK_PATH}" >&2
+            exit 1
+          fi
+
+          godot_ndk_path="${ANDROID_HOME}/ndk/${EXPECTED_NDK_VERSION}"
+          if [ ! -e "${godot_ndk_path}" ]; then
+            echo "[error] Godot cannot find the linked Android NDK at ${godot_ndk_path}" >&2
+            exit 1
+          fi
+
+          ndk_bin="${godot_ndk_path}/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          for compiler in clang clang++; do
+            compiler_path="${ndk_bin}/${compiler}"
+            if [ ! -x "${compiler_path}" ]; then
+              echo "[error] Android NDK compiler is not executable: ${compiler_path}" >&2
+              exit 1
+            fi
+            if ! "${compiler_path}" --version; then
+              echo "[error] Android NDK compiler failed its version check: ${compiler_path}" >&2
+              exit 1
+            fi
+          done
+
+          echo "ANDROID_NDK_ROOT=${godot_ndk_path}" >> "${GITHUB_ENV}"
+          echo "ANDROID_NDK_HOME=${godot_ndk_path}" >> "${GITHUB_ENV}"
+          echo "[info] Godot Android NDK: ${godot_ndk_path}"
+
+      - name: Build Android 32-bit debug template
+        uses: ./.github/actions/godot-build
+        with:
+          sconsflags: >-
+            ${{ steps.spx-build.outputs.template-release-flags }}
+            arch=arm32
+          custom-modules: ${{ steps.spx-build.outputs.module-path }}
+          platform: android
+          target: template_debug
+
+      - name: Build Android 32-bit release template
+        uses: ./.github/actions/godot-build
+        with:
+          sconsflags: >-
+            ${{ steps.spx-build.outputs.template-release-flags }}
+            arch=arm32
+          custom-modules: ${{ steps.spx-build.outputs.module-path }}
+          platform: android
+          target: template_release
+
+      - name: Build Android 64-bit debug template
+        uses: ./.github/actions/godot-build
+        with:
+          sconsflags: >-
+            ${{ steps.spx-build.outputs.template-release-flags }}
+            arch=arm64
+          custom-modules: ${{ steps.spx-build.outputs.module-path }}
+          platform: android
+          target: template_debug
+
+      - name: Build Android 64-bit release template
+        uses: ./.github/actions/godot-build
+        with:
+          sconsflags: >-
+            ${{ steps.spx-build.outputs.template-release-flags }}
+            arch=arm64
+          custom-modules: ${{ steps.spx-build.outputs.module-path }}
+          platform: android
+          target: template_release
+
+      - name: Generate Android templates
+        working-directory: platform/android/java
+        run: ./gradlew generateGodotTemplates
+
+      - name: Package Android artifact
+        shell: bash
+        env:
+          RUNTIME_VERSION: ${{ inputs.runtime_version }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          zip -j artifacts/android.zip bin/android*.apk bin/android_source.zip
+          echo "[info] Packaged Android runtime ${RUNTIME_VERSION}"
+          unzip -l artifacts/android.zip
+
+      - name: Upload Android artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-android
+          path: artifacts/android.zip
+          if-no-files-found: error
+          retention-days: 14

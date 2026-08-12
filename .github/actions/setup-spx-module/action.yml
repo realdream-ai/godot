@@ -1,0 +1,165 @@
+name: Set up external SPX module
+description: Check out the SPX source used by a runtime build and expose its immutable source identifiers.
+
+inputs:
+  runtime-version:
+    description: Runtime version that must match the selected SPX runtime lock.
+    required: true
+  runtime-abi:
+    description: Runtime ABI that must match the selected SPX runtime lock.
+    required: true
+  repository:
+    description: SPX repository containing the runtime lock and external module.
+    required: true
+  ref:
+    description: SPX branch, tag, or full commit SHA to check out.
+    required: true
+  toolchain-scope:
+    description: Toolchain digest scope for the target platform (native, web, or android).
+    required: true
+outputs:
+  godot-sha:
+    description: Full Godot source commit SHA.
+    value: ${{ steps.source.outputs.godot-sha }}
+  module-sha:
+    description: Git tree SHA for the external SPX module.
+    value: ${{ steps.source.outputs.module-sha }}
+  module-path:
+    description: Absolute path to the external module declared by the SPX runtime lock.
+    value: ${{ steps.source.outputs.module-path }}
+  common-flags:
+    description: Common SCons flags from the SPX module build profile.
+    value: ${{ steps.source.outputs.common-flags }}
+  editor-release-flags:
+    description: Common and native editor release SCons flags from the SPX module build profile.
+    value: ${{ steps.source.outputs.editor-release-flags }}
+  template-release-flags:
+    description: Common and export template release SCons flags from the SPX module build profile.
+    value: ${{ steps.source.outputs.template-release-flags }}
+  scons-version:
+    description: SCons version pinned by the SPX runtime lock.
+    value: ${{ steps.source.outputs.scons-version }}
+  emsdk-version:
+    description: Emscripten SDK version pinned by the SPX runtime lock.
+    value: ${{ steps.source.outputs.emsdk-version }}
+  android-ndk-version:
+    description: Full Android NDK package revision pinned by the SPX runtime lock.
+    value: ${{ steps.source.outputs.android-ndk-version }}
+  android-ndk-installer-alias:
+    description: Validated setup-ndk alias when known; only Android builds require it.
+    value: ${{ steps.source.outputs.android-ndk-installer-alias }}
+  jdk-version:
+    description: JDK version pinned by the SPX runtime lock.
+    value: ${{ steps.source.outputs.jdk-version }}
+  engine-toolchain-sha256:
+    description: SHA-256 of the target-scoped engine toolchain contract.
+    value: ${{ steps.source.outputs.engine-toolchain-sha256 }}
+
+runs:
+  using: composite
+  steps:
+    - name: Check out SPX build contract
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.repository }}
+        ref: ${{ inputs.ref }}
+        path: .spx-source
+        persist-credentials: false
+        # The action may be rerun in a reused workspace after expanding the module sparse checkout.
+        clean: true
+        sparse-checkout: |
+          /internal/release/runtime.lock.json
+          /.github/scripts/runtime_build_contract.py
+        sparse-checkout-cone-mode: false
+
+    - name: Resolve source identifiers
+      id: source
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      env:
+        INPUT_RUNTIME_VERSION: ${{ inputs.runtime-version }}
+        INPUT_RUNTIME_ABI: ${{ inputs.runtime-abi }}
+        TOOLCHAIN_SCOPE: ${{ inputs.toolchain-scope }}
+      run: |
+        set -euo pipefail
+
+        if command -v python3 >/dev/null 2>&1; then
+          python_command=python3
+        elif command -v python >/dev/null 2>&1; then
+          python_command=python
+        else
+          echo "[error] Python 3 is required to validate the SPX runtime build contract" >&2
+          exit 1
+        fi
+
+        source_root=.spx-source
+        lock_path="${source_root}/internal/release/runtime.lock.json"
+        contract_path="${source_root}/.github/scripts/runtime_build_contract.py"
+        if [ ! -f "${lock_path}" ] || [ ! -f "${contract_path}" ]; then
+          echo "[error] Selected SPX source does not contain the runtime build contract" >&2
+          exit 1
+        fi
+
+        if ! current_godot_origin="$(git remote get-url origin)"; then
+          echo "[error] Current Godot checkout has no origin remote" >&2
+          exit 1
+        fi
+        if ! current_godot_sha="$(git rev-parse --verify 'HEAD^{commit}')"; then
+          echo "[error] Cannot resolve the current Godot HEAD commit" >&2
+          exit 1
+        fi
+
+        contract_args=(
+          source
+          --lock "${lock_path}"
+          --github-output "${GITHUB_OUTPUT}"
+          --runtime-version "${INPUT_RUNTIME_VERSION}"
+          --runtime-abi "${INPUT_RUNTIME_ABI}"
+          --godot-origin "${current_godot_origin}"
+          --godot-commit "${current_godot_sha}"
+          --toolchain-scope "${TOOLCHAIN_SCOPE}"
+        )
+        if [ "${TOOLCHAIN_SCOPE}" = android ]; then
+          contract_args+=(--require-android-ndk-alias)
+        fi
+
+        module_relative_path="$("${python_command}" "${contract_path}" "${contract_args[@]}")"
+        if [ -z "${module_relative_path}" ] || [[ "${module_relative_path}" == *$'\n'* ]]; then
+          echo "[error] Runtime build contract returned an invalid module path" >&2
+          exit 1
+        fi
+
+        if ! module_object_type="$(git -C "${source_root}" cat-file -t "HEAD:${module_relative_path}")"; then
+          echo "[error] SPX module is missing from the selected commit: ${module_relative_path}" >&2
+          exit 1
+        fi
+        if [ "${module_object_type}" != tree ]; then
+          echo "[error] SPX module is not a Git tree: ${module_relative_path}" >&2
+          exit 1
+        fi
+        printf '/%s/\n' "${module_relative_path}" | git -C "${source_root}" sparse-checkout add --stdin
+
+        module_checkout_path="${source_root}/${module_relative_path}"
+        profile_path="${module_checkout_path}/spx_scons_profile.json"
+        if [ ! -f "${module_checkout_path}/SCsub" ] || [ ! -f "${module_checkout_path}/config.py" ] || [ ! -f "${profile_path}" ]; then
+          echo "[error] External SPX module is incomplete: ${module_checkout_path}" >&2
+          exit 1
+        fi
+
+        module_path="$(MODULE_CHECKOUT_PATH="${module_checkout_path}" "${python_command}" -c 'import os; from pathlib import Path; print(Path(os.environ["MODULE_CHECKOUT_PATH"]).resolve().as_posix())')"
+        spx_sha="$(git -C "${source_root}" rev-parse HEAD)"
+        module_sha="$(git -C "${source_root}" rev-parse "HEAD:${module_relative_path}")"
+
+        echo "[info] Runtime version: ${INPUT_RUNTIME_VERSION#v}"
+        echo "[info] Godot commit: ${current_godot_sha}"
+        echo "[info] SPX commit: ${spx_sha}"
+        echo "[info] SPX module tree: ${module_sha}"
+        echo "[info] SPX module path: ${module_path}"
+
+        echo "godot-sha=${current_godot_sha}" >> "${GITHUB_OUTPUT}"
+        echo "module-sha=${module_sha}" >> "${GITHUB_OUTPUT}"
+        echo "module-path=${module_path}" >> "${GITHUB_OUTPUT}"
+
+        "${python_command}" "${contract_path}" profile \
+          --profile "${profile_path}" \
+          --github-output "${GITHUB_OUTPUT}"
