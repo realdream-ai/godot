@@ -67,7 +67,7 @@ jobs:
             artifact_name: runtime-web-worker
     steps:
       - name: Check out Godot source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ inputs.godot_repository }}
           ref: ${{ inputs.godot_ref }}
@@ -125,7 +125,7 @@ jobs:
           fi
 
       - name: Upload Web artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.artifact_name }}
           path: artifacts/${{ matrix.output_file }}
@@ -134,7 +134,7 @@ jobs:
 
       - name: Upload Web minigame artifact
         if: matrix.mode == 'normal'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: runtime-web-minigame
           path: artifacts/web-minigame.zip
@@ -143,7 +143,7 @@ jobs:
 
       - name: Upload Web miniprogram artifact
         if: matrix.mode == 'normal'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: runtime-web-miniprogram
           path: artifacts/web-miniprogram.zip

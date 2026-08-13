@@ -31,7 +31,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Check out Godot source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ inputs.godot_repository }}
           ref: ${{ inputs.godot_ref }}
@@ -74,7 +74,7 @@ jobs:
           Compress-Archive -Path artifacts/godot.windows.editor.x86_64.exe -DestinationPath artifacts/editor-windows-x86_64.zip
 
       - name: Upload Windows editor artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: runtime-editor-windows-x86_64
           path: artifacts/editor-windows-x86_64.zip
@@ -86,7 +86,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Check out Godot source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ inputs.godot_repository }}
           ref: ${{ inputs.godot_ref }}
@@ -146,7 +146,7 @@ jobs:
           Write-Host "[info] Packaged Windows runtime $env:RUNTIME_VERSION"
 
       - name: Upload Windows template artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: runtime-windows-x86_64
           path: artifacts/windows-x86_64.zip

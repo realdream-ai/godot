@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Check out Godot source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ inputs.godot_repository }}
           ref: ${{ inputs.godot_ref }}
@@ -50,7 +50,7 @@ jobs:
           cache-scope: android-templates
 
       - name: Set up locked JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: ${{ steps.spx-build.outputs.jdk-version }}
@@ -162,7 +162,7 @@ jobs:
           unzip -l artifacts/android.zip
 
       - name: Upload Android artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: runtime-android
           path: artifacts/android.zip

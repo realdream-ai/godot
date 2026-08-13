@@ -42,7 +42,7 @@ jobs:
     timeout-minutes: 120
     steps:
       - name: Check out locked Godot source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ inputs.godot_repository }}
           ref: ${{ inputs.godot_ref }}
@@ -169,7 +169,7 @@ jobs:
     timeout-minutes: 90
     steps:
       - name: Check out locked Godot source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ inputs.godot_repository }}
           ref: ${{ inputs.godot_ref }}

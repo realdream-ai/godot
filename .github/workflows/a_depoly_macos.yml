@@ -35,7 +35,7 @@ jobs:
         arch: [x86_64, arm64]
     steps:
       - name: Check out Godot source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ inputs.godot_repository }}
           ref: ${{ inputs.godot_ref }}
@@ -72,7 +72,7 @@ jobs:
           zip -j "artifacts/editor-macos-${{ matrix.arch }}.zip" "bin/godot.macos.editor.${{ matrix.arch }}"
 
       - name: Upload macOS editor artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: runtime-editor-macos-${{ matrix.arch }}
           path: artifacts/editor-macos-${{ matrix.arch }}.zip
@@ -88,7 +88,7 @@ jobs:
         arch: [x86_64, arm64]
     steps:
       - name: Check out Godot source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ inputs.godot_repository }}
           ref: ${{ inputs.godot_ref }}
@@ -141,7 +141,7 @@ jobs:
           echo "[info] Packaged macOS ${RUNTIME_VERSION} ${{ matrix.arch }} templates"
 
       - name: Upload macOS template artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: runtime-macos-${{ matrix.arch }}
           path: artifacts/macos-${{ matrix.arch }}.zip
@@ -154,7 +154,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Check out Godot source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ inputs.godot_repository }}
           ref: ${{ inputs.godot_ref }}
@@ -162,13 +162,13 @@ jobs:
           persist-credentials: false
 
       - name: Download x86_64 templates
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: runtime-macos-x86_64
           path: template-artifacts/x86_64
 
       - name: Download arm64 templates
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: runtime-macos-arm64
           path: template-artifacts/arm64
@@ -211,7 +211,7 @@ jobs:
           zip -q -9 -r artifacts/macos.zip macos_template.app
 
       - name: Upload universal macOS artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: runtime-macos-universal
           path: artifacts/macos.zip
