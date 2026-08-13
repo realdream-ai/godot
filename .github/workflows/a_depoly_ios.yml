@@ -121,7 +121,7 @@ jobs:
           unzip -l artifacts/ios.zip
 
       - name: Upload iOS artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: runtime-ios
           path: artifacts/ios.zip
