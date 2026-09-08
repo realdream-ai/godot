@@ -57,9 +57,6 @@ private:
 
 	AudioStreamPlayerInternal *internal = nullptr;
 
-	SafeNumeric<float> setplay{ -1.0 };
-	Ref<AudioStreamPlayback> setplayback;
-
 	Vector<AudioFrame> volume_vector;
 
 	uint64_t last_mix_count = -1;

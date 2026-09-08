@@ -58,9 +58,18 @@ private:
 	AudioServer::PlaybackType playback_type = AudioServer::PlaybackType::PLAYBACK_TYPE_DEFAULT;
 
 	HashMap<StringName, ParameterData> playback_parameters;
+	struct PendingPlayback {
+		Ref<AudioStreamPlayback> playback;
+		float position = 0.0f;
+		bool paused = false;
+	};
+	Vector<PendingPlayback> pending_playbacks;
 
 	void _set_process(bool p_enabled);
 	void _update_stream_parameters();
+	int _find_pending_playback(const Ref<AudioStreamPlayback> &p_playback) const;
+	void _clear_pending_playbacks();
+	void _clear_playbacks();
 
 	_FORCE_INLINE_ bool _is_sample() {
 		return (AudioServer::get_singleton()->get_default_playback_type() == AudioServer::PlaybackType::PLAYBACK_TYPE_SAMPLE && get_playback_type() == AudioServer::PlaybackType::PLAYBACK_TYPE_DEFAULT) || get_playback_type() == AudioServer::PlaybackType::PLAYBACK_TYPE_SAMPLE;
@@ -94,6 +103,9 @@ public:
 	StringName get_bus() const;
 
 	Ref<AudioStreamPlayback> play_basic();
+	void play_pending(float p_from_pos);
+	bool has_pending_playback() const;
+	void start_pending_playbacks(const HashMap<StringName, Vector<AudioFrame>> &p_bus_volumes, float p_pitch_scale, float p_highshelf_gain = 0.0f, float p_attenuation_cutoff_hz = 0.0f);
 	void seek(float p_seconds);
 	void stop_basic();
 	bool is_playing() const;

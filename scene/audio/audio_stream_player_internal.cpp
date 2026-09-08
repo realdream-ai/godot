@@ -63,11 +63,14 @@ void AudioStreamPlayerInternal::_update_stream_parameters() {
 void AudioStreamPlayerInternal::process() {
 	Vector<Ref<AudioStreamPlayback>> playbacks_to_remove;
 	for (Ref<AudioStreamPlayback> &playback : stream_playbacks) {
+		if (_find_pending_playback(playback) != -1) {
+			continue; // Pending voices have not started.
+		}
 		if (playback.is_valid() && !AudioServer::get_singleton()->is_playback_active(playback) && !AudioServer::get_singleton()->is_playback_paused(playback)) {
 			playbacks_to_remove.push_back(playback);
 		}
 	}
-	// Now go through and remove playbacks that have finished. Removing elements from a Vector in a range based for is asking for trouble.
+	// Remove finished voices after iterating.
 	for (Ref<AudioStreamPlayback> &playback : playbacks_to_remove) {
 		stream_playbacks.erase(playback);
 	}
@@ -83,7 +86,13 @@ void AudioStreamPlayerInternal::process() {
 
 void AudioStreamPlayerInternal::ensure_playback_limit() {
 	while (stream_playbacks.size() > max_polyphony) {
-		AudioServer::get_singleton()->stop_playback_stream(stream_playbacks[0]);
+		int pending_index = _find_pending_playback(stream_playbacks[0]);
+		if (pending_index != -1) {
+			stream_playbacks[0]->set_sample_playback(nullptr);
+			pending_playbacks.remove_at(pending_index);
+		} else {
+			AudioServer::get_singleton()->stop_playback_stream(stream_playbacks[0]);
+		}
 		stream_playbacks.remove_at(0);
 	}
 }
@@ -106,10 +115,7 @@ void AudioStreamPlayerInternal::notification(int p_what) {
 		} break;
 
 		case Node::NOTIFICATION_PREDELETE: {
-			for (Ref<AudioStreamPlayback> &playback : stream_playbacks) {
-				AudioServer::get_singleton()->stop_playback_stream(playback);
-			}
-			stream_playbacks.clear();
+			_clear_playbacks();
 		} break;
 
 		case Node::NOTIFICATION_SUSPENDED:
@@ -174,9 +180,96 @@ Ref<AudioStreamPlayback> AudioStreamPlayerInternal::play_basic() {
 	return stream_playback;
 }
 
-void AudioStreamPlayerInternal::set_stream_paused(bool p_pause) {
-	// TODO this does not have perfect recall, fix that maybe? If there are zero playbacks registered with the AudioServer, this bool isn't persisted.
+void AudioStreamPlayerInternal::play_pending(float p_from_pos) {
+	Ref<AudioStreamPlayback> playback = play_basic();
+	if (playback.is_null()) {
+		return;
+	}
+	PendingPlayback pending;
+	pending.playback = playback;
+	pending.position = MAX(p_from_pos, 0.0f);
+	pending_playbacks.push_back(pending);
+}
+
+bool AudioStreamPlayerInternal::has_pending_playback() const {
+	return !pending_playbacks.is_empty();
+}
+
+void AudioStreamPlayerInternal::start_pending_playbacks(const HashMap<StringName, Vector<AudioFrame>> &p_bus_volumes, float p_pitch_scale, float p_highshelf_gain, float p_attenuation_cutoff_hz) {
+	ERR_FAIL_COND(p_bus_volumes.is_empty());
+	// Apply the limit before starting queued voices.
+	ensure_playback_limit();
+	// The first bus is the sample's initial route.
+	const KeyValue<StringName, Vector<AudioFrame>> &sample_bus = *p_bus_volumes.begin();
+	// Snapshot requests: start() may reenter the player.
+	const Vector<PendingPlayback> playbacks_to_start = pending_playbacks;
+	for (const PendingPlayback &request : playbacks_to_start) {
+		int pending_index = _find_pending_playback(request.playback);
+		if (pending_index == -1) {
+			continue;
+		}
+		PendingPlayback pending = pending_playbacks[pending_index];
+		if (pending.paused) {
+			continue;
+		}
+		AudioServer::get_singleton()->start_playback_stream(pending.playback, p_bus_volumes, pending.position, p_pitch_scale, p_highshelf_gain, p_attenuation_cutoff_hz);
+		pending_index = _find_pending_playback(pending.playback);
+		if (pending_index == -1) {
+			AudioServer::get_singleton()->stop_playback_stream(pending.playback);
+			continue;
+		}
+
+		// Start samples after spatial parameters are ready.
+		if (pending.playback->get_is_sample() && pending.playback->get_sample_playback().is_valid()) {
+			Ref<AudioSamplePlayback> sample_playback = pending.playback->get_sample_playback();
+			sample_playback->offset = pending.position;
+			sample_playback->bus = sample_bus.key;
+			sample_playback->volume_vector = sample_bus.value;
+			sample_playback->pitch_scale = p_pitch_scale;
+			AudioServer::get_singleton()->start_sample_playback(sample_playback);
+			if (p_bus_volumes.size() > 1) {
+				// Apply reverb sends after sample creation.
+				AudioServer::get_singleton()->set_playback_bus_volumes_linear(pending.playback, p_bus_volumes);
+			}
+		}
+		pending_playbacks.remove_at(pending_index);
+	}
+}
+
+int AudioStreamPlayerInternal::_find_pending_playback(const Ref<AudioStreamPlayback> &p_playback) const {
+	for (int i = 0; i < pending_playbacks.size(); i++) {
+		if (pending_playbacks[i].playback == p_playback) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+void AudioStreamPlayerInternal::_clear_pending_playbacks() {
+	for (const PendingPlayback &pending : pending_playbacks) {
+		stream_playbacks.erase(pending.playback);
+		// Unregistered samples must release their reference cycle.
+		pending.playback->set_sample_playback(nullptr);
+	}
+	pending_playbacks.clear();
+}
+
+void AudioStreamPlayerInternal::_clear_playbacks() {
+	_clear_pending_playbacks();
 	for (Ref<AudioStreamPlayback> &playback : stream_playbacks) {
+		AudioServer::get_singleton()->stop_playback_stream(playback);
+	}
+	stream_playbacks.clear();
+}
+
+void AudioStreamPlayerInternal::set_stream_paused(bool p_pause) {
+	// TODO: Remember pause state when no playback exists.
+	for (Ref<AudioStreamPlayback> &playback : stream_playbacks) {
+		int pending_index = _find_pending_playback(playback);
+		if (pending_index != -1) {
+			pending_playbacks.write[pending_index].paused = p_pause;
+			continue;
+		}
 		AudioServer::get_singleton()->set_playback_paused(playback, p_pause);
 		if (_is_sample() && playback->get_sample_playback().is_valid()) {
 			AudioServer::get_singleton()->set_sample_playback_pause(playback->get_sample_playback(), p_pause);
@@ -185,8 +278,12 @@ void AudioStreamPlayerInternal::set_stream_paused(bool p_pause) {
 }
 
 bool AudioStreamPlayerInternal::get_stream_paused() const {
-	// There's currently no way to pause some playback streams but not others. Check the first and don't bother looking at the rest.
+	// Use the first voice's pause state.
 	if (!stream_playbacks.is_empty()) {
+		int pending_index = _find_pending_playback(stream_playbacks[0]);
+		if (pending_index != -1) {
+			return pending_playbacks[pending_index].paused;
+		}
 		return AudioServer::get_singleton()->is_playback_paused(stream_playbacks[0]);
 	}
 	return false;
@@ -261,6 +358,10 @@ void AudioStreamPlayerInternal::set_stream(Ref<AudioStream> p_stream) {
 }
 
 void AudioStreamPlayerInternal::seek(float p_seconds) {
+	if (pending_playbacks.size() == 1 && stream_playbacks.size() == 1) {
+		pending_playbacks.write[0].position = MAX(p_seconds, 0.0f);
+		return;
+	}
 	if (is_playing()) {
 		stop_callable.call();
 		play_callable.call(p_seconds);
@@ -268,16 +369,15 @@ void AudioStreamPlayerInternal::seek(float p_seconds) {
 }
 
 void AudioStreamPlayerInternal::stop_basic() {
-	for (Ref<AudioStreamPlayback> &playback : stream_playbacks) {
-		AudioServer::get_singleton()->stop_playback_stream(playback);
-	}
-	stream_playbacks.clear();
-
+	_clear_playbacks();
 	active.clear();
 	_set_process(false);
 }
 
 bool AudioStreamPlayerInternal::is_playing() const {
+	if (!pending_playbacks.is_empty()) {
+		return true;
+	}
 	for (const Ref<AudioStreamPlayback> &playback : stream_playbacks) {
 		if (AudioServer::get_singleton()->is_playback_active(playback)) {
 			return true;
@@ -287,9 +387,14 @@ bool AudioStreamPlayerInternal::is_playing() const {
 }
 
 float AudioStreamPlayerInternal::get_playback_position() {
-	// Return the playback position of the most recently started playback stream.
+	// Return the latest voice's position.
 	if (!stream_playbacks.is_empty()) {
-		return AudioServer::get_singleton()->get_playback_position(stream_playbacks[stream_playbacks.size() - 1]);
+		const Ref<AudioStreamPlayback> &playback = stream_playbacks[stream_playbacks.size() - 1];
+		int pending_index = _find_pending_playback(playback);
+		if (pending_index != -1) {
+			return pending_playbacks[pending_index].position;
+		}
+		return AudioServer::get_singleton()->get_playback_position(playback);
 	}
 	return 0;
 }
