@@ -85,7 +85,7 @@ private:
 	void _set_playing(bool p_enable);
 	bool _is_active() const;
 	Area3D *_get_overriding_area();
-	HashMap<StringName, Vector<AudioFrame>> _update_panning();
+	void _update_panning(HashMap<StringName, Vector<AudioFrame>> *r_initial_bus_volumes = nullptr);
 
 	uint32_t area_mask = 1;
 

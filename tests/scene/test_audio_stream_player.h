@@ -32,6 +32,7 @@
 #define TEST_AUDIO_STREAM_PLAYER_H
 
 #include "scene/2d/audio_stream_player_2d.h"
+#include "scene/audio/audio_stream_player_internal.h"
 #include "scene/main/window.h"
 #include "scene/resources/audio_stream_wav.h"
 #include "scene/resources/world_2d.h"
@@ -61,6 +62,16 @@ public:
 	HashSet<ObjectID> active;
 	HashSet<ObjectID> paused;
 	int stops = 0;
+	Callable on_start_sample;
+	Callable on_set_bus_volumes;
+
+	static void call_once(Callable &r_callback) {
+		Callable callback = r_callback;
+		r_callback = Callable();
+		if (callback.is_valid()) {
+			callback.call();
+		}
+	}
 
 	const char *get_name() const override { return "Sample test driver"; }
 	Error init() override { return OK; }
@@ -85,6 +96,7 @@ public:
 		started.pitch = p_playback->pitch_scale;
 		starts.push_back(started);
 		active.insert(started.id);
+		call_once(on_start_sample);
 	}
 	void stop_sample_playback(const Ref<AudioSamplePlayback> &p_playback) override {
 		active.erase(p_playback->get_instance_id());
@@ -101,7 +113,42 @@ public:
 	bool is_sample_playback_active(const Ref<AudioSamplePlayback> &p_playback) override {
 		return active.has(p_playback->get_instance_id());
 	}
+	void set_sample_playback_bus_volumes_linear(const Ref<AudioSamplePlayback> &p_playback, const HashMap<StringName, Vector<AudioFrame>> &p_bus_volumes) override {
+		if (active.has(p_playback->get_instance_id())) {
+			call_once(on_set_bus_volumes);
+		}
+	}
 };
+
+// Exercise multiple initial buses without requiring a physics area.
+class PendingPlayer : public Node {
+	GDCLASS(PendingPlayer, Node);
+
+protected:
+	void _notification(int p_what) {
+		internal->notification(p_what);
+	}
+
+public:
+	AudioStreamPlayerInternal *internal = nullptr;
+
+	void play(float p_position) { internal->play_pending(p_position); }
+	void stop() { internal->stop_basic(); }
+	void restart(float p_position) {
+		stop();
+		play(p_position);
+	}
+
+	PendingPlayer() {
+		internal = memnew(AudioStreamPlayerInternal(this, callable_mp(this, &PendingPlayer::play), callable_mp(this, &PendingPlayer::stop), true));
+	}
+	~PendingPlayer() { memdelete(internal); }
+};
+
+void restart_player(AudioStreamPlayer2D *p_player, float p_position) {
+	p_player->stop();
+	p_player->play(p_position);
+}
 
 struct Fixture {
 	SampleDriver driver;
@@ -253,6 +300,85 @@ TEST_CASE("[SceneTree][AudioStreamPlayer2D] Cancelled samples do not start or re
 	CHECK(playback->get_sample_playback().is_null());
 }
 
+TEST_CASE("[SceneTree][AudioStreamPlayer2D] Driver start can cancel and replace a pending sample") {
+	Fixture fixture;
+	AudioStreamPlayer2D *player = fixture.create_player();
+	SIGNAL_WATCH(player, "finished");
+	player->play();
+	Ref<AudioStreamPlayback> old_playback = player->get_stream_playback();
+	Ref<AudioSamplePlayback> old_sample = old_playback->get_sample_playback();
+	ObjectID old_playback_id = old_playback->get_instance_id();
+	ObjectID old_sample_id = old_sample->get_instance_id();
+	fixture.driver.on_start_sample = callable_mp_static(restart_player).bind(player, 0.004f);
+
+	fixture.physics(player);
+	REQUIRE(fixture.driver.starts.size() == 1);
+	CHECK(fixture.driver.on_start_sample.is_null());
+	CHECK(fixture.driver.active.is_empty());
+	CHECK(old_playback->get_sample_playback().is_null());
+	CHECK(player->is_playing());
+	CHECK(player->get_playback_position() == doctest::Approx(0.004f));
+
+	fixture.physics(player);
+	REQUIRE(fixture.driver.starts.size() == 2);
+	CHECK(fixture.driver.starts[1].offset == doctest::Approx(0.004f));
+	CHECK(fixture.driver.active.size() == 1);
+	CHECK(fixture.driver.active.has(fixture.driver.starts[1].id));
+	CHECK_FALSE(fixture.driver.active.has(old_sample_id));
+	CHECK(fixture.driver.stops == 1);
+	SIGNAL_CHECK_FALSE("finished");
+
+	old_sample.unref();
+	old_playback.unref();
+	fixture.server->update();
+	CHECK(ObjectDB::get_instance(old_sample_id) == nullptr);
+	CHECK(ObjectDB::get_instance(old_playback_id) == nullptr);
+}
+
+TEST_CASE("[SceneTree][AudioStreamPlayerInternal] Driver bus update can replace a pending sample") {
+	Fixture fixture;
+	PendingPlayer *player = memnew(PendingPlayer);
+	player->internal->set_stream(fixture.stream);
+	player->internal->set_playback_type(AudioServer::PLAYBACK_TYPE_SAMPLE);
+	fixture.viewport->add_child(player);
+	player->play(0.0f);
+	Ref<AudioStreamPlayback> old_playback = player->internal->get_stream_playback();
+	Ref<AudioSamplePlayback> old_sample = old_playback->get_sample_playback();
+	ObjectID old_playback_id = old_playback->get_instance_id();
+	ObjectID old_sample_id = old_sample->get_instance_id();
+	fixture.driver.on_set_bus_volumes = callable_mp(player, &PendingPlayer::restart).bind(0.005f);
+	Vector<AudioFrame> volumes;
+	volumes.resize(4);
+	volumes.fill(AudioFrame(0.0f, 0.0f));
+	volumes.write[0] = AudioFrame(0.2f, 0.2f);
+	HashMap<StringName, Vector<AudioFrame>> buses;
+	buses["Master"] = volumes;
+	buses["Effects"] = volumes;
+
+	player->internal->start_pending_playbacks(buses, 1.0f);
+	REQUIRE(fixture.driver.starts.size() == 1);
+	CHECK(fixture.driver.on_set_bus_volumes.is_null());
+	CHECK(fixture.driver.active.is_empty());
+	CHECK(old_playback->get_sample_playback().is_null());
+	CHECK(player->internal->has_pending_playback());
+	CHECK(player->internal->get_playback_position() == doctest::Approx(0.005f));
+
+	player->internal->start_pending_playbacks(buses, 1.0f);
+	REQUIRE(fixture.driver.starts.size() == 2);
+	CHECK(fixture.driver.starts[1].offset == doctest::Approx(0.005f));
+	CHECK(fixture.driver.active.size() == 1);
+	CHECK(fixture.driver.active.has(fixture.driver.starts[1].id));
+	CHECK_FALSE(fixture.driver.active.has(old_sample_id));
+	CHECK(fixture.driver.stops == 1);
+	CHECK_FALSE(player->internal->has_pending_playback());
+
+	old_sample.unref();
+	old_playback.unref();
+	fixture.server->update();
+	CHECK(ObjectDB::get_instance(old_sample_id) == nullptr);
+	CHECK(ObjectDB::get_instance(old_playback_id) == nullptr);
+}
+
 TEST_CASE("[SceneTree][AudioStreamPlayer2D] Same-frame sample polyphony and finished") {
 	Fixture fixture;
 	AudioStreamPlayer2D *player = fixture.create_player();
@@ -283,6 +409,36 @@ TEST_CASE("[SceneTree][AudioStreamPlayer2D] Same-frame sample polyphony and fini
 	CHECK_FALSE(player->is_playing());
 	CHECK(fixture.driver.active.is_empty());
 	SIGNAL_CHECK_FALSE("finished");
+}
+
+TEST_CASE("[SceneTree][AudioStreamPlayer2D] Seeking queued polyphonic samples replaces all voices") {
+	Fixture fixture;
+	AudioStreamPlayer2D *player = fixture.create_player();
+	player->set_max_polyphony(3);
+	Vector<Ref<AudioStreamPlayback>> old_playbacks;
+	for (int i = 0; i < 3; i++) {
+		player->play(0.001f * i);
+		old_playbacks.push_back(player->get_stream_playback());
+	}
+
+	SUBCASE("Unpaused voices") {
+		CHECK_FALSE(player->get_stream_paused());
+	}
+	SUBCASE("Multiple paused voices retain the existing stop-and-play seek behavior") {
+		player->set_stream_paused(true);
+		CHECK(player->get_stream_paused());
+	}
+	player->seek(0.006f);
+	CHECK(fixture.driver.starts.is_empty());
+	CHECK_FALSE(player->get_stream_paused());
+	CHECK(player->get_playback_position() == doctest::Approx(0.006f));
+	for (const Ref<AudioStreamPlayback> &playback : old_playbacks) {
+		CHECK(playback->get_sample_playback().is_null());
+	}
+	fixture.physics(player);
+	REQUIRE(fixture.driver.starts.size() == 1);
+	CHECK(fixture.driver.starts[0].offset == doctest::Approx(0.006f));
+	CHECK(fixture.driver.active.size() == 1);
 }
 
 TEST_CASE("[SceneTree][AudioStreamPlayer2D] Finished samples do not consume a polyphony slot") {

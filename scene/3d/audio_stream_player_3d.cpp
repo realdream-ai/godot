@@ -266,7 +266,7 @@ void AudioStreamPlayer3D::_notification(int p_what) {
 			HashMap<StringName, Vector<AudioFrame>> bus_volumes;
 			if (internal->has_pending_playback() || (internal->active.is_set() && last_mix_count != AudioServer::get_singleton()->get_mix_count()) || force_update_panning) {
 				force_update_panning = false;
-				bus_volumes = _update_panning();
+				_update_panning(internal->has_pending_playback() ? &bus_volumes : nullptr);
 			}
 
 			if (internal->has_pending_playback()) {
@@ -318,18 +318,20 @@ Area3D *AudioStreamPlayer3D::_get_overriding_area() {
 }
 
 // Interacts with PhysicsServer3D, so can only be called during _physics_process.
-HashMap<StringName, Vector<AudioFrame>> AudioStreamPlayer3D::_update_panning() {
+void AudioStreamPlayer3D::_update_panning(HashMap<StringName, Vector<AudioFrame>> *r_initial_bus_volumes) {
 	actual_pitch_scale = internal->pitch_scale;
 	Vector<AudioFrame> output_volume_vector;
 	output_volume_vector.resize(4);
 	for (AudioFrame &frame : output_volume_vector) {
 		frame = AudioFrame(0, 0);
 	}
-	HashMap<StringName, Vector<AudioFrame>> output_bus_volumes;
-	output_bus_volumes[internal->bus] = output_volume_vector;
+	if (r_initial_bus_volumes) {
+		r_initial_bus_volumes->clear();
+		(*r_initial_bus_volumes)[internal->bus] = output_volume_vector;
+	}
 
 	if (!internal->active.is_set() || internal->stream.is_null()) {
-		return output_bus_volumes;
+		return;
 	}
 
 	Vector3 linear_velocity;
@@ -342,7 +344,7 @@ HashMap<StringName, Vector<AudioFrame>> AudioStreamPlayer3D::_update_panning() {
 	Vector3 global_pos = get_global_transform().origin;
 
 	Ref<World3D> world_3d = get_world_3d();
-	ERR_FAIL_COND_V(world_3d.is_null(), output_bus_volumes);
+	ERR_FAIL_COND(world_3d.is_null());
 
 	HashSet<Camera3D *> cameras = world_3d->get_cameras();
 	cameras.insert(get_viewport()->get_camera_3d());
@@ -449,7 +451,9 @@ HashMap<StringName, Vector<AudioFrame>> AudioStreamPlayer3D::_update_panning() {
 		} else {
 			bus_volumes[internal->bus] = output_volume_vector;
 		}
-		output_bus_volumes = bus_volumes;
+		if (r_initial_bus_volumes) {
+			*r_initial_bus_volumes = bus_volumes;
+		}
 
 		for (Ref<AudioStreamPlayback> &playback : internal->stream_playbacks) {
 			AudioServer::get_singleton()->set_playback_bus_volumes_linear(playback, bus_volumes);
@@ -489,7 +493,6 @@ HashMap<StringName, Vector<AudioFrame>> AudioStreamPlayer3D::_update_panning() {
 			}
 		}
 	}
-	return output_bus_volumes;
 }
 
 void AudioStreamPlayer3D::set_stream(Ref<AudioStream> p_stream) {

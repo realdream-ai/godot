@@ -199,7 +199,7 @@ void AudioStreamPlayerInternal::start_pending_playbacks(const HashMap<StringName
 	ERR_FAIL_COND(p_bus_volumes.is_empty());
 	// Apply the limit before starting queued voices.
 	ensure_playback_limit();
-	// The first bus is the sample's initial route.
+	// The first inserted bus is the sample's initial route.
 	const KeyValue<StringName, Vector<AudioFrame>> &sample_bus = *p_bus_volumes.begin();
 	// Snapshot requests: start() may reenter the player.
 	const Vector<PendingPlayback> playbacks_to_start = pending_playbacks;
@@ -220,19 +220,26 @@ void AudioStreamPlayerInternal::start_pending_playbacks(const HashMap<StringName
 		}
 
 		// Start samples after spatial parameters are ready.
+		Ref<AudioSamplePlayback> sample_playback;
 		if (pending.playback->get_is_sample() && pending.playback->get_sample_playback().is_valid()) {
-			Ref<AudioSamplePlayback> sample_playback = pending.playback->get_sample_playback();
+			sample_playback = pending.playback->get_sample_playback();
 			sample_playback->offset = pending.position;
 			sample_playback->bus = sample_bus.key;
 			sample_playback->volume_vector = sample_bus.value;
 			sample_playback->pitch_scale = p_pitch_scale;
 			AudioServer::get_singleton()->start_sample_playback(sample_playback);
-			if (p_bus_volumes.size() > 1) {
+			if (p_bus_volumes.size() > 1 && _find_pending_playback(pending.playback) != -1) {
 				// Apply reverb sends after sample creation.
 				AudioServer::get_singleton()->set_playback_bus_volumes_linear(pending.playback, p_bus_volumes);
 			}
 		}
-		pending_playbacks.remove_at(pending_index);
+		pending_index = _find_pending_playback(pending.playback);
+		if (pending_index != -1) {
+			pending_playbacks.remove_at(pending_index);
+		} else if (sample_playback.is_valid()) {
+			// A driver callback may cancel a sample while it is starting.
+			AudioServer::get_singleton()->stop_sample_playback(sample_playback);
+		}
 	}
 }
 
@@ -363,6 +370,7 @@ void AudioStreamPlayerInternal::seek(float p_seconds) {
 		return;
 	}
 	if (is_playing()) {
+		// Seeking replaces polyphonic playback with one voice.
 		stop_callable.call();
 		play_callable.call(p_seconds);
 	}

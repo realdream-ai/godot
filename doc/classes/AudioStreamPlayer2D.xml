@@ -17,6 +17,7 @@
 			<return type="float" />
 			<description>
 				Returns the position in the [AudioStream].
+				If playback is queued, returns its starting position.
 			</description>
 		</method>
 		<method name="get_stream_playback">
