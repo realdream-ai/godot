@@ -32,7 +32,6 @@
 #include "godot_js.h"
 #include "os_web.h"
 
-#include "core/config/engine.h"
 #include "core/io/resource_loader.h"
 #include "main/main.h"
 #include "scene/main/scene_tree.h"
@@ -46,9 +45,6 @@
 #include <stdlib.h>
 
 static OS_Web *os = nullptr;
-#ifndef PROXY_TO_PTHREAD_ENABLED
-static uint64_t target_ticks = 0;
-#endif
 
 static bool main_started = false;
 static bool shutdown_complete = false;
@@ -72,30 +68,13 @@ void cleanup_after_sync() {
 }
 
 void main_loop_callback() {
-#ifndef PROXY_TO_PTHREAD_ENABLED
-	uint64_t current_ticks = os->get_ticks_usec();
-#endif
-
-	bool force_draw = DisplayServerWeb::get_singleton()->check_size_force_redraw();
+	const bool force_draw = DisplayServerWeb::get_singleton()->check_size_force_redraw();
+	if (!os->try_begin_frame(force_draw)) {
+		return; // Skip frame.
+	}
 	if (force_draw) {
 		Main::force_redraw();
-#ifndef PROXY_TO_PTHREAD_ENABLED
-	} else if (current_ticks < target_ticks) {
-		return; // Skip frame.
-#endif
 	}
-
-#ifndef PROXY_TO_PTHREAD_ENABLED
-	int max_fps = Engine::get_singleton()->get_max_fps();
-	if (max_fps > 0) {
-		if (current_ticks - target_ticks > 1000000) {
-			// When the window loses focus, we stop getting updates and accumulate delay.
-			// For this reason, if the difference is too big, we reset target ticks to the current ticks.
-			target_ticks = current_ticks;
-		}
-		target_ticks += (uint64_t)(1000000 / max_fps);
-	}
-#endif
 
 	if (os->main_loop_iterate()) {
 		emscripten_cancel_main_loop(); // Cancel current loop and set the cleanup one.
