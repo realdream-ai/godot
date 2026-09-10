@@ -94,7 +94,10 @@ bool OS_Web::try_begin_frame(bool p_force_draw) {
 			const uint64_t lower_bound = current_ticks > dynamic_delay_usec
 					? current_ticks - dynamic_delay_usec
 					: 0;
-			dynamic_target_ticks = MAX(dynamic_target_ticks, lower_bound);
+			const uint64_t upper_bound = current_ticks > UINT64_MAX - dynamic_delay_usec
+					? UINT64_MAX
+					: current_ticks + dynamic_delay_usec;
+			dynamic_target_ticks = MIN(MAX(dynamic_target_ticks, lower_bound), upper_bound);
 		}
 	}
 
@@ -233,6 +236,8 @@ void OS_Web::add_frame_delay(bool p_can_draw) {
 	const uint64_t fixed_target_ticks = fixed_delay_usec > 0
 			? frame_end_ticks + fixed_delay_usec
 			: 0;
+	// OS::add_frame_delay() applies the fixed delay first, then only waits for
+	// the dynamic target if it is later, so the equivalent deadline is MAX.
 	next_frame_target_ticks = MAX(fixed_target_ticks, dynamic_target_ticks);
 #endif
 }
