@@ -36,6 +36,7 @@
 #include "ip_web.h"
 #include "net_socket_web.h"
 
+#include "core/config/engine.h"
 #include "core/config/project_settings.h"
 #include "core/debugger/engine_debugger.h"
 #include "drivers/unix/dir_access_unix.h"
@@ -70,6 +71,39 @@ void OS_Web::set_main_loop(MainLoop *p_main_loop) {
 
 MainLoop *OS_Web::get_main_loop() const {
 	return main_loop;
+}
+
+bool OS_Web::try_begin_frame(bool p_force_draw) {
+#ifdef PROXY_TO_PTHREAD_ENABLED
+	return true;
+#else
+	const uint64_t current_ticks = get_ticks_usec();
+	if (!p_force_draw && current_ticks < next_frame_target_ticks) {
+		return false;
+	}
+
+	if (dynamic_delay_usec > 0) {
+		const bool forced_early = p_force_draw && current_ticks < dynamic_target_ticks;
+		const bool long_pause = current_ticks >= dynamic_target_ticks &&
+				current_ticks - dynamic_target_ticks > 1000000;
+		if (forced_early || long_pause) {
+			// Rebase after an early forced draw or a long pause instead of catching up.
+			dynamic_target_ticks = current_ticks;
+		} else {
+			// Match OS::add_frame_delay() by keeping the target within one interval.
+			const uint64_t lower_bound = current_ticks > dynamic_delay_usec
+					? current_ticks - dynamic_delay_usec
+					: 0;
+			const uint64_t upper_bound = current_ticks > UINT64_MAX - dynamic_delay_usec
+					? UINT64_MAX
+					: current_ticks + dynamic_delay_usec;
+			dynamic_target_ticks = MIN(MAX(dynamic_target_ticks, lower_bound), upper_bound);
+		}
+	}
+
+	frame_start_ticks = current_ticks;
+	return true;
+#endif
 }
 
 void OS_Web::fs_sync_callback() {
@@ -174,7 +208,37 @@ String OS_Web::get_name() const {
 
 void OS_Web::add_frame_delay(bool p_can_draw) {
 #ifndef PROXY_TO_PTHREAD_ENABLED
-	OS::add_frame_delay(p_can_draw);
+	Engine *engine = Engine::get_singleton();
+	const uint64_t frame_end_ticks = get_ticks_usec();
+	const uint64_t fixed_delay_usec = (uint64_t)engine->get_frame_delay() * 1000;
+
+	// Keep this selection logic in sync with OS::add_frame_delay().
+	uint64_t next_dynamic_delay_usec = 0;
+	const int low_processor_delay_usec = get_low_processor_usage_mode_sleep_usec();
+	if ((is_in_low_processor_usage_mode() || !p_can_draw) && low_processor_delay_usec > 0) {
+		next_dynamic_delay_usec = (uint64_t)low_processor_delay_usec;
+	}
+	const int max_fps = engine->get_max_fps();
+	if (max_fps > 0 && !engine->is_editor_hint()) {
+		next_dynamic_delay_usec = MAX(next_dynamic_delay_usec, (uint64_t)(1000000 / max_fps));
+	}
+
+	if (next_dynamic_delay_usec == 0) {
+		dynamic_target_ticks = 0;
+	} else if (next_dynamic_delay_usec != dynamic_delay_usec || dynamic_target_ticks == 0) {
+		// Start a new cadence when pacing is enabled or its interval changes.
+		dynamic_target_ticks = frame_start_ticks + next_dynamic_delay_usec;
+	} else {
+		dynamic_target_ticks += next_dynamic_delay_usec;
+	}
+	dynamic_delay_usec = next_dynamic_delay_usec;
+
+	const uint64_t fixed_target_ticks = fixed_delay_usec > 0
+			? frame_end_ticks + fixed_delay_usec
+			: 0;
+	// OS::add_frame_delay() applies the fixed delay first, then only waits for
+	// the dynamic target if it is later, so the equivalent deadline is MAX.
+	next_frame_target_ticks = MAX(fixed_target_ticks, dynamic_target_ticks);
 #endif
 }
 

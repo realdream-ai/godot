@@ -46,6 +46,12 @@ class OS_Web : public OS_Unix {
 	MainLoop *main_loop = nullptr;
 	List<AudioDriverWeb *> audio_drivers;
 
+	// Non-blocking frame pacing for builds that run the engine on the browser thread.
+	uint64_t frame_start_ticks = 0;
+	uint64_t dynamic_target_ticks = 0;
+	uint64_t next_frame_target_ticks = 0;
+	uint64_t dynamic_delay_usec = 0;
+
 	MIDIDriverWebMidi midi_driver;
 
 	bool idb_is_syncing = false;
@@ -81,6 +87,7 @@ public:
 	void initialize_joypads() override;
 
 	MainLoop *get_main_loop() const override;
+	bool try_begin_frame(bool p_force_draw);
 	bool main_loop_iterate();
 
 	Error execute(const String &p_path, const List<String> &p_arguments, String *r_pipe = nullptr, int *r_exitcode = nullptr, bool read_stderr = false, Mutex *p_pipe_mutex = nullptr, bool p_open_console = false) override;
@@ -98,8 +105,7 @@ public:
 	Error shell_open(const String &p_uri) override;
 	String get_name() const override;
 
-	// Override default OS implementation which would block the main thread with delay_usec.
-	// Implemented in web_main.cpp loop callback instead.
+	// Schedule frame delays without blocking the browser main thread.
 	void add_frame_delay(bool p_can_draw) override;
 
 	void vibrate_handheld(int p_duration_ms, float p_amplitude) override;
