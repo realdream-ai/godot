@@ -259,25 +259,20 @@ void AudioStreamPlayer3D::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_INTERNAL_PHYSICS_PROCESS: {
-			// Update anything related to position first, if possible of course.
-			Vector<AudioFrame> volume_vector;
-			if (setplay.get() > 0 || (internal->active.is_set() && last_mix_count != AudioServer::get_singleton()->get_mix_count()) || force_update_panning) {
-				force_update_panning = false;
-				volume_vector = _update_panning();
-			}
-
-			if (setplayback.is_valid() && setplay.get() >= 0) {
-				internal->active.set();
-				HashMap<StringName, Vector<AudioFrame>> bus_map;
-				bus_map[_get_actual_bus()] = volume_vector;
-				AudioServer::get_singleton()->start_playback_stream(setplayback, bus_map, setplay.get(), actual_pitch_scale, linear_attenuation, attenuation_filter_cutoff_hz);
-				setplayback.unref();
-				setplay.set(-1);
-			}
-
 			if (!internal->stream_playbacks.is_empty() && internal->active.is_set()) {
 				internal->process();
 			}
+			// Update anything related to position first, if possible of course.
+			HashMap<StringName, Vector<AudioFrame>> bus_volumes;
+			if (internal->has_pending_playback() || (internal->active.is_set() && last_mix_count != AudioServer::get_singleton()->get_mix_count()) || force_update_panning) {
+				force_update_panning = false;
+				_update_panning(internal->has_pending_playback() ? &bus_volumes : nullptr);
+			}
+
+			if (internal->has_pending_playback()) {
+				internal->start_pending_playbacks(bus_volumes, actual_pitch_scale, linear_attenuation, attenuation_filter_cutoff_hz);
+			}
+
 			internal->ensure_playback_limit();
 		} break;
 	}
@@ -323,24 +318,20 @@ Area3D *AudioStreamPlayer3D::_get_overriding_area() {
 }
 
 // Interacts with PhysicsServer3D, so can only be called during _physics_process.
-StringName AudioStreamPlayer3D::_get_actual_bus() {
-	Area3D *overriding_area = _get_overriding_area();
-	if (overriding_area && overriding_area->is_overriding_audio_bus() && !overriding_area->is_using_reverb_bus()) {
-		return overriding_area->get_audio_bus_name();
-	}
-	return internal->bus;
-}
-
-// Interacts with PhysicsServer3D, so can only be called during _physics_process.
-Vector<AudioFrame> AudioStreamPlayer3D::_update_panning() {
+void AudioStreamPlayer3D::_update_panning(HashMap<StringName, Vector<AudioFrame>> *r_initial_bus_volumes) {
+	actual_pitch_scale = internal->pitch_scale;
 	Vector<AudioFrame> output_volume_vector;
 	output_volume_vector.resize(4);
 	for (AudioFrame &frame : output_volume_vector) {
 		frame = AudioFrame(0, 0);
 	}
+	if (r_initial_bus_volumes) {
+		r_initial_bus_volumes->clear();
+		(*r_initial_bus_volumes)[internal->bus] = output_volume_vector;
+	}
 
 	if (!internal->active.is_set() || internal->stream.is_null()) {
-		return output_volume_vector;
+		return;
 	}
 
 	Vector3 linear_velocity;
@@ -353,7 +344,7 @@ Vector<AudioFrame> AudioStreamPlayer3D::_update_panning() {
 	Vector3 global_pos = get_global_transform().origin;
 
 	Ref<World3D> world_3d = get_world_3d();
-	ERR_FAIL_COND_V(world_3d.is_null(), output_volume_vector);
+	ERR_FAIL_COND(world_3d.is_null());
 
 	HashSet<Camera3D *> cameras = world_3d->get_cameras();
 	cameras.insert(get_viewport()->get_camera_3d());
@@ -460,6 +451,9 @@ Vector<AudioFrame> AudioStreamPlayer3D::_update_panning() {
 		} else {
 			bus_volumes[internal->bus] = output_volume_vector;
 		}
+		if (r_initial_bus_volumes) {
+			*r_initial_bus_volumes = bus_volumes;
+		}
 
 		for (Ref<AudioStreamPlayback> &playback : internal->stream_playbacks) {
 			AudioServer::get_singleton()->set_playback_bus_volumes_linear(playback, bus_volumes);
@@ -499,7 +493,6 @@ Vector<AudioFrame> AudioStreamPlayer3D::_update_panning() {
 			}
 		}
 	}
-	return output_volume_vector;
 }
 
 void AudioStreamPlayer3D::set_stream(Ref<AudioStream> p_stream) {
@@ -553,21 +546,7 @@ float AudioStreamPlayer3D::get_pitch_scale() const {
 }
 
 void AudioStreamPlayer3D::play(float p_from_pos) {
-	Ref<AudioStreamPlayback> stream_playback = internal->play_basic();
-	if (stream_playback.is_null()) {
-		return;
-	}
-	setplayback = stream_playback;
-	setplay.set(p_from_pos);
-
-	// Sample handling.
-	if (stream_playback->get_is_sample() && stream_playback->get_sample_playback().is_valid()) {
-		Ref<AudioSamplePlayback> sample_playback = stream_playback->get_sample_playback();
-		sample_playback->offset = p_from_pos;
-		sample_playback->bus = _get_actual_bus();
-
-		AudioServer::get_singleton()->start_sample_playback(sample_playback);
-	}
+	internal->play_pending(p_from_pos);
 }
 
 void AudioStreamPlayer3D::seek(float p_seconds) {
@@ -575,21 +554,14 @@ void AudioStreamPlayer3D::seek(float p_seconds) {
 }
 
 void AudioStreamPlayer3D::stop() {
-	setplay.set(-1);
 	internal->stop_basic();
 }
 
 bool AudioStreamPlayer3D::is_playing() const {
-	if (setplay.get() >= 0) {
-		return true; // play() has been called this frame, but no playback exists just yet.
-	}
 	return internal->is_playing();
 }
 
 float AudioStreamPlayer3D::get_playback_position() {
-	if (setplay.get() >= 0) {
-		return setplay.get(); // play() has been called this frame, but no playback exists just yet.
-	}
 	return internal->get_playback_position();
 }
 

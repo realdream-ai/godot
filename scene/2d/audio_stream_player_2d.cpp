@@ -53,22 +53,21 @@ void AudioStreamPlayer2D::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_INTERNAL_PHYSICS_PROCESS: {
+			if (!internal->stream_playbacks.is_empty() && internal->active.is_set()) {
+				internal->process();
+			}
 			// Update anything related to position first, if possible of course.
-			if (setplay.get() > 0 || (internal->active.is_set() && last_mix_count != AudioServer::get_singleton()->get_mix_count()) || force_update_panning) {
+			if (internal->has_pending_playback() || (internal->active.is_set() && last_mix_count != AudioServer::get_singleton()->get_mix_count()) || force_update_panning) {
 				force_update_panning = false;
 				_update_panning();
 			}
 
-			if (setplayback.is_valid() && setplay.get() >= 0) {
-				internal->active.set();
-				AudioServer::get_singleton()->start_playback_stream(setplayback, _get_actual_bus(), volume_vector, setplay.get(), internal->pitch_scale);
-				setplayback.unref();
-				setplay.set(-1);
+			if (internal->has_pending_playback()) {
+				HashMap<StringName, Vector<AudioFrame>> bus_volumes;
+				bus_volumes[_get_actual_bus()] = volume_vector;
+				internal->start_pending_playbacks(bus_volumes, internal->pitch_scale);
 			}
 
-			if (!internal->stream_playbacks.is_empty() && internal->active.is_set()) {
-				internal->process();
-			}
 			internal->ensure_playback_limit();
 		} break;
 	}
@@ -227,21 +226,7 @@ float AudioStreamPlayer2D::get_pitch_scale() const {
 }
 
 void AudioStreamPlayer2D::play(float p_from_pos) {
-	Ref<AudioStreamPlayback> stream_playback = internal->play_basic();
-	if (stream_playback.is_null()) {
-		return;
-	}
-	setplayback = stream_playback;
-	setplay.set(p_from_pos);
-
-	// Sample handling.
-	if (stream_playback->get_is_sample() && stream_playback->get_sample_playback().is_valid()) {
-		Ref<AudioSamplePlayback> sample_playback = stream_playback->get_sample_playback();
-		sample_playback->offset = p_from_pos;
-		sample_playback->bus = _get_actual_bus();
-
-		AudioServer::get_singleton()->start_sample_playback(sample_playback);
-	}
+	internal->play_pending(p_from_pos);
 }
 
 void AudioStreamPlayer2D::seek(float p_seconds) {
@@ -249,21 +234,14 @@ void AudioStreamPlayer2D::seek(float p_seconds) {
 }
 
 void AudioStreamPlayer2D::stop() {
-	setplay.set(-1);
 	internal->stop_basic();
 }
 
 bool AudioStreamPlayer2D::is_playing() const {
-	if (setplay.get() >= 0) {
-		return true; // play() has been called this frame, but no playback exists just yet.
-	}
 	return internal->is_playing();
 }
 
 float AudioStreamPlayer2D::get_playback_position() {
-	if (setplay.get() >= 0) {
-		return setplay.get(); // play() has been called this frame, but no playback exists just yet.
-	}
 	return internal->get_playback_position();
 }
 

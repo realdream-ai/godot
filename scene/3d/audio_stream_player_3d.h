@@ -67,9 +67,6 @@ private:
 
 	AudioStreamPlayerInternal *internal = nullptr;
 
-	SafeNumeric<float> setplay{ -1.0 };
-	Ref<AudioStreamPlayback> setplayback;
-
 	AttenuationModel attenuation_model = ATTENUATION_INVERSE_DISTANCE;
 	float unit_size = 10.0;
 	float max_db = 3.0;
@@ -87,9 +84,8 @@ private:
 
 	void _set_playing(bool p_enable);
 	bool _is_active() const;
-	StringName _get_actual_bus();
 	Area3D *_get_overriding_area();
-	Vector<AudioFrame> _update_panning();
+	void _update_panning(HashMap<StringName, Vector<AudioFrame>> *r_initial_bus_volumes = nullptr);
 
 	uint32_t area_mask = 1;
 
